@@ -1,0 +1,42 @@
+/* Редактор модуля Fill Blanks. Цвета берутся из переменных ядра (editor.html) */
+.fb-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
+.fb-field { display:flex; flex-direction:column; gap:4px; font-size:.9rem; color:var(--muted); margin-bottom:10px; }
+.fb-field input, .fb-field select { color:var(--text); font-size:1rem; }
+.fb-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.fb-muted { color:var(--muted); }
+.fb-limit { color:var(--bad); font-weight:600; }
+.fb-help { color:var(--muted); font-size:.85rem; margin:6px 0 10px; }
+.fb-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.fb-warn { color:var(--bad); font-size:.85rem; margin:-4px 0 8px; }
+
+/* Слева предложения и банк, справа панель пропуска */
+.fb-grid { display:grid; grid-template-columns:minmax(0, 1fr) 300px; gap:20px; align-items:start; }
+@media (max-width: 1000px) { .fb-grid { grid-template-columns:1fr; } }
+
+.fb-sentence { display:flex; gap:8px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 10px; margin-bottom:8px; }
+.fb-num { color:var(--muted); min-width:1.6em; padding-top:6px; }
+.fb-edit { flex:1; min-height:36px; padding:4px 2px; outline:none; white-space:pre-wrap; line-height:2.1; }
+.fb-edit.empty::before { content:attr(data-placeholder); color:var(--muted); pointer-events:none; }
+.fb-sentence:focus-within { border-color:var(--accent); }
+.fb-chip { display:inline-block; padding:0 10px; margin:0 2px; border-radius:6px; background:var(--accent-soft); border-bottom:2px solid var(--accent); line-height:1.6; cursor:pointer; user-select:none; }
+.fb-chip.open { background:var(--accent); color:#fff; }
+.fb-icon { border:none; background:transparent; color:var(--muted); padding:0 6px; min-height:28px; font-size:1.1rem; }
+.fb-icon:hover { color:var(--bad); }
+.fb-add { margin:4px 0 8px; }
+
+.fb-panel-box { position:sticky; top:12px; }
+.fb-panel { background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:12px; }
+.fb-panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.fb-label { font-size:.9rem; color:var(--muted); margin-bottom:4px; }
+.fb-danger { color:var(--bad); border-color:var(--bad); background:transparent; margin-top:6px; }
+
+.fb-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+.fb-chips:empty { display:none; }
+.fb-tag { display:inline-flex; align-items:center; gap:2px; min-height:32px; padding:2px 6px 2px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); }
+.fb-tag.fb-auto { padding-right:12px; color:var(--muted); background:transparent; border-style:dashed; }
+.fb-tag-x { border:none; background:transparent; min-height:24px; padding:0 6px; color:var(--muted); }
+.fb-tag-x:hover { color:var(--bad); }
+.fb-adder { display:flex; gap:6px; margin-bottom:8px; }
+.fb-adder input { flex:1; min-width:0; }
+.fb-bank { margin-top:16px; }
+.fb-bank h3 { font-size:1rem; margin:0; }
