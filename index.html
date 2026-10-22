@@ -16,7 +16,12 @@
   header { flex:none; padding:10px 12px 8px; border-bottom:1px solid var(--line); }
   main { flex:1 1 auto; min-height:0; overflow-y:auto; padding:10px 12px; -webkit-overflow-scrolling:touch; }
   footer { flex:none; padding:8px 12px 10px; border-top:1px solid var(--line); background:var(--bg); }
-  h1 { font-size:1.05rem; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  h1 { flex:1; min-width:0; font-size:1.05rem; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .reset { flex:none; display:flex; align-items:center; gap:6px; }
+  .reset button { min-height:34px; padding:2px 10px; }
+  .reset .ask { color:var(--muted); font-size:.9rem; }
+  .reset [hidden] { display:none; }
   .para + .para { margin-top:.8em; }
   /* Кнопки режимов нужны только в предпросмотре у преподавателя; режим ученика выбирает преподаватель */
   .modes { display:none; gap:6px; overflow-x:auto; }
@@ -28,9 +33,14 @@
   button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px; line-height:2.4; }
   .gap { display:inline-flex; align-items:center; justify-content:center; min-width:90px; min-height:40px; border-bottom:2px solid var(--accent); margin:0 4px; padding:0 6px; vertical-align:middle; text-align:center; cursor:pointer; line-height:1.3; }
-  .gap.ok { color:var(--ok); border-color:var(--ok); }
+  /* Результат не только цветом: у верного ✓, у неверного ✗ */
+  .gap.ok { color:var(--ok); border-color:var(--ok); cursor:default; }
+  .gap.ok::after { content:"✓"; margin-left:4px; }
   .gap.bad { color:var(--bad); border-color:var(--bad); }
-  .gap input, .gap select { font:inherit; width:100%; min-height:38px; border:none; background:transparent; color:var(--text); text-align:center; }
+  .gap.bad::after { content:"✗"; margin-left:4px; }
+  .gap.missing { border-bottom-style:dashed; border-color:var(--bad); }
+  .gap.locked { cursor:default; }
+  .gap input, .gap select { font:inherit; width:100%; min-height:38px; border:none; background:transparent; color:inherit; text-align:center; }
   .gap select option { background:var(--card); color:var(--text); }
   /* Банк занимает не больше четверти экрана и прокручивается сам */
   .bank { display:flex; flex-wrap:wrap; gap:6px; max-height:25vh; overflow-y:auto; margin-bottom:8px; }
@@ -38,14 +48,21 @@
   .chip { display:inline-flex; align-items:center; min-height:36px; padding:2px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer; user-select:none; }
   .chip.used { opacity:.35; cursor:default; }
   .chip.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .score { color:var(--muted); }
+  .actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .score { color:var(--muted); flex:1; min-width:140px; }
+  .score.warn { color:var(--bad); }
   .unavailable { flex:1; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; color:var(--muted); font-size:1.1rem; }
 </style>
 </head>
 <body>
 <header>
-  <h1 id="title">Загрузка…</h1>
+  <div class="head">
+    <h1 id="title">Загрузка…</h1>
+    <div class="reset">
+      <button id="resetTop" title="Начать заново" aria-label="Начать заново">↻</button>
+      <span id="resetAsk" hidden><span class="ask">Начать заново?</span> <button id="resetYes">Да</button> <button id="resetNo">Нет</button></span>
+    </div>
+  </div>
   <div class="modes">
     <button data-mode="word_bank">Банк слов</button>
     <button data-mode="dropdown">Выпадающий список</button>
@@ -58,21 +75,24 @@
 <footer>
   <div class="bank" id="bank"></div>
   <div class="actions">
+    <span class="score" id="score" role="status" aria-live="polite"></span>
     <button class="primary" id="check">Проверить</button>
-    <button id="reset">Начать заново</button>
-    <span class="score" id="score"></span>
   </div>
 </footer>
 
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
-let data = null, mode = 'word_bank', gaps = [], selected = null, checked = false;
+let data = null, mode = 'word_bank', gaps = [], selected = null;
+// Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
+let maxChecks = 3, checksUsed = 0, finished = false, note = '';
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key
 let bankOrder = [], poolOrder = [];
 
-const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
+// Сравнение: Unicode NFC, без учёта регистра, лишних пробелов и точки, запятой, ? и ! в конце
+const norm = s => String(s).normalize('NFC').trim().replace(/\s+/g, ' ').replace(/[.,?!]+$/, '').trim().toLowerCase();
 const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+const $ = id => document.getElementById(id);
 
 // Без повторов: одинаковыми считаются слова, равные после нормализации
 const uniq = words => {
@@ -87,10 +107,14 @@ function build() {
     item.parts.forEach(p => {
       if (typeof p === 'string') return;
       const g = data.gaps[p.gap];
-      gaps.push({ id: p.gap, answer: g.answer, alternatives: g.alternatives || [], value: '', bankKey: null });
+      gaps.push({ id: p.gap, answer: g.answer, alternatives: g.alternatives || [], value: '', bankKey: null, locked: false, state: null });
     });
   });
   mode = data.mode || 'word_bank';
+  // Число проверок: выбрал преподаватель (1–5), иначе 3 при 1–5 пропусках и 5 при 6 и больше
+  const set = Number(data.behavior && data.behavior.checks);
+  maxChecks = set >= 1 && set <= 5 ? Math.floor(set) : (gaps.length <= 5 ? 3 : 5);
+  checksUsed = 0; finished = false; note = ''; selected = null;
   shuffleWords();
 }
 
@@ -105,13 +129,16 @@ function shuffleWords() {
   poolOrder = shuffle(uniq([...answers, ...gaps.flatMap(g => g.alternatives), ...distractors]));
 }
 
+// Закреплённые после проверки ответы и всё после конца прохождения менять нельзя
+const frozen = g => g.locked || finished;
+const isFilled = g => g.locked || norm(g.value) !== '';
+
 function render() {
-  checked = false;
-  const main = document.getElementById('main');
+  const main = $('main');
   const scroll = main.scrollTop;
-  document.getElementById('title').textContent = data.title;
+  $('title').textContent = data.title;
   document.querySelectorAll('.modes button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  const root = document.getElementById('root');
+  const root = $('root');
   root.innerHTML = '';
   let gi = 0;
   // Отдельные предложения: у каждого своя карточка. Связный текст: одна карточка, предложения-абзацы внутри
@@ -135,25 +162,35 @@ function render() {
     });
   });
   renderBank();
-  document.getElementById('score').textContent = '';
+  updateStatus();
   main.scrollTop = scroll;
+}
+
+// Правка ответа снимает старую отметку «неверно» и «не заполнено»: верность узнаем только при следующей проверке
+function edited(g, el) {
+  g.state = null;
+  el.classList.remove('bad', 'missing');
+  note = '';
+  updateStatus();
 }
 
 function makeGap(idx) {
   const g = gaps[idx];
   const el = document.createElement('span');
-  el.className = 'gap';
+  el.className = 'gap' + (g.state ? ' ' + g.state : '') + (frozen(g) ? ' locked' : '');
   el.dataset.idx = idx;
   if (mode === 'typing') {
     const input = document.createElement('input');
     input.value = g.value;
     input.placeholder = '…';
-    input.oninput = () => { g.value = input.value; g.bankKey = null; };
+    input.readOnly = frozen(g);
+    input.oninput = () => { g.value = input.value; g.bankKey = null; edited(g, el); };
     // Ждём, пока откроется клавиатура, и сдвигаем пропуск в середину
     input.onfocus = () => setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
     el.appendChild(input);
   } else if (mode === 'dropdown') {
     const sel = document.createElement('select');
+    sel.disabled = frozen(g);
     sel.appendChild(document.createElement('option'));
     poolOrder.forEach(w => {
       const opt = document.createElement('option');
@@ -161,18 +198,24 @@ function makeGap(idx) {
       sel.appendChild(opt);
     });
     sel.value = g.value;
-    sel.onchange = () => { g.value = sel.value; g.bankKey = null; };
+    sel.onchange = () => { g.value = sel.value; g.bankKey = null; edited(g, el); };
     el.appendChild(sel);
   } else {
     el.textContent = g.value;
     el.onclick = () => {
-      if (g.value) { g.value = ''; g.bankKey = null; }
-      else if (selected !== null) {
+      if (frozen(g)) return;
+      if (selected !== null) {
+        // Выбранное слово встаёт в пропуск; прежнее слово из этого пропуска возвращается в банк
         const w = bankOrder.find(b => b.key === selected);
         g.value = w.text;
         g.bankKey = w.key;
         selected = null;
-      }
+      } else if (g.value) {
+        g.value = '';
+        g.bankKey = null;
+      } else return;
+      g.state = null;
+      note = '';
       render();
     };
   }
@@ -180,7 +223,7 @@ function makeGap(idx) {
 }
 
 function renderBank() {
-  const bank = document.getElementById('bank');
+  const bank = $('bank');
   const scroll = bank.scrollTop;
   bank.innerHTML = '';
   if (mode !== 'word_bank') return;
@@ -189,35 +232,74 @@ function renderBank() {
     const chip = document.createElement('span');
     chip.className = 'chip' + (used.has(w.key) ? ' used' : '') + (selected === w.key ? ' selected' : '');
     chip.textContent = w.text;
-    if (!used.has(w.key)) chip.onclick = () => { selected = selected === w.key ? null : w.key; render(); };
+    if (!used.has(w.key) && !finished) chip.onclick = () => { selected = selected === w.key ? null : w.key; render(); };
     bank.appendChild(chip);
   });
   bank.scrollTop = scroll;
 }
 
-function check() {
-  checked = true;
-  let ok = 0;
-  document.querySelectorAll('.gap').forEach(el => {
-    const g = gaps[el.dataset.idx];
-    // Засчитываются основной ответ и альтернативы именно этого пропуска
-    const right = [g.answer, ...g.alternatives].some(a => norm(a) === norm(g.value));
-    if (right) ok++;
-    el.classList.remove('ok', 'bad');
-    el.classList.add(right ? 'ok' : 'bad');
-  });
-  document.getElementById('score').textContent = `Верно: ${ok} из ${gaps.length}`;
+// Строка внизу: до первой проверки — сколько заполнено, потом результат и остаток проверок, в конце — итог
+function updateStatus() {
+  const total = gaps.length, ok = gaps.filter(g => g.locked).length;
+  const s = $('score');
+  s.classList.toggle('warn', !!note);
+  if (note) s.textContent = note;
+  else if (finished) s.textContent = `Результат: ${ok} из ${total} (${Math.round(ok / total * 100)}%)`;
+  else if (checksUsed === 0) s.textContent = `Заполнено: ${gaps.filter(isFilled).length} из ${total}`;
+  else s.textContent = `Верно: ${ok} из ${total} · Проверок осталось: ${maxChecks - checksUsed}`;
+  $('check').textContent = finished ? 'Начать заново' : 'Проверить';
 }
 
-document.querySelectorAll('.modes button').forEach(b => b.onclick = () => { mode = b.dataset.mode; selected = null; render(); });
-document.getElementById('check').onclick = check;
-document.getElementById('reset').onclick = () => {
-  gaps.forEach(g => { g.value = ''; g.bankKey = null; });
-  selected = null;
-  shuffleWords();
+function check() {
+  if (finished) return;
+  // Неполный ответ проверку не тратит: показываем, чего не хватает
+  const missing = gaps.filter(g => !isFilled(g));
+  if (missing.length) {
+    gaps.forEach(g => { if (!g.locked) g.state = isFilled(g) ? null : 'missing'; });
+    note = missing.length === 1 ? 'Заполните пропуск, который остался пустым.' : `Заполните все пропуски: ещё ${missing.length}.`;
+    render();
+    const first = document.querySelector('.gap.missing');
+    if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return;
+  }
+  checksUsed++;
+  note = '';
+  gaps.forEach(g => {
+    if (g.locked) return;
+    // Засчитываются основной ответ и альтернативы именно этого пропуска
+    const right = [g.answer, ...g.alternatives].some(a => norm(a) === norm(g.value));
+    g.state = right ? 'ok' : 'bad';
+    g.locked = right;
+  });
+  if (gaps.every(g => g.locked) || checksUsed >= maxChecks) finished = true;
   render();
-  document.getElementById('main').scrollTop = 0;
+}
+
+// Новое прохождение: ответы, закрепление, проверки и сообщения сбрасываются, слова перемешиваются заново
+function restart() {
+  gaps.forEach(g => { g.value = ''; g.bankKey = null; g.locked = false; g.state = null; });
+  checksUsed = 0; finished = false; note = ''; selected = null;
+  shuffleWords();
+  closeResetAsk();
+  render();
+  $('main').scrollTop = 0;
+}
+
+const started = () => checksUsed > 0 || gaps.some(g => g.value);
+function closeResetAsk() { $('resetAsk').hidden = true; $('resetTop').hidden = false; }
+
+$('resetTop').onclick = () => {
+  if (!data) return;
+  if (!started()) { restart(); return; }
+  // Ответы уже есть: коротко спрашиваем, чтобы не сбросить случайно
+  $('resetTop').hidden = true;
+  $('resetAsk').hidden = false;
 };
+$('resetYes').onclick = restart;
+$('resetNo').onclick = closeResetAsk;
+$('check').onclick = () => { if (finished) restart(); else check(); };
+// В предпросмотре другой режим означает новое прохождение
+document.querySelectorAll('.modes button').forEach(b => b.onclick = () => { mode = b.dataset.mode; restart(); });
 
 // Снято с публикации или не найдено: ученик видит только сообщение, без кнопок
 function showUnavailable() {

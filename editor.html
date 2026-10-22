@@ -75,7 +75,7 @@
   }
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
-<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=4">
+<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=5">
 </head>
 <body>
 <aside>
@@ -101,7 +101,7 @@
     <nav class="tabs">
       <button data-tab="content">Содержимое</button>
       <button disabled title="Будет позже">Дизайн</button>
-      <button disabled title="Будет позже">Поведение</button>
+      <button data-tab="behavior">Поведение</button>
       <button data-tab="publish">Публикация</button>
     </nav>
     <div id="content"></div>
@@ -132,9 +132,9 @@
   </div>
 </div>
 
-<script src="modules/fill-blanks/editor.js?v=4"></script>
+<script src="modules/fill-blanks/editor.js?v=5"></script>
 <script>
-const ASSET_V = 4;
+const ASSET_V = 5;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -200,6 +200,7 @@ function showTab(name) {
   tab = name;
   document.querySelectorAll('.tabs [data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   if (name === 'publish') renderPublish();
+  else if (name === 'behavior') renderBehavior();
   else MODULES[current.module].render($('content'), current, touch);
 }
 
@@ -250,7 +251,26 @@ function renderList() {
 // Файл упражнения в том виде, в каком его получит плеер
 function exerciseFor(draft, published) {
   const body = MODULES[draft.module].exportData(draft);
-  return { id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body };
+  const checks = draft.behavior && draft.behavior.checks;
+  return { id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body, behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' } };
+}
+
+// Вкладка «Поведение» общая для модулей: число проверок на прохождение
+function renderBehavior() {
+  const gaps = Object.keys(MODULES[current.module].exportData(current).gaps).length;
+  const auto = gaps <= 5 ? 3 : 5;
+  const value = current.behavior && current.behavior.checks >= 1 ? String(current.behavior.checks) : 'auto';
+  const options = [['auto', `Автоматически (сейчас ${auto})`], ...[1, 2, 3, 4, 5].map(n => [String(n), String(n)])];
+  $('content').innerHTML = `
+    <section class="pub">
+      <label class="muted" for="checks">Сколько раз ученик может нажать «Проверить»</label><br>
+      <select id="checks">${options.map(([v, t]) => `<option value="${v}"${v === value ? ' selected' : ''}>${t}</option>`).join('')}</select>
+      <p class="muted">Автоматически: 3 проверки, если в задании 1–5 пропусков, и 5, если 6 и больше. Нажатие на «Проверить» при неполном ответе проверку не тратит. Верные ответы после проверки закрепляются. Упражнение заканчивается, когда всё верно или проверки закончились.</p>
+    </section>`;
+  $('checks').onchange = () => {
+    current.behavior = { checks: $('checks').value === 'auto' ? 'auto' : Number($('checks').value) };
+    touch();
+  };
 }
 
 const snapshot = draft => JSON.stringify(exerciseFor(draft, true));
@@ -385,7 +405,12 @@ async function openFile(f) {
     if (!file || !MODULES[file.module]) throw new Error('Это не файл упражнения DimVibe.');
     if (!/^ex-[a-z0-9]+$/.test(file.id || '')) throw new Error('В файле нет правильного номера упражнения.');
     if (drafts[file.id] && !confirm(`Черновик «${drafts[file.id].title || file.id}» уже есть в этом браузере. Заменить его содержимым файла?`)) return;
-    const draft = { id: file.id, title: String(file.title || ''), ...MODULES[file.module].load(file), updatedAt: new Date().toISOString() };
+    const checks = Number(file.behavior && file.behavior.checks);
+    const draft = {
+      id: file.id, title: String(file.title || ''), ...MODULES[file.module].load(file),
+      behavior: { checks: checks >= 1 && checks <= 5 ? Math.floor(checks) : 'auto' },
+      updatedAt: new Date().toISOString(),
+    };
     draft.publication = { state: file.published === false ? 'unpublished' : 'published', at: null, snapshot: snapshot(draft) };
     drafts[file.id] = draft;
     writeStore();
