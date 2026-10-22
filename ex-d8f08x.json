@@ -1,0 +1,39 @@
+{
+  "id": "ex-d8f08x",
+  "module": "fill_blanks",
+  "format": 2,
+  "published": true,
+  "title": "ww-1",
+  "layout": "sentences",
+  "mode": "word_bank",
+  "items": [
+    {
+      "id": "s1",
+      "parts": [
+        {
+          "gap": "g4"
+        },
+        " multiple-choice questions with 4 ",
+        {
+          "gap": "g5"
+        },
+        "."
+      ]
+    }
+  ],
+  "gaps": {
+    "g4": {
+      "answer": "Classic",
+      "alternatives": [],
+      "hint": ""
+    },
+    "g5": {
+      "answer": "options",
+      "alternatives": [],
+      "hint": ""
+    }
+  },
+  "distractors": [
+    "fame"
+  ]
+}
