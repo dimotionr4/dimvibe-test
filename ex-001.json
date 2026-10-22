@@ -1,12 +1,20 @@
 {
   "id": "ex-001",
+  "module": "fill_blanks",
+  "format": 2,
   "published": true,
   "title": "TEST A2: версия 2",
+  "layout": "sentences",
+  "mode": "word_bank",
   "items": [
     {
-      "lang": "en",
-      "text": "The bartender {poured} the drink into the {bottle}.",
-      "distractors": ["cup", "served", "glass"]
+      "id": "s1",
+      "parts": ["The bartender ", { "gap": "g1" }, " the drink into the ", { "gap": "g2" }, "."]
     }
-  ]
+  ],
+  "gaps": {
+    "g1": { "answer": "poured", "alternatives": [], "hint": "" },
+    "g2": { "answer": "bottle", "alternatives": [], "hint": "" }
+  },
+  "distractors": ["cup", "served", "glass"]
 }
