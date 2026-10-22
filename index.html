@@ -10,44 +10,62 @@
     :root { --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
   }
   * { box-sizing: border-box; }
-  body { margin:0; padding:16px; background:var(--bg); color:var(--text); font-family: system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.6; }
-  h1 { font-size:1.2rem; margin:0 0 12px; }
-  .modes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
-  button { font:inherit; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; padding:8px 12px; cursor:pointer; }
+  html, body { height:100%; }
+  /* Три части: шапка и низ на месте, прокручивается только середина */
+  body { margin:0; display:flex; flex-direction:column; height:100vh; height:100dvh; background:var(--bg); color:var(--text); font-family: system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.5; }
+  header { flex:none; padding:10px 12px 8px; border-bottom:1px solid var(--line); }
+  main { flex:1 1 auto; min-height:0; overflow-y:auto; padding:10px 12px; -webkit-overflow-scrolling:touch; }
+  footer { flex:none; padding:8px 12px 10px; border-top:1px solid var(--line); background:var(--bg); }
+  h1 { font-size:1.05rem; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .modes { display:flex; gap:6px; overflow-x:auto; }
+  .modes button { flex:none; }
+  button { font:inherit; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; padding:6px 12px; min-height:40px; cursor:pointer; }
+  .modes button { font-size:.9rem; min-height:36px; padding:4px 10px; }
   button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
   button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
-  .lang { font-size:.75rem; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
-  .gap { display:inline-block; min-width:90px; min-height:32px; border-bottom:2px solid var(--accent); margin:0 4px; padding:0 6px; vertical-align:middle; text-align:center; cursor:pointer; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px; line-height:2.4; }
+  .lang { font-size:.75rem; color:var(--muted); text-transform:uppercase; line-height:1.4; margin-bottom:2px; }
+  .gap { display:inline-flex; align-items:center; justify-content:center; min-width:90px; min-height:40px; border-bottom:2px solid var(--accent); margin:0 4px; padding:0 6px; vertical-align:middle; text-align:center; cursor:pointer; line-height:1.3; }
   .gap.ok { color:var(--ok); border-color:var(--ok); }
   .gap.bad { color:var(--bad); border-color:var(--bad); }
-  .gap input, .gap select { font:inherit; width:100%; border:none; background:transparent; color:var(--text); text-align:center; }
-  .bank { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
-  .chip { padding:6px 10px; border-radius:999px; border:1px solid var(--line); }
-  .chip.used { opacity:.35; text-decoration:line-through; cursor:default; }
+  .gap input, .gap select { font:inherit; width:100%; min-height:38px; border:none; background:transparent; color:var(--text); text-align:center; }
+  .gap select option { background:var(--card); color:var(--text); }
+  /* Банк занимает не больше четверти экрана и прокручивается сам */
+  .bank { display:flex; flex-wrap:wrap; gap:6px; max-height:25vh; overflow-y:auto; margin-bottom:8px; }
+  .bank:empty { display:none; }
+  .chip { display:inline-flex; align-items:center; min-height:36px; padding:2px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer; user-select:none; }
+  .chip.used { opacity:.35; cursor:default; }
   .chip.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
+  .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .score { color:var(--muted); }
 </style>
 </head>
 <body>
-<h1 id="title">Загрузка…</h1>
-<div class="modes">
-  <button data-mode="word_bank">Банк слов</button>
-  <button data-mode="dropdown">Выпадающий список</button>
-  <button data-mode="typing">Ввод вручную</button>
-</div>
-<div id="root"></div>
-<div class="bank" id="bank"></div>
-<div class="actions">
-  <button class="primary" id="check">Проверить</button>
-  <button id="reset">Начать заново</button>
-  <span class="score" id="score"></span>
-</div>
+<header>
+  <h1 id="title">Загрузка…</h1>
+  <div class="modes">
+    <button data-mode="word_bank">Банк слов</button>
+    <button data-mode="dropdown">Выпадающий список</button>
+    <button data-mode="typing">Ввод вручную</button>
+  </div>
+</header>
+<main id="main">
+  <div id="root"></div>
+</main>
+<footer>
+  <div class="bank" id="bank"></div>
+  <div class="actions">
+    <button class="primary" id="check">Проверить</button>
+    <button id="reset">Начать заново</button>
+    <span class="score" id="score"></span>
+  </div>
+</footer>
 
 <script>
 const id = new URLSearchParams(location.search).get('id') || 'ex-001';
 let data = null, mode = 'word_bank', gaps = [], selected = null, checked = false;
+// Порядок слов перемешивается один раз на прохождение
+let bankOrder = [], poolOrder = [];
 
 const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
 const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
@@ -58,19 +76,22 @@ function parse(text) {
 
 function build() {
   gaps = [];
-  data.items.forEach((item, itemIndex) => {
+  data.items.forEach(item => {
     parse(item.text).forEach(p => { if (p.gap) gaps.push({ answer: p.gap, value: '', lang: item.lang }); });
   });
+  shuffleWords();
 }
 
-function bankWords() {
-  const words = gaps.map(g => g.answer);
-  data.items.forEach(item => (item.distractors || []).forEach(d => words.push(d)));
-  return shuffle([...new Set(words)]);
+function shuffleWords() {
+  const words = [...new Set([...gaps.map(g => g.answer), ...data.items.flatMap(i => i.distractors || [])])];
+  bankOrder = shuffle(words);
+  poolOrder = shuffle(words);
 }
 
 function render() {
   checked = false;
+  const main = document.getElementById('main');
+  const scroll = main.scrollTop;
   document.getElementById('title').textContent = data.title;
   document.querySelectorAll('.modes button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   const root = document.getElementById('root');
@@ -92,6 +113,7 @@ function render() {
   });
   renderBank();
   document.getElementById('score').textContent = '';
+  main.scrollTop = scroll;
 }
 
 function makeGap(idx) {
@@ -104,10 +126,17 @@ function makeGap(idx) {
     input.value = g.value;
     input.placeholder = '…';
     input.oninput = () => { g.value = input.value; };
+    // Ждём, пока откроется клавиатура, и сдвигаем пропуск в середину
+    input.onfocus = () => setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
     el.appendChild(input);
   } else if (mode === 'dropdown') {
     const sel = document.createElement('select');
-    sel.innerHTML = '<option value=""></option>' + dropdownPool().map(w => `<option>${w}</option>`).join('');
+    sel.appendChild(document.createElement('option'));
+    poolOrder.forEach(w => {
+      const opt = document.createElement('option');
+      opt.textContent = w;
+      sel.appendChild(opt);
+    });
     sel.value = g.value;
     sel.onchange = () => { g.value = sel.value; };
     el.appendChild(sel);
@@ -121,22 +150,20 @@ function makeGap(idx) {
   return el;
 }
 
-function dropdownPool() {
-  return shuffle([...new Set([...gaps.map(g => g.answer), ...data.items.flatMap(i => i.distractors || [])])]);
-}
-
 function renderBank() {
   const bank = document.getElementById('bank');
+  const scroll = bank.scrollTop;
   bank.innerHTML = '';
   if (mode !== 'word_bank') return;
   const used = new Set(gaps.map(g => g.value).filter(Boolean));
-  bankWords().forEach(w => {
+  bankOrder.forEach(w => {
     const chip = document.createElement('span');
     chip.className = 'chip' + (used.has(w) ? ' used' : '') + (selected === w ? ' selected' : '');
     chip.textContent = w;
     if (!used.has(w)) chip.onclick = () => { selected = selected === w ? null : w; render(); };
     bank.appendChild(chip);
   });
+  bank.scrollTop = scroll;
 }
 
 function check() {
@@ -154,7 +181,13 @@ function check() {
 
 document.querySelectorAll('.modes button').forEach(b => b.onclick = () => { mode = b.dataset.mode; selected = null; render(); });
 document.getElementById('check').onclick = check;
-document.getElementById('reset').onclick = () => { gaps.forEach(g => g.value = ''); selected = null; render(); };
+document.getElementById('reset').onclick = () => {
+  gaps.forEach(g => g.value = '');
+  selected = null;
+  shuffleWords();
+  render();
+  document.getElementById('main').scrollTop = 0;
+};
 
 fetch(`${id}.json`, { cache: 'no-store' })
   .then(r => { if (!r.ok) throw new Error(); return r.json(); })
