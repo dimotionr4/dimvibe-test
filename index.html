@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DimVibe — тест Fill Blanks</title>
+<style>
+  :root { --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--text); font-family: system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.6; }
+  h1 { font-size:1.2rem; margin:0 0 12px; }
+  .modes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  button { font:inherit; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; padding:8px 12px; cursor:pointer; }
+  button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
+  .lang { font-size:.75rem; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+  .gap { display:inline-block; min-width:90px; min-height:32px; border-bottom:2px solid var(--accent); margin:0 4px; padding:0 6px; vertical-align:middle; text-align:center; cursor:pointer; }
+  .gap.ok { color:var(--ok); border-color:var(--ok); }
+  .gap.bad { color:var(--bad); border-color:var(--bad); }
+  .gap input, .gap select { font:inherit; width:100%; border:none; background:transparent; color:var(--text); text-align:center; }
+  .bank { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+  .chip { padding:6px 10px; border-radius:999px; border:1px solid var(--line); }
+  .chip.used { opacity:.35; text-decoration:line-through; cursor:default; }
+  .chip.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
+  .score { color:var(--muted); }
+</style>
+</head>
+<body>
+<h1 id="title">Загрузка…</h1>
+<div class="modes">
+  <button data-mode="word_bank">Банк слов</button>
+  <button data-mode="dropdown">Выпадающий список</button>
+  <button data-mode="typing">Ввод вручную</button>
+</div>
+<div id="root"></div>
+<div class="bank" id="bank"></div>
+<div class="actions">
+  <button class="primary" id="check">Проверить</button>
+  <button id="reset">Начать заново</button>
+  <span class="score" id="score"></span>
+</div>
+
+<script>
+const id = new URLSearchParams(location.search).get('id') || 'ex-001';
+let data = null, mode = 'word_bank', gaps = [], selected = null, checked = false;
+
+const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
+const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+
+function parse(text) {
+  return text.split(/\{([^}]+)\}/).map((part, i) => i % 2 === 1 ? { gap: part } : { txt: part });
+}
+
+function build() {
+  gaps = [];
+  data.items.forEach((item, itemIndex) => {
+    parse(item.text).forEach(p => { if (p.gap) gaps.push({ answer: p.gap, value: '', lang: item.lang }); });
+  });
+}
+
+function bankWords() {
+  const words = gaps.map(g => g.answer);
+  data.items.forEach(item => (item.distractors || []).forEach(d => words.push(d)));
+  return shuffle([...new Set(words)]);
+}
+
+function render() {
+  checked = false;
+  document.getElementById('title').textContent = data.title;
+  document.querySelectorAll('.modes button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  const root = document.getElementById('root');
+  root.innerHTML = '';
+  let gi = 0;
+  data.items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const label = document.createElement('div');
+    label.className = 'lang';
+    label.textContent = item.lang;
+    card.appendChild(label);
+    parse(item.text).forEach(p => {
+      if (!p.gap) { card.appendChild(document.createTextNode(p.txt)); return; }
+      const idx = gi++;
+      card.appendChild(makeGap(idx));
+    });
+    root.appendChild(card);
+  });
+  renderBank();
+  document.getElementById('score').textContent = '';
+}
+
+function makeGap(idx) {
+  const g = gaps[idx];
+  const el = document.createElement('span');
+  el.className = 'gap';
+  el.dataset.idx = idx;
+  if (mode === 'typing') {
+    const input = document.createElement('input');
+    input.value = g.value;
+    input.placeholder = '…';
+    input.oninput = () => { g.value = input.value; };
+    el.appendChild(input);
+  } else if (mode === 'dropdown') {
+    const sel = document.createElement('select');
+    sel.innerHTML = '<option value=""></option>' + dropdownPool().map(w => `<option>${w}</option>`).join('');
+    sel.value = g.value;
+    sel.onchange = () => { g.value = sel.value; };
+    el.appendChild(sel);
+  } else {
+    el.textContent = g.value;
+    el.onclick = () => {
+      if (g.value) { g.value = ''; } else if (selected) { g.value = selected; selected = null; }
+      render();
+    };
+  }
+  return el;
+}
+
+function dropdownPool() {
+  return shuffle([...new Set([...gaps.map(g => g.answer), ...data.items.flatMap(i => i.distractors || [])])]);
+}
+
+function renderBank() {
+  const bank = document.getElementById('bank');
+  bank.innerHTML = '';
+  if (mode !== 'word_bank') return;
+  const used = new Set(gaps.map(g => g.value).filter(Boolean));
+  bankWords().forEach(w => {
+    const chip = document.createElement('span');
+    chip.className = 'chip' + (used.has(w) ? ' used' : '') + (selected === w ? ' selected' : '');
+    chip.textContent = w;
+    if (!used.has(w)) chip.onclick = () => { selected = selected === w ? null : w; render(); };
+    bank.appendChild(chip);
+  });
+}
+
+function check() {
+  checked = true;
+  let ok = 0;
+  document.querySelectorAll('.gap').forEach(el => {
+    const g = gaps[el.dataset.idx];
+    const right = norm(g.value) === norm(g.answer);
+    if (right) ok++;
+    el.classList.remove('ok', 'bad');
+    el.classList.add(right ? 'ok' : 'bad');
+  });
+  document.getElementById('score').textContent = `Верно: ${ok} из ${gaps.length}`;
+}
+
+document.querySelectorAll('.modes button').forEach(b => b.onclick = () => { mode = b.dataset.mode; selected = null; render(); });
+document.getElementById('check').onclick = check;
+document.getElementById('reset').onclick = () => { gaps.forEach(g => g.value = ''); selected = null; render(); };
+
+fetch(`${id}.json`, { cache: 'no-store' })
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(d => { data = d; build(); render(); })
+  .catch(() => { document.getElementById('title').textContent = 'Упражнение не найдено'; });
+</script>
+</body>
+</html>

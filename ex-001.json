@@ -1,0 +1,26 @@
+{
+  "id": "ex-001",
+  "title": "Тестовое упражнение: Fill Blanks",
+  "items": [
+    {
+      "lang": "en",
+      "text": "The bartender {poured} the drink into the {glass}.",
+      "distractors": ["cup", "served", "bottle"]
+    },
+    {
+      "lang": "ru",
+      "text": "Бармен {налил} напиток в {бокал}.",
+      "distractors": ["стакан", "подал", "бутылку"]
+    },
+    {
+      "lang": "ka",
+      "text": "ბარმენმა სასმელი ჭიქაში {ჩამოასხა}.",
+      "distractors": ["დალია", "ბოთლი"]
+    },
+    {
+      "lang": "en",
+      "text": "Every evening, the bartender {prepares} the cocktails. First he {mixes} the ingredients, then he {pours} them into a glass with ice.",
+      "distractors": ["cleans", "orders", "chooses"]
+    }
+  ]
+}
