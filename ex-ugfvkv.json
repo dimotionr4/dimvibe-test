@@ -1,0 +1,46 @@
+{
+  "id": "ex-ugfvkv",
+  "module": "fill_blanks",
+  "format": 2,
+  "published": true,
+  "title": "",
+  "layout": "text",
+  "mode": "word_bank",
+  "items": [
+    {
+      "id": "s1",
+      "parts": [
+        {
+          "gap": "g1"
+        },
+        " features several popular urban hiking trails and nature walks that ",
+        {
+          "gap": "g2"
+        },
+        " the city to surrounding ridges, lakes, and historical ",
+        {
+          "gap": "g3"
+        },
+        ". You can explore the top-rated local options on AllTrails."
+      ]
+    }
+  ],
+  "gaps": {
+    "g1": {
+      "answer": "Tbilisi",
+      "alternatives": [],
+      "hint": ""
+    },
+    "g2": {
+      "answer": "connect",
+      "alternatives": [],
+      "hint": ""
+    },
+    "g3": {
+      "answer": "landmarks",
+      "alternatives": [],
+      "hint": ""
+    }
+  },
+  "distractors": []
+}
