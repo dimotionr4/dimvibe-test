@@ -70,7 +70,8 @@
     #work { padding:12px; }
   }
 </style>
-<link rel="stylesheet" href="modules/fill-blanks/editor.css">
+<!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
+<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=3">
 </head>
 <body>
 <aside>
@@ -112,12 +113,14 @@
       <span class="muted grow">Так увидит ученик. Ответы здесь никуда не сохраняются.</span>
       <button id="previewClose">Закрыть</button>
     </div>
+    <div id="previewMsg" class="warn" hidden></div>
     <div class="stage" id="stage"><iframe id="previewFrame" title="Предпросмотр"></iframe></div>
   </div>
 </div>
 
-<script src="modules/fill-blanks/editor.js"></script>
+<script src="modules/fill-blanks/editor.js?v=3"></script>
 <script>
+const ASSET_V = 3;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -316,12 +319,26 @@ function renderPublish() {
 }
 
 // Предпросмотр: плеер (index.html?preview) сообщает, что готов, и получает данные черновика
+let previewTimer = null;
+
+function previewProblem(text) {
+  $('previewMsg').textContent = text;
+  $('previewMsg').hidden = false;
+}
+
 function openPreview() {
-  $('previewFrame').src = 'index.html?preview=1';
+  $('previewMsg').hidden = true;
+  $('previewFrame').src = 'index.html?preview=1&v=' + ASSET_V;
   $('preview').hidden = false;
+  // Если плеер за 5 секунд не попросил данные (например, браузер взял старую копию страницы), говорим об этом прямо
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => {
+    previewProblem('Предпросмотр не загрузился. Обновите страницу редактора клавишами Ctrl+F5 и попробуйте снова.');
+  }, 5000);
 }
 
 function closePreview() {
+  clearTimeout(previewTimer);
   $('preview').hidden = true;
   $('previewFrame').src = 'about:blank';
 }
@@ -329,7 +346,12 @@ function closePreview() {
 addEventListener('message', e => {
   if (e.origin !== location.origin || e.source !== $('previewFrame').contentWindow) return;
   if (e.data && e.data.type === 'dimvibe-preview-ready' && current) {
-    e.source.postMessage({ type: 'dimvibe-preview', exercise: exerciseFor(current, true) }, location.origin);
+    clearTimeout(previewTimer);
+    try {
+      e.source.postMessage({ type: 'dimvibe-preview', exercise: exerciseFor(current, true) }, location.origin);
+    } catch (err) {
+      previewProblem('Не удалось подготовить черновик для предпросмотра. Проверьте вкладку «Содержимое»: возможно, в тексте есть пропуск без данных.');
+    }
   }
 });
 
