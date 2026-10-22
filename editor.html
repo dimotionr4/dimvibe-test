@@ -11,11 +11,12 @@
   }
   * { box-sizing: border-box; }
   body { margin:0; min-height:100vh; display:flex; background:var(--bg); color:var(--text); font-family: system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.5; }
-  button, input, select { font:inherit; color:var(--text); }
+  button, input, select, textarea { font:inherit; color:var(--text); }
   button { border:1px solid var(--line); background:var(--card); border-radius:8px; padding:6px 12px; min-height:36px; cursor:pointer; }
   button:disabled { opacity:.5; cursor:default; }
   button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
-  input, select { border:1px solid var(--line); background:var(--card); border-radius:8px; padding:6px 10px; min-height:36px; }
+  input, select, textarea { border:1px solid var(--line); background:var(--card); border-radius:8px; padding:6px 10px; min-height:36px; }
+  code { background:var(--accent-soft); border-radius:4px; padding:0 4px; }
 
   /* Слева список черновиков, справа редактор */
   aside { flex:none; width:260px; border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:10px; }
@@ -38,6 +39,31 @@
   .warn { background:#fff3cd; color:#5c4400; border-radius:8px; padding:8px 12px; margin-bottom:12px; }
   #empty { margin:15vh auto 0; text-align:center; color:var(--muted); }
 
+  /* Вкладка «Публикация» */
+  .pub { max-width:720px; }
+  .pub h3 { font-size:1rem; margin:22px 0 6px; }
+  .pub ol { padding-left:22px; margin:6px 0; }
+  .pub li { margin-bottom:4px; }
+  .status { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:0 0 12px; }
+  .status.changed { border-color:var(--accent); }
+  .problems { border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin-bottom:12px; }
+  .problems.bad { border-color:var(--bad); }
+  .problems ul { margin:4px 0 0; padding-left:20px; }
+  .pub-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .copy { display:flex; gap:6px; align-items:flex-start; }
+  .copy input, .copy textarea { flex:1; min-width:0; font-family:ui-monospace, Consolas, monospace; font-size:.85rem; resize:vertical; }
+
+  /* Предпросмотр: настоящий плеер в рамке высотой 600 px, как в LearnWorlds */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; z-index:10; }
+  .modal[hidden] { display:none; }
+  .modal-box { background:var(--bg); border-radius:12px; padding:12px; width:min(1000px, 100%); }
+  .modal-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .modal-bar .grow { flex:1; }
+  .modal-bar button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .stage { display:flex; justify-content:center; }
+  #previewFrame { width:100%; height:600px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+  .stage.phone #previewFrame { width:375px; }
+
   @media (max-width: 760px) {
     body { flex-direction:column; }
     aside { width:auto; border-right:none; border-bottom:1px solid var(--line); }
@@ -49,6 +75,8 @@
 <body>
 <aside>
   <button class="primary" id="new">+ Новое упражнение</button>
+  <button id="openFile">Открыть файл упражнения</button>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
   <h2>Мои упражнения</h2>
   <div id="list"></div>
 </aside>
@@ -62,27 +90,43 @@
     <div class="top">
       <input id="title" placeholder="Название упражнения">
       <span class="muted" id="saved"></span>
+      <button id="previewBtn">Предпросмотр</button>
     </div>
     <div class="muted" style="margin:-4px 0 10px">Номер: <span id="draftId"></span> · черновик хранится только в этом браузере</div>
     <nav class="tabs">
-      <button class="active">Содержимое</button>
+      <button data-tab="content">Содержимое</button>
       <button disabled title="Будет позже">Дизайн</button>
       <button disabled title="Будет позже">Поведение</button>
-      <button disabled title="Будет позже">Публикация</button>
+      <button data-tab="publish">Публикация</button>
     </nav>
     <div id="content"></div>
   </div>
 </div>
 
+<div id="preview" class="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-bar">
+      <b>Предпросмотр</b>
+      <button data-size="desktop" class="active">Компьютер</button>
+      <button data-size="phone">Телефон</button>
+      <span class="muted grow">Так увидит ученик. Ответы здесь никуда не сохраняются.</span>
+      <button id="previewClose">Закрыть</button>
+    </div>
+    <div class="stage" id="stage"><iframe id="previewFrame" title="Предпросмотр"></iframe></div>
+  </div>
+</div>
+
 <script src="modules/fill-blanks/editor.js"></script>
 <script>
-// Ядро редактора: черновики в браузере, название, вкладки, автосохранение.
-// Содержимое задания рисует редактор модуля (MODULES), ядро в него не вмешивается.
+// Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
+// Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
 const MODULES = { fill_blanks: FillBlanksEditor };
-let drafts = {}, current = null, savedTimer = null;
+let drafts = {}, current = null, tab = 'content', savedTimer = null;
 
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const when = iso => new Date(iso).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 function warn(text) { $('warn').textContent = text; $('warn').hidden = false; }
 
@@ -119,6 +163,7 @@ function createDraft() {
   const id = newId();
   drafts[id] = { id, title: '', ...MODULES.fill_blanks.create(), updatedAt: new Date().toISOString() };
   writeStore();
+  tab = 'content';
   open(id);
   $('title').focus();
 }
@@ -130,8 +175,15 @@ function open(id) {
   $('editor').hidden = false;
   $('title').value = current.title;
   $('draftId').textContent = current.id;
-  MODULES[current.module].render($('content'), current, touch);
+  showTab(tab);
   renderList();
+}
+
+function showTab(name) {
+  tab = name;
+  document.querySelectorAll('.tabs [data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  if (name === 'publish') renderPublish();
+  else MODULES[current.module].render($('content'), current, touch);
 }
 
 function removeDraft(id) {
@@ -164,9 +216,9 @@ function renderList() {
     btn.className = 'draft-open';
     const name = document.createElement('b');
     name.textContent = dr.title || 'Без названия';
-    const when = document.createElement('small');
-    when.textContent = new Date(dr.updatedAt).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    btn.append(name, when);
+    const date = document.createElement('small');
+    date.textContent = when(dr.updatedAt);
+    btn.append(name, date);
     btn.onclick = () => open(dr.id);
     const del = document.createElement('button');
     del.className = 'draft-del';
@@ -178,9 +230,151 @@ function renderList() {
   });
 }
 
+// Файл упражнения в том виде, в каком его получит плеер
+function exerciseFor(draft, published) {
+  const body = MODULES[draft.module].exportData(draft);
+  return { id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body };
+}
+
+const snapshot = draft => JSON.stringify(exerciseFor(draft, true));
+
+function download(exercise) {
+  const blob = new Blob([JSON.stringify(exercise, null, 2) + '\n'], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = exercise.id + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function publicationStatus() {
+  const pub = current.publication;
+  if (!pub) return { text: 'Ещё не публиковалось.' };
+  if (pub.state === 'unpublished') {
+    const base = pub.at ? `Файл «снято с публикации» скачан ${when(pub.at)}.` : 'Черновик открыт из файла упражнения, снятого с публикации.';
+    return { text: `${base} После отправки через GitHub Desktop ученик видит «Упражнение сейчас недоступно».` };
+  }
+  const base = pub.at ? `Файл публикации скачан ${when(pub.at)}.` : 'Черновик открыт из файла опубликованного упражнения.';
+  if (pub.snapshot !== snapshot(current)) return { text: `${base} После этого есть изменения: ученики их не увидят, пока вы не опубликуете снова.`, changed: true };
+  return { text: `${base} После отправки через GitHub Desktop ученики видят эту версию.` };
+}
+
+function renderPublish() {
+  const { errors, warnings } = MODULES[current.module].validate(current);
+  if (!current.title.trim()) warnings.push('Нет названия: ученик увидит пустой заголовок.');
+  const id = current.id;
+  const url = new URL('./', location.href).href + '?id=' + id;
+  const code = `<iframe src="${url}" width="100%" height="600" style="border:0;" title="${esc(current.title.trim() || id)}"></iframe>`;
+  const status = publicationStatus();
+  const list = items => '<ul>' + items.map(t => `<li>${esc(t)}</li>`).join('') + '</ul>';
+  $('content').innerHTML = `
+    <section class="pub">
+      <p class="status${status.changed ? ' changed' : ''}">${esc(status.text)}</p>
+      ${errors.length ? `<div class="problems bad"><b>Чтобы опубликовать, исправьте:</b>${list(errors)}</div>` : ''}
+      ${warnings.length ? `<div class="problems"><b>Обратите внимание:</b>${list(warnings)}</div>` : ''}
+      <div class="pub-actions">
+        <button class="primary" id="publish"${errors.length ? ' disabled' : ''}>Опубликовать (скачать файл)</button>
+        <button id="unpublish">Снять с публикации (скачать файл)</button>
+      </div>
+
+      <h3>Как отправить файл ученикам</h3>
+      <ol>
+        <li>Нажмите кнопку выше. В папку «Загрузки» скачается файл <code>${id}.json</code>.</li>
+        <li>Переложите его в папку проекта <code>dimvibe-test</code>, рядом с <code>index.html</code>. Если там уже есть файл с таким именем, замените его.
+          Если браузер назвал файл <code>${id} (1).json</code>, переименуйте его в <code>${id}.json</code>.</li>
+        <li>В GitHub Desktop: Commit to main, затем Push origin. Через минуту ученики увидят новую версию.</li>
+      </ol>
+      <p class="muted">Пока файл не отправлен, ученики видят прежнюю версию. Черновик в редакторе им не виден.</p>
+
+      <h3>Ссылка для ученика</h3>
+      <div class="copy"><input readonly value="${esc(url)}"><button data-copy>Копировать</button></div>
+
+      <h3>Код для LearnWorlds (блок Embed)</h3>
+      <div class="copy"><textarea readonly rows="3">${esc(code)}</textarea><button data-copy>Копировать</button></div>
+      <p class="muted">Код вставляется один раз. После новых публикаций его менять не нужно.</p>
+    </section>`;
+
+  $('publish').onclick = () => {
+    download(exerciseFor(current, true));
+    current.publication = { state: 'published', at: new Date().toISOString(), snapshot: snapshot(current) };
+    touch();
+    renderPublish();
+  };
+  $('unpublish').onclick = () => {
+    download(exerciseFor(current, false));
+    current.publication = { state: 'unpublished', at: new Date().toISOString(), snapshot: snapshot(current) };
+    touch();
+    renderPublish();
+  };
+  $('content').querySelectorAll('[data-copy]').forEach(btn => btn.onclick = () => {
+    const field = btn.previousElementSibling;
+    field.select();
+    const done = () => { btn.textContent = 'Скопировано'; setTimeout(() => { btn.textContent = 'Копировать'; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(field.value).then(done, () => { document.execCommand('copy'); done(); });
+    else { document.execCommand('copy'); done(); }
+  });
+}
+
+// Предпросмотр: плеер (index.html?preview) сообщает, что готов, и получает данные черновика
+function openPreview() {
+  $('previewFrame').src = 'index.html?preview=1';
+  $('preview').hidden = false;
+}
+
+function closePreview() {
+  $('preview').hidden = true;
+  $('previewFrame').src = 'about:blank';
+}
+
+addEventListener('message', e => {
+  if (e.origin !== location.origin || e.source !== $('previewFrame').contentWindow) return;
+  if (e.data && e.data.type === 'dimvibe-preview-ready' && current) {
+    e.source.postMessage({ type: 'dimvibe-preview', exercise: exerciseFor(current, true) }, location.origin);
+  }
+});
+
+document.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-size]').forEach(x => x.classList.toggle('active', x === b));
+  $('stage').classList.toggle('phone', b.dataset.size === 'phone');
+});
+$('previewBtn').onclick = openPreview;
+$('previewClose').onclick = closePreview;
+$('preview').onclick = e => { if (e.target === $('preview')) closePreview(); };
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('preview').hidden) closePreview(); });
+
+// Открыть опубликованный файл, например чтобы поправить упражнение на другом компьютере
+async function openFile(f) {
+  try {
+    const file = JSON.parse(await f.text());
+    if (!file || !MODULES[file.module]) throw new Error('Это не файл упражнения DimVibe.');
+    if (!/^ex-[a-z0-9]+$/.test(file.id || '')) throw new Error('В файле нет правильного номера упражнения.');
+    if (drafts[file.id] && !confirm(`Черновик «${drafts[file.id].title || file.id}» уже есть в этом браузере. Заменить его содержимым файла?`)) return;
+    const draft = { id: file.id, title: String(file.title || ''), ...MODULES[file.module].load(file), updatedAt: new Date().toISOString() };
+    draft.publication = { state: file.published === false ? 'unpublished' : 'published', at: null, snapshot: snapshot(draft) };
+    drafts[file.id] = draft;
+    writeStore();
+    tab = 'content';
+    open(file.id);
+  } catch (e) {
+    alert('Не удалось открыть файл. ' + (e instanceof SyntaxError ? 'Файл повреждён или это не файл упражнения.' : e.message));
+  }
+}
+
+$('openFile').onclick = () => $('fileInput').click();
+$('fileInput').onchange = () => {
+  const f = $('fileInput').files[0];
+  $('fileInput').value = '';
+  if (f) openFile(f);
+};
+
 $('new').onclick = createDraft;
 $('new2').onclick = createDraft;
-$('title').oninput = () => { current.title = $('title').value; touch(); };
+$('title').oninput = () => {
+  current.title = $('title').value;
+  touch();
+  if (tab === 'publish') renderPublish();
+};
+document.querySelectorAll('.tabs [data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 
 readStore();
 let last = null;

@@ -390,5 +390,68 @@ const FillBlanksEditor = (() => {
     d.distractors.forEach((w, i) => bankChips.append(tag(w, () => { d.distractors.splice(i, 1); save(); drawBank(); }, 'fb-trap')));
   }
 
-  return { create, render };
+  const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
+
+  // Данные для файла упражнения: без пустых предложений, лишних пробелов и стёртых из текста пропусков
+  function exportData(draft) {
+    const items = draft.items
+      .filter(i => i.parts.some(p => isGap(p) || p.trim()))
+      .map(i => {
+        const parts = i.parts.map((p, k) => {
+          if (isGap(p)) return p;
+          let s = p.replace(/\s+/g, ' ');
+          if (k === 0) s = s.trimStart();
+          if (k === i.parts.length - 1) s = s.trimEnd();
+          return s;
+        }).filter(p => p !== '');
+        return { id: i.id, parts };
+      });
+    const gaps = {};
+    items.forEach(i => i.parts.filter(isGap).forEach(p => {
+      const g = draft.gaps[p.gap];
+      gaps[p.gap] = { answer: clean(g.answer), alternatives: (g.alternatives || []).map(clean).filter(Boolean), hint: clean(g.hint) };
+    }));
+    return { module: 'fill_blanks', format: 2, layout: draft.layout, mode: draft.mode, items, gaps, distractors: draft.distractors.map(clean).filter(Boolean) };
+  }
+
+  // errors не дают опубликовать, warnings — только предупреждают
+  function validate(draft) {
+    const ex = exportData(draft), errors = [], warnings = [];
+    const order = ex.items.flatMap(i => i.parts.filter(isGap).map(p => p.gap));
+    if (!order.length) errors.push('Нет ни одного пропуска.');
+    if (order.length > MAX_GAPS) errors.push(`Пропусков больше ${MAX_GAPS}. Разделите задание на два.`);
+    order.forEach((id, n) => { if (!ex.gaps[id].answer) errors.push(`Пропуск ${n + 1}: нет правильного ответа.`); });
+    if (ex.mode === 'dropdown' && order.length) {
+      const pool = new Set([...order.flatMap(id => [ex.gaps[id].answer, ...ex.gaps[id].alternatives]), ...ex.distractors].map(norm).filter(Boolean));
+      order.forEach((id, n) => {
+        const right = new Set([ex.gaps[id].answer, ...ex.gaps[id].alternatives].map(norm));
+        if (![...pool].some(w => !right.has(w))) errors.push(`Пропуск ${n + 1}: в выпадающем списке нет неверного варианта. Добавьте слово-ловушку.`);
+      });
+      if (pool.size > 8) warnings.push(`В выпадающем списке ${pool.size} вариантов. Обычно хватает 3–5.`);
+    }
+    return { errors, warnings };
+  }
+
+  // Файл упражнения → поля черновика. Недостающее заполняется, пропуски без данных выбрасываются
+  function load(file) {
+    if (!Array.isArray(file.items)) throw new Error('В файле нет предложений.');
+    const gaps = {};
+    Object.entries(file.gaps || {}).forEach(([id, g]) => {
+      gaps[id] = { answer: String(g.answer || ''), alternatives: Array.isArray(g.alternatives) ? g.alternatives.map(String) : [], hint: String(g.hint || '') };
+    });
+    const items = file.items.map((i, k) => {
+      const parts = (Array.isArray(i.parts) ? i.parts : []).filter(p => typeof p === 'string' || (p && gaps[p.gap]));
+      return { id: String(i.id || 's' + (k + 1)), parts: parts.length ? parts : [''] };
+    });
+    return {
+      ...create(),
+      layout: file.layout === 'text' ? 'text' : 'sentences',
+      mode: ['word_bank', 'dropdown', 'typing'].includes(file.mode) ? file.mode : 'word_bank',
+      items: items.length ? items : create().items,
+      gaps,
+      distractors: Array.isArray(file.distractors) ? file.distractors.map(String) : [],
+    };
+  }
+
+  return { create, render, load, exportData, validate };
 })();
