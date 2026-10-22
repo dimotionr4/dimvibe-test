@@ -16,9 +16,14 @@ const FillBlanksEditor = (() => {
     return e;
   }
 
-  function create() {
-    return { module: 'fill_blanks', format: 2, layout: 'sentences', mode: 'word_bank', items: [{ id: 's1', parts: [''] }], gaps: {}, distractors: [] };
+  // layout выбирается один раз при создании упражнения и потом не меняется:
+  // 'sentences' — отдельные предложения, 'text' — связный текст (его абзацы хранятся как items)
+  function create(layout) {
+    return { module: 'fill_blanks', format: 2, layout: layout === 'text' ? 'text' : 'sentences', mode: 'word_bank', items: [{ id: 's1', parts: [''] }], gaps: {}, distractors: [] };
   }
+
+  const isText = () => d.layout === 'text';
+  const LAYOUT_NAME = { sentences: 'Отдельные предложения', text: 'Связный текст' };
 
   function render(container, draft, onSave) {
     root = container;
@@ -86,8 +91,10 @@ const FillBlanksEditor = (() => {
   function draw() {
     root.innerHTML = '';
     const opts = el('div', 'fb-row');
+    const kind = el('div', 'fb-field', 'Вид текста');
+    kind.append(el('div', 'fb-kind', LAYOUT_NAME[d.layout]), el('small', '', 'Выбирается при создании упражнения'));
     opts.append(
-      select('Вид текста', [['sentences', 'Отдельные предложения'], ['text', 'Связный текст (будет позже)', true]], d.layout, v => { d.layout = v; save(); }),
+      kind,
       select('Способ ответа', [['word_bank', 'Банк слов'], ['dropdown', 'Выпадающий список'], ['typing', 'Ввод вручную']], d.mode, v => { d.mode = v; save(); })
     );
 
@@ -104,14 +111,16 @@ const FillBlanksEditor = (() => {
     const grid = el('div', 'fb-grid');
     const left = el('div', 'fb-left');
     d.items.forEach((item, i) => left.append(sentence(item, i)));
-    const add = el('button', 'fb-add', '+ Предложение');
+    left.classList.toggle('fb-textmode', isText());
+    const add = el('button', 'fb-add', isText() ? '+ Абзац' : '+ Предложение');
     add.onclick = () => addSentence(d.items.length);
     left.append(add, bankSection());
     panelBox = el('div', 'fb-panel-box');
     grid.append(left, panelBox);
 
     root.append(opts, bar,
-      el('p', 'fb-help', 'Выделите слово или фразу в предложении (двойной щелчок выделяет одно слово) и нажмите «Сделать пропуском». Нажмите на пропуск, чтобы настроить ответ.'),
+      el('p', 'fb-help', (isText() ? 'Вставьте или наберите текст, Enter начинает новый абзац. ' : '')
+        + `Выделите слово или фразу ${isText() ? 'в тексте' : 'в предложении'} (двойной щелчок выделяет одно слово) и нажмите «Сделать пропуском». Нажмите на пропуск, чтобы настроить ответ.`),
       msg, grid);
     updateCounter();
     drawBank();
@@ -135,11 +144,11 @@ const FillBlanksEditor = (() => {
 
   function sentence(item, i) {
     const card = el('div', 'fb-sentence');
-    card.append(el('span', 'fb-num', `${i + 1}.`));
+    if (!isText()) card.append(el('span', 'fb-num', `${i + 1}.`));
     const ed = el('div', 'fb-edit');
     ed.contentEditable = 'true';
     ed.dataset.item = item.id;
-    ed.dataset.placeholder = 'Введите предложение…';
+    ed.dataset.placeholder = isText() ? 'Введите или вставьте текст…' : 'Введите предложение…';
     fillDom(ed, item.parts);
     ed.oninput = () => {
       item.parts = readDom(ed);
@@ -156,7 +165,21 @@ const FillBlanksEditor = (() => {
     };
     ed.onpaste = e => {
       e.preventDefault();
-      document.execCommand('insertText', false, e.clipboardData.getData('text/plain').replace(/\s+/g, ' '));
+      const raw = e.clipboardData.getData('text/plain');
+      // В связном тексте каждая строка вставленного текста становится отдельным абзацем
+      const paras = isText() ? raw.split(/\r?\n/).map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean) : [];
+      if (paras.length < 2) { document.execCommand('insertText', false, raw.replace(/\s+/g, ' ')); return; }
+      document.execCommand('insertText', false, paras[0]);
+      item.parts = readDom(ed);
+      let at = d.items.indexOf(item) + 1;
+      const ids = d.items.map(i => i.id);
+      paras.slice(1).forEach(p => {
+        const id = nextId('s', ids);
+        ids.push(id);
+        d.items.splice(at++, 0, { id, parts: [p] });
+      });
+      save();
+      draw();
     };
     ed.ondrop = e => e.preventDefault();
     ed.onclick = e => {
@@ -169,7 +192,7 @@ const FillBlanksEditor = (() => {
     card.append(ed);
     if (d.items.length > 1) {
       const del = el('button', 'fb-icon', '×');
-      del.title = 'Удалить предложение';
+      del.title = isText() ? 'Удалить абзац' : 'Удалить предложение';
       del.onclick = () => removeSentence(item);
       card.append(del);
     }
@@ -248,7 +271,7 @@ const FillBlanksEditor = (() => {
 
   function removeSentence(item) {
     const ids = item.parts.filter(isGap).map(p => p.gap);
-    if (ids.length && !confirm(`Удалить предложение вместе с пропусками (${ids.length})?`)) return;
+    if (ids.length && !confirm(`Удалить ${isText() ? 'абзац' : 'предложение'} вместе с пропусками (${ids.length})?`)) return;
     d.items.splice(d.items.indexOf(item), 1);
     ids.forEach(id => delete d.gaps[id]);
     if (ids.includes(openGap)) openGap = null;

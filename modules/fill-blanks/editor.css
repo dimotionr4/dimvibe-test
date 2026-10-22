@@ -2,6 +2,13 @@
 .fb-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
 .fb-field { display:flex; flex-direction:column; gap:4px; font-size:.9rem; color:var(--muted); margin-bottom:10px; }
 .fb-field input, .fb-field select { color:var(--text); font-size:1rem; }
+.fb-kind { color:var(--text); font-size:1rem; min-height:36px; display:flex; align-items:center; }
+.fb-field small { font-size:.8rem; }
+/* Связный текст: абзацы стоят плотно, как один текст */
+.fb-textmode .fb-sentence { margin-bottom:-1px; border-radius:0; }
+.fb-textmode .fb-sentence:first-child { border-radius:12px 12px 0 0; }
+.fb-textmode .fb-sentence:nth-last-of-type(1) { border-radius:0 0 12px 12px; margin-bottom:8px; }
+.fb-textmode .fb-sentence:only-of-type { border-radius:12px; }
 .fb-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
 .fb-muted { color:var(--muted); }
 .fb-limit { color:var(--bad); font-weight:600; }
