@@ -38,6 +38,7 @@
   .chip.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
   .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .score { color:var(--muted); }
+  .unavailable { flex:1; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; color:var(--muted); font-size:1.1rem; }
 </style>
 </head>
 <body>
@@ -189,10 +190,18 @@ document.getElementById('reset').onclick = () => {
   document.getElementById('main').scrollTop = 0;
 };
 
+// Снято с публикации или не найдено: ученик видит только сообщение, без кнопок
+function showUnavailable() {
+  document.body.innerHTML = '<div class="unavailable">Упражнение сейчас недоступно</div>';
+}
+
 fetch(`${id}.json`, { cache: 'no-store' })
   .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-  .then(d => { data = d; build(); render(); })
-  .catch(() => { document.getElementById('title').textContent = 'Упражнение не найдено'; });
+  .then(d => {
+    if (d.published === false) { showUnavailable(); return; }
+    data = d; build(); render();
+  })
+  .catch(showUnavailable);
 </script>
 </body>
 </html>
