@@ -1,4 +1,4 @@
-// Редактор модуля Multiple Choice: вопросы с вариантами; у каждого вопроса Single Choice (один верный) или Multiple Select (один и больше).
+﻿// Редактор модуля Multiple Choice: вопросы с вариантами; у каждого вопроса Single Choice (один верный) или Multiple Select (один и больше).
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Правильные ответы хранятся по ID вариантов, поэтому перестановка и правка текста их не сбивают.
 const MultipleChoiceEditor = (() => {
@@ -8,6 +8,7 @@ const MultipleChoiceEditor = (() => {
   const { nextId } = GapEngine;
   let d, root, save, openId = null, delAsk = null, msgTimer = null, drag = null;
   let msg, counter, listBox, addBtn;
+  const optOpen = new Set(); // раскрытые панели картинки и звука вариантов: «ID вопроса:ID варианта»
 
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
 
@@ -20,8 +21,33 @@ const MultipleChoiceEditor = (() => {
   const svg = inner => `<svg class="mc-ico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
 
-  const newOptions = n => Array.from({ length: n }, (_, k) => ({ id: 'o' + (k + 1), text: '' }));
-  const newItem = id => ({ id, text: '', mode: '', options: newOptions(DEFAULT_OPT), correct: [] });
+  const emptyImage = () => ({ media: '', url: '', alt: '' });
+  const newOption = id => ({ id, text: '', image: emptyImage(), audio: '' });
+  const newOptions = n => Array.from({ length: n }, (_, k) => newOption('o' + (k + 1)));
+  const newItem = id => ({ id, text: '', mode: '', options: newOptions(DEFAULT_OPT), correct: [], image: { ...emptyImage(), align: 'top' }, audio: '' });
+  const ALIGNS = { top: 'Сверху', bottom: 'Снизу', left: 'Слева', right: 'Справа' };
+  const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
+  const FITS = { contain: 'Вписать целиком', cover: 'Заполнить рамку' };
+  const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
+  const hasOptContent = o => !!clean(o.text) || hasPic(o.image);
+  // Черновики, сделанные до картинок и звука, получают пустые поля
+  function normalize() {
+    d.items.forEach(it => {
+      if (!it.image) it.image = { ...emptyImage(), align: 'top' };
+      if (!ALIGNS[it.image.align]) it.image.align = 'top';
+      if (typeof it.audio !== 'string') it.audio = '';
+      it.options.forEach(o => { if (!o.image) o.image = emptyImage(); if (typeof o.audio !== 'string') o.audio = ''; });
+    });
+  }
+  // Файл упражнения: {media | url, alt} или null; звук — {media} или null
+  const imageOut = (im, extra) => {
+    if (!im) return null;
+    const alt = clean(im.alt), media = safeMediaPath(im.media);
+    if (media) return { media, alt, ...extra };
+    const url = safeImageUrl(im.url);
+    return url ? { url, alt, ...extra } : null;
+  };
+  const audioOut = p => { const m = safeMediaPath(p); return m ? { media: m } : null; };
   // '' в вопросе — «как в общих настройках»
   const modeOf = it => (it.mode === 'single' || it.mode === 'multiple' ? it.mode : d.mode === 'multiple' ? 'multiple' : 'single');
 
@@ -33,6 +59,7 @@ const MultipleChoiceEditor = (() => {
     root = container;
     d = draft;
     save = onSave;
+    normalize();
     if (!d.items.some(i => i.id === openId)) openId = d.items.length ? d.items[0].id : null;
     delAsk = null;
     draw();
@@ -95,7 +122,7 @@ const MultipleChoiceEditor = (() => {
   const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
 
   function summary(it) {
-    const filled = it.options.filter(o => clean(o.text)).length, n = it.correct.length;
+    const filled = it.options.filter(hasOptContent).length, n = it.correct.length;
     return `${modeOf(it) === 'multiple' ? 'Multiple' : 'Single'} · вариантов: ${filled} · верных: ${n}`;
   }
 
@@ -169,6 +196,64 @@ const MultipleChoiceEditor = (() => {
     return r;
   }
 
+  // Выбор картинки: загрузка и медиатека (mediaPicker из ядра), ссылка https, описание, «Убрать»; для картинки вопроса ещё положение.
+  // im — объект {media, url, alt[, align]}, меняется на месте; redraw вызывается, когда картинка появилась или исчезла
+  function imageField(im, withAlign, redraw) {
+    const box = el('div', 'mc-imgf');
+    const pic = hasPic(im);
+    if (pic) {
+      const th = el('span', 'mc-thumb');
+      const src = mediaSrc(safeMediaPath(im.media) ? { media: im.media } : { url: im.url });
+      if (src) { const img = el('img'); img.src = src; img.alt = ''; img.onerror = () => { th.classList.add('broken'); img.remove(); }; th.append(img); }
+      box.append(th);
+    }
+    const row = el('div', 'mc-imgrow');
+    if (window.mediaPicker) row.append(window.mediaPicker('image', () => im.media || '', v => { im.media = v; if (v) im.url = ''; save(); redraw(); }, 'Загрузить картинку'));
+    const linkBtn = el('button', '', 'Ссылка');
+    linkBtn.type = 'button';
+    row.append(linkBtn);
+    if (pic || im.url || im.media) {
+      const rm = el('button', '', 'Убрать');
+      rm.type = 'button';
+      rm.onclick = () => { im.media = ''; im.url = ''; save(); redraw(); };
+      row.append(rm);
+    }
+    box.append(row);
+    const link = el('input');
+    link.placeholder = 'Ссылка на картинку (https://…)';
+    link.value = im.url || '';
+    link.hidden = !im.url;
+    link.setAttribute('aria-label', 'Ссылка на картинку');
+    const bad = el('div', 'mc-warn');
+    bad.hidden = true;
+    link.oninput = () => { im.url = link.value; if (link.value.trim()) im.media = ''; bad.hidden = !link.value.trim() || !!safeImageUrl(link.value); bad.textContent = 'Нужен полный адрес с https://.'; save(); };
+    link.onchange = redraw;
+    linkBtn.onclick = () => { link.hidden = !link.hidden; if (!link.hidden) link.focus(); };
+    box.append(link, bad);
+    if (pic) {
+      const alt = el('input');
+      alt.placeholder = 'Описание картинки для незрячих учеников';
+      alt.value = im.alt || '';
+      alt.setAttribute('aria-label', 'Описание картинки');
+      alt.oninput = () => { im.alt = alt.value; save(); };
+      box.append(alt);
+      if (withAlign) {
+        const seg = el('span', 'mc-seg');
+        Object.entries(ALIGNS).forEach(([v, label]) => {
+          const bt = el('button', im.align === v ? 'active' : '', label);
+          bt.type = 'button';
+          bt.setAttribute('aria-pressed', String(im.align === v));
+          bt.onclick = () => { im.align = v; save(); redraw(); };
+          seg.append(bt);
+        });
+        const al = el('div', 'mc-label mc-labelrow', 'Положение картинки');
+        box.append(al, seg);
+      }
+    }
+    return box;
+  }
+  const audioField = (get, set, label) => (window.mediaPicker ? window.mediaPicker('audio', get, set, label) : el('span'));
+
   // Раскрытый вопрос: текст, тип, варианты (слева отметка верного, справа поле текста)
   function body(it, headTxt) {
     const b = el('div', 'mc-body');
@@ -181,6 +266,14 @@ const MultipleChoiceEditor = (() => {
     ta.oninput = () => { it.text = ta.value; fit(); headTxt.textContent = clean(it.text) || 'Пустой вопрос'; headTxt.classList.toggle('empty', !clean(it.text)); save(); };
     b.append(ta);
     setTimeout(fit, 0);
+
+    // Картинка и озвучка вопроса (необязательно)
+    const mq = el('div', 'mc-label mc-labelrow', 'Картинка и звук вопроса (необязательно)');
+    mq.append(help('Картинка стоит сверху, снизу, слева или справа от текста вопроса. У ученика на ней значок увеличения. Размер и вписывание картинок — во вкладке «Дизайн». Звук ученик включает значком динамика у вопроса, он не влияет на выбор и баллы.'));
+    const qbox = el('div', 'mc-media');
+    const drawQ = () => { qbox.innerHTML = ''; qbox.append(imageField(it.image, true, drawQ), el('div', 'mc-label', 'Звук вопроса'), audioField(() => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить звук вопроса')); };
+    drawQ();
+    b.append(mq, qbox);
 
     // Тип вопроса: как в общих настройках или свой
     const tl = el('div', 'mc-label mc-labelrow', 'Тип вопроса');
@@ -239,8 +332,25 @@ const MultipleChoiceEditor = (() => {
       del.setAttribute('aria-label', `Убрать вариант ${k + 1}`);
       del.disabled = it.options.length <= 1;
       del.onclick = () => { it.options.splice(k, 1); it.correct = it.correct.filter(x => x !== o.id); save(); drawList(); };
-      line.append(mark, inp, del);
-      opts.append(line);
+      // Картинка и звук варианта: значки открывают панель под строкой (светятся, если что-то задано)
+      const key = it.id + ':' + o.id, isOpen = optOpen.has(key);
+      const more = el('button', 'mc-ib mc-more' + (isOpen ? ' on' : '') + (hasPic(o.image) || o.audio ? ' has' : ''));
+      more.type = 'button';
+      more.innerHTML = svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/>');
+      more.title = 'Картинка и звук варианта';
+      more.setAttribute('aria-label', `Картинка и звук варианта ${k + 1}`);
+      more.setAttribute('aria-expanded', String(isOpen));
+      more.onclick = () => { if (optOpen.has(key)) optOpen.delete(key); else optOpen.add(key); drawList(); };
+      line.append(mark, inp, more, del);
+      const wrap = el('div', 'mc-optwrap');
+      wrap.append(line);
+      if (isOpen) {
+        const panel = el('div', 'mc-optpanel');
+        const drawO = () => { panel.innerHTML = ''; panel.append(imageField(o.image, false, drawO), el('div', 'mc-label', 'Звук варианта'), audioField(() => o.audio || '', v => { o.audio = v; save(); }, 'Загрузить звук варианта')); };
+        drawO();
+        wrap.append(panel);
+      }
+      opts.append(wrap);
     });
     b.append(opts);
     if (!multi && it.correct.length > 1) b.append(el('div', 'mc-warn', `В Single Choice нужен один верный вариант, а отмечено ${it.correct.length}. Отметки сохранены: выберите один, иначе публикация заблокируется. Если переключить на Multiple Select, они снова заработают.`));
@@ -248,7 +358,7 @@ const MultipleChoiceEditor = (() => {
     add.type = 'button';
     add.disabled = it.options.length >= MAX_OPT;
     add.onclick = () => {
-      it.options.push({ id: nextId('o', it.options.map(x => x.id)), text: '' });
+      it.options.push(newOption(nextId('o', it.options.map(x => x.id))));
       save();
       drawList();
       const inputs = listBox.querySelectorAll(`.mc-row[data-id="${it.id}"] .mc-optline input`);
@@ -320,13 +430,23 @@ const MultipleChoiceEditor = (() => {
       shuffle: draft.shuffle !== false,
       ...(draft.showCount ? { showCount: true } : {}),
       ...(draft.showCorrect ? { showCorrect: true } : {}),
-      items: draft.items.map(it => ({
-        id: it.id,
-        text: clean(it.text),
-        mode: modeOf(it),
-        options: it.options.map(o => ({ id: o.id, text: clean(o.text) })),
-        correct: it.options.map(o => o.id).filter(id => it.correct.includes(id)),
-      })),
+      imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm',
+      imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain',
+      items: draft.items.map(it => {
+        const qi = imageOut(it.image, { align: it.image && ALIGNS[it.image.align] ? it.image.align : 'top' }), qa = audioOut(it.audio);
+        return {
+          id: it.id,
+          text: clean(it.text),
+          mode: modeOf(it),
+          ...(qi ? { image: qi } : {}),
+          ...(qa ? { audio: qa } : {}),
+          options: it.options.map(o => {
+            const oi = imageOut(o.image), oa = audioOut(o.audio);
+            return { id: o.id, text: clean(o.text), ...(oi ? { image: oi } : {}), ...(oa ? { audio: oa } : {}) };
+          }),
+          correct: it.options.map(o => o.id).filter(id => it.correct.includes(id)),
+        };
+      }),
     };
   }
 
@@ -343,11 +463,16 @@ const MultipleChoiceEditor = (() => {
       const who = `Вопрос ${n + 1}`;
       if (!clean(it.text)) errors.push(`${who}: нет текста вопроса.`);
       if (it.options.length < 2) errors.push(`${who}: нужно минимум два варианта.`);
-      it.options.forEach((o, k) => { if (!clean(o.text)) errors.push(`${who}, вариант ${k + 1}: пустой. Заполните его или уберите.`); });
+      it.options.forEach((o, k) => { if (!hasOptContent(o)) errors.push(`${who}, вариант ${k + 1}: пустой (нет ни текста, ни картинки). Заполните его или уберите.`); });
+      const badLink = (im, what) => { if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) errors.push(`${what}: ссылка на картинку должна быть полным адресом с https://.`); };
+      badLink(it.image, `${who}, картинка вопроса`);
+      it.options.forEach((o, k) => badLink(o.image, `${who}, вариант ${k + 1}`));
+      if (hasPic(it.image) && !clean(it.image.alt)) warnings.push(`${who}: у картинки вопроса нет описания.`);
+      it.options.forEach((o, k) => { if (hasPic(o.image) && !clean(o.text) && !clean(o.image.alt)) warnings.push(`${who}, вариант ${k + 1}: картинка без текста и без описания, незрячий ученик её не поймёт.`); });
       const have = it.correct.filter(id => it.options.some(o => o.id === id));
       if (!have.length) errors.push(`${who}: не отмечен верный вариант.`);
       else if (modeOf(it) === 'single' && have.length > 1) errors.push(`${who}: в Single Choice нужен один верный вариант, а отмечено ${have.length}. Выберите один или переключите вопрос на Multiple Select.`);
-      const texts = it.options.map(o => clean(o.text).toLowerCase()).filter(Boolean);
+      const texts = it.options.filter(o => !hasPic(o.image)).map(o => clean(o.text).toLowerCase()).filter(Boolean);
       if (new Set(texts).size < texts.length) warnings.push(`${who}: есть одинаковые варианты.`);
       if (modeOf(it) === 'multiple' && have.length === 1) warnings.push(`${who}: в Multiple Select отмечен один верный вариант; ученик не узнает, что их может быть несколько, если не включить подсказку «Выберите N».`);
     });
@@ -359,9 +484,12 @@ const MultipleChoiceEditor = (() => {
     if (!Array.isArray(file.items)) throw new Error('В файле нет вопросов.');
     const general = file.mode === 'multiple' ? 'multiple' : 'single';
     const items = file.items.map((i, k) => {
-      const options = (Array.isArray(i.options) ? i.options : []).map((o, n) => ({ id: String((o && o.id) || 'o' + (n + 1)), text: String((o && o.text) || '') }));
+      const imageIn = im => ({ media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') });
+      const audioIn = a => (a && safeMediaPath(a.media)) || '';
+      const options = (Array.isArray(i.options) ? i.options : []).map((o, n) => ({ id: String((o && o.id) || 'o' + (n + 1)), text: String((o && o.text) || ''), image: imageIn(o && o.image), audio: audioIn(o && o.audio) }));
       const mode = i.mode === 'multiple' ? 'multiple' : 'single';
       return {
+        image: { ...imageIn(i.image), align: i.image && ALIGNS[i.image.align] ? i.image.align : 'top' }, audio: audioIn(i.audio),
         id: String(i.id || 'q' + (k + 1)), text: String(i.text || ''),
         mode: mode === general ? '' : mode,
         options: options.length ? options : newOptions(DEFAULT_OPT),
@@ -371,6 +499,7 @@ const MultipleChoiceEditor = (() => {
     return {
       ...create(), mode: general, view: file.view === 'list' ? 'list' : 'one', labels: file.labels === 'numbers' ? 'numbers' : 'letters',
       shuffle: file.shuffle !== false, showCount: file.showCount === true, showCorrect: file.showCorrect === true,
+      imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain',
       items: items.length ? items : create().items,
     };
   }
@@ -381,6 +510,9 @@ const MultipleChoiceEditor = (() => {
     return [
       { field: 'view', label: 'Показ вопросов', value: VIEWS[draft.view] ? draft.view : 'one', names: VIEWS,
         icons: { one: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'), list: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>') } },
+      { field: 'imageSize', label: 'Размер картинок', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } },
+      { field: 'imageFit', label: 'Картинка в рамке', value: FITS[draft.imageFit] ? draft.imageFit : 'contain', names: FITS,
+        icons: { contain: sq('<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>'), cover: sq('<rect x="3" y="5" width="18" height="14" rx="2" fill="currentColor" fill-opacity=".35"/>') } },
     ]; // метки вариантов переключаются в самом «Содержимом», над вариантами
   }
 

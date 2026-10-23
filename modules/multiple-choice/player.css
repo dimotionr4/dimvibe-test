@@ -32,3 +32,38 @@
 .style-comic .mc-opt.bad:not(.hintbtn) { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 16%, var(--card)); }
 .style-comic .mc-opt.right:not(.hintbtn) { --rc:var(--ok); }
 .style-comic .mc-card.missing { --rc:var(--bad); }
+
+/* Картинки и звук. Вопрос: картинка сверху, снизу, слева или справа от текста; варианты с картинками — сеткой */
+.mc-qblock { margin-bottom:10px; display:flex; gap:10px; }
+.mc-qblock .mc-q { margin-bottom:0; flex:1; min-width:0; }
+.mc-qblock.pos-none, .mc-qblock.pos-top, .mc-qblock.pos-bottom { flex-direction:column; }
+.mc-qblock.pos-left, .mc-qblock.pos-right { flex-direction:row; align-items:flex-start; gap:12px; }
+.mc-qfig { position:relative; flex:none; max-width:100%; align-self:center; }
+.mc-qblock.pos-left .mc-qfig, .mc-qblock.pos-right .mc-qfig { max-width:45%; align-self:flex-start; }
+.mc-pic { display:block; border-radius:8px; overflow:hidden; }
+.mc-pic img { display:block; width:100%; height:100%; object-fit:contain; }
+.mc-pic.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); min-height:40px; }
+.mc-qpic { width:220px; max-width:100%; }
+.mc-qpic img { height:auto; max-height:260px; }
+.mc-card.size-s .mc-qpic { width:140px; }
+.mc-card.size-l .mc-qpic { width:320px; }
+.mc-card.size-l .mc-qpic img { max-height:340px; }
+.mc-card.fit-cover .mc-opic img { object-fit:cover; }
+.mc-opic { width:100%; height:96px; }
+.mc-card.size-s .mc-opic { height:64px; }
+.mc-card.size-l .mc-opic { height:140px; }
+.mc-ow { position:relative; }
+.mc-otop { display:inline-flex; align-items:center; gap:10px; flex:none; }
+.mc-opts.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+.mc-opts.grid .mc-ow { display:flex; }
+.mc-opts.grid .mc-opt { flex-direction:column; align-items:stretch; justify-content:flex-start; height:100%; }
+.mc-opts.grid .mc-otop { align-self:flex-start; }
+.mc-opts.grid .mc-text { flex:none; text-align:center; }
+.mc-ow-tools { position:absolute; top:6px; right:6px; display:flex; gap:8px; z-index:2; }
+.mc-opts:not(.grid) .mc-ow-tools { top:50%; transform:translateY(-50%); right:10px; }
+.mc-opts:not(.grid) .mc-ow.has-tools .mc-opt { padding-right:70px; }
+.hintbtn.mc-tool { position:static; flex:none; }
+.hintbtn.mc-tool.mc-zoom { font-size:14px; }
+.hintbtn.mc-tool.playing { background:var(--accent); color:var(--on-accent, #fff); border-color:var(--accent); }
+.mc-qfig .mc-tool { position:absolute; right:6px; bottom:6px; }
+.mc-q .mc-tool { margin-left:4px; align-self:center; }

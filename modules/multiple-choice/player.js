@@ -1,8 +1,9 @@
-// Плеер модуля Multiple Choice: у каждого вопроса варианты, ученик выбирает один (Single) или несколько (Multiple Select).
+﻿// Плеер модуля Multiple Choice: у каждого вопроса варианты, ученик выбирает один (Single) или несколько (Multiple Select).
 // Общая часть прохождения — шапка, инструкция, проверки, закрепление, результат, сброс — живёт в index.html и работает с теми же
 // переменными (data, gaps, finished, note, checksUsed) и функцией render(). Каждый вопрос — «пропуск» общего хода: answer — верный набор
 // (ID вариантов по алфавиту через запятую), value — выбранный набор в том же виде. Балл только за точный набор.
 // Номера, кнопки «Предыдущий / Следующий» и их стили общие с True / False (классы tf-dots, tf-dot, tf-pager, tf-count в modules/true-false/player.css).
+// Картинки вопроса и вариантов: значок увеличения открывает общий просмотр (core/mediaviewer.js); звук — общие audioButton / playAudio из index.html.
 const MultipleChoicePlayer = (() => {
   let idx = 0; // какой вопрос показан в режиме «по одному»
   let refocus = null, showFix = false;
@@ -11,6 +12,7 @@ const MultipleChoicePlayer = (() => {
   const ids = s => String(s || '').split(',').filter(Boolean);
   const join = a => [...a].sort().join(',');
   const modeOf = it => (it.mode === 'multiple' ? 'multiple' : 'single');
+  const sizeOf = () => (['s', 'm', 'l'].includes(data.imageSize) ? data.imageSize : 'm');
 
   function shuffleArr(a) { return a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]); }
 
@@ -39,6 +41,30 @@ const MultipleChoicePlayer = (() => {
   }
   const label = n => (data.labels === 'numbers' ? String(n + 1) : String.fromCharCode(65 + n));
 
+  // Картинка с увеличением: значок лежит отдельной кнопкой на углу и не выбирает вариант
+  function picture(im, cls) {
+    const src = mediaSrc(im);
+    if (!src) return null;
+    const box = el('span', 'mc-pic ' + cls);
+    const img = el('img');
+    img.alt = String(im.alt || '');
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    img.onerror = () => { box.classList.add('broken'); img.remove(); };
+    img.src = src;
+    box.append(img);
+    return { box, src, alt: img.alt };
+  }
+  function zoomButton(src, alt) {
+    const z = el('button', 'hintbtn mc-tool mc-zoom', '⤢');
+    z.type = 'button';
+    z.setAttribute('aria-label', 'Увеличить картинку');
+    z.title = 'Увеличить';
+    z.onclick = e => { e.stopPropagation(); openMediaViewer(src, alt); };
+    return z;
+  }
+
   function finalize(i) {
     const g = gaps[i];
     g.final = true;
@@ -60,21 +86,38 @@ const MultipleChoicePlayer = (() => {
     render();
   }
 
-  function card(i) {
-    const it = data.items[i], g = gaps[i], multi = modeOf(it) === 'multiple';
-    const chosen = new Set(ids(g.value)), right = new Set(it.correct || []);
-    const c = el('div', 'card mc-card' + (g.state ? ' ' + g.state : '') + (g.locked ? ' locked' : ''));
-    c.dataset.i = i;
+  // Вопрос: картинка сверху, снизу, слева или справа от текста (по выбору автора); значок звука рядом с текстом
+  function questionBlock(it, i) {
+    const wrap = el('div', 'mc-qblock');
+    const pic = picture(it.image, 'mc-qpic');
+    const align = ['top', 'bottom', 'left', 'right'].includes(it.image && it.image.align) ? it.image.align : 'top';
+    wrap.classList.add('pos-' + (pic ? align : 'none'));
     const head = el('div', 'mc-q');
     if (data.items.length > 1) head.append(el('span', 'tf-num', `${i + 1}.`));
     head.append(el('span', 'tf-text', it.text));
-    c.append(head);
+    const qa = mediaSrc(it.audio);
+    if (qa) head.append(audioButton(qa, 'mq' + i, 'hintbtn mc-tool mc-voice', '🔊', 'Прослушать вопрос'));
+    if (!pic) { wrap.append(head); return wrap; }
+    const figure = el('div', 'mc-qfig');
+    figure.append(pic.box, zoomButton(pic.src, pic.alt));
+    if (align === 'top' || align === 'left') wrap.append(figure, head); else wrap.append(head, figure);
+    return wrap;
+  }
+
+  function card(i) {
+    const it = data.items[i], g = gaps[i], multi = modeOf(it) === 'multiple';
+    const chosen = new Set(ids(g.value)), right = new Set(it.correct || []);
+    const c = el('div', 'card mc-card size-' + sizeOf() + (data.imageFit === 'cover' ? ' fit-cover' : '') + (g.state ? ' ' + g.state : '') + (g.locked ? ' locked' : ''));
+    c.dataset.i = i;
+    c.append(questionBlock(it, i));
     // Подсказка «Выберите N правильных ответов» — только у Multiple Select и только если включена в «Поведении»
     if (multi && data.showCount) c.append(el('div', 'mc-count', `Выберите правильных ответов: ${right.size}`));
-    const list = el('div', 'mc-opts');
+    const byId = Object.fromEntries((it.options || []).map(o => [o.id, o]));
+    // Если у какого-то варианта есть картинка, все варианты идут сеткой, иначе читаемым списком
+    const grid = (it.options || []).some(o => o.image && mediaSrc(o.image));
+    const list = el('div', 'mc-opts' + (grid ? ' grid' : ''));
     list.setAttribute('role', multi ? 'group' : 'radiogroup');
     list.setAttribute('aria-label', `Варианты ответа на вопрос ${i + 1}`);
-    const byId = Object.fromEntries((it.options || []).map(o => [o.id, o]));
     const showRight = showFix && finished && g.state === 'bad';
     g.order.forEach((oid, n) => {
       const o = byId[oid];
@@ -86,11 +129,24 @@ const MultipleChoicePlayer = (() => {
       b.dataset.k = oid;
       b.setAttribute('role', multi ? 'checkbox' : 'radio');
       b.setAttribute('aria-checked', String(on));
-      b.append(el('span', 'mc-mark'), el('span', 'mc-lab', label(n)), el('span', 'mc-text', o.text));
+      const top = el('span', 'mc-otop');
+      top.append(el('span', 'mc-mark'), el('span', 'mc-lab', label(n)));
+      b.append(top);
+      const pic = picture(o.image, 'mc-opic');
+      if (pic) b.append(pic.box);
+      if (o.text) b.append(el('span', 'mc-text', o.text));
       if (showRight && right.has(oid)) b.append(el('span', 'mc-tick', ' ✓ верный'));
       if (frozen(g)) b.disabled = true;
       else b.onclick = () => pick(i, oid);
-      list.append(b);
+      // Значки увеличения и звука — соседние кнопки поверх варианта: нажатие на них ответ не выбирает
+      const tools = [];
+      if (pic) tools.push(zoomButton(pic.src, pic.alt));
+      const oa = mediaSrc(o.audio);
+      if (oa) tools.push(audioButton(oa, 'mo' + i + oid, 'hintbtn mc-tool mc-voice', '🔊', `Прослушать вариант ${label(n)}`));
+      const wrap = el('div', 'mc-ow' + (tools.length ? ' has-tools' : ''));
+      wrap.append(b);
+      if (tools.length) { const tb = el('span', 'mc-ow-tools'); tb.append(...tools); wrap.append(tb); }
+      list.append(wrap);
     });
     c.append(list);
     // Multiple Select «по одному»: ответ фиксируется кнопкой «Ответить»

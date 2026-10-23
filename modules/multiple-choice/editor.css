@@ -57,3 +57,15 @@
 .mc-addopt:disabled, .mc-add:disabled { opacity:.5; }
 .mc-add { margin:4px 0 8px; }
 @media (max-width:480px) { .mc-meta { display:none; } }
+
+/* Картинка и звук: вопроса и вариантов */
+.mc-media, .mc-optpanel { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+.mc-optpanel { margin:4px 0 6px 42px; padding:8px; border:1px dashed var(--line); border-radius:10px; width:calc(100% - 42px); }
+.mc-imgf { display:flex; flex-direction:column; gap:6px; align-items:flex-start; width:100%; }
+.mc-imgf input { width:100%; max-width:420px; }
+.mc-imgrow { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.mc-thumb { width:72px; height:72px; border:1px solid var(--line); border-radius:8px; background:var(--bg); padding:2px; display:inline-flex; align-items:center; justify-content:center; }
+.mc-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+.mc-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.mc-more.on, .mc-more.has { color:var(--accent); }
+.mc-optwrap { display:flex; flex-direction:column; }
