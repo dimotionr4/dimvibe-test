@@ -2,11 +2,14 @@
    .lw-thin / .lw-thick — тонкая и толстая линия (по умолчанию средняя).
    Контур — SVG-рисунок внутри элемента (его кривую строит core/rough.js), цвет и толщину задаёт этот файл.
    Рисунок лежит под содержимым, поэтому текст внутри не искажается. Номер версии `?v=` у подключения поднимайте при изменении. */
-/* Шрифт Comic: Bubble Sans (SIL Open Font License, текст лицензии — fonts/OFL-bubble-sans.txt). Загружается только когда включён Comic.
-   В нём есть латиница и кириллица, но нет грузинского и значков ✓ ✗ ↻ — они берутся из запасных шрифтов.
-   Один вес и один наклон, поэтому «поддельную» жирность и курсив браузера выключаем (font-synthesis). */
-@font-face { font-family:"Bubble Sans"; src:url("../fonts/bubble-sans-1.01.otf") format("opentype"); font-weight:400; font-style:normal; font-display:swap; }
-.style-comic, .style-comic body { font-family:"Bubble Sans", system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; font-synthesis:none; }
+/* Шрифт Comic: Blogger Sans, начертания обычное, курсив, жирное, жирный курсив. Загружается только когда включён Comic.
+   Лицензия CC BY-ND 4.0: файлы шрифта подключаются без изменений, авторство указано в fonts/blogger-sans/CREDITS.txt и в редакторе.
+   Есть латиница и кириллица, нет грузинского и значков ✓ ✗ ↻ — они берутся из запасных шрифтов. */
+@font-face { font-family:"Blogger Sans"; src:url("../fonts/blogger-sans/BloggerSans.woff") format("woff"); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:"Blogger Sans"; src:url("../fonts/blogger-sans/BloggerSans-Italic.woff") format("woff"); font-weight:400; font-style:italic; font-display:swap; }
+@font-face { font-family:"Blogger Sans"; src:url("../fonts/blogger-sans/BloggerSans-Bold.woff") format("woff"); font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:"Blogger Sans"; src:url("../fonts/blogger-sans/BloggerSans-BoldItalic.woff") format("woff"); font-weight:700; font-style:italic; font-display:swap; }
+.style-comic, .style-comic body { font-family:"Blogger Sans", system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; }
 
 .style-comic { --comic-line:var(--accent); --lw:3px; }
 .style-comic.line-black { --comic-line:var(--text); }
