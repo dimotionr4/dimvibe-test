@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+// Адрес сайта без ?id= (и не предпросмотр редактора) открывает главную; упражнения ученика всегда с ?id=
+if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
+</script>
 <title>DimVibe — тест Fill Blanks</title>
 <link rel="stylesheet" href="core/gap.css?v=6">
 <link rel="stylesheet" href="core/check.css?v=1">
