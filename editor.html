@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
-<link rel="stylesheet" href="core/gap.css?v=3">
+<link rel="stylesheet" href="core/gap.css?v=4">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
@@ -429,9 +429,9 @@ function renderDesign() {
       <label class="check"><input type="checkbox" id="gapNum"${gd.numbered ? ' checked' : ''}> Нумеровать пропуски</label>
       <p class="muted">Так будет выглядеть пропуск у ученика: пустой (с подсказкой), верный и неверный.</p>
       <div class="gapsample" style="--accent:${shade(ACCENTS[chosen])}">
-        She <span class="gap ${gapClasses(gd)}"${gd.numbered ? ' data-num="1"' : ''}>&nbsp;<button class="hintbtn" tabindex="-1" aria-hidden="true">💡</button></span> in the
-        <span class="gap ${gapClasses(gd)} ok"${gd.numbered ? ' data-num="2"' : ''}>bar</span> and
-        <span class="gap ${gapClasses(gd)} bad"${gd.numbered ? ' data-num="3"' : ''}>pub</span>.
+        She <span class="gap ${gapClasses(gd)}">&nbsp;<button class="hintbtn" tabindex="-1" aria-hidden="true">💡</button>${gd.numbered ? '<span class="gap-num">1</span>' : ''}</span> in the
+        <span class="gap ${gapClasses(gd)} ok">bar${gd.numbered ? '<span class="gap-num">2</span>' : ''}</span> and
+        <span class="gap ${gapClasses(gd)} bad">pub${gd.numbered ? '<span class="gap-num">3</span>' : ''}</span>.
       </div>
       <h3 style="margin-top:22px">Инструкция</h3>
       <label class="check"><input type="checkbox" id="showInstr"${current.design && current.design.showInstruction === false ? '' : ' checked'}> Показывать инструкцию ученику</label>

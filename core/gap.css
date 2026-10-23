@@ -23,7 +23,7 @@
 /* Значки в четырёх углах контура: слева сверху номер, справа сверху озвучка (пока не используется),
    справа снизу подсказка, слева снизу результат. Они сидят на углу наполовину снаружи и не закрывают ответ.
    Результат крупнее остальных (28 px против 18–22 px). */
-.gap[data-num]::before { content:attr(data-num); position:absolute; left:-7px; top:-10px; display:flex; align-items:center; justify-content:center; width:18px; height:18px; box-sizing:border-box; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--text); font-size:.65rem; font-weight:600; line-height:1; z-index:1; }
+.gap-num { position:absolute; left:-7px; top:-10px; display:flex; align-items:center; justify-content:center; width:18px; height:18px; box-sizing:border-box; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--text); font-size:.65rem; font-weight:600; line-height:1; z-index:1; }
 .gap.ok::after, .gap.bad::after { position:absolute; left:-10px; bottom:-12px; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:1rem; font-weight:700; line-height:1; color:var(--on-accent, #fff); background:var(--gap-c); z-index:1; }
 .gap.ok::after { content:"✓"; }
 .gap.bad::after { content:"✗"; }

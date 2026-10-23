@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
-<link rel="stylesheet" href="core/gap.css?v=3">
+<link rel="stylesheet" href="core/gap.css?v=4">
+<link rel="stylesheet" href="core/comic.css?v=2">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -66,6 +67,13 @@
 </style>
 </head>
 <body>
+<!-- Фильтр «неровная линия» для стиля Comic (core/comic.css): слегка смещает точки контура по шуму, чтобы линия выглядела нарисованной от руки -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="rough" x="-3%" y="-3%" width="106%" height="106%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
 <header>
   <div class="head">
     <h1 id="title">Загрузка…</h1>
@@ -113,6 +121,18 @@ const uniq = words => {
   return words.filter(w => { const k = norm(w); if (!k || seen.has(k)) return false; seen.add(k); return true; });
 };
 
+// Стиль упражнения (Classic или Comic) и цвет контуров Comic берутся из файла (design.style, design.comicLine).
+// Для пробы значения можно переопределить в ссылке: ?style=comic&line=black&shape=pill&dashed=1&num=1&width=wide
+function applyLook() {
+  const q = k => params.get(k);
+  const dz = data.design = { ...(data.design || {}) };
+  if (q('shape') || q('dashed') || q('num') || q('width')) {
+    dz.gap = { ...(dz.gap || {}), ...(q('shape') ? { shape: q('shape') } : {}), ...(q('dashed') ? { dashed: q('dashed') === '1' } : {}), ...(q('num') ? { numbered: q('num') === '1' } : {}), ...(q('width') ? { width: q('width') } : {}) };
+  }
+  document.documentElement.classList.toggle('style-comic', (q('style') || dz.style) === 'comic');
+  document.documentElement.classList.toggle('line-black', (q('line') || dz.comicLine) === 'black');
+}
+
 // Формат 2: текст предложения — куски строк и пропуски {gap: ID}, данные пропусков лежат в data.gaps
 function build() {
   gaps = [];
@@ -124,6 +144,7 @@ function build() {
     });
   });
   mode = data.mode || 'word_bank';
+  applyLook();
   // Цвет упражнения; если файл с набором цветов не загрузился, остаётся стандартный фиолетовый
   if (typeof applyAccent === 'function') applyAccent(document.documentElement, data.design && data.design.accent);
   // Число проверок: выбрал преподаватель (1–5), иначе 3 при 1–5 пропусках и 5 при 6 и больше
@@ -284,7 +305,6 @@ function makeGap(idx) {
   // Форма, ширина и нумерация выбраны преподавателем во вкладке «Дизайн» (если файла с набором нет — сплошная линия)
   const look = typeof normalizeGapDesign === 'function' ? normalizeGapDesign(data.design && data.design.gap) : { shape: 'line', width: 'auto', dashed: false, numbered: false };
   el.className = 'gap ' + (typeof gapClasses === 'function' ? gapClasses(look) : 'shape-line w-auto') + (g.state ? ' ' + g.state : '') + (frozen(g) ? ' locked' : '');
-  if (look.numbered) el.dataset.num = idx + 1;
   el.dataset.idx = idx;
   if (mode === 'typing') {
     const input = document.createElement('input');
@@ -325,6 +345,14 @@ function makeGap(idx) {
       note = '';
       render();
     };
+  }
+  // Номер на углу пропуска; добавляется последним, потому что в режиме банка текст пропуска заменяет всё его содержимое
+  if (look.numbered) {
+    const num = document.createElement('span');
+    num.className = 'gap-num';
+    num.setAttribute('aria-hidden', 'true');
+    num.textContent = idx + 1;
+    el.appendChild(num);
   }
   return el;
 }
