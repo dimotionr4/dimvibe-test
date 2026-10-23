@@ -25,7 +25,11 @@
         {
           "gap": "g3"
         },
-        ". You can explore the top-rated local options on AllTrails."
+        ". You can ",
+        {
+          "gap": "g5"
+        },
+        " the top-rated local options on AllTrails."
       ]
     }
   ],
@@ -49,16 +53,24 @@
       "answer": "landmarks",
       "alternatives": [],
       "hint": ""
+    },
+    "g5": {
+      "answer": "explore",
+      "alternatives": [],
+      "hint": ""
     }
   },
   "distractors": [],
   "instruction": {
     "title": "Please insert",
     "text": "**let **us **try this text ** and *then *we can **continue later",
+    "audio": {
+      "media": "media/ex-ugfvkv/aud-87321932.mp3"
+    },
     "image": {
-      "url": "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
-      "alt": "",
-      "size": "small",
+      "media": "media/ex-ugfvkv/img-0133b924.jpg",
+      "alt": "furniture",
+      "size": "large",
       "align": "left"
     }
   },
