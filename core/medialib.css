@@ -1,0 +1,50 @@
+/* Окно «Медиатека». Цвета — из переменных редактора (--bg, --card, --line, --text, --muted, --accent, --accent-soft, --bad) */
+.ml { position:fixed; inset:0; z-index:30; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
+.ml-box { background:var(--bg); color:var(--text); border-radius:14px; width:min(1040px, 100%); height:min(88vh, 760px); display:flex; flex-direction:column; gap:10px; padding:14px; box-shadow:0 12px 40px rgba(0,0,0,.4); }
+.ml-head { display:flex; align-items:center; gap:10px; flex:none; }
+.ml-head b { font-size:1.1rem; }
+.ml-count { color:var(--muted); font-size:.85rem; white-space:nowrap; }
+.ml-search { flex:1; min-width:0; }
+.ml-x { width:36px; min-height:36px; padding:0; font-size:1.3rem; line-height:1; }
+.ml-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; flex:none; }
+.ml-bar select, .ml-bar button { min-height:34px; }
+.ml-check { display:inline-flex; align-items:center; gap:4px; font-size:.9rem; color:var(--muted); }
+.ml-up { margin-left:auto; }
+.ml-tags { display:flex; flex-wrap:wrap; gap:6px; flex:none; max-height:76px; overflow-y:auto; }
+.ml-tag { min-height:28px; padding:0 10px; border-radius:999px; font-size:.85rem; }
+.ml-tag.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.ml-note { flex:none; border-radius:8px; padding:6px 10px; background:var(--accent-soft); font-size:.9rem; }
+.ml-note.bad { background:transparent; border:1px solid var(--bad); color:var(--bad); }
+.ml-mid { flex:1; min-height:0; display:grid; grid-template-columns:1fr 260px; gap:12px; }
+.ml-grid { overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:10px; align-content:start; padding:2px; }
+.ml-empty { color:var(--muted); grid-column:1 / -1; margin:8px 0; }
+.ml-card { position:relative; display:flex; flex-direction:column; gap:4px; padding:6px; min-height:0; border-radius:10px; border:1px solid var(--line); background:var(--card); text-align:center; }
+.ml-card:hover { border-color:var(--accent); }
+.ml-card.act { box-shadow:0 0 0 2px var(--accent); }
+.ml-card.sel { border-color:var(--accent); background:var(--accent-soft); }
+.ml-card.hid { opacity:.5; }
+.ml-th { display:flex; align-items:center; justify-content:center; width:100%; aspect-ratio:1; }
+.ml-th img { max-width:100%; max-height:100%; object-fit:contain; display:block; border-radius:6px; }
+.ml-th img.broken, .ml-big img.broken { min-width:48px; min-height:48px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.ml-name { font-size:.78rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ml-mark { position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:.8rem; line-height:22px; display:none; }
+.ml-card.sel .ml-mark { display:block; }
+.ml-side { overflow-y:auto; display:flex; flex-direction:column; gap:8px; border:1px solid var(--line); border-radius:12px; background:var(--card); padding:10px; }
+.ml-big { display:flex; align-items:center; justify-content:center; height:150px; background:var(--bg); border-radius:8px; }
+.ml-big img { max-width:100%; max-height:100%; object-fit:contain; }
+.ml-chips { display:flex; flex-wrap:wrap; gap:4px; }
+.ml-chips:empty { display:none; }
+.ml-chip { display:inline-flex; align-items:center; gap:2px; border:1px solid var(--line); border-radius:999px; padding:1px 4px 1px 10px; font-size:.85rem; }
+.ml-chip button { min-height:20px; width:20px; padding:0; border:none; background:transparent; color:var(--muted); }
+.ml-chip button:hover { color:var(--bad); }
+.ml-info { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; margin:0; font-size:.82rem; }
+.ml-info dt { color:var(--muted); }
+.ml-info dd { margin:0; overflow-wrap:anywhere; }
+.ml-foot { flex:none; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+.ml-picked { margin-right:auto; color:var(--muted); }
+@media (max-width:700px) {
+  .ml { padding:0; }
+  .ml-box { height:100dvh; border-radius:0; }
+  .ml-mid { grid-template-columns:1fr; grid-template-rows:1fr auto; }
+  .ml-side { max-height:42vh; }
+}

@@ -247,7 +247,8 @@ const ImageToGapsEditor = (() => {
   }
 
   // Выбор картинки: заглушки, загрузка файла или ссылка. onPick получает {media | stub | url}
-  function imagePicker(onPick) {
+  // multi — можно отметить несколько картинок из медиатеки сразу (onPick вызывается для каждой)
+  function imagePicker(onPick, multi) {
     const box = el('div', 'ig-picker');
     const stubs = el('div', 'ig-stubs');
     Object.entries(MEDIA_STUBS).forEach(([k, label]) => {
@@ -262,6 +263,12 @@ const ImageToGapsEditor = (() => {
     const stubHead = el('div', 'ig-label ig-labelrow', 'Заглушки');
     stubHead.append(help('Временные картинки проекта, пока нет общей медиатеки. Подойдут для пробы.'));
     box.append(stubHead, stubs);
+    if (window.openMediaLibrary) {
+      const lib = el('button', 'ig-lib', 'Из медиатеки');
+      lib.type = 'button';
+      lib.onclick = () => openMediaLibrary({ pick: true, multi: !!multi, onPick: items => items.forEach(it => onPick({ media: it.path, alt: it.name })) });
+      box.append(lib);
+    }
     if (window.mediaPicker) box.append(window.mediaPicker('image', () => '', path => onPick({ media: path }), 'Загрузить картинку'));
     const row = el('div', 'ig-adder');
     const inp = el('input');
@@ -341,7 +348,7 @@ const ImageToGapsEditor = (() => {
     };
     showCurrent();
     const picker = imagePicker(im => {
-      g.image = { ...emptyImage(), ...im, alt: g.image.alt || '' };
+      g.image = { ...emptyImage(), ...im, alt: g.image.alt || im.alt || '' };
       save();
       refreshChip(id);
       drawGrid();
@@ -365,7 +372,7 @@ const ImageToGapsEditor = (() => {
   if (!window.__igOutside) {
     window.__igOutside = true;
     addEventListener('pointerdown', e => {
-      if (openGap && root && root.isConnected && !e.target.closest('.ig-panel-box, .ig-chip, .help, .helpbub, .media-pick')) closePanel();
+      if (openGap && root && root.isConnected && !e.target.closest('.ig-panel-box, .ig-chip, .help, .helpbub, .media-pick, .ml')) closePanel();
     });
     addEventListener('resize', () => placePanel());
   }
@@ -396,7 +403,7 @@ const ImageToGapsEditor = (() => {
       drawGrid();
       trapBox.hidden = true;
       open.hidden = false;
-    }));
+    }, true));
     const cancel = el('button', '', 'Отмена');
     cancel.onclick = () => { trapOpen = false; trapBox.hidden = true; open.hidden = false; };
     trapBox.append(cancel);
