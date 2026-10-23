@@ -369,7 +369,7 @@
 </div>
 
 <script src="core/design.js?v=5"></script>
-<script src="core/media.js?v=1"></script>
+<script src="core/media.js?v=2"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=7"></script>
 <script src="modules/fill-blanks/editor.js?v=23"></script>
@@ -494,11 +494,11 @@ function createDraft(layout) {
   drafts[id] = { id, title: '', ...MODULES.fill_blanks.create(layout), updatedAt: new Date().toISOString() };
   writeStore();
   tab = 'content';
-  open(id);
+  openDraft(id);
   $('title').focus();
 }
 
-function open(id) {
+function openDraft(id) {
   current = drafts[id];
   try { localStorage.setItem(LAST, id); } catch (e) {}
   $('empty').hidden = true;
@@ -537,7 +537,7 @@ function removeDraft(id) {
   if (current && current.id === id) {
     current = null;
     const rest = sorted();
-    if (rest.length) open(rest[0].id); else showEmpty();
+    if (rest.length) openDraft(rest[0].id); else showEmpty();
   }
   renderList();
 }
@@ -563,7 +563,7 @@ function renderList() {
     const date = document.createElement('small');
     date.textContent = when(dr.updatedAt);
     btn.append(name, date);
-    btn.onclick = () => open(dr.id);
+    btn.onclick = () => openDraft(dr.id);
     const del = document.createElement('button');
     del.className = 'draft-del';
     del.textContent = '×';
@@ -1467,7 +1467,7 @@ async function openFile(f) {
     drafts[file.id] = draft;
     writeStore();
     tab = 'content';
-    open(file.id);
+    openDraft(file.id);
   } catch (e) {
     alert('Не удалось открыть файл. ' + (e instanceof SyntaxError ? 'Файл повреждён или это не файл упражнения.' : e.message));
   }
@@ -1527,8 +1527,8 @@ addEventListener('keydown', e => {
 readStore();
 let last = null;
 try { last = localStorage.getItem(LAST); } catch (e) {}
-if (drafts[last]) open(last);
-else if (sorted().length) open(sorted()[0].id);
+if (drafts[last]) openDraft(last);
+else if (sorted().length) openDraft(sorted()[0].id);
 else showEmpty();
 renderList();
 setPreviewOpen(!narrow()); // на широком экране предпросмотр открыт сразу, на узком открывается кнопкой

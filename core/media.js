@@ -99,7 +99,7 @@ function mediaErrorText(e) {
   if (c === 'storage/unauthenticated') return 'Сначала войдите через Google.';
   if (c === 'storage/retry-limit-exceeded' || c === 'storage/canceled') return 'Загрузка прервалась. Проверьте интернет и повторите.';
   if (c.startsWith('auth/network') || /Failed to fetch|dynamically imported|Importing a module/i.test(String(e && e.message))) return 'Нет связи с Firebase. Проверьте интернет.';
-  return 'Не удалось выполнить действие' + (c ? ' (' + c + ')' : '') + '.';
+  return 'Не удалось выполнить действие' + (c ? ' (' + c + ')' : e && e.message ? ' (' + String(e.message).slice(0, 120) + ')' : '') + '.';
 }
 
 // Загружает файл и возвращает путь в хранилище. folder — номер упражнения, kind — 'image' или 'audio'.
