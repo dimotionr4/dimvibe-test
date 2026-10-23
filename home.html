@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DimVibe — главная</title>
+<style>
+  /* Тема общая с редактором: ключ dimvibe.theme в браузере, «Авто» следует за устройством */
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --line:#c9c9d8; --gap:14px; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; }
+  }
+  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.5; }
+  button, a, input { font:inherit; color:inherit; }
+  svg { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  #bar { display:flex; align-items:center; gap:8px; height:48px; padding:0 16px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5; }
+  .grow { flex:1; }
+  .bar-link { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); text-decoration:none; }
+  .bar-link:hover { background:var(--accent-soft); }
+  .bar-link svg { width:18px; height:18px; }
+  .theme-switch { position:relative; display:inline-flex; align-items:center; justify-content:space-between; width:60px; height:32px; padding:0 7px; border-radius:999px; background:var(--accent-soft); border:1px solid var(--line); cursor:pointer; }
+  .theme-switch svg { width:16px; height:16px; stroke:var(--muted); position:relative; z-index:1; }
+  .theme-switch i { position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:var(--accent); transition:transform .15s; }
+  .theme-switch[aria-checked="true"] i { transform:translateX(28px); }
+  .theme-switch .ts-sun { stroke:#fff; }
+  .theme-switch[aria-checked="true"] .ts-sun { stroke:var(--muted); }
+  .theme-switch[aria-checked="true"] .ts-moon { stroke:#fff; }
+  main { max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; }
+  h2 { font-size:.85rem; color:var(--muted); font-weight:600; margin:24px 0 10px; text-transform:uppercase; letter-spacing:.04em; }
+  .lead { color:var(--muted); margin:0 0 16px; }
+
+  /* Подсказки при наведении и фокусе (как в редакторе) */
+  [data-tip] { position:relative; }
+  [data-tip]::after { content:attr(data-tip); position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); white-space:nowrap; background:var(--text); color:var(--bg); font-size:.78rem; line-height:1.3; padding:4px 8px; border-radius:6px; pointer-events:none; z-index:40; display:none; font-weight:400; }
+  [data-tip].tip-end::after { left:auto; right:0; transform:none; }
+  [data-tip]:hover::after, [data-tip]:focus-visible::after { display:block; animation:tipin .12s .35s both; }
+  @keyframes tipin { from { opacity:0; } to { opacity:1; } }
+
+  /* Панель инструментов: поиск, избранное, скрытые, виды, настройки */
+  #tools { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+  .search { position:relative; flex:1; min-width:0; max-width:340px; }
+  .search svg { position:absolute; left:10px; top:9px; width:18px; height:18px; color:var(--muted); pointer-events:none; }
+  .search input { width:100%; min-height:36px; padding:6px 32px 6px 34px; border:1px solid var(--line); background:var(--card); border-radius:8px; }
+  .search input:focus { outline:none; border-color:var(--accent); }
+  .search .x { position:absolute; right:2px; top:2px; width:32px; height:32px; border:none; background:transparent; border-radius:6px; color:var(--muted); cursor:pointer; display:none; }
+  .search.has .x { display:block; }
+  .tb { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:4px; min-width:36px; height:36px; padding:0 8px; border:1px solid transparent; background:transparent; border-radius:8px; cursor:pointer; }
+  .tb:hover { background:var(--accent-soft); }
+  .tb svg { width:20px; height:20px; }
+  .tb[aria-pressed="true"], .tb[aria-expanded="true"] { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+  .tb small { font-size:.75rem; font-weight:600; }
+  .sep { width:1px; height:22px; background:var(--line); margin:0 4px; }
+  .views { display:inline-flex; gap:2px; padding:2px; border:1px solid var(--line); border-radius:10px; background:var(--card); }
+  .views .tb { height:30px; min-width:32px; }
+  .views .tb[aria-pressed="true"] { border-color:transparent; background:var(--accent); color:#fff; }
+  .menuwrap { position:relative; }
+  .pop { position:absolute; right:0; top:calc(100% + 6px); z-index:30; width:250px; padding:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.25); }
+  .pop[hidden] { display:none; }
+  .pop .row { margin-bottom:12px; }
+  .pop .row:last-child { margin-bottom:0; }
+  .pop .lab { display:flex; justify-content:space-between; font-size:.82rem; color:var(--muted); margin-bottom:6px; }
+  .pop .lab b { color:var(--text); font-weight:600; }
+  .seg { display:flex; gap:4px; }
+  .seg button { flex:1; min-height:30px; padding:2px 6px; font-size:.85rem; border:1px solid var(--line); background:var(--card); border-radius:8px; cursor:pointer; }
+  .seg button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .pop input[type=range] { width:100%; accent-color:var(--accent); margin:8px 0 0; }
+  .pop .ticks { display:flex; justify-content:space-between; font-size:.75rem; color:var(--muted); padding:0 6px; }
+  .pop .off { opacity:.4; pointer-events:none; }
+  .pop .note { font-size:.78rem; color:var(--muted); margin:0; }
+
+  /* Карточки модулей */
+  .grid { display:grid; gap:var(--gap); }
+  .grid.v-cards { grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); }
+  .grid.v-cards.manual { grid-template-columns:repeat(auto-fill, minmax(max(130px, calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols))), 1fr)); }
+  .grid.v-list { grid-template-columns:1fr; --gap:8px; }
+  .grid.v-icons { grid-template-columns:repeat(auto-fill, 72px); }
+  .mod { position:relative; border:1px solid var(--line); border-radius:14px; background:var(--card); }
+  .mod .main { display:flex; flex-direction:column; gap:8px; padding:16px; height:100%; text-decoration:none; border-radius:14px; }
+  .mod a.main:hover, .mod a.main:focus-visible { box-shadow:0 0 0 1px var(--accent), 0 4px 16px rgba(109,74,255,.15); outline:none; }
+  .ic { width:48px; height:48px; flex:none; border-radius:12px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; }
+  .ic svg { width:28px; height:28px; stroke-width:1.8; }
+  .mod b { font-size:1.05rem; }
+  .mod p { margin:0; color:var(--muted); font-size:.9rem; flex:1; }
+  .go { color:var(--accent); font-weight:600; font-size:.9rem; }
+  .soonb { display:inline-block; margin-left:6px; font-size:.7rem; font-weight:400; padding:0 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); vertical-align:middle; }
+  .mod.soon { opacity:.65; border-style:dashed; }
+  .mod.soon .ic { background:var(--bg); color:var(--muted); }
+  .mod.is-hidden { opacity:.45; border-style:dotted; }
+  .acts { position:absolute; top:6px; right:6px; display:flex; gap:2px; }
+  .act { width:30px; height:30px; padding:0; border:none; background:transparent; border-radius:8px; color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; opacity:0; }
+  .act svg { width:17px; height:17px; }
+  .act:hover { background:var(--accent-soft); color:var(--accent); }
+  .mod:hover .act, .act:focus-visible, .act.on, .mod:focus-within .act { opacity:1; }
+  .act.on { color:var(--accent); }
+  .act.on svg { fill:currentColor; }
+  @media (hover:none) { .act { opacity:1; } }
+
+  /* Список: строки */
+  .v-list .mod .main { flex-direction:row; align-items:center; gap:14px; padding:10px 84px 10px 12px; }
+  .v-list .ic { width:40px; height:40px; }
+  .v-list .ic svg { width:24px; height:24px; }
+  .v-list .txt { flex:1; min-width:0; }
+  .v-list .txt p { font-size:.85rem; }
+  .v-list .acts { top:50%; transform:translateY(-50%); }
+  .v-list .go { flex:none; }
+  /* Значки: только иконка, название и описание — в подсказке */
+  .v-icons .mod { border-radius:14px; }
+  .v-icons .mod .main { padding:10px; align-items:center; justify-content:center; }
+  .v-icons .ic { width:48px; height:48px; }
+  .v-icons .txt, .v-icons .go { display:none; }
+  .v-icons .acts { top:2px; right:2px; flex-direction:column; }
+  .v-icons .act { width:20px; height:20px; border-radius:6px; }
+  .v-icons .act svg { width:13px; height:13px; }
+  .v-icons .act.on { opacity:1; }
+  .v-icons .mod::after { content:attr(data-tip); }
+  .v-icons .mod[data-tip]::after { top:calc(100% + 4px); left:0; transform:none; white-space:normal; width:max-content; max-width:220px; }
+  .v-icons .mod[data-tip]:hover::after { display:block; animation:tipin .12s .35s both; }
+  .empty { color:var(--muted); text-align:center; padding:32px 0; }
+  .empty[hidden] { display:none; }
+  @media (max-width:520px) {
+    .grid.v-cards, .grid.v-cards.manual { grid-template-columns:1fr; }
+    .bar-link .t { display:none; }
+    #tools { flex-wrap:wrap; }
+    .search { max-width:none; flex-basis:100%; }
+    .pop { right:auto; left:0; }
+    .tools-r { margin-left:auto; }
+  }
+  .tools-r { display:flex; align-items:center; gap:6px; margin-left:auto; }
+</style>
+</head>
+<body>
+<header id="bar">
+  <b>DimVibe</b>
+  <span class="grow"></span>
+  <a class="bar-link" href="editor.html" title="Открыть редактор"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg><span class="t">Редактор</span></a>
+  <button class="theme-switch" id="themeSwitch" role="switch" aria-checked="false" aria-label="Тёмная тема" title="Светлая / тёмная тема">
+    <i></i>
+    <svg class="ts-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <svg class="ts-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg>
+  </button>
+</header>
+<main>
+  <h1>Какое упражнение создать?</h1>
+  <p class="lead">Выберите тип упражнения: откроется редактор с новым черновиком.</p>
+  <div id="tools">
+    <div class="search" id="searchBox">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" type="search" placeholder="Поиск модуля" aria-label="Поиск модуля" autocomplete="off">
+      <button class="x" id="qx" aria-label="Очистить поиск"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="tools-r">
+      <button class="tb" id="favOnly" aria-pressed="false" data-tip="Только избранное" aria-label="Только избранное"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg></button>
+      <button class="tb" id="showHid" aria-pressed="false" data-tip="Скрытые модули" aria-label="Показать скрытые модули"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.2A9.8 9.8 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3.2 3.8M6.5 7.6A15.7 15.7 0 0 0 2.5 12S6 18 12 18c1.2 0 2.3-.2 3.3-.6"/><path d="M9.9 10a3 3 0 0 0 4.2 4.2"/></svg><small id="hidN" hidden></small></button>
+      <span class="sep"></span>
+      <div class="views" role="group" aria-label="Вид">
+        <button class="tb" data-view="cards" aria-pressed="true" data-tip="Карточки" aria-label="Карточки"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
+        <button class="tb" data-view="list" aria-pressed="false" data-tip="Список" aria-label="Список"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+        <button class="tb" data-view="icons" aria-pressed="false" data-tip="Значки" aria-label="Компактные значки"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+      </div>
+      <div class="menuwrap">
+        <button class="tb" id="setBtn" aria-expanded="false" aria-haspopup="true" data-tip="Колонки и интервалы" aria-label="Настройки вида"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+        <div class="pop" id="pop" hidden>
+          <div class="row" id="colRow">
+            <div class="lab"><span>Колонки</span><b id="colVal">Авто</b></div>
+            <div class="seg"><button id="colAuto" aria-pressed="true">Авто</button><button id="colMan" aria-pressed="false">Вручную</button></div>
+            <input type="range" id="cols" min="2" max="8" step="1" value="4" aria-label="Число колонок">
+            <div class="ticks" aria-hidden="true"><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+          </div>
+          <div class="row">
+            <div class="lab"><span>Интервал</span></div>
+            <div class="seg" id="gapSeg"><button data-gap="8" aria-pressed="false">Малый</button><button data-gap="14" aria-pressed="true">Средний</button><button data-gap="24" aria-pressed="false">Большой</button></div>
+          </div>
+          <p class="note" id="colNote" hidden>Колонки задаются только в виде «Карточки».</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <section id="secReady"><h2>Готовы к созданию</h2><div class="grid" id="ready"></div></section>
+  <section id="secSoon"><h2>Скоро</h2><div class="grid" id="soon"></div></section>
+  <p class="empty" id="none" hidden>Ничего не найдено.</p>
+</main>
+<script>
+// Реестр модулей: чтобы добавить модуль, достаточно строки здесь (ready: true — модуль подключён в editor.html).
+// Названия «скоро» взяты из файлов спецификации docs/spec/04_MODULES; описания — только там, где они известны.
+const ICON = {
+  fill_blanks: '<path d="M4 7h16"/><path d="M4 12h5"/><path d="M12 13h8"/><path d="M4 17h16"/>',
+  image_to_gaps: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M3 17l5-5 4 4 3-3 6 6"/>',
+  true_false: '<path d="M4 8l3 3 5-6"/><path d="M14 14l6 6M20 14l-6 6"/>',
+  multiple_choice: '<circle cx="6" cy="7" r="2"/><circle cx="6" cy="17" r="2"/><path d="M11 7h9M11 17h9"/>',
+  matching: '<circle cx="6" cy="7" r="2"/><circle cx="18" cy="17" r="2"/><path d="M8 7l8 10"/>',
+  ordering: '<path d="M8 6h12M8 12h12M8 18h12"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
+  generic: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>'
+};
+const MODS = [
+  { id: 'fill_blanks', name: 'Fill Blanks', desc: 'В пропуски текста нужно вписать или выбрать слова.', ready: true },
+  { id: 'image_to_gaps', name: 'Image to Gaps', desc: 'В пропуски текста ставятся картинки.', ready: true },
+  { id: 'true_false', name: 'True / False', desc: 'Верно или неверно: ученик оценивает утверждения.', ready: true },
+  { id: 'multiple_choice', name: 'Multiple Choice', desc: 'Вопросы с выбором одного или нескольких вариантов.', ready: true },
+  { id: 'matching', name: 'Matching', desc: 'Сопоставление: соединить пары из двух столбцов.' },
+  { id: 'ordering', name: 'Ordering', desc: 'Расставить элементы в правильном порядке.' },
+  { id: 'categories', name: 'Categories / Sorting', desc: 'Разложить карточки по категориям.' },
+  { id: 'timeline', name: 'Timeline', desc: 'Расставить события в хронологическом порядке.' },
+  { id: 'mini_dialogues', name: 'Mini Dialogues', desc: 'Диалог-переписка с пропусками в репликах.' },
+  { id: 'word_scramble', name: 'Word Scramble / Sentence Builder', desc: 'Собрать слово или фразу из рассыпанных частей.' },
+  { id: 'flashcards', name: 'Flashcards' }, { id: 'vocabulary', name: 'Vocabulary' }, { id: 'word_search', name: 'Word Search' },
+  { id: 'hotspot', name: 'Hotspot' }, { id: 'label_the_diagram', name: 'Label the Diagram' }, { id: 'odd_one_out', name: 'Odd One Out' },
+  { id: 'select_title', name: 'Select Title' }, { id: 'prepositions', name: 'Prepositions' }, { id: 'splice', name: 'Splice' },
+  { id: 'color_coding', name: 'Color Coding' }, { id: 'mistake_mode', name: 'Mistake Mode' }, { id: 'essay_writing', name: 'Essay Writing' }
+];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const STAR = '<path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/>';
+const EYEOFF = '<path d="M3 3l18 18"/><path d="M10.6 6.2A9.8 9.8 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3.2 3.8M6.5 7.6A15.7 15.7 0 0 0 2.5 12S6 18 12 18c1.2 0 2.3-.2 3.3-.6"/><path d="M9.9 10a3 3 0 0 0 4.2 4.2"/>';
+const EYE = '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
+
+// Настройки хранятся в браузере преподавателя; без хранилища страница работает, но не помнит выбор
+const PREFS = 'dimvibe.home.v1';
+const st = { view: 'cards', cols: 0, gap: 14, fav: [], hid: [] }; // cols 0 = авто
+try { Object.assign(st, JSON.parse(localStorage.getItem(PREFS)) || {}); } catch (e) {}
+const view = { q: '', favOnly: false, showHid: false };
+const save = () => { try { localStorage.setItem(PREFS, JSON.stringify(st)); } catch (e) {} };
+
+function cardHtml(m) {
+  const fav = st.fav.includes(m.id), hid = st.hid.includes(m.id);
+  const body = `<span class="ic">${svg(ICON[m.id] || ICON.generic)}</span><span class="txt"><b>${esc(m.name)}${m.ready ? '' : '<span class="soonb">Скоро</span>'}</b><p>${esc(m.desc || '')}</p></span>${m.ready ? '<span class="go">Создать →</span>' : ''}`;
+  const main = m.ready ? `<a class="main" href="editor.html?new=${m.id}">${body}</a>` : `<div class="main">${body}</div>`;
+  const acts = `<span class="acts">
+    <button class="act tip-end ${fav ? 'on' : ''}" data-act="fav" data-id="${m.id}" aria-pressed="${fav}" data-tip="${fav ? 'Убрать из избранного' : 'В избранное'}" aria-label="${fav ? 'Убрать из избранного' : 'В избранное'}">${svg(STAR)}</button>
+    <button class="act tip-end" data-act="hide" data-id="${m.id}" data-tip="${hid ? 'Вернуть' : 'Скрыть'}" aria-label="${hid ? 'Вернуть модуль' : 'Скрыть модуль'}">${svg(hid ? EYE : EYEOFF)}</button></span>`;
+  const tip = st.view === 'icons' ? ` data-tip="${esc(m.name + (m.desc ? ' — ' + m.desc : '') + (m.ready ? '' : ' (скоро)'))}"` : '';
+  return `<div class="mod ${m.ready ? '' : 'soon'} ${hid ? 'is-hidden' : ''}"${tip}>${main}${acts}</div>`;
+}
+
+function render() {
+  const q = view.q.trim().toLowerCase();
+  const list = MODS.filter(m => {
+    const hid = st.hid.includes(m.id);
+    if (hid && !view.showHid) return false;
+    if (view.favOnly && !st.fav.includes(m.id)) return false;
+    return !q || (m.name + ' ' + (m.desc || '')).toLowerCase().includes(q);
+  });
+  for (const [id, ready] of [['ready', true], ['soon', false]]) {
+    const items = list.filter(m => !!m.ready === ready);
+    const g = $(id);
+    g.className = 'grid v-' + st.view + (st.view === 'cards' && st.cols ? ' manual' : '');
+    g.innerHTML = items.map(cardHtml).join('');
+    $(id === 'ready' ? 'secReady' : 'secSoon').hidden = !items.length;
+  }
+  $('none').hidden = list.length > 0;
+  const root = document.documentElement.style;
+  root.setProperty('--gap', st.view === 'list' ? '8px' : st.gap + 'px');
+  root.setProperty('--cols', st.cols || 4);
+  // панель инструментов
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === st.view)));
+  $('favOnly').setAttribute('aria-pressed', String(view.favOnly));
+  $('showHid').setAttribute('aria-pressed', String(view.showHid));
+  $('hidN').hidden = !st.hid.length;
+  $('hidN').textContent = st.hid.length;
+  $('searchBox').classList.toggle('has', !!view.q);
+  $('colAuto').setAttribute('aria-pressed', String(!st.cols));
+  $('colMan').setAttribute('aria-pressed', String(!!st.cols));
+  $('cols').value = st.cols || 4;
+  $('cols').disabled = !st.cols;
+  $('colVal').textContent = st.cols || 'Авто';
+  const cardsOnly = st.view !== 'cards';
+  $('colRow').classList.toggle('off', cardsOnly);
+  $('colNote').hidden = !cardsOnly;
+  document.querySelectorAll('#gapSeg [data-gap]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.gap === st.gap)));
+  $('gapSeg').classList.toggle('off', st.view === 'list');
+}
+
+// Нажатия на значки «избранное» и «скрыть» на карточках
+document.querySelector('main').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const arr = b.dataset.act === 'fav' ? st.fav : st.hid, i = arr.indexOf(b.dataset.id);
+  if (i < 0) arr.push(b.dataset.id); else arr.splice(i, 1);
+  // если вернули последний скрытый модуль, режим «Скрытые» больше не нужен
+  if (!st.hid.length) view.showHid = false;
+  save(); render();
+});
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { st.view = b.dataset.view; save(); render(); });
+$('favOnly').onclick = () => { view.favOnly = !view.favOnly; render(); };
+$('showHid').onclick = () => { view.showHid = !view.showHid; render(); };
+$('q').oninput = () => { view.q = $('q').value; render(); };
+$('q').onkeydown = e => { if (e.key === 'Escape') { $('q').value = ''; view.q = ''; render(); } };
+$('qx').onclick = () => { $('q').value = ''; view.q = ''; render(); $('q').focus(); };
+$('colAuto').onclick = () => { st.cols = 0; save(); render(); };
+$('colMan').onclick = () => { st.cols = +$('cols').value || 4; save(); render(); };
+$('cols').oninput = () => { st.cols = +$('cols').value; save(); render(); };
+document.querySelectorAll('#gapSeg [data-gap]').forEach(b => b.onclick = () => { st.gap = +b.dataset.gap; save(); render(); });
+
+// Всплывающая панель настроек: закрывается по клику снаружи и по Esc
+const setPop = open => { $('pop').hidden = !open; $('setBtn').setAttribute('aria-expanded', String(open)); };
+$('setBtn').onclick = () => setPop($('pop').hidden);
+document.addEventListener('click', e => { if (!$('pop').hidden && !e.target.closest('.menuwrap')) setPop(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('pop').hidden) { setPop(false); $('setBtn').focus(); } });
+
+// Тема: тот же ключ, что в редакторе
+const THEME_KEY = 'dimvibe.theme';
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('themeSwitch').setAttribute('aria-checked', String(t === 'dark'));
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+}
+(() => {
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+  setTheme(saved === 'light' || saved === 'dark' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+})();
+$('themeSwitch').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+render();
+</script>
+</body>
+</html>

@@ -132,6 +132,8 @@
   aside { flex:none; width:260px; border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:10px; background:var(--bg); z-index:30; }
   #list { flex:1; min-height:0; overflow-y:auto; }
   .side-btn { display:flex; align-items:center; gap:8px; text-align:left; position:relative; }
+  a.side-btn { text-decoration:none; color:inherit; border:1px solid var(--line); background:var(--card); border-radius:8px; padding:6px 12px; min-height:36px; }
+  a.side-btn:hover { background:var(--accent-soft); }
   /* Свёрнутая панель: только значки, названия — в подсказках */
   aside.collapsed { width:56px; padding:14px 8px; align-items:center; }
   aside.collapsed .lbl, aside.collapsed #list { display:none; }
@@ -313,6 +315,7 @@
 </header>
 <div id="shell">
 <aside id="side">
+  <a class="side-btn" id="goHome" href="home.html" data-tip="Главная: все модули"><span data-icon="home"></span><span class="lbl">Главная</span></a>
   <button class="primary side-btn" id="new" data-tip="Новое упражнение"><span data-icon="plus"></span><span class="lbl">Новое упражнение</span></button>
   <button class="side-btn" id="openFile" data-tip="Открыть файл упражнения"><span data-icon="folder"></span><span class="lbl">Открыть файл упражнения</span></button>
   <input type="file" id="fileInput" accept=".json,application/json" hidden>
@@ -1311,6 +1314,7 @@ function renderPublish() {
 // Значки интерфейса: рисуются из этого списка в любой элемент с data-icon
 const ICONS = {
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10M10 20v-6h4v6"/>',
   undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
   redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
@@ -1547,14 +1551,15 @@ $('kindCancel').onclick = closeKind;
 $('kindDialog').onclick = e => { if (e.target === $('kindDialog')) closeKind(); };
 // Какой модуль создавать; выбор запоминается до следующего окна
 let newModule = 'fill_blanks';
-document.querySelectorAll('#modPick [data-mod]').forEach(b => b.onclick = () => {
-  newModule = b.dataset.mod;
-  document.querySelectorAll('#modPick [data-mod]').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+const pickModule = mod => {
+  newModule = mod;
+  document.querySelectorAll('#modPick [data-mod]').forEach(x => { const on = x.dataset.mod === mod; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); });
   // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
   const st = newModule === 'true_false' || newModule === 'multiple_choice';
   document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
   $('kindNote').hidden = st;
-});
+};
+document.querySelectorAll('#modPick [data-mod]').forEach(b => b.onclick = () => pickModule(b.dataset.mod));
 document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { closeKind(); createDraft(b.dataset.kind, newModule); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('kindDialog').hidden) closeKind(); });
 $('title').oninput = () => {
@@ -1600,6 +1605,16 @@ else if (sorted().length) openDraft(sorted()[0].id);
 else showEmpty();
 renderList();
 setPreviewOpen(!narrow()); // на широком экране предпросмотр открыт сразу, на узком открывается кнопкой
+// Переход с главной (home.html?new=модуль): модуль выбран заранее; у True / False и Multiple Choice черновик создаётся сразу
+(() => {
+  const mod = new URLSearchParams(location.search).get('new');
+  if (!mod) return;
+  history.replaceState(null, '', location.pathname);
+  if (!MODULES[mod]) return;
+  pickModule(mod);
+  if (mod === 'true_false' || mod === 'multiple_choice') createDraft('statements', mod);
+  else askKind();
+})();
 </script>
 </body>
 </html>
