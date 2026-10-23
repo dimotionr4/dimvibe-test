@@ -96,6 +96,8 @@
   .grow { flex:1; }
   .icon-btn { position:relative; display:inline-flex; align-items:center; justify-content:center; width:36px; min-height:36px; height:36px; padding:0; border:1px solid transparent; background:transparent; color:var(--text); }
   .icon-btn:hover { background:var(--accent-soft); }
+  .icon-btn:disabled { opacity:.35; cursor:default; background:transparent; }
+  .hist { display:inline-flex; gap:2px; }
   .icon-btn.active, .icon-btn[aria-pressed="true"] { background:var(--accent-soft); color:var(--accent); }
   .icon-btn svg, .side-btn svg { width:20px; height:20px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   /* Подсказка при наведении (и при фокусе с клавиатуры) */
@@ -309,6 +311,7 @@
   <div id="editor" hidden>
     <div class="top">
       <input id="title" placeholder="Название упражнения">
+      <span class="hist"><button class="icon-btn" id="undo" data-icon="undo" data-tip="Отменить (Ctrl+Z)" aria-label="Отменить" disabled></button><button class="icon-btn" id="redo" data-icon="redo" data-tip="Повторить (Ctrl+Y)" aria-label="Повторить" disabled></button></span>
       <span class="muted" id="saved"></span>
     </div>
     <div class="muted" style="margin:-4px 0 10px">Номер: <span id="draftId"></span> · черновик хранится только в этом браузере</div>
@@ -390,6 +393,7 @@ function writeStore() {
 // Вызывается после каждого изменения черновика
 function touch() {
   current.updatedAt = new Date().toISOString();
+  histRecord();
   if (writeStore()) {
     $('saved').textContent = 'Сохранено';
     clearTimeout(savedTimer);
@@ -397,6 +401,76 @@ function touch() {
   }
   renderList();
   schedulePreview();
+}
+
+// Отмена и повтор: у каждого черновика свой стек снимков всего черновика (без статуса публикации и времени правки).
+// Он живёт, пока открыта страница. Быстрый набор в одном текстовом поле (пауза меньше секунды) — один шаг
+const HIST_MAX = 50, hist = {};
+// Объединяем только правки, вызванные вводом с клавиатуры (событие input), а не нажатиями кнопок
+let inputNow = false;
+addEventListener('input', () => { inputNow = true; setTimeout(() => { inputNow = false; }, 0); }, true);
+const histSnap = dr => JSON.stringify(dr, (k, v) => (k === 'publication' || k === 'updatedAt' ? undefined : v));
+
+function histButtons() {
+  const h = current && hist[current.id];
+  $('undo').disabled = !h || h.idx <= 0;
+  $('redo').disabled = !h || h.idx >= h.stack.length - 1;
+}
+
+// Открыт черновик: если история не совпадает с ним (например, его заменили файлом), начинаем заново
+function histInit() {
+  const s = histSnap(current), h = hist[current.id];
+  if (!h || h.stack[h.idx] !== s) hist[current.id] = { stack: [s], idx: 0, at: 0, el: null };
+  histButtons();
+}
+
+function histRecord() {
+  const h = hist[current.id];
+  if (!h) return;
+  const s = histSnap(current);
+  if (s === h.stack[h.idx]) return;
+  const ae = document.activeElement, now = Date.now();
+  const typing = inputNow && !!ae && ae.matches('input:not([type=range]):not([type=file]), textarea, [contenteditable="true"]');
+  const merge = typing && h.el === ae && now - h.at < 1000 && h.idx > 0;
+  h.at = now;
+  h.el = typing ? ae : null;
+  h.stack.length = h.idx + 1; // новая правка стирает «повтор»
+  if (merge) h.stack[h.idx] = s;
+  else {
+    h.stack.push(s);
+    h.idx++;
+    if (h.stack.length > HIST_MAX + 1) { h.stack.shift(); h.idx--; }
+  }
+  histButtons();
+}
+
+// dir = -1 отмена, +1 повтор. Черновик подменяется на месте (модуль держит ссылку на тот же объект)
+function histGo(dir) {
+  const h = current && hist[current.id];
+  if (!h) return;
+  const to = h.idx + dir;
+  if (to < 0 || to >= h.stack.length) return;
+  h.idx = to; h.el = null; h.at = 0;
+  const pub = current.publication, id = current.id;
+  Object.keys(current).forEach(k => delete current[k]);
+  Object.assign(current, JSON.parse(h.stack[to]));
+  current.id = id;
+  if (pub !== undefined) current.publication = pub;
+  current.updatedAt = new Date().toISOString();
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  hideHelp();
+  const keepScroll = $('work').scrollTop;
+  $('title').value = current.title;
+  showTab(tab);
+  $('work').scrollTop = keepScroll;
+  if (writeStore()) {
+    $('saved').textContent = 'Сохранено';
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => { $('saved').textContent = ''; }, 1500);
+  }
+  renderList();
+  schedulePreview();
+  histButtons();
 }
 
 // Случайный номер вида ex-k7m2qa: у разных преподавателей номера не совпадут
@@ -423,6 +497,7 @@ function open(id) {
   $('editor').hidden = false;
   $('title').value = current.title;
   $('draftId').textContent = current.id;
+  histInit();
   showTab(tab);
   renderList();
   if (narrow()) setSide(true, false);
@@ -449,6 +524,7 @@ function removeDraft(id) {
   const name = drafts[id].title || 'Без названия';
   if (!confirm(`Удалить черновик «${name}»? Уже опубликованное упражнение это не затронет.`)) return;
   delete drafts[id];
+  delete hist[id];
   writeStore();
   if (current && current.id === id) {
     current = null;
@@ -1076,6 +1152,8 @@ function renderPublish() {
 // Значки интерфейса: рисуются из этого списка в любой элемент с data-icon
 const ICONS = {
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+  redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
@@ -1329,6 +1407,17 @@ addEventListener('keydown', e => { if (e.key === 'Escape' && !$('creditPop').hid
 addEventListener('pointerdown', e => { if (dzColorOpen && !e.target.closest('.mock')) { dzColorOpen = false; renderDesign(); } });
 addEventListener('pointerdown', e => { if (helpFor && !e.target.closest('.help, #helpBubble')) hideHelp(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && helpFor) hideHelp(); });
+
+$('undo').onclick = () => histGo(-1);
+$('redo').onclick = () => histGo(1);
+// Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z (по коду клавиши, работает и на русской раскладке). Своя отмена заменяет встроенную в полях:
+// встроенная не знает о перерисовке редактора и расходилась бы с общей историей
+addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || !current || !$('kindDialog').hidden) return;
+  if (e.code !== 'KeyZ' && e.code !== 'KeyY') return;
+  e.preventDefault();
+  histGo(e.code === 'KeyY' || e.shiftKey ? 1 : -1);
+});
 
 readStore();
 let last = null;
