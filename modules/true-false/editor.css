@@ -40,7 +40,23 @@
 .tf-n { color:var(--muted); flex:none; }
 .tf-txt { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tf-txt.empty { color:var(--muted); font-style:italic; }
-.tf-tag { flex:none; font-size:.72rem; color:var(--bad); border:1px solid var(--bad); border-radius:999px; padding:0 8px; }
+/* Строка: слева кнопки правильного ответа, справа поле утверждения */
+.tf-head { align-items:flex-start; padding:8px 6px 8px 4px; }
+.tf-grip, .tf-n { padding-top:8px; }
+.tf-main { flex:1; min-width:0; display:flex; gap:10px; align-items:stretch; }
+.tf-picks { flex:none; width:128px; display:flex; flex-direction:column; gap:4px; }
+.tf-pick { min-height:34px; padding:2px 10px; border-radius:8px; font-size:.9rem; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tf-pick:hover { border-color:var(--accent); }
+.tf-pick.on { color:var(--text); font-weight:600; }
+.tf-pick.on.a { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.tf-pick.on.b { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.tf-pick.on.c { border-color:var(--accent); background:var(--accent-soft); }
+.tf-pick.on .tf-pl::before { content:"✓ "; }
+.tf-field { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.tf-field textarea { width:100%; flex:1; min-height:72px; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.tf-more.on { color:var(--accent); }
+@media (max-width:560px) { .tf-main { flex-direction:column; } .tf-picks { width:auto; flex-direction:row; flex-wrap:wrap; } .tf-pick { flex:1 1 90px; } }
+.tf-tag { flex:none; align-self:flex-start; font-size:.72rem; color:var(--bad); border:1px solid var(--bad); border-radius:999px; padding:0 8px; }
 .tf-tag[hidden] { display:none; }
 .tf-tools2 { display:flex; align-items:center; gap:0; flex:none; }
 .tf-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }

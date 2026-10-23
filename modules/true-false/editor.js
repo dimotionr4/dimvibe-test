@@ -1,4 +1,4 @@
-// Редактор модуля True / False: утверждения, у каждого один верный ответ из двух категорий (необязательно трёх).
+﻿// Редактор модуля True / False: утверждения, у каждого один верный ответ из двух категорий (необязательно трёх).
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Всё, что видит автор, лежит в черновике (кроме открытой строки и пометок «проверьте ответ»), поэтому отмена и повтор ядра работают сами.
 const TrueFalseEditor = (() => {
@@ -192,16 +192,45 @@ const TrueFalseEditor = (() => {
       save();
       drawList();
     };
-    const ico = el('span', 'tf-state');
-    const sum = el('button', 'tf-sum');
-    sum.type = 'button';
-    sum.setAttribute('aria-expanded', String(it.id === openId));
-    const num = el('span', 'tf-n', `${i + 1}.`);
-    const txt = el('span', 'tf-txt');
+    // Слева кнопки правильного ответа, справа поле утверждения
+    const main = el('div', 'tf-main');
+    const picks = el('div', 'tf-picks');
+    picks.setAttribute('role', 'radiogroup');
+    picks.setAttribute('aria-label', `Правильный ответ, утверждение ${i + 1}`);
+    labelsOf(fmtOf(it)).forEach(l => {
+      const b = el('button', 'tf-pick' + (it.correct === l.id ? ' on ' + l.id : ''));
+      b.type = 'button';
+      b.dataset.k = l.id;
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String(it.correct === l.id));
+      b.title = 'Правильный ответ: ' + (clean(l.text) || '…');
+      b.append(el('span', 'tf-pl', clean(l.text) || '…'));
+      b.onclick = () => { it.correct = it.correct === l.id ? '' : l.id; recheck.delete(it.id); save(); drawList(); };
+      picks.append(b);
+    });
+    const field = el('div', 'tf-field');
+    const ta = el('textarea');
+    ta.rows = 2;
+    ta.placeholder = 'Утверждение, например: The sun rises in the east.';
+    ta.value = it.text;
+    ta.setAttribute('aria-label', `Текст утверждения ${i + 1}`);
+    const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
+    ta.oninput = () => { it.text = ta.value; fit(); save(); };
+    setTimeout(fit, 0);
     const tag = el('span', 'tf-tag', 'Проверьте правильный ответ');
-    sum.append(num, txt, tag);
-    sum.onclick = () => { openId = openId === it.id ? null : it.id; delAsk = null; drawList(); if (openId) { const ta = listBox.querySelector(`.tf-row[data-id="${it.id}"] textarea`); if (ta && !it.text) ta.focus(); } };
+    tag.hidden = !(recheck.has(it.id) && it.correct);
+    field.append(ta, tag);
+    if (it.correct === 'c' && !fmtOf(it).third) field.append(el('div', 'tf-warn', 'Ответ привязан к третьему варианту, а он отключён: включите его или выберите другой ответ.'));
+    main.append(picks, field);
     const tools = el('span', 'tf-tools2');
+    const more = el('button', 'tf-ib tf-more' + (it.id === openId ? ' on' : ''));
+    more.type = 'button';
+    more.innerHTML = svg('<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>');
+    more.title = 'Пояснение, озвучка, другой формат ответов';
+    more.setAttribute('aria-label', more.title);
+    more.setAttribute('aria-expanded', String(it.id === openId));
+    more.onclick = () => { openId = openId === it.id ? null : it.id; delAsk = null; drawList(); };
+    tools.append(more);
     const btn = (cls, html, tip, fn, disabled) => {
       const b = el('button', 'tf-ib ' + cls);
       b.type = 'button';
@@ -228,66 +257,25 @@ const TrueFalseEditor = (() => {
       q.append(yes, no);
       tools.append(q);
     } else tools.append(btn('tf-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => askDelete(i)));
-    head.append(grip, ico, sum, tools);
+    head.append(grip, el('span', 'tf-n', `${i + 1}.`), main, tools);
     r.append(head);
-    fillHead(r, it);
     if (it.id === openId) r.append(body(it, r));
     return r;
   }
 
-  // Заголовок строки: значок ответа и начало текста; вызывается при правках без полной перерисовки
-  function fillHead(r, it) {
-    const s = statusIcon(it);
-    const ico = r.querySelector('.tf-state');
-    ico.className = 'tf-state ' + s.cls;
-    ico.innerHTML = s.html;
-    ico.title = s.tip;
-    const t = clean(it.text);
-    const txt = r.querySelector('.tf-txt');
-    txt.textContent = t || 'Пустое утверждение';
-    txt.classList.toggle('empty', !t);
-    r.querySelector('.tf-tag').hidden = !(recheck.has(it.id) && it.correct);
-  }
-  const markTags = () => listBox.querySelectorAll('.tf-row').forEach(r => { const it = d.items.find(x => x.id === r.dataset.id); if (it) fillHead(r, it); });
-  // Названия на кнопках выбора ответа в раскрытых строках
-  const syncLabels = () => listBox.querySelectorAll('.tf-row.open').forEach(r => {
+  // Названия на кнопках ответа и метки «проверьте» без полной перерисовки (чтобы не терять фокус в поле названия)
+  const markTags = () => listBox.querySelectorAll('.tf-row').forEach(r => {
     const it = d.items.find(x => x.id === r.dataset.id);
-    if (it) r.querySelectorAll('.tf-rad span').forEach(s => { s.textContent = labelText(it, s.dataset.k) || '…'; });
+    if (it) r.querySelector('.tf-tag').hidden = !(recheck.has(it.id) && it.correct);
+  });
+  const syncLabels = () => listBox.querySelectorAll('.tf-row').forEach(r => {
+    const it = d.items.find(x => x.id === r.dataset.id);
+    if (it) r.querySelectorAll('.tf-pl').forEach((s, k) => { const l = labelsOf(fmtOf(it))[k]; if (l) s.textContent = clean(l.text) || '…'; });
   });
   const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
 
   function body(it, r) {
     const b = el('div', 'tf-body');
-    const ta = el('textarea');
-    ta.rows = 2;
-    ta.placeholder = 'Утверждение, например: The sun rises in the east.';
-    ta.value = it.text;
-    ta.setAttribute('aria-label', 'Текст утверждения');
-    const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
-    ta.oninput = () => { it.text = ta.value; fit(); fillHead(r, it); save(); };
-    b.append(ta);
-    setTimeout(fit, 0);
-
-    // Правильный ответ: одна из включённых категорий
-    const rl = el('div', 'tf-label tf-labelrow', 'Правильный ответ');
-    rl.append(help('Выберите одну категорию. Если названия потом изменятся, ответ останется на своём месте, а у строки появится напоминание проверить его.'));
-    const rads = el('div', 'tf-rads');
-    rads.setAttribute('role', 'radiogroup');
-    labelsOf(fmtOf(it)).forEach(l => {
-      const lab = el('label', 'tf-rad');
-      const inp = el('input');
-      inp.type = 'radio';
-      inp.name = 'tf-correct-' + it.id;
-      inp.checked = it.correct === l.id;
-      const sp = el('span', '', clean(l.text) || '…');
-      sp.dataset.k = l.id;
-      inp.onchange = () => { it.correct = l.id; recheck.delete(it.id); save(); fillHead(r, it); };
-      lab.append(inp, sp);
-      rads.append(lab);
-    });
-    b.append(rl, rads);
-    if (it.correct === 'c' && !fmtOf(it).third) b.append(el('div', 'tf-warn', 'Правильный ответ привязан к третьему варианту, а он отключён. Включите его снова или выберите другой ответ: пока упражнение не опубликуется.'));
-
     const el2 = el('div', 'tf-label tf-labelrow', 'Пояснение (необязательно)');
     el2.append(help('Ученик увидит пояснение после проверки, если ответил на это утверждение верно, и в конце упражнения. Пока ответ неверный, пояснение скрыто, чтобы не выдать ответ. Баллы оно не меняет.'));
     const ex = el('textarea');
