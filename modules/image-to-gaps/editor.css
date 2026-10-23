@@ -1,0 +1,74 @@
+/* Редактор модуля Image to Gaps. Цвета берутся из переменных ядра (editor.html) */
+.ig-wrap { position:relative; }
+.ig-muted { color:var(--muted); }
+.ig-limit { color:var(--bad); font-weight:600; }
+.ig-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.ig-warn { color:var(--bad); font-size:.85rem; margin:2px 0 8px; }
+.ig-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.ig-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.ig-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.ig-kindtag { font-size:.8rem; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 10px; }
+.ig-seg { position:relative; display:inline-flex; gap:4px; }
+.ig-seg button { position:relative; min-height:32px; height:32px; min-width:34px; padding:0 10px; border-radius:8px; font-size:.85rem; }
+.ig-seg button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.ig-labelrow { display:flex; align-items:center; gap:6px; }
+.ig-labelrow h3 { margin:0; font-size:1rem; }
+.ig-label { font-size:.9rem; color:var(--muted); margin:8px 0 4px; }
+
+/* Предложения */
+.ig-sentence { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 10px; margin-bottom:8px; }
+.ig-sentence:focus-within { border-color:var(--accent); }
+.ig-num { color:var(--muted); min-width:1.6em; padding-top:6px; }
+.ig-edit { flex:1; min-width:0; min-height:36px; padding:4px 2px; outline:none; white-space:pre-wrap; line-height:2.4; }
+.ig-edit.empty::before { content:attr(data-placeholder); color:var(--muted); pointer-events:none; }
+.ig-textmode .ig-sentence { margin-bottom:-1px; border-radius:0; }
+.ig-textmode .ig-sentence:first-child { border-radius:12px 12px 0 0; }
+.ig-textmode .ig-sentence:nth-last-of-type(1) { border-radius:0 0 12px 12px; margin-bottom:8px; }
+.ig-textmode .ig-sentence:only-of-type { border-radius:12px; }
+.ig-icon { border:none; background:transparent; color:var(--muted); padding:0 6px; min-height:28px; font-size:1.1rem; }
+.ig-icon:hover { color:var(--bad); }
+.ig-add { margin:4px 0 8px; }
+
+/* Значок пропуска в тексте: миниатюра картинки, без картинки — выделенное слово пунктиром */
+.ig-chip { display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; min-width:34px; height:34px; padding:2px; margin:0 3px; border-radius:8px; background:var(--accent-soft); border:2px solid var(--accent); cursor:pointer; user-select:none; line-height:1; }
+.ig-chip.empty { padding:0 10px; border-style:dashed; font-size:.9rem; }
+.ig-chip.open { background:var(--accent); color:#fff; }
+.ig-chip-img { width:28px; height:28px; }
+
+/* Миниатюры: квадрат, картинка вписана целиком */
+.ig-thumb { display:inline-flex; align-items:center; justify-content:center; width:100%; height:100%; }
+.ig-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+.ig-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+
+/* Панель пропуска */
+.ig-panel-box { position:absolute; z-index:8; box-shadow:0 8px 28px rgba(0,0,0,.28); border-radius:12px; }
+.ig-panel-box[hidden] { display:none; }
+.ig-panel { background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:12px; }
+.ig-panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.ig-panel-tools { display:inline-flex; gap:2px; align-items:center; }
+.ig-trash { position:relative; }
+.ig-panel > input { width:100%; margin-bottom:6px; }
+.ig-current { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.ig-current:empty { display:none; }
+.ig-cur-img { width:64px; height:64px; flex:none; border:1px solid var(--line); border-radius:8px; background:var(--bg); padding:2px; }
+
+/* Выбор картинки */
+.ig-picker { display:flex; flex-direction:column; gap:6px; }
+.ig-stubs { display:flex; flex-wrap:wrap; gap:6px; }
+.ig-stub { width:44px; height:44px; min-height:0; padding:3px; border-radius:8px; }
+.ig-stub:hover { border-color:var(--accent); }
+.ig-adder { display:flex; gap:6px; }
+.ig-adder input { flex:1; min-width:0; }
+
+/* Банк картинок: сетка маленьких квадратов */
+.ig-bank { margin-top:16px; }
+.ig-bank .ig-labelrow { margin-bottom:8px; }
+.ig-filter { margin-left:auto; }
+.ig-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.ig-card { position:relative; width:56px; height:56px; min-height:0; padding:4px; border-radius:10px; border:1px solid var(--line); background:var(--card); }
+.ig-card.ig-auto { border-style:dashed; cursor:pointer; }
+.ig-card.ig-auto:hover { border-color:var(--accent); }
+.ig-card-x { position:absolute; top:-8px; right:-8px; width:22px; height:22px; min-height:0; padding:0; border-radius:50%; font-size:.9rem; line-height:1; color:var(--muted); }
+.ig-card-x:hover { color:var(--bad); border-color:var(--bad); }
+.ig-trapbox { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; max-width:360px; display:flex; flex-direction:column; gap:8px; }
+.ig-trapbox[hidden] { display:none; }

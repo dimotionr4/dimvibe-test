@@ -34,16 +34,28 @@ function mediaUrl(path) {
   return p ? `https://firebasestorage.googleapis.com/v0/b/${MEDIA_BUCKET}/o/${encodeURIComponent(p)}?alt=media` : null;
 }
 
-// Источник файла: {media} (путь в хранилище) или {url} (внешняя ссылка https). Возвращает адрес или null
+// Заглушки: временные картинки из проекта (core/stubs/<имя>.svg), пока нет общей медиатеки. Подпись — для редактора
+const MEDIA_STUBS = { apple: 'Яблоко', banana: 'Банан', ball: 'Мяч', house: 'Дом', tree: 'Дерево', sun: 'Солнце', star: 'Звезда', fish: 'Рыба' };
+
+// Источник файла: {media} (путь в хранилище), {stub} (заглушка) или {url} (внешняя ссылка https). Возвращает адрес или null
 function mediaSrc(item) {
   if (!item) return null;
   if (item.media) return mediaUrl(item.media);
+  if (item.stub) return MEDIA_STUBS[item.stub] ? `core/stubs/${item.stub}.svg` : null;
   try {
     const u = new URL(String(item.url || '').trim());
     return u.protocol === 'https:' ? u.href : null;
   } catch (e) {
     return null;
   }
+}
+
+// Идентичность картинки (mediaId): одна и та же картинка в разных местах даёт один и тот же ключ. Пустая строка — картинки нет
+function mediaKey(item) {
+  if (!item) return '';
+  if (item.media) return safeMediaPath(item.media) ? 'm:' + item.media : '';
+  if (item.stub) return MEDIA_STUBS[item.stub] ? 's:' + item.stub : '';
+  return mediaSrc(item) ? 'u:' + String(item.url).trim() : '';
 }
 
 const mediaExt = name => (String(name).toLowerCase().match(/\.([a-z0-9]+)$/) || [])[1] || '';

@@ -1,0 +1,26 @@
+/* Плеер модуля Image to Gaps: пропуск-рамка под картинку и банк маленьких карточек. Форма, цвета и значки состояний — из core/gap.css */
+.no-modes .modes { display:none !important; }
+
+/* Размер пропуска: ориентиры, ширина колонки Player может его уменьшить */
+.gap.itg-gap { --iw:88px; --ih:72px; width:var(--iw); height:var(--ih); min-width:0; min-height:0; max-width:100%; margin:6px 5px; padding:0; flex:none; }
+.gap.itg-gap.size-s { --iw:64px; --ih:54px; }
+.gap.itg-gap.size-l { --iw:120px; --ih:96px; }
+/* Картинка в пропуске должна оставаться картинкой, поэтому плашка и свободная форма здесь — скруглённые прямоугольники */
+.gap.itg-gap.shape-pill, .gap.itg-gap.shape-free { border-radius:12px; padding:0; }
+.gap.itg-gap:not(.has-img) { background:color-mix(in srgb, var(--gap-c) 8%, transparent); }
+.gap.itg-gap img { display:block; width:100%; height:100%; object-fit:contain; padding:3px; border-radius:8px; pointer-events:none; user-select:none; }
+.gap.itg-gap.fit-cover img { object-fit:cover; padding:0; }
+/* Выбрана картинка: все пустые пропуски подсвечиваются одинаково, правильный не раскрывается */
+.gap.itg-gap.target { outline:2px dashed var(--accent); outline-offset:2px; background:color-mix(in srgb, var(--accent) 14%, transparent); }
+.gap.itg-gap:focus-visible, .itg-card:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+
+/* Банк: одинаковые квадратные карточки в сетке; общий банк занимает не больше четверти экрана (index.html) */
+.itg-card { flex:none; width:52px; height:52px; min-height:0; padding:3px; border-radius:10px; border:1px solid var(--line); background:var(--card); }
+.itg-card img { display:block; width:100%; height:100%; object-fit:contain; border-radius:6px; pointer-events:none; user-select:none; }
+.itg-card.used { opacity:.35; cursor:default; }
+.itg-card.selected { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+@media (max-width:420px) {
+  .gap.itg-gap { --iw:76px; --ih:64px; }
+  .gap.itg-gap.size-s { --iw:56px; --ih:48px; }
+  .gap.itg-gap.size-l { --iw:100px; --ih:82px; }
+}

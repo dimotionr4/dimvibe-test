@@ -6,8 +6,10 @@ const FillBlanksEditor = (() => {
   let counter, msg, panelBox, altsBox, bankChips, gapBar;
 
   const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
-  const isGap = p => typeof p !== 'string';
-  const isChip = n => n.classList && n.classList.contains('fb-chip');
+  // Разметка пропусков в тексте — общий движок (core/gap-engine.js)
+  const { isGap, nextId } = GapEngine;
+  const hasGap = id => !!d.gaps[id];
+  const readDom = ed => GapEngine.readDom(ed, hasGap, 'fb-chip');
 
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -36,52 +38,7 @@ const FillBlanksEditor = (() => {
   }
 
   // Пропуски в порядке появления в тексте. В d.gaps могут остаться стёртые из текста (чтобы Ctrl+Z их вернул) — их не считаем
-  const gapOrder = () => d.items.flatMap(i => i.parts.filter(isGap).map(p => p.gap));
-
-  function nextId(prefix, ids) {
-    return prefix + (Math.max(0, ...ids.map(id => parseInt(id.slice(prefix.length), 10) || 0)) + 1);
-  }
-
-  // Предложение как массив отдельных символов и пропусков: так удобно резать по позициям выделения
-  const toTokens = parts => parts.flatMap(p => isGap(p) ? [p] : p.split(''));
-
-  function fromTokens(tokens) {
-    const parts = [];
-    tokens.forEach(t => {
-      if (!isGap(t) && typeof parts[parts.length - 1] === 'string') parts[parts.length - 1] += t;
-      else parts.push(t);
-    });
-    return parts.length ? parts : [''];
-  }
-
-  // Текст из поля предложения обратно в данные; браузер может вставлять неразрывные пробелы и обёртки — их убираем
-  function readDom(ed) {
-    const tokens = [], seen = new Set();
-    const walk = n => n.childNodes.forEach(c => {
-      if (c.nodeType === Node.TEXT_NODE) tokens.push(...c.data.replace(/ /g, ' ').split(''));
-      else if (isChip(c)) {
-        const id = c.dataset.gap;
-        if (d.gaps[id] && !seen.has(id)) { seen.add(id); tokens.push({ gap: id }); }
-      } else walk(c);
-    });
-    walk(ed);
-    return fromTokens(tokens);
-  }
-
-  // Позиция точки выделения в тех же единицах, что и toTokens: символ текста = 1, пропуск = 1
-  function offsetIn(ed, node, off) {
-    const r = document.createRange();
-    r.setStart(ed, 0);
-    r.setEnd(node, off);
-    let n = 0;
-    const walk = x => x.childNodes.forEach(c => {
-      if (c.nodeType === Node.TEXT_NODE) n += c.data.length;
-      else if (isChip(c)) n += d.gaps[c.dataset.gap] ? 1 : 0;
-      else walk(c);
-    });
-    walk(r.cloneContents());
-    return n;
-  }
+  const gapOrder = () => GapEngine.gapOrder(d.items);
 
   function say(text) {
     msg.textContent = text;
@@ -244,38 +201,17 @@ const FillBlanksEditor = (() => {
   }
 
   function makeGap() {
-    const sel = getSelection();
-    if (!sel.rangeCount || sel.isCollapsed) return say('Сначала выделите слово или фразу в предложении.');
-    const r = sel.getRangeAt(0);
-    const edOf = n => (n.nodeType === Node.TEXT_NODE ? n.parentElement : n).closest('.fb-edit');
-    const ed = edOf(r.startContainer);
-    if (!ed || ed !== edOf(r.endContainer)) return say('Выделение должно быть внутри одного предложения.');
-    if (gapOrder().length >= MAX_GAPS) return say(`В задании не больше ${MAX_GAPS} пропусков. Разделите его на два задания.`);
-
-    const item = d.items.find(i => i.id === ed.dataset.item);
-    item.parts = readDom(ed);
-    const t = toTokens(item.parts);
-    let s = offsetIn(ed, r.startContainer, r.startOffset), e = offsetIn(ed, r.endContainer, r.endOffset);
-    const space = x => !isGap(x) && /\s/.test(x);
-    while (s < e && space(t[s])) s++;
-    while (e > s && space(t[e - 1])) e--;
-    if (s === e) return say('Выделите слово или фразу, а не пробел.');
-    if (t.slice(s, e).some(isGap)) return say('В выделении уже есть пропуск. Выделите только обычный текст.');
-
-    const id = nextId('g', Object.keys(d.gaps));
-    d.gaps[id] = { answer: t.slice(s, e).join(''), alternatives: [], hint: '', audio: '', hintAudio: '' };
-    t.splice(s, e - s, { gap: id });
-    item.parts = fromTokens(t);
-    sel.removeAllRanges();
-    openGap = id;
+    const r = GapEngine.fromSelection({ items: d.items, hasGap, editClass: 'fb-edit', chipClass: 'fb-chip', count: gapOrder().length, max: MAX_GAPS, newId: () => nextId('g', Object.keys(d.gaps)) });
+    if (r.error) return say(r.error);
+    d.gaps[r.id] = { answer: r.text, alternatives: [], hint: '', audio: '', hintAudio: '' };
+    openGap = r.id;
     save();
     draw();
   }
 
   // Пропуск снова становится обычным текстом
   function removeGap(id) {
-    const item = d.items.find(i => i.parts.some(p => isGap(p) && p.gap === id));
-    item.parts = fromTokens(toTokens(item.parts).flatMap(t => isGap(t) && t.gap === id ? d.gaps[id].answer.split('') : [t]));
+    GapEngine.restoreText(d.items, id, d.gaps[id].answer);
     delete d.gaps[id];
     openGap = null;
     save();

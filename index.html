@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="core/gap.css?v=6">
 <link rel="stylesheet" href="core/check.css?v=1">
 <link rel="stylesheet" href="core/comic.css?v=12">
+<link rel="stylesheet" href="modules/image-to-gaps/player.css?v=1">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -105,13 +106,16 @@
 </footer>
 
 <script src="core/design.js?v=5"></script>
-<script src="core/media.js?v=3"></script>
+<script src="core/media.js?v=4"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
+<script src="modules/image-to-gaps/player.js?v=1"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
 let data = null, mode = 'word_bank', gaps = [], selected = null;
+// Модуль упражнения: Fill Blanks (по умолчанию) или Image to Gaps (modules/image-to-gaps/player.js). Общие — шапка, инструкция, проверки, результат
+const isImg = () => !!data && data.module === 'image_to_gaps';
 // Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
 let maxChecks = 3, checksUsed = 0, finished = false, note = '', instrOpen = true;
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key
@@ -156,10 +160,12 @@ function build() {
     item.parts.forEach(p => {
       if (typeof p === 'string') return;
       const g = data.gaps[p.gap];
-      gaps.push({ id: p.gap, answer: g.answer, alternatives: g.alternatives || [], hint: String(g.hint || '').trim(), audio: mediaSrc(g.audio), hintAudio: mediaSrc(g.hintAudio), value: '', bankKey: null, locked: false, state: null });
+      gaps.push(isImg() ? ImageToGapsPlayer.gap(p.gap, g) : { id: p.gap, answer: g.answer, alternatives: g.alternatives || [], hint: String(g.hint || '').trim(), audio: mediaSrc(g.audio), hintAudio: mediaSrc(g.hintAudio), value: '', bankKey: null, locked: false, state: null });
     });
   });
   mode = data.mode || 'word_bank';
+  // Image to Gaps: свой способ ответа (банк картинок), кнопок режимов нет
+  document.body.classList.toggle('no-modes', isImg());
   applyLook();
   // Цвет упражнения; если файл с набором цветов не загрузился, остаётся стандартный фиолетовый
   if (typeof applyAccent === 'function') applyAccent(document.documentElement, data.design && data.design.accent);
@@ -173,6 +179,7 @@ function build() {
 // Банк: у каждого ответа свой экземпляр (два пропуска с ответом «the» — два слова в банке) и ловушки.
 // Выпадающий список: ответы, альтернативы и ловушки без повторов (общий пул)
 function shuffleWords() {
+  if (isImg()) { bankOrder = ImageToGapsPlayer.shuffle(); return; }
   const answers = gaps.map(g => g.answer);
   const distractors = data.distractors || [];
   const taken = new Set(answers.map(norm));
@@ -386,6 +393,7 @@ function fitInput(el, input) {
 }
 
 function makeGap(idx) {
+  if (isImg()) return ImageToGapsPlayer.makeGap(idx);
   const g = gaps[idx];
   const el = document.createElement('span');
   // Форма, ширина и нумерация выбраны преподавателем во вкладке «Дизайн» (если файла с набором нет — сплошная линия)
@@ -447,6 +455,7 @@ function renderBank() {
   const bank = $('bank');
   const scroll = bank.scrollTop;
   bank.innerHTML = '';
+  if (isImg()) { ImageToGapsPlayer.renderBank(bank); bank.scrollTop = scroll; return; }
   if (mode !== 'word_bank') return;
   const used = new Set(gaps.map(g => g.bankKey).filter(k => k !== null));
   bankOrder.forEach(w => {

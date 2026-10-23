@@ -273,6 +273,11 @@
   .kind { display:block; width:100%; text-align:left; margin-bottom:8px; padding:10px 12px; }
   .kind b, .kind span { display:block; }
   .kind span { color:var(--muted); font-size:.9rem; }
+  .modpick { display:flex; gap:8px; margin-bottom:12px; }
+  .modpick button { flex:1; text-align:left; padding:8px 12px; }
+  .modpick button b, .modpick button span { display:block; }
+  .modpick button span { color:var(--muted); font-size:.85rem; }
+  .modpick button.active { background:var(--accent-soft); border-color:var(--accent); }
   .stage { display:flex; justify-content:center; }
   #previewFrame { width:100%; height:600px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
   .stage.phone #previewFrame { width:375px; max-width:100%; }
@@ -288,6 +293,7 @@
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
 <link rel="stylesheet" href="modules/fill-blanks/editor.css?v=24">
+<link rel="stylesheet" href="modules/image-to-gaps/editor.css?v=1">
 </head>
 <body>
 <header id="bar">
@@ -360,7 +366,11 @@
 
 <div id="kindDialog" class="modal" hidden>
   <div class="modal-box choose">
-    <h3 style="margin:0 0 4px">Какое упражнение создать?</h3>
+    <h3 style="margin:0 0 8px">Какое упражнение создать?</h3>
+    <div class="modpick" id="modPick" role="group" aria-label="Модуль">
+      <button class="active" data-mod="fill_blanks" aria-pressed="true"><b>Fill Blanks</b><span>В пропуски — слова</span></button>
+      <button data-mod="image_to_gaps" aria-pressed="false"><b>Image to Gaps</b><span>В пропуски — картинки</span></button>
+    </div>
     <p class="muted" style="margin:0 0 12px">Вид текста выбирается один раз и потом не меняется.</p>
     <button class="kind" data-kind="sentences"><b>Отдельные предложения</b><span>Каждое предложение — своё задание с пропусками.</span></button>
     <button class="kind" data-kind="text"><b>Связный текст</b><span>Один текст из нескольких абзацев с пропусками.</span></button>
@@ -369,16 +379,18 @@
 </div>
 
 <script src="core/design.js?v=5"></script>
-<script src="core/media.js?v=3"></script>
+<script src="core/media.js?v=4"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
-<script src="modules/fill-blanks/editor.js?v=24"></script>
+<script src="core/gap-engine.js?v=1"></script>
+<script src="modules/fill-blanks/editor.js?v=25"></script>
+<script src="modules/image-to-gaps/editor.js?v=1"></script>
 <script>
-const ASSET_V = 24;
+const ASSET_V = 25;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -489,9 +501,9 @@ function newId() {
   return id;
 }
 
-function createDraft(layout) {
+function createDraft(layout, module) {
   const id = newId();
-  drafts[id] = { id, title: '', ...MODULES.fill_blanks.create(layout), updatedAt: new Date().toISOString() };
+  drafts[id] = { id, title: '', ...MODULES[MODULES[module] ? module : 'fill_blanks'].create(layout), updatedAt: new Date().toISOString() };
   writeStore();
   tab = 'content';
   openDraft(id);
@@ -1487,7 +1499,13 @@ $('new').onclick = askKind;
 $('new2').onclick = askKind;
 $('kindCancel').onclick = closeKind;
 $('kindDialog').onclick = e => { if (e.target === $('kindDialog')) closeKind(); };
-document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { closeKind(); createDraft(b.dataset.kind); });
+// Какой модуль создавать; выбор запоминается до следующего окна
+let newModule = 'fill_blanks';
+document.querySelectorAll('#modPick [data-mod]').forEach(b => b.onclick = () => {
+  newModule = b.dataset.mod;
+  document.querySelectorAll('#modPick [data-mod]').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+});
+document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { closeKind(); createDraft(b.dataset.kind, newModule); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('kindDialog').hidden) closeKind(); });
 $('title').oninput = () => {
   current.title = $('title').value;
