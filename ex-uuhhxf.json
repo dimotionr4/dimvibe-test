@@ -1,0 +1,50 @@
+{
+  "id": "ex-uuhhxf",
+  "module": "true_false",
+  "format": 1,
+  "published": false,
+  "title": "",
+  "view": "one",
+  "answers": {
+    "preset": "sd",
+    "a": "Safe",
+    "b": "Dangerous"
+  },
+  "items": [
+    {
+      "id": "q1",
+      "text": "",
+      "correct": "a"
+    }
+  ],
+  "instruction": {
+    "title": "",
+    "text": ""
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "violet",
+    "showInstruction": true,
+    "showImage": true,
+    "gap": {
+      "shape": "line",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "classic",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "backdrop"
+    },
+    "check": {
+      "variant": "soft",
+      "align": "center"
+    }
+  }
+}

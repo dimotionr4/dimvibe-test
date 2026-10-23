@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -111,7 +111,7 @@
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
 <script src="modules/image-to-gaps/player.js?v=3"></script>
-<script src="modules/true-false/player.js?v=1"></script>
+<script src="modules/true-false/player.js?v=2"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -196,7 +196,7 @@ function shuffleWords() {
 }
 
 // Закреплённые после проверки ответы и всё после конца прохождения менять нельзя
-const frozen = g => g.locked || finished;
+const frozen = g => g.locked || g.final || finished; // final: ответ дан с единственной попыткой (True / False «по одному»)
 const isFilled = g => g.locked || norm(g.value) !== '';
 
 // Подсказки: значок есть только у пропусков с подсказкой, на которые ещё нет верного ответа.
@@ -493,7 +493,9 @@ function updateStatus() {
   // До первой проверки результата нет (только сколько заполнено); после проверки появляется рамка; в конце — итог и полоса с процентом
   s.classList.toggle('result', checksUsed > 0 || !!note);
   s.classList.toggle('final', finished && !note);
+  const once = isTF() && TrueFalsePlayer.instant(); // True / False «по одному»: без кнопки «Проверить», каждый ответ засчитывается сразу
   if (note) t.textContent = note;
+  else if (once && !finished) t.textContent = `Отвечено: ${gaps.filter(g => g.final).length} из ${total} · Верно: ${ok}`;
   else if (finished) t.textContent = `Результат: ${ok} из ${total} (${pct}%)`;
   else if (checksUsed === 0) t.textContent = `Заполнено: ${gaps.filter(isFilled).length} из ${total}`;
   else t.textContent = `Верно: ${ok} из ${total} · Неверно: ${wrong} · Проверок осталось: ${maxChecks - checksUsed}`;
@@ -502,6 +504,7 @@ function updateStatus() {
   $('scoreBar').firstElementChild.style.width = pct + '%';
   if (window.roughen) roughen(s.parentElement); // Comic: рамка блока результата появляется и меняет размер
   // Подпись меняем только если она правда изменилась: перезапись текста стирает нарисованный контур кнопки (Comic)
+  $('check').hidden = once && !finished;
   const label = finished ? 'Начать заново' : 'Проверить';
   if ($('check').textContent !== label) { $('check').textContent = label; if (window.roughen) roughen($('check').parentElement); }
 }
@@ -536,7 +539,7 @@ function check() {
 
 // Новое прохождение: ответы, закрепление, проверки и сообщения сбрасываются, слова перемешиваются заново
 function restart() {
-  gaps.forEach(g => { g.value = ''; g.bankKey = null; g.locked = false; g.state = null; });
+  gaps.forEach(g => { g.value = ''; g.bankKey = null; g.locked = false; g.final = false; g.state = null; });
   checksUsed = 0; finished = false; note = ''; selected = null; instrOpen = true;
   if (isTF()) TrueFalsePlayer.reset();
   shuffleWords();

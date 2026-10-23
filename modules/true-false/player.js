@@ -7,6 +7,7 @@ const TrueFalsePlayer = (() => {
   let idx = 0; // какое утверждение показано в режиме «по одному»
   let refocus = null; // куда вернуть фокус после перерисовки
   const listView = () => data.view === 'list';
+  const instant = () => !listView(); // «по одному»: одна попытка на утверждение
 
   function labelsOf(item) {
     const a = item.answers || data.answers || {};
@@ -34,6 +35,19 @@ const TrueFalsePlayer = (() => {
   function pick(i, key) {
     const g = gaps[i];
     if (frozen(g)) return;
+    if (instant()) {
+      // Показ «по одному»: одна попытка на утверждение, ответ проверяется сразу и больше не меняется
+      g.value = key;
+      g.final = true;
+      g.locked = key === g.answer;
+      g.state = g.locked ? 'ok' : 'bad';
+      note = '';
+      checksUsed = 1;
+      if (gaps.every(x => x.final)) finished = true;
+      refocus = null;
+      render();
+      return;
+    }
     g.value = g.value === key ? '' : key; // повторное нажатие снимает выбор
     g.state = null;
     note = '';
@@ -123,5 +137,5 @@ const TrueFalsePlayer = (() => {
     }
   }
 
-  return { units, reset, goMissing, render: renderInto };
+  return { units, reset, goMissing, instant, render: renderInto };
 })();
