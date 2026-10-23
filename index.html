@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
 <link rel="stylesheet" href="core/gap.css?v=4">
-<link rel="stylesheet" href="core/comic.css?v=2">
+<link rel="stylesheet" href="core/comic.css?v=5">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -67,13 +67,6 @@
 </style>
 </head>
 <body>
-<!-- Фильтр «неровная линия» для стиля Comic (core/comic.css): слегка смещает точки контура по шуму, чтобы линия выглядела нарисованной от руки -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <filter id="rough" x="-3%" y="-3%" width="106%" height="106%">
-    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="noise"/>
-    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
-  </filter>
-</svg>
 <header>
   <div class="head">
     <h1 id="title">Загрузка…</h1>
@@ -101,6 +94,7 @@
 
 <script src="core/design.js?v=2"></script>
 <script src="core/richtext.js?v=4"></script>
+<script src="core/rough.js?v=2"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -288,6 +282,7 @@ function render() {
   });
   renderBank();
   updateStatus();
+  if (window.roughen) roughen(); // Comic: нарисовать контуры заново для новых элементов
   main.scrollTop = scroll;
 }
 
@@ -440,6 +435,9 @@ document.querySelectorAll('.modes button').forEach(b => b.onclick = () => { mode
 function showUnavailable() {
   document.body.innerHTML = '<div class="unavailable">Упражнение сейчас недоступно</div>';
 }
+
+// Шрифты загрузились — размеры могли измениться, контуры Comic перерисовываем
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (window.roughen) roughen(); });
 
 if (params.has('preview')) {
   document.body.classList.add('preview');

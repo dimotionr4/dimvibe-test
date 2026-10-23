@@ -1,35 +1,40 @@
 /* Стиль Comic: «нарисованная от руки» линия. Включается классом .style-comic на <html>; .line-black — чёрные контуры вместо акцентных.
-   Контур рисуется отдельным слоем (::before) с эффектом неровной линии (фильтр #rough, он лежит в странице), поэтому текст внутри не искажается.
-   Номер версии `?v=` у подключения поднимайте при изменении. */
+   Контур — отдельный слой ::before: его форму рисует core/rough.js (гладкая кривая в --rough-mask), а цвет задаёт этот файл.
+   Заливка остаётся у самого элемента, поэтому текст внутри не искажается. Номер версии `?v=` у подключения поднимайте при изменении. */
 .style-comic { --comic-line:var(--accent); }
 .style-comic.line-black { --comic-line:var(--text); }
 
-/* Слой контура. Слой лежит под содержимым (isolation + z-index:-1) и не ловит нажатия */
 .style-comic .gap, .style-comic .chip, .style-comic .card, .style-comic .instr,
 .style-comic button:not(.hintbtn):not(.instr-head) { position:relative; isolation:isolate; }
+
+/* Слой контура: лежит под содержимым, не ловит нажатия; пока кривая не построена, он прозрачный */
 .style-comic .gap::before, .style-comic .chip::before, .style-comic .card::before, .style-comic .instr::before,
 .style-comic button:not(.hintbtn):not(.instr-head)::before {
-  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; box-sizing:border-box;
-  filter:url(#rough); border:3px solid var(--rc, var(--comic-line)); border-radius:var(--rr, 10px); background:var(--rb, transparent);
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:var(--rc, var(--comic-line));
+  -webkit-mask:var(--rough-mask, linear-gradient(#0000, #0000)) 0 0 / 100% 100% no-repeat;
+  mask:var(--rough-mask, linear-gradient(#0000, #0000)) 0 0 / 100% 100% no-repeat;
 }
 
-/* Классические рамки и фоны убираем: их заменяет нарисованный слой */
+/* Классические рамки и фон убираем: заливка рисуется слоем ::after по той же кривой, что и контур */
 .style-comic .card, .style-comic .instr, .style-comic .chip, .style-comic button:not(.hintbtn):not(.instr-head) { border-color:transparent; background:transparent; }
-.style-comic .instr { border-left-color:transparent; }
+.style-comic .card::after, .style-comic .instr::after, .style-comic .chip::after, .style-comic button:not(.hintbtn):not(.instr-head)::after {
+  content:""; position:absolute; inset:0; z-index:-2; pointer-events:none;
+  background:var(--rb, var(--card));
+  -webkit-mask:var(--rough-fill, linear-gradient(#0000, #0000)) 0 0 / 100% 100% no-repeat;
+  mask:var(--rough-fill, linear-gradient(#0000, #0000)) 0 0 / 100% 100% no-repeat;
+}
+.style-comic button.primary:not(.hintbtn):not(.instr-head)::after, .style-comic button.active:not(.hintbtn):not(.instr-head)::after, .style-comic .chip.selected::after { --rb:var(--accent); }
 
-.style-comic .card::before, .style-comic .instr::before { --rr:14px; --rb:var(--card); }
-.style-comic button:not(.hintbtn):not(.instr-head)::before { --rb:var(--card); }
-.style-comic button.primary:not(.hintbtn):not(.instr-head)::before, .style-comic button.active:not(.hintbtn):not(.instr-head)::before { --rb:var(--accent); --rc:var(--accent); }
-.style-comic.line-black button.primary:not(.hintbtn):not(.instr-head)::before, .style-comic.line-black button.active:not(.hintbtn):not(.instr-head)::before { --rc:var(--text); }
-.style-comic .chip::before { --rr:999px; --rb:var(--card); }
-.style-comic .chip.selected::before { --rb:var(--accent); --rc:var(--accent); }
-.style-comic.line-black .chip.selected::before { --rc:var(--text); }
+/* Контур заливных кнопок и выбранных слов: в цвет заливки, а при чёрных контурах — чёрный */
+.style-comic button.primary:not(.hintbtn):not(.instr-head)::before, .style-comic button.active:not(.hintbtn):not(.instr-head)::before, .style-comic .chip.selected::before { --rc:var(--accent); }
+.style-comic.line-black button.primary:not(.hintbtn):not(.instr-head)::before, .style-comic.line-black button.active:not(.hintbtn):not(.instr-head)::before, .style-comic.line-black .chip.selected::before { --rc:var(--text); }
 
-/* Пропуск: цвет контура — акцентный или чёрный, а состояния (верно, неверно, не заполнено) остаются своими цветами */
+/* Пропуск: контур акцентный или чёрный, а состояния (верно, неверно, не заполнено) остаются своими цветами.
+   Заливка у плашки и свободной формы — лёгкий оттенок цвета контура */
 .style-comic .gap:not(.ok):not(.bad):not(.missing) { --gap-c:var(--comic-line); }
-.style-comic .gap.shape-line, .style-comic .gap.shape-frame, .style-comic .gap.shape-pill, .style-comic .gap.shape-free { border:0; background:none; }
 .style-comic .gap::before { --rc:var(--gap-c); }
-.style-comic .gap.shape-line::before { border:0; border-bottom:3px var(--gap-line) var(--gap-c); border-radius:0; }
-.style-comic .gap.shape-frame::before { border:3px var(--gap-line) var(--gap-c); border-radius:8px; }
-.style-comic .gap.shape-pill::before { border:3px solid var(--gap-c); border-radius:999px; background:color-mix(in srgb, var(--gap-c) 16%, transparent); }
-.style-comic .gap.shape-free::before { border:3px solid var(--gap-c); border-radius:16px 6px 13px 5px / 8px 14px 6px 16px; background:color-mix(in srgb, var(--gap-c) 10%, transparent); }
+.style-comic .gap.shape-line, .style-comic .gap.shape-frame, .style-comic .gap.shape-pill, .style-comic .gap.shape-free { border:0; background:none; }
+.style-comic .gap.missing.shape-pill, .style-comic .gap.missing.shape-free { outline:none; } /* пунктир уже нарисован рисованной линией */
+.style-comic .gap.shape-pill { border-radius:999px; background:color-mix(in srgb, var(--gap-c) 16%, transparent); }
+.style-comic .gap.shape-free { border-radius:16px 6px 13px 5px / 8px 14px 6px 16px; background:color-mix(in srgb, var(--gap-c) 10%, transparent); }
