@@ -13,7 +13,11 @@
         {
           "gap": "g1"
         },
-        " features several popular urban hiking trails and nature walks that ",
+        " features several ",
+        {
+          "gap": "g4"
+        },
+        " urban hiking trails and nature walks that ",
         {
           "gap": "g2"
         },
@@ -30,6 +34,11 @@
       "answer": "Tbilisi",
       "alternatives": [],
       "hint": "capital"
+    },
+    "g4": {
+      "answer": "popular",
+      "alternatives": [],
+      "hint": ""
     },
     "g2": {
       "answer": "connect",
@@ -57,26 +66,26 @@
     "checks": "auto"
   },
   "design": {
-    "accent": "blue",
-    "showInstruction": true,
-    "showImage": true,
+    "accent": "violet",
+    "showInstruction": false,
+    "showImage": false,
     "gap": {
-      "shape": "line",
+      "shape": "frame",
       "dashed": true,
-      "width": "auto",
-      "numbered": false
+      "width": "wide",
+      "numbered": true
     },
     "style": "comic",
     "comicLine": "black",
-    "comicWidth": "normal",
+    "comicWidth": "thin",
     "page": {
       "width": "standard",
-      "density": "loose",
+      "density": "comfortable",
       "background": "plain"
     },
     "check": {
-      "variant": "outline",
-      "align": "center"
+      "variant": "soft",
+      "align": "left"
     }
   }
 }

@@ -1,0 +1,42 @@
+{
+  "id": "ex-55sufr",
+  "module": "fill_blanks",
+  "format": 2,
+  "published": false,
+  "title": "",
+  "layout": "sentences",
+  "mode": "word_bank",
+  "items": [],
+  "gaps": {},
+  "distractors": [],
+  "instruction": {
+    "title": "",
+    "text": ""
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "violet",
+    "showInstruction": true,
+    "showImage": true,
+    "gap": {
+      "shape": "line",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "classic",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "plain"
+    },
+    "check": {
+      "variant": "filled",
+      "align": "right"
+    }
+  }
+}
