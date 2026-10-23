@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
-<link rel="stylesheet" href="core/gap.css?v=2">
+<link rel="stylesheet" href="core/gap.css?v=3">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
@@ -35,7 +35,7 @@
   .shape.on { border:2px solid var(--text); font-weight:600; }
   .shape small { color:var(--muted); }
   .shape .gap { margin:0; min-width:64px; min-height:34px; pointer-events:none; }
-  .gapsample { padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); line-height:2.6; }
+  .gapsample { padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); line-height:3.5; }
   .check[hidden] { display:none; }
   .check { display:flex; align-items:center; gap:8px; margin:6px 0; }
   .sample { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
@@ -427,9 +427,9 @@ function renderDesign() {
         ${Object.entries(GAP_WIDTHS).map(([k, l]) => `<button data-gapw="${k}" class="${k === gd.width ? 'active' : ''}">${esc(l)}</button>`).join('')}
       </div>
       <label class="check"><input type="checkbox" id="gapNum"${gd.numbered ? ' checked' : ''}> Нумеровать пропуски</label>
-      <p class="muted">Так будет выглядеть пропуск у ученика: пустой, верный и неверный.</p>
+      <p class="muted">Так будет выглядеть пропуск у ученика: пустой (с подсказкой), верный и неверный.</p>
       <div class="gapsample" style="--accent:${shade(ACCENTS[chosen])}">
-        She <span class="gap ${gapClasses(gd)}"${gd.numbered ? ' data-num="1"' : ''}>&nbsp;</span> in the
+        She <span class="gap ${gapClasses(gd)}"${gd.numbered ? ' data-num="1"' : ''}>&nbsp;<button class="hintbtn" tabindex="-1" aria-hidden="true">💡</button></span> in the
         <span class="gap ${gapClasses(gd)} ok"${gd.numbered ? ' data-num="2"' : ''}>bar</span> and
         <span class="gap ${gapClasses(gd)} bad"${gd.numbered ? ' data-num="3"' : ''}>pub</span>.
       </div>

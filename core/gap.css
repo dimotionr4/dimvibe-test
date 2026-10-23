@@ -13,14 +13,21 @@
 .gap.w-narrow { min-width:64px; }
 .gap.w-wide { min-width:180px; }
 
-/* Состояния. Цвет — не единственный признак: у верного ✓, у неверного ✗, у пустого пунктир */
+/* Состояния. Цвет — не единственный признак: у верного ✓, у неверного ✗ (значок слева снизу), у пустого пунктир */
 .gap.ok { --gap-c:var(--ok); color:var(--ok); cursor:default; }
-.gap.ok::after { content:"✓"; margin-left:4px; }
 .gap.bad { --gap-c:var(--bad); color:var(--bad); }
-.gap.bad::after { content:"✗"; margin-left:4px; }
 .gap.missing { --gap-c:var(--bad); --gap-line:dashed; }
 .gap.missing.shape-pill, .gap.missing.shape-free { outline:2px dashed var(--bad); outline-offset:2px; }
 .gap.locked { cursor:default; }
 
-/* Нумерация: маленький номер слева сверху, включается атрибутом data-num */
-.gap[data-num]::before { content:attr(data-num); position:absolute; left:3px; top:-1px; font-size:.65rem; font-weight:600; line-height:1; color:var(--muted); }
+/* Значки в четырёх углах контура: слева сверху номер, справа сверху озвучка (пока не используется),
+   справа снизу подсказка, слева снизу результат. Они сидят на углу наполовину снаружи и не закрывают ответ.
+   Результат крупнее остальных (28 px против 18–22 px). */
+.gap[data-num]::before { content:attr(data-num); position:absolute; left:-7px; top:-10px; display:flex; align-items:center; justify-content:center; width:18px; height:18px; box-sizing:border-box; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--text); font-size:.65rem; font-weight:600; line-height:1; z-index:1; }
+.gap.ok::after, .gap.bad::after { position:absolute; left:-10px; bottom:-12px; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:1rem; font-weight:700; line-height:1; color:var(--on-accent, #fff); background:var(--gap-c); z-index:1; }
+.gap.ok::after { content:"✓"; }
+.gap.bad::after { content:"✗"; }
+.hintbtn { position:absolute; right:-9px; bottom:-11px; display:flex; align-items:center; justify-content:center; width:22px; height:22px; min-width:0; min-height:0; padding:0; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--text); font-size:12px; line-height:1; cursor:pointer; z-index:1; }
+.hintbtn::before { content:""; position:absolute; inset:-10px; } /* область нажатия ~42 px, значок остаётся маленьким */
+.hintbtn.locked { opacity:.7; }
+/* Правый верхний угол свободен: там будет значок озвучки, когда подключим звук */

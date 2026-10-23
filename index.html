@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
-<link rel="stylesheet" href="core/gap.css?v=2">
+<link rel="stylesheet" href="core/gap.css?v=3">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -35,7 +35,7 @@
   .modes button { font-size:.9rem; min-height:36px; padding:4px 10px; }
   button.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px; line-height:2.4; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px; line-height:3.5; } /* запас по высоте под значки в углах пропусков */
   /* Вид пропуска (форма, ширина, состояния) — в core/gap.css */
   /* Результат не только цветом: у верного ✓, у неверного ✗ */
   /* Инструкция: сверху, по умолчанию развёрнута, ученик может свернуть */
@@ -47,8 +47,7 @@
   .instr-body[hidden] { display:none; } /* без этой строки flow-root не даёт свернуть инструкцию */
   .instr-body p { margin:.4em 0; }
   /* Подсказка: замок до второй проверки, потом лампочка; окно не выходит за края экрана */
-  .hintbtn { min-width:32px; min-height:32px; padding:0; border:none; background:transparent; font-size:1rem; vertical-align:middle; }
-  .hintbtn.locked { opacity:.5; }
+  /* Значок подсказки — в core/gap.css (в углу пропуска): замок до второй проверки, потом лампочка */
   .pop { position:fixed; z-index:20; width:max-content; max-width:min(280px, calc(100vw - 16px)); background:var(--card); color:var(--text); border:1px solid var(--accent); border-radius:10px; padding:8px 12px; line-height:1.4; box-shadow:0 4px 16px rgba(0,0,0,.3); overflow-wrap:anywhere; }
   /* width:0 + min-width:100%: собственная ширина поля не растягивает пропуск, его размер задаёт форма/ширина из дизайна */
   .gap input, .gap select { font:inherit; width:0; min-width:100%; min-height:38px; border:none; background:transparent; color:inherit; text-align:center; }
@@ -258,9 +257,11 @@ function render() {
     item.parts.forEach(p => {
       if (typeof p === 'string') { box.appendChild(document.createTextNode(p)); return; }
       const idx = gi++;
-      box.appendChild(makeGap(idx));
+      const gapEl = makeGap(idx);
+      // Значок подсказки сидит на углу самого пропуска и двигается вместе с ним
       const hint = hintButton(idx);
-      if (hint) box.appendChild(hint);
+      if (hint) gapEl.appendChild(hint);
+      box.appendChild(gapEl);
     });
   });
   renderBank();
