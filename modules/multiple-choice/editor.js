@@ -198,6 +198,18 @@ const MultipleChoiceEditor = (() => {
     const multi = modeOf(it) === 'multiple';
     const ol = el('div', 'mc-label mc-labelrow', 'Варианты');
     ol.append(help(multi ? 'Отметьте квадратом все верные варианты (можно один или все). Ученик должен выбрать точный набор.' : 'Отметьте кружком один верный вариант.'));
+    // Метки вариантов (одни на всё упражнение): буквы или цифры; бледно видны в отметке каждого варианта
+    const ls = el('span', 'mc-seg mc-lseg');
+    [['letters', 'A B C'], ['numbers', '1 2 3']].forEach(([v, label]) => {
+      const bt = el('button', (d.labels === 'numbers' ? 'numbers' : 'letters') === v ? 'active' : '', label);
+      bt.type = 'button';
+      bt.title = LABELS[v];
+      bt.setAttribute('aria-pressed', String((d.labels === 'numbers' ? 'numbers' : 'letters') === v));
+      bt.onclick = () => { d.labels = v; save(); drawList(); };
+      ls.append(bt);
+    });
+    ls.title = 'Метки A, B, C или 1, 2, 3 одинаковы для всего упражнения; ученик видит их по порядку на экране (при перемешивании тоже)';
+    ol.append(ls);
     b.append(ol);
     const opts = el('div', 'mc-opts-ed');
     it.options.forEach((o, k) => {
@@ -207,6 +219,7 @@ const MultipleChoiceEditor = (() => {
       mark.type = 'button';
       mark.setAttribute('role', multi ? 'checkbox' : 'radio');
       mark.setAttribute('aria-checked', String(on));
+      mark.textContent = d.labels === 'numbers' ? String(k + 1) : String.fromCharCode(65 + k);
       mark.title = on ? 'Верный вариант (нажмите, чтобы снять)' : 'Отметить верным';
       mark.setAttribute('aria-label', `${mark.title}: вариант ${k + 1}`);
       mark.onclick = () => {
@@ -368,9 +381,7 @@ const MultipleChoiceEditor = (() => {
     return [
       { field: 'view', label: 'Показ вопросов', value: VIEWS[draft.view] ? draft.view : 'one', names: VIEWS,
         icons: { one: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'), list: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>') } },
-      { field: 'labels', label: 'Метки вариантов', value: LABELS[draft.labels] ? draft.labels : 'letters', names: LABELS,
-        icons: { letters: '<b class="sz">A</b>', numbers: '<b class="sz">1</b>' } },
-    ];
+    ]; // метки вариантов переключаются в самом «Содержимом», над вариантами
   }
 
   // Настройки модуля во вкладке «Поведение»: переключатели «Вкл / Выкл»
