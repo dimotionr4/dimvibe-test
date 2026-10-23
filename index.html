@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
 <style>
-  :root { --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
+  /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
+    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
   }
+  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
   * { box-sizing: border-box; }
   html, body { height:100%; }
   /* Три части: шапка и низ на месте, прокручивается только середина */
@@ -363,8 +365,15 @@ function showUnavailable() {
 if (params.has('preview')) {
   document.body.classList.add('preview');
   // Предпросмотр в редакторе: данные черновика присылает страница редактора с того же сайта, файл не загружается
+  const setTheme = t => {
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    else delete document.documentElement.dataset.theme;
+  };
   addEventListener('message', e => {
-    if (e.origin !== location.origin || e.source !== parent || !e.data || e.data.type !== 'dimvibe-preview') return;
+    if (e.origin !== location.origin || e.source !== parent || !e.data) return;
+    if (e.data.type === 'dimvibe-theme') { setTheme(e.data.theme); return; }
+    if (e.data.type !== 'dimvibe-preview') return;
+    setTheme(e.data.theme);
     data = e.data.exercise; build(); render();
   });
   parent.postMessage({ type: 'dimvibe-preview-ready' }, location.origin);

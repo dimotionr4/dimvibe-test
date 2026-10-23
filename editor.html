@@ -5,10 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
 <style>
-  :root { --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
+  /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
+    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
   }
+  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
+  .seg { display:flex; gap:4px; }
+  .seg button { flex:1; min-height:32px; padding:2px 6px; font-size:.85rem; }
+  .seg button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .theme-box { margin-top:auto; padding-top:14px; }
+  .theme-box .muted { display:block; margin-bottom:4px; }
   * { box-sizing: border-box; }
   body { margin:0; min-height:100vh; display:flex; background:var(--bg); color:var(--text); font-family: system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.5; }
   button, input, select, textarea { font:inherit; color:var(--text); }
@@ -75,7 +82,7 @@
   }
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
-<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=6">
+<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=7">
 </head>
 <body>
 <aside>
@@ -84,6 +91,14 @@
   <input type="file" id="fileInput" accept=".json,application/json" hidden>
   <h2>Мои упражнения</h2>
   <div id="list"></div>
+  <div class="theme-box">
+    <span class="muted">Тема редактора</span>
+    <div class="seg" id="themeSeg" role="group" aria-label="Тема редактора">
+      <button data-theme-pick="auto">Авто</button>
+      <button data-theme-pick="light">Светлая</button>
+      <button data-theme-pick="dark">Тёмная</button>
+    </div>
+  </div>
 </aside>
 <div id="work">
   <div id="warn" class="warn" hidden></div>
@@ -124,7 +139,12 @@
       <b>Предпросмотр</b>
       <button data-size="desktop" class="active">Компьютер</button>
       <button data-size="phone">Телефон</button>
-      <span class="muted grow">Так увидит ученик. Ответы здесь никуда не сохраняются.</span>
+      <span class="seg" id="previewTheme" role="group" aria-label="Тема предпросмотра">
+        <button data-preview-theme="auto">Авто</button>
+        <button data-preview-theme="light">Светлая</button>
+        <button data-preview-theme="dark">Тёмная</button>
+      </span>
+      <span class="muted grow">Так увидит ученик. Ответы здесь никуда не сохраняются. У ученика тема следует за устройством.</span>
       <button id="previewClose">Закрыть</button>
     </div>
     <div id="previewMsg" class="warn" hidden></div>
@@ -132,9 +152,9 @@
   </div>
 </div>
 
-<script src="modules/fill-blanks/editor.js?v=6"></script>
+<script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
-const ASSET_V = 6;
+const ASSET_V = 7;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -353,6 +373,37 @@ function renderPublish() {
 }
 
 // Предпросмотр: плеер (index.html?preview) сообщает, что готов, и получает данные черновика
+// Тема редактора хранится в браузере; предпросмотр можно смотреть в другой теме, не меняя тему редактора
+const THEME_KEY = 'dimvibe.theme';
+let theme = 'auto', previewTheme = 'auto';
+
+function applyTheme(t) {
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+}
+
+function setTheme(t) {
+  theme = t;
+  applyTheme(t);
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+  document.querySelectorAll('[data-theme-pick]').forEach(b => b.classList.toggle('active', b.dataset.themePick === t));
+}
+
+function setPreviewTheme(t) {
+  previewTheme = t;
+  document.querySelectorAll('[data-preview-theme]').forEach(b => b.classList.toggle('active', b.dataset.previewTheme === t));
+  const w = $('previewFrame').contentWindow;
+  if (!$('preview').hidden && w) w.postMessage({ type: 'dimvibe-theme', theme: t }, location.origin);
+}
+
+document.querySelectorAll('[data-theme-pick]').forEach(b => b.onclick = () => setTheme(b.dataset.themePick));
+document.querySelectorAll('[data-preview-theme]').forEach(b => b.onclick = () => setPreviewTheme(b.dataset.previewTheme));
+(() => {
+  let saved = 'auto';
+  try { saved = localStorage.getItem(THEME_KEY) || 'auto'; } catch (e) {}
+  setTheme(['light', 'dark'].includes(saved) ? saved : 'auto');
+})();
+
 let previewTimer = null;
 
 function previewProblem(text) {
@@ -361,6 +412,8 @@ function previewProblem(text) {
 }
 
 function openPreview() {
+  // Предпросмотр начинается в теме редактора; её можно сменить кнопками в окне
+  setPreviewTheme(theme);
   $('previewMsg').hidden = true;
   $('previewFrame').src = 'index.html?preview=1&v=' + ASSET_V;
   $('preview').hidden = false;
@@ -382,7 +435,7 @@ addEventListener('message', e => {
   if (e.data && e.data.type === 'dimvibe-preview-ready' && current) {
     clearTimeout(previewTimer);
     try {
-      e.source.postMessage({ type: 'dimvibe-preview', exercise: exerciseFor(current, true) }, location.origin);
+      e.source.postMessage({ type: 'dimvibe-preview', theme: previewTheme, exercise: exerciseFor(current, true) }, location.origin);
     } catch (err) {
       previewProblem('Не удалось подготовить черновик для предпросмотра. Проверьте вкладку «Содержимое»: возможно, в тексте есть пропуск без данных.');
     }
