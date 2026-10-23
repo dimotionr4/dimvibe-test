@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
-<link rel="stylesheet" href="core/gap.css?v=4">
+<link rel="stylesheet" href="core/gap.css?v=5">
 <link rel="stylesheet" href="core/check.css?v=1">
 <link rel="stylesheet" href="core/comic.css?v=12">
 <style>
@@ -105,7 +105,8 @@
 </footer>
 
 <script src="core/design.js?v=5"></script>
-<script src="core/richtext.js?v=4"></script>
+<script src="core/media.js?v=1"></script>
+<script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=7"></script>
 <script>
 const params = new URLSearchParams(location.search);
@@ -155,7 +156,7 @@ function build() {
     item.parts.forEach(p => {
       if (typeof p === 'string') return;
       const g = data.gaps[p.gap];
-      gaps.push({ id: p.gap, answer: g.answer, alternatives: g.alternatives || [], hint: String(g.hint || '').trim(), value: '', bankKey: null, locked: false, state: null });
+      gaps.push({ id: p.gap, answer: g.answer, alternatives: g.alternatives || [], hint: String(g.hint || '').trim(), audio: mediaSrc(g.audio), hintAudio: mediaSrc(g.hintAudio), value: '', bankKey: null, locked: false, state: null });
     });
   });
   mode = data.mode || 'word_bank';
@@ -194,12 +195,46 @@ function closePop() {
   pop = popOwner = null;
 }
 
-function showPop(btn, text) {
+// Звук: один на всю страницу. Нажатие на играющую кнопку останавливает звук, на другую — переключает
+let audioEl = null, audioBtn = null, audioKey = '';
+function stopAudio() {
+  if (audioEl) { audioEl.onended = audioEl.onerror = null; audioEl.pause(); }
+  audioEl = null;
+  if (audioBtn) { audioBtn.classList.remove('playing'); audioBtn.textContent = audioBtn.dataset.icon + (audioBtn.dataset.text ? ' ' + audioBtn.dataset.text : ''); }
+  audioBtn = null; audioKey = '';
+}
+function playAudio(url, btn, key) {
+  if (audioBtn === btn) return stopAudio();
+  stopAudio();
+  audioEl = new Audio(url);
+  audioBtn = btn; audioKey = key;
+  btn.classList.add('playing');
+  btn.textContent = '⏹' + (btn.dataset.text ? ' ' + btn.dataset.text : '');
+  audioEl.onended = audioEl.onerror = stopAudio;
+  audioEl.play().catch(stopAudio);
+}
+// Кнопка звука: icon — значок в покое, key — по нему кнопка находится заново, если страницу перерисовали во время звучания
+function audioButton(url, key, cls, icon, label, text) {
+  const b = document.createElement('button');
+  b.className = cls;
+  b.dataset.icon = icon; b.dataset.akey = key;
+  if (text) b.dataset.text = text; // подпись рядом со значком
+  const suffix = text ? ' ' + text : '';
+  const on = audioKey === key && audioEl;
+  b.textContent = (on ? '⏹' : icon) + suffix;
+  if (on) { b.classList.add('playing'); audioBtn = b; }
+  b.setAttribute('aria-label', label);
+  b.onclick = e => { e.stopPropagation(); playAudio(url, b, key); };
+  return b;
+}
+
+function showPop(btn, text, audio) {
   closePop();
   pop = document.createElement('div');
   pop.className = 'pop';
   pop.setAttribute('role', 'tooltip');
   pop.textContent = text;
+  if (audio) pop.append(audioButton(audio.url, audio.key, 'audbtn', '🔊', 'Прослушать подсказку', 'Слушать'));
   popOwner = btn;
   document.body.appendChild(pop);
   // Ставим под значком по центру, но не за краем окна; если снизу нет места — над значком
@@ -211,18 +246,26 @@ function showPop(btn, text) {
 
 function hintButton(idx) {
   const g = gaps[idx];
-  if (!g.hint || g.locked) return null;
+  if ((!g.hint && !g.hintAudio) || g.locked) return null;
   const open = checksUsed >= HINTS_AFTER;
   const btn = document.createElement('button');
   btn.className = 'hintbtn' + (open ? '' : ' locked');
   btn.textContent = open ? '💡' : '🔒';
   const text = open ? g.hint : 'Подсказка откроется после второй проверки.';
+  const audio = open && g.hintAudio ? { url: g.hintAudio, key: 'h' + idx } : null;
   btn.setAttribute('aria-label', open ? 'Показать подсказку' : text);
   btn.onclick = e => {
     e.stopPropagation();
-    if (popOwner === btn) closePop(); else showPop(btn, text);
+    if (popOwner === btn) closePop(); else showPop(btn, text, audio);
   };
   return btn;
+}
+
+// Озвучка слова: значок динамика в правом верхнем углу пропуска, только у озвученных. Не зависит от проверок
+function voiceButton(idx) {
+  const g = gaps[idx];
+  if (!g.audio) return null;
+  return audioButton(g.audio, 'v' + idx, 'hintbtn voicebtn', '🔊', 'Прослушать слово');
 }
 
 addEventListener('click', closePop);
@@ -260,6 +303,12 @@ function instructionBlock() {
   body.className = 'instr-body';
   body.hidden = !instrOpen;
   if (image) body.appendChild(image);
+  const audio = mediaSrc(ins.audio);
+  if (audio) {
+    const p = document.createElement('p');
+    p.appendChild(audioButton(audio, 'instr', 'audbtn', '🔊', 'Прослушать инструкцию', 'Слушать'));
+    body.appendChild(p);
+  }
   body.appendChild(richText(text));
   box.append(head, body);
   return box;
@@ -296,8 +345,9 @@ function render() {
       const idx = gi++;
       const gapEl = makeGap(idx);
       // Значок подсказки сидит на углу самого пропуска и двигается вместе с ним
-      const hint = hintButton(idx);
+      const hint = hintButton(idx), voice = voiceButton(idx);
       if (hint) gapEl.appendChild(hint);
+      if (voice) gapEl.appendChild(voice);
       box.appendChild(gapEl);
     });
   });

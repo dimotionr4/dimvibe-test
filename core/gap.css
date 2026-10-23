@@ -30,4 +30,9 @@
 .hintbtn { position:absolute; right:-9px; bottom:-11px; display:flex; align-items:center; justify-content:center; width:22px; height:22px; min-width:0; min-height:0; padding:0; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--text); font-size:12px; line-height:1; cursor:pointer; z-index:1; }
 .hintbtn::before { content:""; position:absolute; inset:-10px; } /* область нажатия ~42 px, значок остаётся маленьким */
 .hintbtn.locked { opacity:.7; }
-/* Правый верхний угол свободен: там будет значок озвучки, когда подключим звук */
+/* Правый верхний угол: значок озвучки слова. Кнопка имеет класс hintbtn (общий вид и исключение из стилей Comic), здесь только положение */
+.voicebtn { top:-11px; bottom:auto; }
+.voicebtn.playing { background:var(--accent); color:var(--on-accent, #fff); border-color:var(--accent); }
+/* Звук в окне подсказки и в инструкции */
+.audbtn { min-height:32px; padding:2px 10px; font-size:.85rem; }
+.pop .audbtn { display:block; margin:6px auto 0; }

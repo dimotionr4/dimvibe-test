@@ -13,10 +13,11 @@ function safeImageUrl(value) {
   }
 }
 
-// Изображение инструкции: image = {url, alt, size: small|medium|large, align: left|center|right}.
-// Возвращает элемент или null, если ссылки нет или она неподходящая. Если картинка не загрузится, вместо неё покажется описание.
+// Изображение инструкции: image = {media | url, alt, size: small|medium|large, align: left|center|right}.
+// media — путь в хранилище (core/media.js, должен быть подключён раньше), url — внешняя ссылка https.
+// Возвращает элемент или null, если источника нет или он неподходящий. Если картинка не загрузится, вместо неё покажется описание.
 function instructionImageEl(image) {
-  const url = image && safeImageUrl(image.url);
+  const url = image && (typeof mediaSrc === 'function' ? mediaSrc(image) : safeImageUrl(image.url));
   if (!url) return null;
   // Размеры небольшие, чтобы картинка не забивала задание. Слева и справа текст обтекает её сбоку;
   // на узком экране боковая картинка занимает не больше 45% ширины блока, поэтому текст остаётся рядом

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
-<link rel="stylesheet" href="core/gap.css?v=4">
+<link rel="stylesheet" href="core/gap.css?v=5">
 <link rel="stylesheet" href="core/check.css?v=1">
 <link rel="stylesheet" href="core/comic.css?v=12">
 <style>
@@ -68,6 +68,13 @@
   .helpbub { position:fixed; z-index:60; max-width:300px; background:var(--text); color:var(--bg); padding:8px 10px; border-radius:8px; font-size:.82rem; line-height:1.4; box-shadow:0 6px 20px rgba(0,0,0,.28); }
   .helpbub[hidden] { display:none; }
   .img-opts select { min-height:32px; padding:2px 8px; margin-left:4px; }
+  .media-pick { margin:6px 0 0; }
+  .media-pick .mp-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .media-pick .mp-row button { min-height:32px; padding:2px 10px; font-size:.85rem; }
+  .media-pick .mp-state { font-size:.82rem; color:var(--muted); min-width:0; overflow-wrap:anywhere; }
+  .media-pick .mp-err { color:var(--bad); font-size:.82rem; margin-top:4px; }
+  .media-pick audio { display:block; width:100%; max-width:320px; height:34px; margin-top:6px; }
+  .media-pick progress { width:90px; height:8px; }
   .shapes { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
   .shape { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 14px; min-width:104px; }
   .shape.on { border:2px solid var(--text); font-weight:600; }
@@ -280,7 +287,7 @@
   }
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
-<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=22">
+<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=23">
 </head>
 <body>
 <header id="bar">
@@ -362,11 +369,12 @@
 </div>
 
 <script src="core/design.js?v=5"></script>
-<script src="core/richtext.js?v=4"></script>
+<script src="core/media.js?v=1"></script>
+<script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=7"></script>
-<script src="modules/fill-blanks/editor.js?v=22"></script>
+<script src="modules/fill-blanks/editor.js?v=23"></script>
 <script>
-const ASSET_V = 22;
+const ASSET_V = 23;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -576,16 +584,103 @@ function exerciseFor(draft, published) {
   const ins = draft.instruction || {};
   // Текст инструкции: строки без лишних пробелов, пустые строки выброшены (каждая строка — абзац)
   const text = String(ins.text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).join('\n');
-  // Изображение попадает в файл только с правильной ссылкой (https); неправильную публикация не пропустит
-  const im = ins.image || {}, url = safeImageUrl(im.url);
+  // Изображение попадает в файл с файлом из хранилища (media) или с правильной ссылкой (https); неправильную публикация не пропустит
+  const im = ins.image || {}, mp = safeMediaPath(im.media), url = mp ? null : safeImageUrl(im.url);
   const instruction = { title: String(ins.title || '').trim(), text };
-  if (url) instruction.image = { url, alt: String(im.alt || '').trim(), size: ['small', 'medium', 'large'].includes(im.size) ? im.size : 'medium', align: ['left', 'center', 'right'].includes(im.align) ? im.align : 'center' };
+  const audioPath = safeMediaPath(ins.audio && ins.audio.media);
+  if (audioPath) instruction.audio = { media: audioPath };
+  if (mp || url) instruction.image = { ...(mp ? { media: mp } : { url }), alt: String(im.alt || '').trim(), size: ['small', 'medium', 'large'].includes(im.size) ? im.size : 'medium', align: ['left', 'center', 'right'].includes(im.align) ? im.align : 'center' };
   return {
     id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
     instruction,
     behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
     design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design), page: normalizePage(draft.design && draft.design.page), check: normalizeCheck(draft.design && draft.design.check) },
   };
+}
+
+// Загрузка файла в хранилище (Firebase Storage, core/media.js). Нужна и модулю (глобальная функция).
+// kind — 'image' или 'audio'; get() — текущий путь в хранилище; set(путь или '') записывает его в черновик.
+// Пока преподаватель не вошёл через Google, вместо загрузки кнопка «Войти для загрузки»
+let mediaUserNow = null;
+const mediaPickers = new Set();
+mediaOnAuth(u => { mediaUserNow = u; mediaPickers.forEach(p => { if (p.isConnected) p.refresh(); else mediaPickers.delete(p); }); });
+function mediaPicker(kind, get, set, label) {
+  const box = document.createElement('div');
+  box.className = 'media-pick';
+  const file = document.createElement('input');
+  file.type = 'file';
+  file.accept = MEDIA_ACCEPT[kind];
+  file.hidden = true;
+  let busy = null, err = '';
+  box.refresh = () => {
+    const path = get();
+    box.textContent = '';
+    const row = document.createElement('div');
+    row.className = 'mp-row';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = busy !== null ? 'Загрузка…' : !mediaUserNow ? 'Войти для загрузки' : path ? 'Заменить файл' : (label || 'Загрузить файл');
+    btn.disabled = busy !== null;
+    btn.onclick = async () => {
+      err = '';
+      if (mediaUserNow) { file.value = ''; file.click(); return; }
+      try { await mediaSignIn(); } catch (e) { err = mediaErrorText(e); box.refresh(); }
+    };
+    row.append(btn);
+    if (busy !== null) {
+      const pr = document.createElement('progress');
+      pr.max = 1; pr.value = busy;
+      row.append(pr);
+    } else if (path) {
+      const st = document.createElement('span');
+      st.className = 'mp-state';
+      st.textContent = 'файл загружен';
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = 'Убрать';
+      del.setAttribute('aria-label', 'Убрать файл из упражнения (в хранилище он остаётся)');
+      del.onclick = () => { err = ''; set(''); box.refresh(); };
+      row.append(st, del);
+    } else {
+      const st = document.createElement('span');
+      st.className = 'mp-state';
+      st.textContent = MEDIA_NAMES[kind];
+      row.append(st);
+    }
+    box.append(row, file);
+    if (kind === 'audio' && path && busy === null) {
+      const a = document.createElement('audio');
+      a.controls = true; a.preload = 'none';
+      a.src = mediaUrl(path) || '';
+      box.append(a);
+    }
+    if (err) {
+      const e = document.createElement('div');
+      e.className = 'mp-err';
+      e.textContent = err;
+      box.append(e);
+    }
+  };
+  file.onchange = async () => {
+    const f = file.files[0];
+    if (!f) return;
+    err = '';
+    const bad = checkMediaFile(f, kind);
+    if (bad) { err = bad; box.refresh(); return; }
+    busy = 0; box.refresh();
+    try {
+      const path = await mediaUpload(f, kind, current && current.id, p => { busy = p; const pr = box.querySelector('progress'); if (pr) pr.value = p; });
+      busy = null;
+      set(path);
+    } catch (e) {
+      busy = null;
+      err = e.userText || mediaErrorText(e);
+    }
+    box.refresh();
+  };
+  mediaPickers.add(box);
+  box.refresh();
+  return box;
 }
 
 // Пояснение по нажатию на «?»: короткий текст рядом со значком вместо абзацев на странице. Нужен и модулю (глобальная функция)
@@ -704,19 +799,23 @@ function renderInstruction(box) {
        <div class="instr-grid"><div class="instr-fields">
         <div class="row-help"><input id="instrTitle" placeholder="Заголовок (если пусто, будет «Инструкция»)"><span id="instrHelp"></span></div>
         <div id="instrText" class="rt-edit empty" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Текст инструкции" data-placeholder="Например: Вставьте слова из банка в пропуски."></div>
+        <div id="audPick"></div>
         <div class="selbar" id="fmtBar" hidden>
           <button data-cmd="bold" data-tip="Жирный (Ctrl+B)" aria-label="Жирный"><b>Ж</b></button>
           <button data-cmd="italic" data-tip="Курсив (Ctrl+I)" aria-label="Курсив"><i>К</i></button>
         </div>
        </div><div class="instr-side">
-        <div class="row-help"><input id="imgUrl" type="url" placeholder="Ссылка на картинку: https://…/picture.jpg"><span id="imgHelp"></span></div>
+        <div id="imgPick"></div>
+        <div class="row-help"><input id="imgUrl" type="url" placeholder="или ссылка на картинку: https://…/picture.jpg"><span id="imgHelp"></span></div>
         <div class="warn-inline" id="imgUrlWarn" hidden></div>
         <input id="imgAlt" placeholder="Описание картинки (для незрячих и если не загрузится)">
         <div id="imMockBox"></div>
        </div></div>
       </div>
     </section>`;
-  $('imgHelp').append(helpIcon('Вставьте ссылку на файл картинки: адрес должен начинаться с https:// и вести прямо на изображение. Размер и положение картинки выбираются на маленьком макете ниже. Загрузка файла появится после подключения хранилища.'));
+  $('imgHelp').append(helpIcon('Загрузите файл кнопкой выше (нужно один раз войти через Google) или вставьте ссылку: адрес должен начинаться с https:// и вести прямо на изображение. Размер и положение картинки выбираются на маленьком макете ниже.'));
+  $('imgPick').append(mediaPicker('image', () => im.media || '', p => { im.media = p; if (p) { im.url = ''; $('imgUrl').value = ''; checkUrl(); } summary(); paintMock(); touch(); }, 'Загрузить картинку'));
+  $('audPick').append(mediaPicker('audio', () => (ins.audio && ins.audio.media) || '', p => { ins.audio = { media: p }; summary(); touch(); }, 'Загрузить звук к инструкции'));
   $('instrHelp').append(helpIcon('Инструкцию ученик видит над заданием и может свернуть. Выделите слово, чтобы сделать его жирным или курсивом. Новая строка — новый абзац. Показать или скрыть инструкцию можно на вкладке «Дизайн».'));
   const ed = $('instrText');
   $('instrTitle').value = ins.title;
@@ -724,7 +823,7 @@ function renderInstruction(box) {
   ed.classList.toggle('empty', !ed.textContent.trim());
   const summary = () => {
     const t = ins.text.replace(/[*]/g, '').trim().replace(/\s+/g, ' ');
-    const parts = [t ? (t.length > 46 ? t.slice(0, 46) + '…' : t) : '', im.url.trim() ? 'есть картинка' : ''].filter(Boolean);
+    const parts = [t ? (t.length > 46 ? t.slice(0, 46) + '…' : t) : '', im.url.trim() || im.media ? 'есть картинка' : '', ins.audio && ins.audio.media ? 'есть звук' : ''].filter(Boolean);
     $('instrSum').textContent = parts.length ? parts.join(' · ') : 'не заполнено (необязательно)';
   };
   const checkUrl = () => {
@@ -733,7 +832,11 @@ function renderInstruction(box) {
     $('imgUrlWarn').textContent = bad ? 'Нужен полный адрес с https://, например https://example.com/picture.jpg' : '';
   };
   $('imgUrl').value = im.url; $('imgAlt').value = im.alt;
-  $('imgUrl').oninput = () => { im.url = $('imgUrl').value; checkUrl(); summary(); touch(); };
+  $('imgUrl').oninput = () => {
+    im.url = $('imgUrl').value;
+    if (im.url.trim() && im.media) { im.media = ''; $('imgPick').firstChild.refresh(); } // ссылка заменяет загруженный файл
+    checkUrl(); summary(); touch();
+  };
   $('imgAlt').oninput = () => { im.alt = $('imgAlt').value; touch(); };
   checkUrl();
   summary();
@@ -1081,8 +1184,8 @@ function renderPublish() {
   if (!current.title.trim()) warnings.push('Нет названия: ученик увидит пустой заголовок.');
   // Изображение инструкции: неправильная ссылка молча пропала бы из файла, поэтому публикацию не пускаем
   const pic = current.instruction && current.instruction.image;
-  if (pic && pic.url.trim()) {
-    if (!safeImageUrl(pic.url)) errors.push('Изображение инструкции: ссылка должна быть полным адресом с https://. Исправьте её на вкладке «Содержимое» или очистите поле.');
+  if (pic && (pic.url.trim() || pic.media)) {
+    if (!pic.media && !safeImageUrl(pic.url)) errors.push('Изображение инструкции: ссылка должна быть полным адресом с https://. Исправьте её на вкладке «Содержимое» или очистите поле.');
     else if (!pic.alt.trim()) warnings.push('У изображения инструкции нет описания: его не увидят незрячие ученики, а при ошибке загрузки будет пустое место.');
   }
   const id = current.id;
@@ -1349,7 +1452,9 @@ async function openFile(f) {
       instruction: {
         title: String((file.instruction && file.instruction.title) || ''),
         text: String((file.instruction && file.instruction.text) || ''),
+        audio: { media: safeMediaPath(file.instruction && file.instruction.audio && file.instruction.audio.media) || '' },
         image: {
+          media: safeMediaPath(file.instruction && file.instruction.image && file.instruction.image.media) || '',
           url: String((file.instruction && file.instruction.image && file.instruction.image.url) || ''),
           alt: String((file.instruction && file.instruction.image && file.instruction.image.alt) || ''),
           size: (file.instruction && file.instruction.image && file.instruction.image.size) || 'medium',

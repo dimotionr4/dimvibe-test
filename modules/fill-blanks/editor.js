@@ -252,7 +252,7 @@ const FillBlanksEditor = (() => {
     if (t.slice(s, e).some(isGap)) return say('В выделении уже есть пропуск. Выделите только обычный текст.');
 
     const id = nextId('g', Object.keys(d.gaps));
-    d.gaps[id] = { answer: t.slice(s, e).join(''), alternatives: [], hint: '' };
+    d.gaps[id] = { answer: t.slice(s, e).join(''), alternatives: [], hint: '', audio: '', hintAudio: '' };
     t.splice(s, e - s, { gap: id });
     item.parts = fromTokens(t);
     sel.removeAllRanges();
@@ -411,7 +411,16 @@ const FillBlanksEditor = (() => {
     const hintHead = el('div', 'fb-label fb-labelrow', 'Подсказка для ученика');
     hintHead.append(help('Значок подсказки откроется у ученика после второй проверки, если пропуск останется неверным или пустым. Баллы и проверки подсказка не тратит. Подсказка не покажется, если проверка всего одна.'));
 
-    p.append(head, ans, noAnswer, altHead, altsBox, altAdder.wrap, hintHead, hint);
+    // Звуки: озвучка слова (значок динамика на пропуске) и звук подсказки. Файл загружается в хранилище, в данных лежит путь
+    const pick = (kind, field, label) => window.mediaPicker
+      ? window.mediaPicker(kind, () => g[field] || '', v => { g[field] = v; save(); placePanel(); }, label)
+      : document.createTextNode('');
+    const voiceHead = el('div', 'fb-label fb-labelrow', 'Озвучка слова');
+    voiceHead.append(help('Ученик нажимает значок динамика в правом верхнем углу пропуска и слышит этот звук. Он не зависит от проверок и подсказок.'));
+    const hintAudioHead = el('div', 'fb-label fb-labelrow', 'Звук подсказки');
+    hintAudioHead.append(help('Звучит в окне подсказки (после второй проверки), вместе с текстом подсказки или вместо него. Баллы и проверки не тратит.'));
+
+    p.append(head, ans, noAnswer, altHead, altsBox, altAdder.wrap, hintHead, hint, hintAudioHead, pick('audio', 'hintAudio', 'Загрузить звук подсказки'), voiceHead, pick('audio', 'audio', 'Загрузить озвучку'));
     panelBox.append(p);
     placePanel();
   }
@@ -483,6 +492,10 @@ const FillBlanksEditor = (() => {
     items.forEach(i => i.parts.filter(isGap).forEach(p => {
       const g = draft.gaps[p.gap];
       gaps[p.gap] = { answer: clean(g.answer), alternatives: (g.alternatives || []).map(clean).filter(Boolean), hint: clean(g.hint) };
+      // Звуки попадают в файл только с правильным путём в хранилище
+      const voice = window.safeMediaPath && window.safeMediaPath(g.audio), hintVoice = window.safeMediaPath && window.safeMediaPath(g.hintAudio);
+      if (voice) gaps[p.gap].audio = { media: voice };
+      if (hintVoice) gaps[p.gap].hintAudio = { media: hintVoice };
     }));
     return { module: 'fill_blanks', format: 2, layout: draft.layout, mode: draft.mode, items, gaps, distractors: draft.distractors.map(clean).filter(Boolean) };
   }
@@ -510,7 +523,7 @@ const FillBlanksEditor = (() => {
     if (!Array.isArray(file.items)) throw new Error('В файле нет предложений.');
     const gaps = {};
     Object.entries(file.gaps || {}).forEach(([id, g]) => {
-      gaps[id] = { answer: String(g.answer || ''), alternatives: Array.isArray(g.alternatives) ? g.alternatives.map(String) : [], hint: String(g.hint || '') };
+      gaps[id] = { answer: String(g.answer || ''), alternatives: Array.isArray(g.alternatives) ? g.alternatives.map(String) : [], hint: String(g.hint || ''), audio: (g.audio && g.audio.media) || '', hintAudio: (g.hintAudio && g.hintAudio.media) || '' };
     });
     const items = file.items.map((i, k) => {
       const parts = (Array.isArray(i.parts) ? i.parts : []).filter(p => typeof p === 'string' || (p && gaps[p.gap]));
