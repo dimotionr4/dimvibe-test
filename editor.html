@@ -294,7 +294,7 @@
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
 <link rel="stylesheet" href="modules/fill-blanks/editor.css?v=24">
 <link rel="stylesheet" href="modules/image-to-gaps/editor.css?v=1">
-<link rel="stylesheet" href="core/medialib.css?v=1">
+<link rel="stylesheet" href="core/medialib.css?v=3">
 </head>
 <body>
 <header id="bar">
@@ -311,7 +311,7 @@
   <button class="primary side-btn" id="new" data-tip="Новое упражнение"><span data-icon="plus"></span><span class="lbl">Новое упражнение</span></button>
   <button class="side-btn" id="openFile" data-tip="Открыть файл упражнения"><span data-icon="folder"></span><span class="lbl">Открыть файл упражнения</span></button>
   <input type="file" id="fileInput" accept=".json,application/json" hidden>
-  <button class="side-btn" id="openLib" data-tip="Медиатека: картинки для упражнений"><span data-icon="image"></span><span class="lbl">Медиатека</span></button>
+  <button class="side-btn" id="openLib" data-tip="Медиатека: картинки и звук"><span data-icon="image"></span><span class="lbl">Медиатека</span></button>
   <h2 class="lbl">Мои упражнения</h2>
   <div id="list"></div>
   <button class="side-btn credit" id="creditBtn" data-tip="Авторство и лицензии" aria-haspopup="true" aria-expanded="false"><span data-icon="info"></span><span class="lbl">Авторство и лицензии</span></button>
@@ -382,13 +382,13 @@
 
 <script src="core/design.js?v=5"></script>
 <script src="core/media.js?v=4"></script>
-<script src="core/medialib.js?v=2"></script>
-<script src="core/medialib-ui.js?v=2"></script>
+<script src="core/medialib.js?v=3"></script>
+<script src="core/medialib-ui.js?v=4"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
 <script src="core/gap-engine.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=25"></script>
-<script src="modules/image-to-gaps/editor.js?v=2"></script>
+<script src="modules/image-to-gaps/editor.js?v=3"></script>
 <script>
 const ASSET_V = 25;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
@@ -643,12 +643,12 @@ function mediaPicker(kind, get, set, label) {
       try { await mediaSignIn(); } catch (e) { err = mediaErrorText(e); box.refresh(); }
     };
     row.append(btn);
-    // Картинку можно выбрать из медиатеки (уже загруженные файлы)
-    if (kind === 'image' && busy === null) {
+    // Картинку или звук можно выбрать из медиатеки (уже загруженные файлы)
+    if (busy === null) {
       const lib = document.createElement('button');
       lib.type = 'button';
       lib.textContent = 'Из медиатеки';
-      lib.onclick = () => openMediaLibrary({ pick: true, multi: false, onPick: items => { err = ''; set(items[0].path); box.refresh(); } });
+      lib.onclick = () => openMediaLibrary({ pick: true, multi: false, kind, onPick: items => { err = ''; set(items[0].path); box.refresh(); } });
       row.append(lib);
     }
     if (busy !== null) {
@@ -694,8 +694,8 @@ function mediaPicker(kind, get, set, label) {
     busy = 0; box.refresh();
     try {
       const onProg = p => { busy = p; const pr = box.querySelector('progress'); if (pr) pr.value = p; };
-      // Картинки идут в общую медиатеку (с миниатюрой и названием по имени файла), звук — в папку упражнения
-      const path = kind === 'image' ? (await MediaLib.upload(f, {}, onProg)).path : await mediaUpload(f, kind, current && current.id, onProg);
+      // Картинки и звук идут в общую медиатеку (картинки с миниатюрой, название по имени файла)
+      const path = (await MediaLib.upload(f, {}, onProg)).path;
       busy = null;
       set(path);
     } catch (e) {

@@ -1,5 +1,6 @@
-// Окно «Медиатека»: сетка картинок, поиск, теги, загрузка, свойства файла. Данные — core/medialib.js.
-// openMediaLibrary({pick, multi, onPick(items)}): pick=true — окно выбора (кнопка «Выбрать»), иначе просто просмотр и правка.
+// Окно «Медиатека»: папки, сетка картинок и звуков, поиск, теги, загрузка, свойства файла. Данные — core/medialib.js.
+// openMediaLibrary({pick, multi, kind, onPick(items)}): pick=true — окно выбора (кнопка «Выбрать»), иначе просмотр и правка;
+// kind='image' или 'audio' — показывать только этот вид (без него есть переключатель «Все / Картинки / Звук»).
 // Номер версии `?v=` у подключения этого файла (и medialib.css) поднимайте при любом изменении.
 const MediaLibUI = (() => {
   const h = (tag, cls, text) => {
@@ -13,16 +14,30 @@ const MediaLibUI = (() => {
 
   const fmtSize = n => (n >= 1048576 ? (n / 1048576).toFixed(1) + ' МБ' : Math.max(1, Math.round(n / 1024)) + ' КБ');
   const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('ru', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+  const fmtDur = s => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}` : '');
   const ORIENT = { all: 'Любая форма', landscape: 'Горизонтальная', portrait: 'Вертикальная', square: 'Квадратная' };
   const SORTS = { new: 'Сначала новые', old: 'Сначала старые', name: 'По названию', size: 'По размеру' };
+  const KINDS = { all: 'Всё', image: 'Картинки', audio: 'Звук' };
   const titleOf = it => it.name || 'Без названия';
   const orientOf = it => (!it.w || !it.h ? '' : Math.abs(it.w / it.h - 1) < 0.08 ? 'square' : it.w > it.h ? 'landscape' : 'portrait');
+
+  // Цвета папок: готовый набор (как у цветов упражнения, плюс серый и красный)
+  const FCOLORS = ['#6d4aff', '#1d62d8', '#0a7c8c', '#12805c', '#b85400', '#c2307a', '#6b6b80', '#d64545'];
+  // Пустые папки хранятся в этом браузере, пока в них не попадёт файл (у файла в хранилище лежат название и цвет папки)
+  const FKEY = 'dimvibe.libFolders';
+  const readPending = () => { try { const a = JSON.parse(localStorage.getItem(FKEY)); return Array.isArray(a) ? a.filter(p => p && p.name) : []; } catch (e) { return []; } };
+  const writePending = a => { try { localStorage.setItem(FKEY, JSON.stringify(a)); } catch (e) { /* без памяти браузера пустые папки не запоминаются */ } };
 
   function open(opts) {
     if (cur) cur.close();
     opts = opts || {};
     const pick = !!opts.pick, multi = !!opts.multi;
     let items = cache || [], q = '', tagsOn = new Set(), orient = 'all', sort = 'new', showHidden = false;
+    let kindF = opts.kind === 'image' || opts.kind === 'audio' ? opts.kind : 'all';
+    let folderSel = '*'; // '*' — все файлы, '' — без папки, иначе название папки
+    let folderForm = null; // null | 'new' | 'edit'
+    let removeAsk = false;
+    let pending = readPending();
     let sel = [], active = null, busy = '', msg = '';
     const id = ++uid;
 
@@ -35,7 +50,7 @@ const MediaLibUI = (() => {
 
     // Верх: название, поиск, закрыть
     const head = h('div', 'ml-head');
-    const title = h('b', '', 'Медиатека');
+    const title = h('b', '', opts.kind === 'audio' ? 'Медиатека: звук' : opts.kind === 'image' ? 'Медиатека: картинки' : 'Медиатека');
     const count = h('span', 'ml-count');
     const search = h('input', 'ml-search');
     search.type = 'search';
@@ -47,7 +62,7 @@ const MediaLibUI = (() => {
     closeBtn.title = 'Закрыть (Esc)';
     head.append(title, count, search, closeBtn);
 
-    // Панель: форма, сортировка, скрытые, обновить, загрузка
+    // Панель: вид, форма, сортировка, скрытые, обновить, загрузка
     const bar = h('div', 'ml-bar');
     const mkSelect = (values, get, set, label) => {
       const s = h('select');
@@ -57,6 +72,8 @@ const MediaLibUI = (() => {
       s.onchange = () => { set(s.value); draw(); };
       return s;
     };
+    const kindSel = mkSelect(KINDS, () => kindF, v => { kindF = v; }, 'Вид файлов');
+    kindSel.hidden = !!opts.kind;
     const orientSel = mkSelect(ORIENT, () => orient, v => { orient = v; }, 'Форма картинки');
     const sortSel = mkSelect(SORTS, () => sort, v => { sort = v; }, 'Сортировка');
     const hid = h('label', 'ml-check');
@@ -66,19 +83,23 @@ const MediaLibUI = (() => {
     hid.append(hidBox, document.createTextNode(' Скрытые'));
     const refresh = h('button', '', 'Обновить');
     const file = h('input');
-    file.type = 'file'; file.multiple = true; file.accept = MEDIA_ACCEPT.image; file.hidden = true;
+    file.type = 'file'; file.multiple = true; file.hidden = true;
+    file.accept = opts.kind === 'audio' ? MEDIA_ACCEPT.audio : opts.kind === 'image' ? MEDIA_ACCEPT.image : MEDIA_ACCEPT.image + ',' + MEDIA_ACCEPT.audio;
     const up = h('button', 'ml-up primary');
-    bar.append(orientSel, sortSel, hid, refresh, up, file);
+    bar.append(kindSel, orientSel, sortSel, hid, refresh, up, file);
 
     const tagRow = h('div', 'ml-tags');
     const note = h('div', 'ml-note');
     note.hidden = true;
 
-    // Середина: сетка и свойства
+    // Середина: папки, сетка и свойства
     const mid = h('div', 'ml-mid');
+    const folderBox = h('div', 'ml-folders');
+    folderBox.setAttribute('role', 'group');
+    folderBox.setAttribute('aria-label', 'Папки');
     const grid = h('div', 'ml-grid');
-    const side = h('aside', 'ml-side');
-    mid.append(grid, side);
+    const side = h('div', 'ml-side');
+    mid.append(folderBox, grid, side);
 
     const foot = h('div', 'ml-foot');
     const picked = h('span', 'ml-picked');
@@ -90,13 +111,33 @@ const MediaLibUI = (() => {
     const say = (t, bad) => { msg = t; note.textContent = t; note.hidden = !t; note.classList.toggle('bad', !!bad); };
     const errText = e => e.userText || mediaErrorText(e);
 
+    // Файлы, которые вообще можно показать (вид, скрытые), — от них считаются папки и теги
+    const base = () => items.filter(it => (kindF === 'all' || it.kind === kindF) && (!it.hidden || showHidden));
+
+    function folders() {
+      const m = new Map();
+      base().forEach(it => {
+        if (!it.folder) return;
+        const f = m.get(it.folder) || { name: it.folder, color: it.fcolor, count: 0 };
+        if (!f.color) f.color = it.fcolor;
+        f.count++;
+        m.set(it.folder, f);
+      });
+      // Папки с файлами других видов или скрытыми тоже существуют: пустой остаётся только та, где файлов нет совсем
+      pending.forEach(p => { if (!m.has(p.name) && !items.some(it => it.folder === p.name)) m.set(p.name, { name: p.name, color: p.color, count: 0 }); });
+      return [...m.values()].sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    }
+    const folderColor = name => (folders().find(f => f.name === name) || {}).color || '';
+
     function visible() {
       const words = q.split(/\s+/).filter(Boolean);
-      const r = items.filter(it => {
-        if (it.hidden && !showHidden) return false;
+      const r = base().filter(it => {
+        if (folderSel === '' && it.folder) return false;
+        if (folderSel !== '*' && folderSel !== '' && it.folder !== folderSel) return false;
         if ([...tagsOn].some(t => !it.tags.includes(t))) return false;
-        if (orient !== 'all' && orientOf(it) && orientOf(it) !== orient) return false;
-        const hay = (it.name + ' ' + it.tags.join(' ') + ' ' + it.path.split('/').pop()).toLowerCase();
+        if (orient !== 'all' && it.kind === 'image' && orientOf(it) && orientOf(it) !== orient) return false;
+        if (orient !== 'all' && it.kind === 'audio') return false;
+        const hay = (it.name + ' ' + it.tags.join(' ') + ' ' + it.folder + ' ' + it.path.split('/').pop()).toLowerCase();
         return words.every(w => hay.includes(w));
       });
       const cmp = { new: (a, b) => (b.created || '').localeCompare(a.created || ''), old: (a, b) => (a.created || '').localeCompare(b.created || ''), name: (a, b) => titleOf(a).localeCompare(titleOf(b), 'ru'), size: (a, b) => b.size - a.size }[sort];
@@ -106,7 +147,7 @@ const MediaLibUI = (() => {
     function drawTags() {
       tagRow.innerHTML = '';
       const counts = {};
-      items.forEach(it => { if (!it.hidden || showHidden) it.tags.forEach(t => { counts[t] = (counts[t] || 0) + 1; }); });
+      base().forEach(it => it.tags.forEach(t => { counts[t] = (counts[t] || 0) + 1; }));
       Object.keys(counts).sort((a, b) => a.localeCompare(b, 'ru')).forEach(t => {
         const b = h('button', 'ml-tag' + (tagsOn.has(t) ? ' on' : ''), `${t} · ${counts[t]}`);
         b.setAttribute('aria-pressed', String(tagsOn.has(t)));
@@ -114,6 +155,129 @@ const MediaLibUI = (() => {
         tagRow.append(b);
       });
       tagRow.hidden = !tagRow.firstChild;
+    }
+
+    // ---- Папки ----
+    const dot = c => { const d = h('span', 'ml-dot'); d.style.background = c || 'var(--muted)'; return d; };
+    const colorRow = (get, set) => {
+      const row = h('div', 'ml-colors');
+      FCOLORS.forEach(c => {
+        const b = h('button', 'ml-color' + (get() === c ? ' on' : ''));
+        b.type = 'button';
+        b.style.background = c;
+        b.setAttribute('aria-label', 'Цвет ' + c);
+        b.setAttribute('aria-pressed', String(get() === c));
+        b.onclick = () => { set(c); row.querySelectorAll('.ml-color').forEach(x => x.classList.toggle('on', x === b)); };
+        row.append(b);
+      });
+      return row;
+    };
+
+    function drawFolders() {
+      folderBox.innerHTML = '';
+      const list = folders();
+      const row = (key, label, n, color, extra) => {
+        const b = h('button', 'ml-folder' + (folderSel === key ? ' on' : ''));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', String(folderSel === key));
+        b.append(color !== undefined ? dot(color) : h('span', 'ml-dot none'), h('span', 'ml-fname', label), h('span', 'ml-fcount', String(n)));
+        b.onclick = () => { folderSel = key; folderForm = null; removeAsk = false; draw(); };
+        folderBox.append(b);
+        return b;
+      };
+      const b0 = base();
+      row('*', 'Все файлы', b0.length);
+      row('', 'Без папки', b0.filter(it => !it.folder).length);
+      list.forEach(f => row(f.name, f.name, f.count, f.color));
+      const add = h('button', 'ml-folder-add', '+ Папка');
+      add.type = 'button';
+      add.onclick = () => { folderForm = folderForm === 'new' ? null : 'new'; draw(); };
+      folderBox.append(add);
+      const named = folderSel !== '*' && folderSel !== '';
+      if (named) {
+        const edit = h('button', 'ml-folder-add', 'Изменить папку');
+        edit.type = 'button';
+        edit.onclick = () => { folderForm = folderForm === 'edit' ? null : 'edit'; removeAsk = false; draw(); };
+        folderBox.append(edit);
+      }
+      if (folderForm) folderBox.append(folderFormEl());
+    }
+
+    function folderFormEl() {
+      const isEdit = folderForm === 'edit';
+      const cu = isEdit ? list0(folderSel) : null;
+      let color = (cu && cu.color) || FCOLORS[0];
+      const form = h('div', 'ml-fform');
+      const name = h('input');
+      name.placeholder = 'Название папки';
+      name.maxLength = 40;
+      name.value = isEdit ? folderSel : '';
+      name.setAttribute('aria-label', 'Название папки');
+      const colors = colorRow(() => color, c => { color = c; });
+      const err = h('div', 'ml-ferr');
+      err.hidden = true;
+      const ok = h('button', 'primary', isEdit ? 'Сохранить' : 'Создать');
+      const cancelF = h('button', '', 'Отмена');
+      cancelF.onclick = () => { folderForm = null; removeAsk = false; draw(); };
+      const go = async () => {
+        const nm = MediaLib.cleanFolder(name.value);
+        if (!nm) { err.textContent = 'Введите название.'; err.hidden = false; return; }
+        const taken = folders().some(f => f.name.toLowerCase() === nm.toLowerCase() && (!isEdit || f.name !== folderSel));
+        if (taken) { err.textContent = 'Такая папка уже есть.'; err.hidden = false; return; }
+        if (!isEdit) {
+          pending = [...pending.filter(p => p.name !== nm), { name: nm, color }];
+          writePending(pending);
+          folderSel = nm; folderForm = null;
+          draw();
+          return;
+        }
+        const old = folderSel, its = items.filter(it => it.folder === old);
+        if (its.length && !user) { err.textContent = 'Чтобы менять папку с файлами, войдите через Google.'; err.hidden = false; return; }
+        folderForm = null;
+        await batch(its, { folder: nm, fcolor: color }, it => { it.folder = nm; it.fcolor = color; });
+        pending = pending.filter(p => p.name !== old && p.name !== nm).concat(its.length ? [] : [{ name: nm, color }]);
+        writePending(pending);
+        folderSel = nm;
+        draw();
+      };
+      ok.onclick = go;
+      name.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+      form.append(name, colors, err);
+      const btns = h('div', 'ml-fbtns');
+      btns.append(ok, cancelF);
+      form.append(btns);
+      if (isEdit) {
+        const rm = h('button', 'ml-frm', removeAsk ? 'Точно убрать? Файлы останутся' : 'Убрать папку');
+        rm.onclick = async () => {
+          if (!removeAsk) { removeAsk = true; draw(); return; }
+          const old = folderSel, its = items.filter(it => it.folder === old);
+          if (its.length && !user) { say('Чтобы менять папку с файлами, войдите через Google.', true); removeAsk = false; draw(); return; }
+          folderForm = null; removeAsk = false;
+          await batch(its, { folder: '' }, it => { it.folder = ''; it.fcolor = ''; });
+          pending = pending.filter(p => p.name !== old);
+          writePending(pending);
+          folderSel = '*';
+          draw();
+        };
+        form.append(rm);
+      }
+      setTimeout(() => name.focus(), 0);
+      return form;
+    }
+    const list0 = name => folders().find(f => f.name === name);
+
+    // Одно изменение для нескольких файлов; при отказе хранилища возвращаем уже изменённые обратно
+    async function batch(its, patch, apply) {
+      const before = its.map(it => [it, it.folder, it.fcolor]);
+      busy = 'folder'; say('Сохранение…'); draw();
+      try {
+        for (const it of its) { await MediaLib.update(it.path, patch); apply(it); }
+        say('');
+      } catch (e) {
+        before.forEach(([it, f, c]) => { it.folder = f; it.fcolor = c; });
+        say('Не удалось сохранить: ' + errText(e), true);
+      }
+      busy = '';
     }
 
     function thumbImg(it, big) {
@@ -129,19 +293,27 @@ const MediaLibUI = (() => {
     }
 
     function draw() {
+      drawFolders();
       drawTags();
       const list = visible();
-      count.textContent = items.length ? `${list.length} из ${items.length}` : '';
+      const total = base().length;
+      count.textContent = total ? `${list.length} из ${total}` : '';
+      orientSel.hidden = kindF === 'audio';
       grid.innerHTML = '';
       if (busy === 'list') grid.append(h('p', 'ml-empty', 'Загрузка списка…'));
-      else if (!list.length) grid.append(h('p', 'ml-empty', items.length ? 'Ничего не найдено. Измените поиск или фильтры.' : 'В медиатеке пока нет картинок. Нажмите «Загрузить».'));
+      else if (!list.length) grid.append(h('p', 'ml-empty', total ? 'Ничего не найдено. Измените поиск, папку или фильтры.' : opts.kind === 'audio' ? 'В медиатеке пока нет звуков. Нажмите «Загрузить».' : 'В медиатеке пока ничего нет. Нажмите «Загрузить».'));
       list.forEach(it => {
         const c = h('button', 'ml-card' + (sel.includes(it.path) ? ' sel' : '') + (active === it.path ? ' act' : '') + (it.hidden ? ' hid' : ''));
         c.type = 'button';
-        c.title = titleOf(it);
+        c.title = titleOf(it) + (it.folder ? ' · ' + it.folder : '');
         const th = h('span', 'ml-th');
-        th.append(thumbImg(it));
+        if (it.kind === 'audio') {
+          th.classList.add('aud');
+          th.append(h('span', 'ml-note-ico', '♪'));
+          if (it.dur) th.append(h('span', 'ml-dur', fmtDur(it.dur)));
+        } else th.append(thumbImg(it));
         c.append(th, h('span', 'ml-name', titleOf(it)));
+        if (it.folder) { const d = dot(it.fcolor); d.classList.add('ml-fdot'); c.append(d); }
         if (pick) c.append(h('span', 'ml-mark', '✓'));
         c.onclick = () => {
           active = it.path;
@@ -160,22 +332,29 @@ const MediaLibUI = (() => {
     }
 
     function drawFoot() {
-      picked.textContent = sel.length ? `Выбрано: ${sel.length}` : multi ? 'Отметьте одну или несколько картинок' : 'Выберите картинку';
+      const what = opts.kind === 'audio' ? 'звук' : 'картинку';
+      picked.textContent = sel.length ? `Выбрано: ${sel.length}` : multi ? 'Отметьте один или несколько файлов' : `Выберите ${what}`;
       okBtn.disabled = !sel.length;
     }
 
     function upBtn() {
       up.disabled = busy !== '' && busy !== 'list';
       up.textContent = busy.startsWith('up') ? busy.slice(2) : user ? 'Загрузить' : 'Войти для загрузки';
-      up.title = user ? 'Новые файлы получают теги, выбранные в фильтре' : 'Загружать и менять файлы может только вошедший через Google';
+      up.title = user ? 'Новые файлы получают теги и папку, выбранные слева и в фильтре' : 'Загружать и менять файлы может только вошедший через Google';
     }
 
     function drawSide() {
       side.innerHTML = '';
       const it = items.find(x => x.path === active);
-      if (!it) { side.append(h('p', 'ml-empty', 'Нажмите на картинку, чтобы увидеть и изменить её свойства.')); return; }
+      if (!it) { side.append(h('p', 'ml-empty', 'Нажмите на файл, чтобы увидеть и изменить его свойства.')); return; }
       const big = h('div', 'ml-big');
-      big.append(thumbImg(it, true));
+      if (it.kind === 'audio') {
+        const a = h('audio');
+        a.controls = true; a.preload = 'none';
+        a.src = mediaUrl(it.path) || '';
+        big.classList.add('aud');
+        big.append(a);
+      } else big.append(thumbImg(it, true));
       const edit = !!user;
       const name = h('input');
       name.value = it.name;
@@ -183,6 +362,18 @@ const MediaLibUI = (() => {
       name.disabled = !edit;
       name.setAttribute('aria-label', 'Название');
       name.onchange = () => save(it, { name: name.value }, () => { it.name = MediaLib.cleanName(name.value); });
+      // Папка файла
+      const fsel = h('select');
+      fsel.setAttribute('aria-label', 'Папка');
+      fsel.disabled = !edit;
+      fsel.append(new Option('Без папки', ''));
+      folders().forEach(f => fsel.append(new Option(f.name, f.name)));
+      if (it.folder && ![...fsel.options].some(o => o.value === it.folder)) fsel.append(new Option(it.folder, it.folder));
+      fsel.value = it.folder;
+      fsel.onchange = () => {
+        const f = fsel.value, c = f ? folderColor(f) : '';
+        save(it, { folder: f, fcolor: c }, () => { it.folder = f; it.fcolor = c; });
+      };
       // Теги: чипы, поле добавления и подсказки из уже существующих
       const tags = h('div', 'ml-chips');
       it.tags.forEach(t => {
@@ -212,25 +403,28 @@ const MediaLibUI = (() => {
       tagIn.onkeydown = e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(); } };
       tagIn.onchange = addTag;
       const info = h('dl', 'ml-info');
-      [['Формат', (it.type.split('/')[1] || '—').toUpperCase()], ['Размеры', it.w ? `${it.w} × ${it.h} px` : '—'], ['Размер файла', it.size ? fmtSize(it.size) : '—'], ['Загружено', fmtDate(it.created)], ['Откуда', it.origin === 'library' ? 'медиатека' : 'упражнение ' + it.origin]]
-        .forEach(([k, v]) => info.append(h('dt', '', k), h('dd', '', v)));
+      const rows = [['Формат', (it.type.split('/')[1] || '—').toUpperCase()]];
+      if (it.kind === 'audio') rows.push(['Длительность', it.dur ? fmtDur(it.dur) : '—']);
+      else rows.push(['Размеры', it.w ? `${it.w} × ${it.h} px` : '—']);
+      rows.push(['Размер файла', it.size ? fmtSize(it.size) : '—'], ['Загружено', fmtDate(it.created)], ['Откуда', it.origin === 'library' ? 'медиатека' : 'упражнение ' + it.origin]);
+      rows.forEach(([k, v]) => info.append(h('dt', '', k), h('dd', '', v)));
       const hideBtn = h('button', '', it.hidden ? 'Вернуть в список' : 'Скрыть из списка');
       hideBtn.disabled = !edit;
       hideBtn.title = 'Файл не удаляется из хранилища: упражнения, где он уже есть, продолжают работать';
       hideBtn.onclick = () => save(it, { hidden: !it.hidden }, () => { it.hidden = !it.hidden; if (it.hidden && !showHidden) { sel = sel.filter(p => p !== it.path); active = null; } });
-      side.append(big, name, tags, tagIn, dl, info, hideBtn);
-      if (!edit) side.append(h('p', 'ml-empty', 'Чтобы менять название и теги, войдите через Google (кнопка «Войти для загрузки»).'));
+      side.append(big, name, h('div', 'ml-lab', 'Папка'), fsel, h('div', 'ml-lab', 'Теги'), tags, tagIn, dl, info, hideBtn);
+      if (!edit) side.append(h('p', 'ml-empty', 'Чтобы менять название, папку и теги, войдите через Google (кнопка «Войти для загрузки»).'));
     }
 
     // Изменение сразу видно; если хранилище отказало, возвращаем как было
     async function save(it, patch, apply) {
-      const before = JSON.stringify([it.name, it.tags, it.hidden]);
+      const before = JSON.stringify([it.name, it.tags, it.hidden, it.folder, it.fcolor]);
       apply();
       draw();
       try { await MediaLib.update(it.path, patch); say('', false); }
       catch (e) {
-        const [n, t, hd] = JSON.parse(before);
-        it.name = n; it.tags = t; it.hidden = hd;
+        const [n, t, hd, f, c] = JSON.parse(before);
+        it.name = n; it.tags = t; it.hidden = hd; it.folder = f; it.fcolor = c;
         say('Не удалось сохранить: ' + errText(e), true);
         draw();
       }
@@ -254,15 +448,19 @@ const MediaLibUI = (() => {
       if (!user) { try { await mediaSignIn(); } catch (e) { say(errText(e), true); } return; }
       const list = [...files];
       const tags = [...tagsOn];
+      const folder = folderSel !== '*' ? folderSel : '', fcolor = folder ? folderColor(folder) : '';
       let ok = 0;
       for (let i = 0; i < list.length; i++) {
         busy = `up${list.length > 1 ? `Загрузка ${i + 1} из ${list.length}…` : 'Загрузка…'}`;
         upBtn();
+        // Файл другого вида, чем показывает окно (например, звук в окне картинок), не загружаем
+        const k = (MEDIA_TYPES[mediaExt(list[i].name)] || [])[1];
+        if (opts.kind && k !== opts.kind) { say(`${list[i].name}: ${opts.kind === 'audio' ? 'здесь нужен звук. ' + MEDIA_NAMES.audio : 'здесь нужна картинка. ' + MEDIA_NAMES.image}.`, true); continue; }
         try {
-          const it = await MediaLib.upload(list[i], { tags });
+          const it = await MediaLib.upload(list[i], { tags, folder, fcolor });
           items = cache = [it, ...(cache || items)];
           active = it.path;
-          if (pick) sel = multi ? [...sel, it.path] : [it.path];
+          if (pick && (!opts.kind || it.kind === opts.kind)) sel = multi ? [...sel, it.path] : [it.path];
           ok++;
           draw();
         } catch (e) {
