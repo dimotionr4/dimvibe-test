@@ -10,62 +10,48 @@
     {
       "id": "s1",
       "parts": [
+        "The ",
         {
-          "gap": "g1"
+          "gap": "g6"
         },
-        " features several ",
+        " poured the ",
         {
-          "gap": "g4"
+          "gap": "g7"
         },
-        " urban hiking trails and nature walks that ",
+        " into the ",
         {
-          "gap": "g2"
+          "gap": "g8"
         },
-        " the city to surrounding ridges, lakes, and historical ",
-        {
-          "gap": "g3"
-        },
-        ". You can ",
-        {
-          "gap": "g5"
-        },
-        " the top-rated local options on AllTrails."
+        "."
       ]
     }
   ],
   "gaps": {
-    "g1": {
-      "answer": "Tbilisi",
+    "g6": {
+      "answer": "bartender",
       "alternatives": [],
-      "hint": "capital"
+      "hint": "",
+      "hintAudio": {
+        "media": "media/ex-ugfvkv/aud-b9b7b97a.wav"
+      }
     },
-    "g4": {
-      "answer": "popular",
-      "alternatives": [],
-      "hint": ""
-    },
-    "g2": {
-      "answer": "connect",
+    "g7": {
+      "answer": "drink",
       "alternatives": [],
       "hint": ""
     },
-    "g3": {
-      "answer": "landmarks",
-      "alternatives": [],
-      "hint": ""
-    },
-    "g5": {
-      "answer": "explore",
+    "g8": {
+      "answer": "glass",
       "alternatives": [],
       "hint": ""
     }
   },
   "distractors": [],
   "instruction": {
-    "title": "Please insert",
-    "text": "**let **us **try this text ** and *then *we can **continue later",
+    "title": "Gap fill",
+    "text": "Please **insert **all the **needed **words",
     "audio": {
-      "media": "media/ex-ugfvkv/aud-87321932.mp3"
+      "media": "media/ex-ugfvkv/aud-2c5eda3e.wav"
     },
     "image": {
       "media": "media/ex-ugfvkv/img-0133b924.jpg",
