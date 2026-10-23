@@ -18,6 +18,15 @@
   .swatch { display:inline-flex; align-items:center; gap:8px; padding:6px 12px 6px 8px; }
   .swatch i { width:20px; height:20px; border-radius:50%; display:inline-block; }
   .swatch.on { border:2px solid var(--text); font-weight:600; }
+  .instr-ed { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:16px; }
+  .instr-ed h3 { margin:0; font-size:1rem; }
+  .instr-ed input, .instr-ed textarea { width:100%; margin:6px 0; font-size:1rem; }
+  .instr-ed textarea { resize:vertical; line-height:1.4; }
+  .rt-bar { display:flex; gap:6px; }
+  .rt-bar button { min-width:36px; padding:2px 8px; }
+  .instr-sample { border-left:4px solid var(--accent); padding:2px 12px; background:var(--bg); border-radius:8px; }
+  .instr-sample p { margin:.4em 0; }
+  .check { display:flex; align-items:center; gap:8px; margin:6px 0; }
   .sample { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
   .sample .primary { background:var(--demo); border-color:var(--demo); color:var(--on-demo); }
   .chipdemo { padding:2px 12px; border-radius:999px; background:var(--demo); color:var(--on-demo); }
@@ -161,6 +170,7 @@
 </div>
 
 <script src="core/design.js?v=1"></script>
+<script src="core/richtext.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
 const ASSET_V = 7;
@@ -231,7 +241,14 @@ function showTab(name) {
   if (name === 'publish') renderPublish();
   else if (name === 'behavior') renderBehavior();
   else if (name === 'design') renderDesign();
-  else MODULES[current.module].render($('content'), current, touch);
+  else {
+    // Содержимое: общая инструкция сверху, под ней редактор модуля
+    $('content').innerHTML = '';
+    const top = document.createElement('div'), rest = document.createElement('div');
+    $('content').append(top, rest);
+    renderInstruction(top);
+    MODULES[current.module].render(rest, current, touch);
+  }
 }
 
 function removeDraft(id) {
@@ -283,7 +300,55 @@ function exerciseFor(draft, published) {
   const body = MODULES[draft.module].exportData(draft);
   const checks = draft.behavior && draft.behavior.checks;
   const accent = draft.design && ACCENTS[draft.design.accent] ? draft.design.accent : DEFAULT_ACCENT;
-  return { id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body, behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' }, design: { accent } };
+  const showInstruction = !draft.design || draft.design.showInstruction !== false;
+  const ins = draft.instruction || {};
+  // Текст инструкции: строки без лишних пробелов, пустые строки выброшены (каждая строка — абзац)
+  const text = String(ins.text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).join('\n');
+  return {
+    id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
+    instruction: { title: String(ins.title || '').trim(), text },
+    behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
+    design: { accent, showInstruction },
+  };
+}
+
+// Блок «Инструкция» вверху вкладки «Содержимое»; общий для модулей. Форматирование: **жирный**, *курсив*
+function renderInstruction(box) {
+  const ins = current.instruction || (current.instruction = { title: '', text: '' });
+  box.innerHTML = `
+    <section class="instr-ed">
+      <h3>Инструкция для ученика</h3>
+      <p class="muted">Необязательно. Ученик видит её над заданием и может свернуть. Новая строка — новый абзац.</p>
+      <input id="instrTitle" placeholder="Заголовок (если пусто, будет «Инструкция»)">
+      <div class="rt-bar">
+        <button data-fmt="**" title="Жирный: выделите слово и нажмите"><b>Ж</b></button>
+        <button data-fmt="*" title="Курсив: выделите слово и нажмите"><i>К</i></button>
+      </div>
+      <textarea id="instrText" rows="3" placeholder="Например: Вставьте слова из банка в пропуски."></textarea>
+      <div class="muted" id="instrSampleLabel">Так увидит ученик:</div>
+      <div class="instr-sample" id="instrSample"></div>
+    </section>`;
+  $('instrTitle').value = ins.title;
+  $('instrText').value = ins.text;
+  const paintSample = () => {
+    $('instrSample').replaceChildren(richText(ins.text));
+    const empty = !ins.text.trim();
+    $('instrSample').hidden = empty;
+    $('instrSampleLabel').hidden = empty;
+  };
+  paintSample();
+  $('instrTitle').oninput = () => { ins.title = $('instrTitle').value; touch(); };
+  $('instrText').oninput = () => { ins.text = $('instrText').value; paintSample(); touch(); };
+  box.querySelectorAll('[data-fmt]').forEach(b => {
+    b.onmousedown = e => e.preventDefault(); // иначе кнопка сбросит выделение в поле
+    b.onclick = () => {
+      const t = $('instrText'), m = b.dataset.fmt, s = t.selectionStart, e = t.selectionEnd;
+      t.setRangeText(m + t.value.slice(s, e) + m, s, e, 'end');
+      if (s === e) t.setSelectionRange(s + m.length, s + m.length); // без выделения: курсор между знаками
+      t.focus();
+      t.oninput();
+    };
+  });
 }
 
 // Вкладка «Дизайн» общая для модулей. Сейчас: цвет упражнения из набора core/design.js
@@ -307,7 +372,14 @@ function renderDesign() {
         <span class="chipdemo">слово</span>
         <span class="gapdemo">ответ</span>
       </div>
+      <h3 style="margin-top:22px">Инструкция</h3>
+      <label class="check"><input type="checkbox" id="showInstr"${current.design && current.design.showInstruction === false ? '' : ' checked'}> Показывать инструкцию ученику</label>
+      <p class="muted">${(current.instruction && (current.instruction.title.trim() || current.instruction.text.trim())) ? 'Если снять отметку, текст инструкции не удаляется, а просто скрывается.' : 'Инструкция пока не написана: её можно добавить на вкладке «Содержимое».'}</p>
     </section>`;
+  $('showInstr').onchange = () => {
+    current.design = { ...current.design, showInstruction: $('showInstr').checked };
+    touch();
+  };
   const paint = key => {
     const a = ACCENTS[key];
     $('sample').style.setProperty('--demo', shade(a));
@@ -315,7 +387,7 @@ function renderDesign() {
   };
   paint(chosen);
   $('content').querySelectorAll('[data-accent]').forEach(b => b.onclick = () => {
-    current.design = { accent: b.dataset.accent };
+    current.design = { ...current.design, accent: b.dataset.accent };
     touch();
     renderDesign();
   });
@@ -509,7 +581,11 @@ async function openFile(f) {
     const draft = {
       id: file.id, title: String(file.title || ''), ...MODULES[file.module].load(file),
       behavior: { checks: checks >= 1 && checks <= 5 ? Math.floor(checks) : 'auto' },
-      design: { accent: file.design && ACCENTS[file.design.accent] ? file.design.accent : DEFAULT_ACCENT },
+      design: {
+        accent: file.design && ACCENTS[file.design.accent] ? file.design.accent : DEFAULT_ACCENT,
+        showInstruction: !file.design || file.design.showInstruction !== false,
+      },
+      instruction: { title: String((file.instruction && file.instruction.title) || ''), text: String((file.instruction && file.instruction.text) || '') },
       updatedAt: new Date().toISOString(),
     };
     draft.publication = { state: file.published === false ? 'unpublished' : 'published', at: null, snapshot: snapshot(draft) };

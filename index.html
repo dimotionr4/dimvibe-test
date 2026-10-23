@@ -42,6 +42,13 @@
   .gap.bad { color:var(--bad); border-color:var(--bad); }
   .gap.bad::after { content:"✗"; margin-left:4px; }
   .gap.missing { border-bottom-style:dashed; border-color:var(--bad); }
+  /* Инструкция: сверху, по умолчанию развёрнута, ученик может свернуть */
+  .instr { border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; background:var(--card); margin-bottom:10px; }
+  .instr-head { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; border:none; background:transparent; text-align:left; font-weight:600; padding:8px 12px; min-height:44px; }
+  .instr-head::after { content:"▾"; color:var(--muted); }
+  .instr-head[aria-expanded="false"]::after { content:"▸"; }
+  .instr-body { padding:0 12px 10px; }
+  .instr-body p { margin:.4em 0; }
   /* Подсказка: замок до второй проверки, потом лампочка; окно не выходит за края экрана */
   .hintbtn { min-width:32px; min-height:32px; padding:0; border:none; background:transparent; font-size:1rem; vertical-align:middle; }
   .hintbtn.locked { opacity:.5; }
@@ -88,12 +95,13 @@
 </footer>
 
 <script src="core/design.js?v=1"></script>
+<script src="core/richtext.js?v=1"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
 let data = null, mode = 'word_bank', gaps = [], selected = null;
 // Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
-let maxChecks = 3, checksUsed = 0, finished = false, note = '';
+let maxChecks = 3, checksUsed = 0, finished = false, note = '', instrOpen = true;
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key
 let bankOrder = [], poolOrder = [];
 
@@ -124,7 +132,7 @@ function build() {
   // Число проверок: выбрал преподаватель (1–5), иначе 3 при 1–5 пропусках и 5 при 6 и больше
   const set = Number(data.behavior && data.behavior.checks);
   maxChecks = set >= 1 && set <= 5 ? Math.floor(set) : (gaps.length <= 5 ? 3 : 5);
-  checksUsed = 0; finished = false; note = ''; selected = null;
+  checksUsed = 0; finished = false; note = ''; selected = null; instrOpen = true;
   shuffleWords();
 }
 
@@ -189,6 +197,30 @@ addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
 addEventListener('resize', closePop);
 $('main').addEventListener('scroll', closePop);
 
+// Инструкция показывается, если в ней что-то написано и преподаватель не скрыл её; «Начать заново» разворачивает её снова
+function instructionBlock() {
+  const ins = data.instruction || {};
+  const title = String(ins.title || '').trim(), text = String(ins.text || '').trim();
+  if ((!title && !text) || (data.design && data.design.showInstruction === false)) return null;
+  const box = document.createElement('section');
+  box.className = 'instr';
+  const head = document.createElement('button');
+  head.className = 'instr-head';
+  head.textContent = title || 'Инструкция';
+  head.setAttribute('aria-expanded', String(instrOpen));
+  head.onclick = () => {
+    instrOpen = !instrOpen;
+    head.setAttribute('aria-expanded', String(instrOpen));
+    body.hidden = !instrOpen;
+  };
+  const body = document.createElement('div');
+  body.className = 'instr-body';
+  body.hidden = !instrOpen;
+  body.appendChild(richText(text));
+  box.append(head, body);
+  return box;
+}
+
 function render() {
   closePop();
   const main = $('main');
@@ -197,6 +229,8 @@ function render() {
   document.querySelectorAll('.modes button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   const root = $('root');
   root.innerHTML = '';
+  const instr = instructionBlock();
+  if (instr) root.appendChild(instr);
   let gi = 0;
   // Отдельные предложения: у каждого своя карточка. Связный текст: одна карточка, предложения-абзацы внутри
   const isText = data.layout === 'text';
@@ -338,7 +372,7 @@ function check() {
 // Новое прохождение: ответы, закрепление, проверки и сообщения сбрасываются, слова перемешиваются заново
 function restart() {
   gaps.forEach(g => { g.value = ''; g.bankKey = null; g.locked = false; g.state = null; });
-  checksUsed = 0; finished = false; note = ''; selected = null;
+  checksUsed = 0; finished = false; note = ''; selected = null; instrOpen = true;
   shuffleWords();
   closeResetAsk();
   render();
