@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
 <link rel="stylesheet" href="core/gap.css?v=4">
-<link rel="stylesheet" href="core/comic.css?v=8">
+<link rel="stylesheet" href="core/comic.css?v=9">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -474,8 +474,15 @@ function showUnavailable() {
   document.body.innerHTML = '<div class="unavailable">Упражнение сейчас недоступно</div>';
 }
 
-// Шрифты загрузились — размеры могли измениться, контуры Comic перерисовываем
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (window.roughen) roughen(); });
+// Шрифт Comic (Bubble Sans) грузится после первой отрисовки и шире обычного: заново подгоняем поля ввода и контуры
+function afterFontsLoaded() {
+  document.querySelectorAll('.gap input').forEach(i => fitInput(i.parentElement, i));
+  if (window.roughen) roughen();
+}
+if (document.fonts) {
+  document.fonts.addEventListener('loadingdone', afterFontsLoaded);
+  if (document.fonts.ready) document.fonts.ready.then(afterFontsLoaded);
+}
 
 if (params.has('preview')) {
   document.body.classList.add('preview');
