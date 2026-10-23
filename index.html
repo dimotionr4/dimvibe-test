@@ -48,6 +48,7 @@
   .instr-head::after { content:"▾"; color:var(--muted); }
   .instr-head[aria-expanded="false"]::after { content:"▸"; }
   .instr-body { padding:0 12px 10px; display:flow-root; } /* flow-root: блок охватывает обтекаемую картинку */
+  .instr-body[hidden] { display:none; } /* без этой строки flow-root не даёт свернуть инструкцию */
   .instr-body p { margin:.4em 0; }
   /* Подсказка: замок до второй проверки, потом лампочка; окно не выходит за края экрана */
   .hintbtn { min-width:32px; min-height:32px; padding:0; border:none; background:transparent; font-size:1rem; vertical-align:middle; }
