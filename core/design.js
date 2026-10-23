@@ -14,6 +14,26 @@ const DEFAULT_ACCENT = 'violet';
 // Неизвестное имя (например, цвет убрали из набора) превращается в цвет по умолчанию
 const accentOf = name => ACCENTS[name] || ACCENTS[DEFAULT_ACCENT];
 
+// Оформление пропуска: форма, прерывистая линия, ширина, нумерация. Один набор для редактора и плеера.
+const GAP_SHAPES = { line: 'Линия', frame: 'Рамка', pill: 'Плашка', free: 'Свободная форма' };
+const GAP_WIDTHS = { auto: 'Авто', narrow: 'Узкая', wide: 'Широкая' };
+
+// Приводит сохранённые настройки к допустимым (старый файл без них — сплошная линия, авто, без номеров).
+// «Прерывистая» есть только у линии и рамки.
+function normalizeGapDesign(g) {
+  g = g || {};
+  const shape = GAP_SHAPES[g.shape] ? g.shape : 'line';
+  return {
+    shape,
+    dashed: !!g.dashed && (shape === 'line' || shape === 'frame'),
+    width: GAP_WIDTHS[g.width] ? g.width : 'auto',
+    numbered: !!g.numbered,
+  };
+}
+
+// Классы пропуска по настройкам (стили — в core/gap.css)
+const gapClasses = g => `shape-${g.shape} w-${g.width}${g.dashed ? ' dashed' : ''}`;
+
 // Страница берёт из переменных --accent-l и --accent-d нужный оттенок в зависимости от темы
 function applyAccent(root, name) {
   const a = accentOf(name);

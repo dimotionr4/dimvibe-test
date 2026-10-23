@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
+<link rel="stylesheet" href="core/gap.css?v=2">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
@@ -29,6 +30,13 @@
   .warn-inline { color:var(--bad); font-size:.85rem; margin:-2px 0 6px; }
   .img-opts { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:4px 0 8px; }
   .img-opts select { min-height:32px; padding:2px 8px; margin-left:4px; }
+  .shapes { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+  .shape { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 14px; min-width:104px; }
+  .shape.on { border:2px solid var(--text); font-weight:600; }
+  .shape small { color:var(--muted); }
+  .shape .gap { margin:0; min-width:64px; min-height:34px; pointer-events:none; }
+  .gapsample { padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); line-height:2.6; }
+  .check[hidden] { display:none; }
   .check { display:flex; align-items:center; gap:8px; margin:6px 0; }
   .sample { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
   .sample .primary { background:var(--demo); border-color:var(--demo); color:var(--on-demo); }
@@ -172,7 +180,7 @@
   </div>
 </div>
 
-<script src="core/design.js?v=1"></script>
+<script src="core/design.js?v=2"></script>
 <script src="core/richtext.js?v=4"></script>
 <script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
@@ -316,7 +324,7 @@ function exerciseFor(draft, published) {
     id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
     instruction,
     behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
-    design: { accent, showInstruction, showImage },
+    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap) },
   };
 }
 
@@ -387,6 +395,7 @@ function renderDesign() {
   const chosen = current.design && ACCENTS[current.design.accent] ? current.design.accent : DEFAULT_ACCENT;
   const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   const shade = a => (dark ? a.dark : a.light);
+  const gdRaw = (current.design && current.design.gap) || {}, gd = normalizeGapDesign(gdRaw);
   $('content').innerHTML = `
     <section class="pub">
       <div class="muted" id="accentLabel">Цвет упражнения</div>
@@ -403,12 +412,43 @@ function renderDesign() {
         <span class="chipdemo">слово</span>
         <span class="gapdemo">ответ</span>
       </div>
+      <h3 style="margin-top:22px">Пропуск</h3>
+      <div class="muted" id="shapeLabel">Форма</div>
+      <div class="shapes" role="radiogroup" aria-labelledby="shapeLabel" style="--accent:${shade(ACCENTS[chosen])}">
+        ${Object.entries(GAP_SHAPES).map(([k, l]) => `
+          <button class="shape${k === gd.shape ? ' on' : ''}" role="radio" aria-checked="${k === gd.shape}" data-shape="${k}">
+            <span class="gap ${gapClasses({ shape: k, width: 'auto', dashed: !!gdRaw.dashed && (k === 'line' || k === 'frame') })}">слово</span>
+            <small>${esc(l)}</small>
+          </button>`).join('')}
+      </div>
+      <label class="check" id="dashedRow"${gd.shape === 'line' || gd.shape === 'frame' ? '' : ' hidden'}><input type="checkbox" id="gapDashed"${gdRaw.dashed ? ' checked' : ''}> Прерывистая ${gd.shape === 'frame' ? 'рамка' : 'линия'}</label>
+      <div class="muted" style="margin-top:8px" id="widthLabel">Ширина</div>
+      <div class="seg" id="widthSeg" role="group" aria-labelledby="widthLabel" style="max-width:320px">
+        ${Object.entries(GAP_WIDTHS).map(([k, l]) => `<button data-gapw="${k}" class="${k === gd.width ? 'active' : ''}">${esc(l)}</button>`).join('')}
+      </div>
+      <label class="check"><input type="checkbox" id="gapNum"${gd.numbered ? ' checked' : ''}> Нумеровать пропуски</label>
+      <p class="muted">Так будет выглядеть пропуск у ученика: пустой, верный и неверный.</p>
+      <div class="gapsample" style="--accent:${shade(ACCENTS[chosen])}">
+        She <span class="gap ${gapClasses(gd)}"${gd.numbered ? ' data-num="1"' : ''}>&nbsp;</span> in the
+        <span class="gap ${gapClasses(gd)} ok"${gd.numbered ? ' data-num="2"' : ''}>bar</span> and
+        <span class="gap ${gapClasses(gd)} bad"${gd.numbered ? ' data-num="3"' : ''}>pub</span>.
+      </div>
       <h3 style="margin-top:22px">Инструкция</h3>
       <label class="check"><input type="checkbox" id="showInstr"${current.design && current.design.showInstruction === false ? '' : ' checked'}> Показывать инструкцию ученику</label>
       <p class="muted">${(current.instruction && (current.instruction.title.trim() || current.instruction.text.trim())) ? 'Если снять отметку, текст инструкции не удаляется, а просто скрывается.' : 'Инструкция пока не написана: её можно добавить на вкладке «Содержимое».'}</p>
       <label class="check"><input type="checkbox" id="showImg"${current.design && current.design.showImage === false ? '' : ' checked'}> Показывать изображение ученику</label>
       <p class="muted">${current.instruction && current.instruction.image && current.instruction.image.url.trim() ? 'Если снять отметку, ссылка на изображение не удаляется, а просто скрывается.' : 'Изображение пока не добавлено: ссылку можно вставить на вкладке «Содержимое».'}</p>
     </section>`;
+  // Настройки пропуска хранятся как выбраны (например, «прерывистая» не теряется при смене формы на плашку и обратно)
+  const setGap = patch => {
+    current.design = { ...current.design, gap: { ...gdRaw, ...patch } };
+    touch();
+    renderDesign();
+  };
+  $('content').querySelectorAll('[data-shape]').forEach(b => b.onclick = () => setGap({ shape: b.dataset.shape }));
+  $('content').querySelectorAll('[data-gapw]').forEach(b => b.onclick = () => setGap({ width: b.dataset.gapw }));
+  $('gapDashed').onchange = () => setGap({ dashed: $('gapDashed').checked });
+  $('gapNum').onchange = () => setGap({ numbered: $('gapNum').checked });
   $('showInstr').onchange = () => {
     current.design = { ...current.design, showInstruction: $('showInstr').checked };
     touch();
@@ -628,6 +668,7 @@ async function openFile(f) {
         accent: file.design && ACCENTS[file.design.accent] ? file.design.accent : DEFAULT_ACCENT,
         showInstruction: !file.design || file.design.showInstruction !== false,
         showImage: !file.design || file.design.showImage !== false,
+        gap: normalizeGapDesign(file.design && file.design.gap),
       },
       instruction: {
         title: String((file.instruction && file.instruction.title) || ''),
