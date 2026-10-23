@@ -14,6 +14,14 @@
   .seg { display:flex; gap:4px; }
   .seg button { flex:1; min-height:32px; padding:2px 6px; font-size:.85rem; }
   .seg button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .swatches { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 6px; }
+  .swatch { display:inline-flex; align-items:center; gap:8px; padding:6px 12px 6px 8px; }
+  .swatch i { width:20px; height:20px; border-radius:50%; display:inline-block; }
+  .swatch.on { border:2px solid var(--text); font-weight:600; }
+  .sample { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+  .sample .primary { background:var(--demo); border-color:var(--demo); color:var(--on-demo); }
+  .chipdemo { padding:2px 12px; border-radius:999px; background:var(--demo); color:var(--on-demo); }
+  .gapdemo { min-width:90px; text-align:center; border-bottom:2px solid var(--demo); padding:0 6px; }
   .theme-box { margin-top:auto; padding-top:14px; }
   .theme-box .muted { display:block; margin-bottom:4px; }
   * { box-sizing: border-box; }
@@ -115,7 +123,7 @@
     <div class="muted" style="margin:-4px 0 10px">Номер: <span id="draftId"></span> · черновик хранится только в этом браузере</div>
     <nav class="tabs">
       <button data-tab="content">Содержимое</button>
-      <button disabled title="Будет позже">Дизайн</button>
+      <button data-tab="design">Дизайн</button>
       <button data-tab="behavior">Поведение</button>
       <button data-tab="publish">Публикация</button>
     </nav>
@@ -152,6 +160,7 @@
   </div>
 </div>
 
+<script src="core/design.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
 const ASSET_V = 7;
@@ -221,6 +230,7 @@ function showTab(name) {
   document.querySelectorAll('.tabs [data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   if (name === 'publish') renderPublish();
   else if (name === 'behavior') renderBehavior();
+  else if (name === 'design') renderDesign();
   else MODULES[current.module].render($('content'), current, touch);
 }
 
@@ -272,7 +282,43 @@ function renderList() {
 function exerciseFor(draft, published) {
   const body = MODULES[draft.module].exportData(draft);
   const checks = draft.behavior && draft.behavior.checks;
-  return { id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body, behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' } };
+  const accent = draft.design && ACCENTS[draft.design.accent] ? draft.design.accent : DEFAULT_ACCENT;
+  return { id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body, behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' }, design: { accent } };
+}
+
+// Вкладка «Дизайн» общая для модулей. Сейчас: цвет упражнения из набора core/design.js
+function renderDesign() {
+  const chosen = current.design && ACCENTS[current.design.accent] ? current.design.accent : DEFAULT_ACCENT;
+  const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const shade = a => (dark ? a.dark : a.light);
+  $('content').innerHTML = `
+    <section class="pub">
+      <div class="muted" id="accentLabel">Цвет упражнения</div>
+      <div class="swatches" role="radiogroup" aria-labelledby="accentLabel">
+        ${Object.entries(ACCENTS).map(([key, a]) => `
+          <button class="swatch${key === chosen ? ' on' : ''}" role="radio" aria-checked="${key === chosen}" data-accent="${key}">
+            <i style="background:${shade(a)}"></i>${esc(a.label)}
+          </button>`).join('')}
+      </div>
+      <p class="muted">Цвет кнопки «Проверить», линий пропусков и выбранных слов. Красный и зелёный результата не меняются. Увидеть цвет в обеих темах можно в предпросмотре.</p>
+      <div class="sample" id="sample">
+        <span>Образец:</span>
+        <button class="primary" tabindex="-1">Проверить</button>
+        <span class="chipdemo">слово</span>
+        <span class="gapdemo">ответ</span>
+      </div>
+    </section>`;
+  const paint = key => {
+    const a = ACCENTS[key];
+    $('sample').style.setProperty('--demo', shade(a));
+    $('sample').style.setProperty('--on-demo', dark ? '#16161f' : '#fff');
+  };
+  paint(chosen);
+  $('content').querySelectorAll('[data-accent]').forEach(b => b.onclick = () => {
+    current.design = { accent: b.dataset.accent };
+    touch();
+    renderDesign();
+  });
 }
 
 // Вкладка «Поведение» общая для модулей: число проверок на прохождение
@@ -387,6 +433,7 @@ function setTheme(t) {
   applyTheme(t);
   try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
   document.querySelectorAll('[data-theme-pick]').forEach(b => b.classList.toggle('active', b.dataset.themePick === t));
+  if (current && tab === 'design') renderDesign();
 }
 
 function setPreviewTheme(t) {
@@ -462,6 +509,7 @@ async function openFile(f) {
     const draft = {
       id: file.id, title: String(file.title || ''), ...MODULES[file.module].load(file),
       behavior: { checks: checks >= 1 && checks <= 5 ? Math.floor(checks) : 'auto' },
+      design: { accent: file.design && ACCENTS[file.design.accent] ? file.design.accent : DEFAULT_ACCENT },
       updatedAt: new Date().toISOString(),
     };
     draft.publication = { state: file.published === false ? 'unpublished' : 'published', at: null, snapshot: snapshot(draft) };
