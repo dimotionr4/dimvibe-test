@@ -1,20 +1,29 @@
 // «Нарисованный от руки» контур для стиля Comic. Для каждого элемента строится плавная кривая с лёгкой неровностью
-// и кладётся как маска слоя ::before (core/comic.css). Кривая векторная, поэтому края гладкие при любом масштабе
-// (в отличие от смещения пикселей фильтром, которое давало «лесенку»). Цвет задаёт CSS, а не этот файл.
-// Номер версии `?v=` у подключения поднимайте при изменении.
+// и кладётся внутрь него обычным SVG-рисунком под содержимым (стили — core/comic.css). Кривая векторная, поэтому
+// края гладкие при любом масштабе. Цвета и толщину задаёт CSS, а не этот файл.
+// Форма контура зависит только от «ключа» элемента (какой это пропуск, какое слово), а не от порядка перерисовок,
+// поэтому при нажатиях контуры не меняются. Номер версии `?v=` у подключения поднимайте при изменении.
 (() => {
   const SELECTOR = '.gap, .chip, .card, .instr, button:not(.hintbtn):not(.instr-head)';
-  const STROKE = 3, INSET = 2, STEP = 14, WOBBLE = 1.1;
-  const seeds = new WeakMap();
-  let counter = 0;
+  const INSET = 2.5, STEP = 14, WOBBLE = 1.1, NS = 'http://www.w3.org/2000/svg';
 
-  // Воспроизводимые «случайные» числа: контур не дёргается при перерисовке
+  // Воспроизводимые «случайные» числа
   const rng = seed => () => {
     seed = (seed + 0x6D2B79F5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+
+  const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
+
+  // Ключ элемента: у пропуска его номер, у слова — само слово, у остальных — вид и порядковый номер среди таких же
+  function keyOf(el) {
+    if (el.dataset.idx !== undefined) return 'gap' + el.dataset.idx;
+    if (el.classList.contains('chip')) return 'chip' + el.textContent;
+    const kind = el.classList.contains('card') ? 'card' : el.classList.contains('instr') ? 'instr' : 'btn';
+    return kind + [...document.querySelectorAll(kind === 'btn' ? 'button' : '.' + kind)].indexOf(el) + (el.id || '');
+  }
 
   // Точки по контуру скруглённого прямоугольника (по часовой стрелке) с радиусами углов [лв, пв, пн, лн]
   function outline(w, h, radii) {
@@ -57,7 +66,7 @@
     return d + 'Z';
   }
 
-  // Открытая линия (для формы «Линия»): слегка волнистая, с маленьким «хвостиком» как у карандаша
+  // Открытая линия (для формы «Линия»): слегка волнистая
   function openLine(w, h, rand) {
     const y = h - INSET - 0.5, n = Math.max(2, Math.round((w - 2 * INSET) / STEP));
     const raw = [];
@@ -69,7 +78,7 @@
   }
 
   // Какой формы контур нужен элементу
-  function shapeOf(el, w, h) {
+  function shapeOf(el, h) {
     if (el.classList.contains('gap')) {
       if (el.classList.contains('shape-frame')) return { radii: [8, 8, 8, 8] };
       if (el.classList.contains('shape-pill')) return { radii: [h / 2, h / 2, h / 2, h / 2] };
@@ -84,16 +93,31 @@
   function paint(el) {
     const w = el.offsetWidth, h = el.offsetHeight;
     if (!w || !h) return;
-    if (!seeds.has(el)) seeds.set(el, ++counter);
-    const rand = rng(seeds.get(el) * 7919 + w);
-    const shape = shapeOf(el, w, h);
+    const old = [...el.children].find(c => c.classList && c.classList.contains('rough'));
+    if (old) old.remove();
+    const rand = rng(hash(keyOf(el)));
+    const shape = shapeOf(el, h);
     const d = shape.line ? openLine(w, h, rand) : closedPath(wobble(outline(w, h, shape.radii), rand));
     // Прерывистые линии: пропуск с классом dashed или «не заполнен»
     const dashed = el.classList.contains('gap') && (el.classList.contains('dashed') || el.classList.contains('missing'));
-    const wrap = body => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`)}")`;
-    el.style.setProperty('--rough-mask', wrap(`<path d="${d}" fill="none" stroke="#000" stroke-width="${STROKE}" stroke-linecap="round" stroke-linejoin="round"${dashed ? ' stroke-dasharray="9 7"' : ''}/>`));
-    // Заливка по той же кривой, чтобы она не выступала за линию (у пропуска заливка проще, там слой ::after занят значком результата)
-    if (!shape.line && !el.classList.contains('gap')) el.style.setProperty('--rough-fill', wrap(`<path d="${d}" fill="#000"/>`));
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'rough');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    if (!shape.line) { // заливка по той же кривой (у линии заливки нет)
+      const fill = document.createElementNS(NS, 'path');
+      fill.setAttribute('class', 'rough-fill');
+      fill.setAttribute('d', d);
+      svg.appendChild(fill);
+    }
+    const line = document.createElementNS(NS, 'path');
+    line.setAttribute('class', 'rough-line');
+    line.setAttribute('d', d);
+    if (dashed) line.setAttribute('stroke-dasharray', '9 7');
+    svg.appendChild(line);
+    el.appendChild(svg);
   }
 
   // Следим за размером: контур перерисовывается, когда элемент меняет размер (сворачивание инструкции, перенос строки, поворот экрана)

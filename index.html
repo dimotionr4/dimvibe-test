@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
 <link rel="stylesheet" href="core/gap.css?v=4">
-<link rel="stylesheet" href="core/comic.css?v=5">
+<link rel="stylesheet" href="core/comic.css?v=7">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -94,7 +94,7 @@
 
 <script src="core/design.js?v=2"></script>
 <script src="core/richtext.js?v=4"></script>
-<script src="core/rough.js?v=2"></script>
+<script src="core/rough.js?v=3"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -116,7 +116,7 @@ const uniq = words => {
 };
 
 // Стиль упражнения (Classic или Comic) и цвет контуров Comic берутся из файла (design.style, design.comicLine).
-// Для пробы значения можно переопределить в ссылке: ?style=comic&line=black&shape=pill&dashed=1&num=1&width=wide
+// Для пробы значения можно переопределить в ссылке: ?style=comic&line=black&lw=thin|thick&shape=pill&dashed=1&num=1&width=wide
 function applyLook() {
   const q = k => params.get(k);
   const dz = data.design = { ...(data.design || {}) };
@@ -125,6 +125,9 @@ function applyLook() {
   }
   document.documentElement.classList.toggle('style-comic', (q('style') || dz.style) === 'comic');
   document.documentElement.classList.toggle('line-black', (q('line') || dz.comicLine) === 'black');
+  // Толщина линии Comic: тонкая, обычная (по умолчанию), толстая
+  document.documentElement.classList.toggle('lw-thin', (q('lw') || dz.comicWidth) === 'thin');
+  document.documentElement.classList.toggle('lw-thick', (q('lw') || dz.comicWidth) === 'thick');
 }
 
 // Формат 2: текст предложения — куски строк и пропуски {gap: ID}, данные пропусков лежат в data.gaps
