@@ -1,0 +1,56 @@
+/* Редактор модуля Multiple Choice. Цвета берутся из переменных ядра (editor.html) */
+.mc-wrap { position:relative; }
+.mc-muted { color:var(--muted); }
+.mc-limit { color:var(--bad); font-weight:600; }
+.mc-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.mc-warn { color:var(--bad); font-size:.85rem; margin:6px 0; }
+.mc-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.mc-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.mc-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.mc-labelrow { display:flex; align-items:center; gap:6px; }
+.mc-labelrow h3 { margin:0; font-size:1rem; }
+.mc-label { font-size:.9rem; color:var(--muted); margin:12px 0 4px; }
+.mc-seg { display:inline-flex; flex-wrap:wrap; gap:4px; }
+.mc-seg button { min-height:32px; padding:0 10px; border-radius:8px; font-size:.85rem; }
+.mc-seg button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.mc-block { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; }
+.mc-block .mc-labelrow { margin-bottom:8px; }
+
+/* Карточки вопросов */
+.mc-row { background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:8px; position:relative; }
+.mc-row.open { border-color:var(--accent); }
+.mc-row.dragging { opacity:.5; }
+.mc-row.drop-before::before, .mc-row.drop-after::after { content:""; position:absolute; left:8px; right:8px; height:3px; border-radius:3px; background:var(--accent); }
+.mc-row.drop-before::before { top:-6px; }
+.mc-row.drop-after::after { bottom:-6px; }
+.mc-head { display:flex; align-items:center; gap:6px; padding:4px 6px 4px 4px; }
+.mc-grip { cursor:grab; color:var(--muted); padding:0 4px; user-select:none; touch-action:none; }
+.mc-sum { flex:1; min-width:0; display:flex; align-items:center; gap:8px; text-align:left; border:none; background:transparent; min-height:44px; padding:0 4px; color:var(--text); }
+.mc-n { color:var(--muted); flex:none; }
+.mc-txt { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mc-txt.empty { color:var(--muted); font-style:italic; }
+.mc-meta { flex:none; font-size:.78rem; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:0 8px; }
+.mc-tools2 { display:flex; align-items:center; flex:none; }
+.mc-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.mc-ib:hover:not(:disabled) { color:var(--accent); }
+.mc-ib.mc-del:hover:not(:disabled) { color:var(--bad); }
+.mc-ib:disabled { opacity:.3; }
+.mc-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.mc-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.mc-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.mc-body { padding:4px 12px 12px; border-top:1px solid var(--line); }
+.mc-body textarea { width:100%; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); margin-top:8px; }
+
+/* Варианты: слева отметка верного (круг — Single, квадрат — Multiple), справа поле текста */
+.mc-opts-ed { display:flex; flex-direction:column; gap:6px; }
+.mc-optline { display:flex; align-items:center; gap:8px; }
+.mc-optline input { flex:1; min-width:0; }
+.mc-mark { flex:none; width:34px; height:34px; min-height:0; padding:0; border-radius:50%; border:2px solid var(--muted); background:var(--card); position:relative; }
+.mc-mark.multi { border-radius:8px; }
+.mc-mark:hover { border-color:var(--accent); }
+.mc-mark.on { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 22%, var(--card)); }
+.mc-mark.on::after { content:""; position:absolute; left:11px; top:5px; width:7px; height:14px; border:solid var(--ok); border-width:0 3px 3px 0; transform:rotate(45deg); }
+.mc-addopt { margin-top:8px; }
+.mc-addopt:disabled, .mc-add:disabled { opacity:.5; }
+.mc-add { margin:4px 0 8px; }
+@media (max-width:480px) { .mc-meta { display:none; } }

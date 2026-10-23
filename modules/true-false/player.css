@@ -1,5 +1,5 @@
-/* Плеер модуля True / False: карточки утверждений с крупными кнопками ответа. Цвета и состояния — из переменных страницы (index.html) */
-.tf-card { line-height:1.5; } /* общий .card рассчитан на значки пропусков и имеет увеличенный межстрочный интервал */
+﻿/* Плеер модуля True / False: карточки утверждений с крупными кнопками ответа. Цвета и состояния — из переменных страницы (index.html) */
+.card.tf-card { line-height:1.5; } /* общий .card рассчитан на значки пропусков и имеет увеличенный межстрочный интервал */
 .tf-q { display:flex; align-items:flex-start; gap:8px; font-size:1.05rem; margin-bottom:10px; }
 .tf-num { color:var(--muted); flex:none; }
 .tf-text { flex:1; min-width:0; overflow-wrap:anywhere; }

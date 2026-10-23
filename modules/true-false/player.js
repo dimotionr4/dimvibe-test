@@ -137,5 +137,7 @@ const TrueFalsePlayer = (() => {
     }
   }
 
-  return { units, reset, goMissing, instant, render: renderInto };
+  const missingNote = n => (n === 1 ? 'Ответьте на утверждение, которое осталось без ответа.' : `Ответьте на все утверждения: ещё ${n}.`);
+
+  return { units, reset, goMissing, instant, missingNote, render: renderInto };
 })();

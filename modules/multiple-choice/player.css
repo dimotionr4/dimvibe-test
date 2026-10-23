@@ -1,0 +1,34 @@
+﻿/* Плеер модуля Multiple Choice: варианты-кнопки со значком выбора (круг — Single, квадрат — Multiple Select) и меткой A, B, C или 1, 2, 3.
+   Номера вопросов и «Предыдущий / Следующий» оформлены классами tf-* из modules/true-false/player.css */
+.card.mc-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
+.mc-q { display:flex; align-items:flex-start; gap:8px; font-size:1.05rem; margin-bottom:10px; }
+.mc-count { color:var(--muted); font-size:.9rem; margin:-4px 0 8px; }
+.mc-opts { display:flex; flex-direction:column; gap:8px; }
+.mc-opt { display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:6px 12px; text-align:left; }
+.mc-mark { flex:none; width:20px; height:20px; border:2px solid var(--muted); border-radius:50%; position:relative; }
+.mc-opt.multi .mc-mark { border-radius:5px; }
+.mc-opt.on .mc-mark { border-color:var(--accent); background:var(--accent); }
+.mc-opt.on .mc-mark::after { content:""; position:absolute; left:5px; top:1px; width:5px; height:10px; border:solid var(--on-accent); border-width:0 2px 2px 0; transform:rotate(45deg); }
+.mc-lab { flex:none; min-width:1.4em; font-weight:700; color:var(--muted); }
+.mc-text { flex:1; min-width:0; overflow-wrap:anywhere; }
+.mc-opt.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
+.mc-opt.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.mc-opt.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.mc-opt.right { border-color:var(--ok); border-width:2px; }
+.mc-tick { flex:none; color:var(--ok); font-weight:700; }
+.mc-opt:disabled { cursor:default; }
+.mc-opt:disabled:not(.on):not(.right) { opacity:.6; }
+.mc-answer { margin-top:10px; }
+.mc-answer:disabled { opacity:.5; cursor:default; }
+.mc-verdict { margin-top:10px; font-weight:700; }
+.mc-verdict.ok { color:var(--ok); }
+.mc-verdict.bad { color:var(--bad); }
+.mc-card.missing { border-color:var(--bad); border-style:dashed; }
+.mc-fixbar { margin:8px 0 0; text-align:center; }
+
+/* Comic: цвета состояний остаются своими, контур берёт --rc, заливка --rb */
+.style-comic .mc-opt.on:not(.hintbtn) { --rc:var(--accent); --rb:color-mix(in srgb, var(--accent) 14%, var(--card)); }
+.style-comic .mc-opt.ok:not(.hintbtn) { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 18%, var(--card)); }
+.style-comic .mc-opt.bad:not(.hintbtn) { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 16%, var(--card)); }
+.style-comic .mc-opt.right:not(.hintbtn) { --rc:var(--ok); }
+.style-comic .mc-card.missing { --rc:var(--bad); }

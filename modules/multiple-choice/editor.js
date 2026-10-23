@@ -1,0 +1,389 @@
+// Редактор модуля Multiple Choice: вопросы с вариантами; у каждого вопроса Single Choice (один верный) или Multiple Select (один и больше).
+// Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
+// Правильные ответы хранятся по ID вариантов, поэтому перестановка и правка текста их не сбивают.
+const MultipleChoiceEditor = (() => {
+  const MAX_Q = 10, MAX_OPT = 8, DEFAULT_OPT = 4;
+  const VIEWS = { one: 'По одному вопросу', list: 'Все списком' };
+  const LABELS = { letters: 'Буквы A, B, C', numbers: 'Цифры 1, 2, 3' };
+  const { nextId } = GapEngine;
+  let d, root, save, openId = null, delAsk = null, msgTimer = null, drag = null;
+  let msg, counter, listBox, addBtn;
+
+  const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  const svg = inner => `<svg class="mc-ico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
+
+  const newOptions = n => Array.from({ length: n }, (_, k) => ({ id: 'o' + (k + 1), text: '' }));
+  const newItem = id => ({ id, text: '', mode: '', options: newOptions(DEFAULT_OPT), correct: [] });
+  // '' в вопросе — «как в общих настройках»
+  const modeOf = it => (it.mode === 'single' || it.mode === 'multiple' ? it.mode : d.mode === 'multiple' ? 'multiple' : 'single');
+
+  function create() {
+    return { module: 'multiple_choice', format: 1, mode: 'single', labels: 'letters', shuffle: true, showCount: false, showCorrect: false, view: 'one', items: [newItem('q1')] };
+  }
+
+  function render(container, draft, onSave) {
+    root = container;
+    d = draft;
+    save = onSave;
+    if (!d.items.some(i => i.id === openId)) openId = d.items.length ? d.items[0].id : null;
+    delAsk = null;
+    draw();
+  }
+
+  function say(text) {
+    msg.textContent = text;
+    msg.hidden = false;
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(() => { msg.hidden = true; }, 6000);
+  }
+
+  function draw() {
+    root.innerHTML = '';
+    root.className = 'mc-wrap';
+    const tools = el('div', 'mc-tools');
+    counter = el('span', 'mc-muted');
+    const right = el('span', 'mc-right');
+    right.append(help(`Напишите вопросы и варианты. Нажмите на кружок или квадрат слева от варианта, чтобы отметить его верным. Single Choice — один верный ответ, Multiple Select — один и больше. Балл за вопрос ставится только за точный набор верных вариантов, частичных баллов нет. Для публикации в вопросе нужно минимум два варианта. Не больше ${MAX_Q} вопросов и ${MAX_OPT} вариантов в вопросе. Метки, показ, перемешивание — во вкладках «Дизайн» и «Поведение».`));
+    tools.append(counter, right);
+    msg = el('div', 'mc-msg');
+    msg.hidden = true;
+    listBox = el('div', 'mc-list');
+    addBtn = el('button', 'mc-add', '+ Вопрос');
+    addBtn.onclick = () => addItem(d.items.length);
+    root.append(tools, msg, defaultBlock(), listBox, addBtn);
+    drawList();
+  }
+
+  function updateCounter() {
+    const n = d.items.length;
+    counter.textContent = `Вопросов: ${n}/${MAX_Q}`;
+    counter.classList.toggle('mc-limit', n >= MAX_Q);
+    addBtn.disabled = n >= MAX_Q;
+  }
+
+  // Тип вопросов по умолчанию: у вопроса можно выбрать свой
+  function defaultBlock() {
+    const box = el('section', 'mc-block');
+    const head = el('div', 'mc-labelrow');
+    head.append(el('h3', '', 'Тип вопросов'), help('Общий тип для вопросов, у которых не выбран свой. Single Choice — один верный ответ, Multiple Select — один и больше. При смене типа отметки верных вариантов не стираются: если в Single отмечено несколько, публикация заблокируется, пока не останется один.'));
+    const seg = el('span', 'mc-seg');
+    [['single', 'Single Choice'], ['multiple', 'Multiple Select']].forEach(([v, label]) => {
+      const b = el('button', d.mode === v ? 'active' : '', label);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(d.mode === v));
+      b.onclick = () => { d.mode = v; save(); draw(); };
+      seg.append(b);
+    });
+    box.append(head, seg);
+    return box;
+  }
+
+  // ---- Список вопросов ----
+  function drawList() {
+    listBox.innerHTML = '';
+    d.items.forEach((it, i) => listBox.append(row(it, i)));
+    updateCounter();
+  }
+  const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
+
+  function summary(it) {
+    const filled = it.options.filter(o => clean(o.text)).length, n = it.correct.length;
+    return `${modeOf(it) === 'multiple' ? 'Multiple' : 'Single'} · вариантов: ${filled} · верных: ${n}`;
+  }
+
+  function row(it, i) {
+    const open = it.id === openId;
+    const r = el('div', 'mc-row' + (open ? ' open' : ''));
+    r.dataset.id = it.id;
+    const head = el('div', 'mc-head');
+    const grip = el('span', 'mc-grip', '⠿');
+    grip.title = 'Перетащить';
+    grip.onpointerdown = () => { r.draggable = true; };
+    r.ondragend = () => { r.draggable = false; r.classList.remove('dragging'); clearDrop(); drag = null; };
+    r.ondragstart = e => { drag = it.id; r.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', it.id); };
+    r.ondragover = e => {
+      if (!drag || drag === it.id) return;
+      e.preventDefault();
+      const b = r.getBoundingClientRect(), after = e.clientY > b.top + b.height / 2;
+      clearDrop();
+      r.classList.add(after ? 'drop-after' : 'drop-before');
+    };
+    r.ondrop = e => {
+      if (!drag) return;
+      e.preventDefault();
+      const b = r.getBoundingClientRect(), after = e.clientY > b.top + b.height / 2;
+      const from = d.items.findIndex(x => x.id === drag);
+      let to = i + (after ? 1 : 0);
+      if (from < 0) return;
+      const [m] = d.items.splice(from, 1);
+      if (from < to) to--;
+      d.items.splice(to, 0, m);
+      drag = null;
+      save();
+      drawList();
+    };
+    const sum = el('button', 'mc-sum');
+    sum.type = 'button';
+    sum.setAttribute('aria-expanded', String(open));
+    const txt = el('span', 'mc-txt' + (clean(it.text) ? '' : ' empty'), clean(it.text) || 'Пустой вопрос');
+    sum.append(el('span', 'mc-n', `${i + 1}.`), txt, el('span', 'mc-meta', summary(it)));
+    sum.onclick = () => { openId = open ? null : it.id; delAsk = null; drawList(); };
+    const tools = el('span', 'mc-tools2');
+    const btn = (cls, html, tip, fn, disabled) => {
+      const b = el('button', 'mc-ib ' + cls);
+      b.type = 'button';
+      b.innerHTML = html;
+      b.title = tip;
+      b.setAttribute('aria-label', tip);
+      b.disabled = !!disabled;
+      b.onclick = e => { e.stopPropagation(); fn(); };
+      return b;
+    };
+    tools.append(
+      btn('', svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', () => move(i, -1), i === 0),
+      btn('', svg('<path d="M6 9l6 6 6-6"/>'), 'Ниже', () => move(i, 1), i === d.items.length - 1),
+      btn('', svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать', () => duplicate(i), d.items.length >= MAX_Q),
+    );
+    if (delAsk === it.id) {
+      const q = el('span', 'mc-ask');
+      const yes = el('button', 'mc-yes', 'Удалить');
+      yes.type = 'button';
+      yes.onclick = () => removeItem(i);
+      const no = el('button', '', 'Нет');
+      no.type = 'button';
+      no.onclick = () => { delAsk = null; drawList(); };
+      q.append(yes, no);
+      tools.append(q);
+    } else tools.append(btn('mc-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => askDelete(i)));
+    head.append(grip, sum, tools);
+    r.append(head);
+    if (open) r.append(body(it, txt));
+    return r;
+  }
+
+  // Раскрытый вопрос: текст, тип, варианты (слева отметка верного, справа поле текста)
+  function body(it, headTxt) {
+    const b = el('div', 'mc-body');
+    const ta = el('textarea');
+    ta.rows = 2;
+    ta.placeholder = 'Вопрос, например: Which of these are fruits?';
+    ta.value = it.text;
+    ta.setAttribute('aria-label', 'Текст вопроса');
+    const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
+    ta.oninput = () => { it.text = ta.value; fit(); headTxt.textContent = clean(it.text) || 'Пустой вопрос'; headTxt.classList.toggle('empty', !clean(it.text)); save(); };
+    b.append(ta);
+    setTimeout(fit, 0);
+
+    // Тип вопроса: как в общих настройках или свой
+    const tl = el('div', 'mc-label mc-labelrow', 'Тип вопроса');
+    tl.append(help('«Как в общих» берёт тип из блока «Тип вопросов» вверху. Выбранный здесь тип действует только для этого вопроса.'));
+    const seg = el('span', 'mc-seg');
+    [['', `Как в общих (${d.mode === 'multiple' ? 'Multiple' : 'Single'})`], ['single', 'Single Choice'], ['multiple', 'Multiple Select']].forEach(([v, label]) => {
+      const bt = el('button', (it.mode || '') === v ? 'active' : '', label);
+      bt.type = 'button';
+      bt.setAttribute('aria-pressed', String((it.mode || '') === v));
+      bt.onclick = () => { it.mode = v; save(); drawList(); };
+      seg.append(bt);
+    });
+    b.append(tl, seg);
+
+    const multi = modeOf(it) === 'multiple';
+    const ol = el('div', 'mc-label mc-labelrow', 'Варианты');
+    ol.append(help(multi ? 'Отметьте квадратом все верные варианты (можно один или все). Ученик должен выбрать точный набор.' : 'Отметьте кружком один верный вариант.'));
+    b.append(ol);
+    const opts = el('div', 'mc-opts-ed');
+    it.options.forEach((o, k) => {
+      const line = el('div', 'mc-optline');
+      const on = it.correct.includes(o.id);
+      const mark = el('button', 'mc-mark' + (multi ? ' multi' : '') + (on ? ' on' : ''));
+      mark.type = 'button';
+      mark.setAttribute('role', multi ? 'checkbox' : 'radio');
+      mark.setAttribute('aria-checked', String(on));
+      mark.title = on ? 'Верный вариант (нажмите, чтобы снять)' : 'Отметить верным';
+      mark.setAttribute('aria-label', `${mark.title}: вариант ${k + 1}`);
+      mark.onclick = () => {
+        if (multi) it.correct = on ? it.correct.filter(x => x !== o.id) : [...it.correct, o.id];
+        else it.correct = on && it.correct.length === 1 ? [] : [o.id]; // в Single выбор заменяет прежний
+        save();
+        drawList();
+      };
+      const inp = el('input');
+      inp.value = o.text;
+      inp.placeholder = `Вариант ${k + 1}`;
+      inp.setAttribute('aria-label', `Текст варианта ${k + 1}`);
+      inp.oninput = () => { o.text = inp.value; save(); headSummary(it); };
+      const del = el('button', 'mc-ib mc-del', '×');
+      del.type = 'button';
+      del.title = 'Убрать вариант';
+      del.setAttribute('aria-label', `Убрать вариант ${k + 1}`);
+      del.disabled = it.options.length <= 1;
+      del.onclick = () => { it.options.splice(k, 1); it.correct = it.correct.filter(x => x !== o.id); save(); drawList(); };
+      line.append(mark, inp, del);
+      opts.append(line);
+    });
+    b.append(opts);
+    if (!multi && it.correct.length > 1) b.append(el('div', 'mc-warn', `В Single Choice нужен один верный вариант, а отмечено ${it.correct.length}. Отметки сохранены: выберите один, иначе публикация заблокируется. Если переключить на Multiple Select, они снова заработают.`));
+    const add = el('button', 'mc-addopt', '+ Вариант');
+    add.type = 'button';
+    add.disabled = it.options.length >= MAX_OPT;
+    add.onclick = () => {
+      it.options.push({ id: nextId('o', it.options.map(x => x.id)), text: '' });
+      save();
+      drawList();
+      const inputs = listBox.querySelectorAll(`.mc-row[data-id="${it.id}"] .mc-optline input`);
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    };
+    b.append(add);
+    return b;
+  }
+  const headSummary = it => {
+    const m = listBox.querySelector(`.mc-row[data-id="${it.id}"] .mc-meta`);
+    if (m) m.textContent = summary(it);
+  };
+
+  function addItem(index) {
+    if (d.items.length >= MAX_Q) return say(`Вопросов не больше ${MAX_Q}. Разделите задание на два.`);
+    const id = nextId('q', d.items.map(i => i.id));
+    d.items.splice(index, 0, newItem(id));
+    openId = id;
+    save();
+    drawList();
+    const ta = listBox.querySelector(`.mc-row[data-id="${id}"] textarea`);
+    if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  }
+
+  function duplicate(i) {
+    if (d.items.length >= MAX_Q) return say(`Вопросов не больше ${MAX_Q}.`);
+    const copy = JSON.parse(JSON.stringify(d.items[i]));
+    copy.id = nextId('q', d.items.map(x => x.id));
+    d.items.splice(i + 1, 0, copy);
+    openId = copy.id;
+    save();
+    drawList();
+  }
+
+  function move(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= d.items.length) return;
+    [d.items[i], d.items[j]] = [d.items[j], d.items[i]];
+    save();
+    drawList();
+    const b = listBox.querySelector(`.mc-row[data-id="${d.items[j].id}"] .mc-ib:not(:disabled)`);
+    if (b) b.focus();
+  }
+
+  // Заполненный вопрос удаляется после подтверждения прямо в строке, пустой — сразу
+  function askDelete(i) {
+    const it = d.items[i];
+    if (!clean(it.text) && !it.correct.length && !it.options.some(o => clean(o.text))) return removeItem(i);
+    delAsk = it.id;
+    drawList();
+  }
+  function removeItem(i) {
+    const [it] = d.items.splice(i, 1);
+    if (openId === it.id) openId = null;
+    delAsk = null;
+    if (!d.items.length) { d.items.push(newItem('q1')); openId = 'q1'; }
+    save();
+    drawList();
+  }
+
+  // ---- Файл упражнения ----
+  function exportData(draft) {
+    d = draft;
+    return {
+      module: 'multiple_choice', format: 1,
+      view: draft.view === 'list' ? 'list' : 'one',
+      mode: draft.mode === 'multiple' ? 'multiple' : 'single',
+      labels: draft.labels === 'numbers' ? 'numbers' : 'letters',
+      shuffle: draft.shuffle !== false,
+      ...(draft.showCount ? { showCount: true } : {}),
+      ...(draft.showCorrect ? { showCorrect: true } : {}),
+      items: draft.items.map(it => ({
+        id: it.id,
+        text: clean(it.text),
+        mode: modeOf(it),
+        options: it.options.map(o => ({ id: o.id, text: clean(o.text) })),
+        correct: it.options.map(o => o.id).filter(id => it.correct.includes(id)),
+      })),
+    };
+  }
+
+  const unitCount = draft => draft.items.length;
+
+  // errors не дают опубликовать, warnings — только предупреждают
+  function validate(draft) {
+    const errors = [], warnings = [];
+    d = draft;
+    const items = draft.items;
+    if (!items.length) errors.push('Нет ни одного вопроса.');
+    if (items.length > MAX_Q) errors.push(`Вопросов больше ${MAX_Q}. Разделите задание на два.`);
+    items.forEach((it, n) => {
+      const who = `Вопрос ${n + 1}`;
+      if (!clean(it.text)) errors.push(`${who}: нет текста вопроса.`);
+      if (it.options.length < 2) errors.push(`${who}: нужно минимум два варианта.`);
+      it.options.forEach((o, k) => { if (!clean(o.text)) errors.push(`${who}, вариант ${k + 1}: пустой. Заполните его или уберите.`); });
+      const have = it.correct.filter(id => it.options.some(o => o.id === id));
+      if (!have.length) errors.push(`${who}: не отмечен верный вариант.`);
+      else if (modeOf(it) === 'single' && have.length > 1) errors.push(`${who}: в Single Choice нужен один верный вариант, а отмечено ${have.length}. Выберите один или переключите вопрос на Multiple Select.`);
+      const texts = it.options.map(o => clean(o.text).toLowerCase()).filter(Boolean);
+      if (new Set(texts).size < texts.length) warnings.push(`${who}: есть одинаковые варианты.`);
+      if (modeOf(it) === 'multiple' && have.length === 1) warnings.push(`${who}: в Multiple Select отмечен один верный вариант; ученик не узнает, что их может быть несколько, если не включить подсказку «Выберите N».`);
+    });
+    return { errors, warnings };
+  }
+
+  // Файл упражнения → поля черновика. Недостающее заполняется
+  function load(file) {
+    if (!Array.isArray(file.items)) throw new Error('В файле нет вопросов.');
+    const general = file.mode === 'multiple' ? 'multiple' : 'single';
+    const items = file.items.map((i, k) => {
+      const options = (Array.isArray(i.options) ? i.options : []).map((o, n) => ({ id: String((o && o.id) || 'o' + (n + 1)), text: String((o && o.text) || '') }));
+      const mode = i.mode === 'multiple' ? 'multiple' : 'single';
+      return {
+        id: String(i.id || 'q' + (k + 1)), text: String(i.text || ''),
+        mode: mode === general ? '' : mode,
+        options: options.length ? options : newOptions(DEFAULT_OPT),
+        correct: (Array.isArray(i.correct) ? i.correct : []).map(String).filter(id => options.some(o => o.id === id)),
+      };
+    });
+    return {
+      ...create(), mode: general, view: file.view === 'list' ? 'list' : 'one', labels: file.labels === 'numbers' ? 'numbers' : 'letters',
+      shuffle: file.shuffle !== false, showCount: file.showCount === true, showCorrect: file.showCorrect === true,
+      items: items.length ? items : create().items,
+    };
+  }
+
+  // Настройки модуля во вкладке «Дизайн»: показ вопросов и вид меток (рисует ядро, поля лежат в черновике)
+  const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  function designOptions(draft) {
+    return [
+      { field: 'view', label: 'Показ вопросов', value: VIEWS[draft.view] ? draft.view : 'one', names: VIEWS,
+        icons: { one: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'), list: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>') } },
+      { field: 'labels', label: 'Метки вариантов', value: LABELS[draft.labels] ? draft.labels : 'letters', names: LABELS,
+        icons: { letters: '<b class="sz">A</b>', numbers: '<b class="sz">1</b>' } },
+    ];
+  }
+
+  // Настройки модуля во вкладке «Поведение»: переключатели «Вкл / Выкл»
+  function behaviorOptions(draft) {
+    return [
+      { field: 'shuffle', label: 'Перемешивать варианты', value: draft.shuffle !== false,
+        help: 'Порядок вариантов выбирается один раз при открытии упражнения и не меняется до обновления страницы; «Начать заново» его не перемешивает. Метки A, B, C идут по текущему порядку, верность — по самому варианту. По умолчанию включено.' },
+      { field: 'showCount', label: 'Подсказка «Выберите N правильных ответов»', value: !!draft.showCount,
+        help: 'У вопросов Multiple Select ученик видит, сколько вариантов нужно выбрать. Это не подсказка из общего хода и баллы не меняет. По умолчанию выключено.' },
+      { field: 'showCorrect', label: 'Показать верные ответы в конце', value: !!draft.showCorrect,
+        help: 'После завершения у ученика появится переключатель: в неверно отвеченных вопросах отметятся верные варианты. Баллы и проверки не меняются. По умолчанию выключено.' },
+    ];
+  }
+
+  return { create, render, load, exportData, validate, unitCount, designOptions, behaviorOptions };
+})();
