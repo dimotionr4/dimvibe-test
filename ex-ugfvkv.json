@@ -23,16 +23,19 @@
           "gap": "g8"
         },
         "."
-      ]
+      ],
+      "audio": {
+        "media": "media/ex-ugfvkv/aud-63d8a3b5.wav"
+      }
     }
   ],
   "gaps": {
     "g6": {
       "answer": "bartender",
       "alternatives": [],
-      "hint": "",
+      "hint": "poured the",
       "hintAudio": {
-        "media": "media/ex-ugfvkv/aud-b9b7b97a.wav"
+        "media": "media/ex-ugfvkv/aud-58dd891f.wav"
       }
     },
     "g7": {
@@ -50,12 +53,9 @@
   "instruction": {
     "title": "Gap fill",
     "text": "Please **insert **all the **needed **words",
-    "audio": {
-      "media": "media/ex-ugfvkv/aud-2c5eda3e.wav"
-    },
     "image": {
       "media": "media/ex-ugfvkv/img-0133b924.jpg",
-      "alt": "furniture",
+      "alt": "",
       "size": "large",
       "align": "left"
     }
