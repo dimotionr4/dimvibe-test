@@ -24,6 +24,44 @@ const MediaLib = (() => {
   const cleanColor = s => (/^#[0-9a-fA-F]{6}$/.test(String(s || '')) ? String(s).toLowerCase() : '');
   const kindOf = name => (MEDIA_TYPES[mediaExt(name)] || [])[1] || '';
 
+  // Отпечаток файла для поиска одинаковых: MD5 в base64 — тот же, что хранилище записывает в метаданные каждого объекта (md5Hash),
+  // поэтому старые файлы сравниваются без скачивания. Для нового файла считаем сами
+  function md5Bytes(buf) {
+    const K = new Uint32Array(64), S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+    for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) >>> 0;
+    const len = buf.length, total = (((len + 8) >>> 6) + 1) << 6;
+    const m = new Uint8Array(total);
+    m.set(buf);
+    m[len] = 0x80;
+    const dv = new DataView(m.buffer);
+    dv.setUint32(total - 8, (len << 3) >>> 0, true);
+    dv.setUint32(total - 4, Math.floor(len / 536870912), true);
+    let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+    const M = new Uint32Array(16);
+    for (let off = 0; off < total; off += 64) {
+      for (let i = 0; i < 16; i++) M[i] = dv.getUint32(off + i * 4, true);
+      let A = a0, B = b0, C = c0, D = d0;
+      for (let i = 0; i < 64; i++) {
+        let F, g;
+        if (i < 16) { F = (B & C) | (~B & D); g = i; }
+        else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+        else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+        else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+        F = (F + A + K[i] + M[g]) >>> 0;
+        A = D; D = C; C = B;
+        const s = S[(i >> 4) * 4 + (i & 3)];
+        B = (B + ((F << s) | (F >>> (32 - s)))) >>> 0;
+      }
+      a0 = (a0 + A) >>> 0; b0 = (b0 + B) >>> 0; c0 = (c0 + C) >>> 0; d0 = (d0 + D) >>> 0;
+    }
+    const out = new Uint8Array(16), o = new DataView(out.buffer);
+    o.setUint32(0, a0, true); o.setUint32(4, b0, true); o.setUint32(8, c0, true); o.setUint32(12, d0, true);
+    return out;
+  }
+  async function fileFingerprint(file) {
+    return btoa(String.fromCharCode(...md5Bytes(new Uint8Array(await file.arrayBuffer()))));
+  }
+
   // Запись каталога из метаданных объекта хранилища
   function itemFrom(path, meta) {
     const c = (meta && meta.customMetadata) || {};
@@ -40,6 +78,7 @@ const MediaLib = (() => {
       w, h,
       dur: Number(c.dur) || 0, // длительность звука, секунды
       size: Number(meta && meta.size) || 0,
+      md5: (meta && meta.md5Hash) || '',
       type: (meta && meta.contentType) || '',
       created: (meta && meta.timeCreated) || '',
       origin: path.split('/')[1] || '',
@@ -131,7 +170,7 @@ const MediaLib = (() => {
     });
     if (th && th.blob) await put(thumbPath(path), th.blob, 'image/webp');
     await put(path, file, MEDIA_TYPES[mediaExt(file.name)][0], custom);
-    return itemFrom(path, { customMetadata: custom, size: file.size, contentType: MEDIA_TYPES[mediaExt(file.name)][0], timeCreated: new Date().toISOString() });
+    return itemFrom(path, { customMetadata: custom, size: file.size, md5Hash: meta && meta.md5, contentType: MEDIA_TYPES[mediaExt(file.name)][0], timeCreated: new Date().toISOString() });
   }
 
   // Меняет название, теги или признак «скрыт» (поля, которых нет в patch, не трогает)
@@ -148,9 +187,41 @@ const MediaLib = (() => {
     await sdk.st.updateMetadata(sdk.st.ref(sdk.stInst, path), { customMetadata: cm });
   }
 
+  // Группы одинаковых файлов (одинаковый отпечаток и вид) среди нескрытых; в группе от двух файлов.
+  // Первым в группе стоит файл, который разумнее оставить: с названием, из библиотеки, в папке, с тегами, потом самый старый
+  function duplicateGroups(items) {
+    const by = new Map();
+    items.forEach(it => {
+      if (it.hidden || !it.md5) return;
+      const k = it.kind + ':' + it.md5;
+      by.set(k, [...(by.get(k) || []), it]);
+    });
+    const score = it => (it.name ? 2 : 0) + (it.origin === 'library' ? 1 : 0) + (it.folder ? 1 : 0) + (it.tags.length ? 1 : 0);
+    return [...by.values()].filter(g => g.length > 1)
+      .map(g => g.sort((a, b) => score(b) - score(a) || (a.created || '').localeCompare(b.created || '')))
+      .sort((a, b) => (a[0].name || '').localeCompare(b[0].name || '', 'ru'));
+  }
+
   // Обмен с хранилищем можно подменить (для проверки интерфейса без сети): MediaLib.backend = { list, upload, update }
   const api = { list, upload, update };
-  const out = { backend: api, cleanTag, cleanName, cleanFolder, cleanColor, parseTags, thumbPath, makeThumb, THUMB_SIDE };
-  ['list', 'upload', 'update'].forEach(k => { out[k] = (...a) => out.backend[k](...a); });
+  const out = { backend: api, cache: null, cleanTag, cleanName, cleanFolder, cleanColor, parseTags, thumbPath, makeThumb, md5Bytes, fileFingerprint, duplicateGroups, THUMB_SIDE };
+  out.list = async (...a) => { const r = await out.backend.list(...a); out.cache = r; return r; };
+  out.update = (...a) => out.backend.update(...a);
+  // Защита от дублей: если точно такой файл уже есть в медиатеке, второй раз он не загружается. Возвращается запись
+  // существующего файла с признаком duplicate (сама запись — в existing). Если список недоступен, файл просто загружается
+  out.upload = async (file, meta, onProgress) => {
+    const kind = kindOf(file.name) || 'image';
+    let md5 = '';
+    try { md5 = await fileFingerprint(file); } catch (e) { /* без отпечатка загружаем как обычно */ }
+    if (md5) {
+      let known = out.cache;
+      if (!known) { try { known = await out.list(); } catch (e) { known = null; } }
+      const dup = known && known.find(x => x.md5 === md5 && x.kind === kind);
+      if (dup) return { ...dup, duplicate: true, existing: dup };
+    }
+    const it = await out.backend.upload(file, { ...(meta || {}), md5 }, onProgress);
+    if (out.cache) out.cache.unshift(it);
+    return it;
+  };
   return out;
 })();

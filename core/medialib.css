@@ -79,3 +79,16 @@
 .ml-dur { font-size:.78rem; color:var(--muted); }
 .ml-big.aud { height:auto; padding:10px 4px; }
 .ml-big audio { width:100%; height:36px; }
+/* Дубликаты */
+.ml-dupbtn.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.ml-dups { grid-column:1 / -1; display:flex; flex-direction:column; gap:10px; }
+.ml-dupnote { margin:0; color:var(--muted); font-size:.88rem; }
+.ml-dup { border:1px solid var(--line); border-radius:12px; background:var(--card); padding:8px; display:flex; flex-direction:column; gap:8px; }
+.ml-duphead { font-size:.85rem; color:var(--muted); }
+.ml-duprow { display:flex; flex-wrap:wrap; gap:8px; }
+.ml-dupitem { position:relative; display:flex; flex-direction:column; gap:3px; width:120px; padding:6px; border:1px solid var(--line); border-radius:10px; cursor:pointer; text-align:center; }
+.ml-dupitem.keep { border-color:var(--ok, #1f9d55); box-shadow:0 0 0 2px var(--ok, #1f9d55); }
+.ml-dupitem input { position:absolute; opacity:0; inset:0; cursor:pointer; }
+.ml-sub { font-size:.72rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ml-keep { font-size:.78rem; font-weight:600; }
+.ml-dupitem:not(.keep) .ml-keep { color:var(--muted); font-weight:400; }

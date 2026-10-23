@@ -37,6 +37,7 @@ const MediaLibUI = (() => {
     let folderSel = '*'; // '*' — все файлы, '' — без папки, иначе название папки
     let folderForm = null; // null | 'new' | 'edit'
     let removeAsk = false;
+    let dupMode = false, dupKeep = {}; // режим «Дубликаты»: какой файл оставить в каждой группе
     let pending = readPending();
     let sel = [], active = null, busy = '', msg = '';
     const id = ++uid;
@@ -85,8 +86,11 @@ const MediaLibUI = (() => {
     const file = h('input');
     file.type = 'file'; file.multiple = true; file.hidden = true;
     file.accept = opts.kind === 'audio' ? MEDIA_ACCEPT.audio : opts.kind === 'image' ? MEDIA_ACCEPT.image : MEDIA_ACCEPT.image + ',' + MEDIA_ACCEPT.audio;
+    const dupBtn = h('button', 'ml-dupbtn', 'Дубликаты');
+    dupBtn.title = 'Найти одинаковые файлы (по содержимому)';
+    dupBtn.onclick = () => { dupMode = !dupMode; draw(); };
     const up = h('button', 'ml-up primary');
-    bar.append(kindSel, orientSel, sortSel, hid, refresh, up, file);
+    bar.append(kindSel, orientSel, sortSel, hid, refresh, dupBtn, up, file);
 
     const tagRow = h('div', 'ml-tags');
     const note = h('div', 'ml-note');
@@ -326,9 +330,69 @@ const MediaLibUI = (() => {
         c.ondblclick = () => { if (pick && !multi) choose(); };
         grid.append(c);
       });
+      const gc = MediaLib.duplicateGroups(items.filter(it => !opts.kind || it.kind === opts.kind)).length;
+      dupBtn.textContent = gc ? `Дубликаты (${gc})` : 'Дубликаты';
+      dupBtn.classList.toggle('on', dupMode);
+      if (dupMode) { grid.innerHTML = ''; drawDups(); }
       drawSide();
       drawFoot();
       upBtn();
+    }
+
+    // Режим «Дубликаты»: группы файлов с одинаковым содержимым; в каждой выбирается файл, который остаётся, остальные скрываются
+    function drawDups() {
+      const wrap = h('div', 'ml-dups');
+      grid.append(wrap);
+      const groups = MediaLib.duplicateGroups(items.filter(it => !opts.kind || it.kind === opts.kind));
+      wrap.append(h('p', 'ml-dupnote', 'Здесь файлы, которые полностью совпадают по содержимому. Оставьте один, остальные скройте: из хранилища они не удаляются, упражнения, где они уже есть, продолжают работать.'));
+      if (!groups.length) { wrap.append(h('p', 'ml-empty', 'Одинаковых файлов нет.')); return; }
+      const key = g => g[0].kind + ':' + g[0].md5;
+      const keepOf = g => { const p = dupKeep[key(g)]; return g.some(x => x.path === p) ? p : g[0].path; };
+      const extras = g => g.filter(x => x.path !== keepOf(g));
+      const total = groups.reduce((n, g) => n + extras(g).length, 0);
+      const all = h('button', 'primary', `Скрыть лишние во всех группах (${total})`);
+      all.disabled = !user || busy !== '';
+      all.title = user ? '' : 'Скрывать файлы может только вошедший через Google';
+      all.onclick = () => hideExtras(groups.flatMap(extras));
+      wrap.append(all);
+      groups.forEach(g => {
+        const box = h('div', 'ml-dup');
+        box.append(h('div', 'ml-duphead', `Одинаковых файлов: ${g.length}`));
+        const row = h('div', 'ml-duprow');
+        g.forEach(it => {
+          const lab = h('label', 'ml-dupitem' + (keepOf(g) === it.path ? ' keep' : ''));
+          const th = h('span', 'ml-th' + (it.kind === 'audio' ? ' aud' : ''));
+          if (it.kind === 'audio') { th.append(h('span', 'ml-note-ico', '♪')); if (it.dur) th.append(h('span', 'ml-dur', fmtDur(it.dur))); } else th.append(thumbImg(it));
+          const r = h('input');
+          r.type = 'radio';
+          r.name = 'dup' + key(g);
+          r.checked = keepOf(g) === it.path;
+          r.onchange = () => { dupKeep[key(g)] = it.path; draw(); };
+          const sub = [it.folder, it.origin === 'library' ? 'медиатека' : 'упражнение ' + it.origin].filter(Boolean).join(' · ');
+          lab.append(th, h('span', 'ml-name', titleOf(it)), h('span', 'ml-sub', sub), h('span', 'ml-keep', r.checked ? 'Оставить' : 'Скрыть'), r);
+          row.append(lab);
+        });
+        box.append(row);
+        const hide = h('button', '', `Скрыть лишние (${extras(g).length})`);
+        hide.disabled = !user || busy !== '';
+        hide.onclick = () => hideExtras(extras(g));
+        box.append(hide);
+        wrap.append(box);
+      });
+    }
+
+    async function hideExtras(its) {
+      if (!its.length) return;
+      busy = 'dups'; say('Скрываю…'); draw();
+      let done = 0;
+      try {
+        for (const it of its) { await MediaLib.update(it.path, { hidden: true }); it.hidden = true; sel = sel.filter(p => p !== it.path); if (active === it.path) active = null; done++; }
+        say(`Скрыто файлов: ${done}.`);
+      } catch (e) {
+        say(`Скрыто ${done} из ${its.length}. Не удалось сохранить: ` + errText(e), true);
+      }
+      busy = '';
+      draw();
     }
 
     function drawFoot() {
@@ -449,7 +513,8 @@ const MediaLibUI = (() => {
       const list = [...files];
       const tags = [...tagsOn];
       const folder = folderSel !== '*' ? folderSel : '', fcolor = folder ? folderColor(folder) : '';
-      let ok = 0;
+      let ok = 0, failed = false;
+      const same = [];
       for (let i = 0; i < list.length; i++) {
         busy = `up${list.length > 1 ? `Загрузка ${i + 1} из ${list.length}…` : 'Загрузка…'}`;
         upBtn();
@@ -457,18 +522,30 @@ const MediaLibUI = (() => {
         const k = (MEDIA_TYPES[mediaExt(list[i].name)] || [])[1];
         if (opts.kind && k !== opts.kind) { say(`${list[i].name}: ${opts.kind === 'audio' ? 'здесь нужен звук. ' + MEDIA_NAMES.audio : 'здесь нужна картинка. ' + MEDIA_NAMES.image}.`, true); continue; }
         try {
-          const it = await MediaLib.upload(list[i], { tags, folder, fcolor });
-          items = cache = [it, ...(cache || items)];
+          const res = await MediaLib.upload(list[i], { tags, folder, fcolor });
+          if (res.duplicate) {
+            // Такой файл уже есть: второй раз не загружаем, показываем и (при выборе) отмечаем существующий
+            const ex = res.existing;
+            if (ex.hidden && !showHidden) { showHidden = true; hidBox.checked = true; }
+            active = ex.path;
+            if (pick && (!opts.kind || ex.kind === opts.kind) && !sel.includes(ex.path)) sel = multi ? [...sel, ex.path] : [ex.path];
+            same.push(`«${list[i].name}» уже есть в медиатеке${ex.name ? ' как «' + ex.name + '»' : ''}${ex.hidden ? ' (скрыт)' : ''}`);
+            draw();
+            continue;
+          }
+          const it = res;
+          if (!items.includes(it)) items = cache = [it, ...items];
           active = it.path;
           if (pick && (!opts.kind || it.kind === opts.kind)) sel = multi ? [...sel, it.path] : [it.path];
           ok++;
           draw();
         } catch (e) {
+          failed = true;
           say(`${list[i].name}: ${errText(e)}`, true);
         }
       }
       busy = '';
-      if (ok === list.length) say(ok > 1 ? `Загружено файлов: ${ok}.` : '');
+      if (!failed) say([ok > 1 ? `Загружено файлов: ${ok}.` : '', ...(same.length > 2 ? [`Уже были в медиатеке, повторно не загружались: ${same.length}.`] : same.map(s => s + '. Второй раз не загружал.'))].filter(Boolean).join(' '));
       draw();
     }
 
