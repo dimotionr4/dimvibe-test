@@ -80,19 +80,22 @@ const ImageToGapsPlayer = (() => {
     el.setAttribute('role', 'button');
     el.tabIndex = frozen(g) ? -1 : 0;
     el.setAttribute('aria-label', `Пропуск ${idx + 1}` + (card ? (card.alt ? ': ' + card.alt : ': картинка выбрана') : ': пусто'));
-    if (card) el.appendChild(picture(card.src, card.alt));
+    // После завершения (если включено в «Поведении» и ученик нажал переключатель): в неверном пропуске крупно верная картинка в зелёной рамке,
+    // а выбор ученика — маленькой картинкой снизу сбоку
+    const showRight = !!(showFix && finished && g.state === 'bad' && g.src && card);
+    if (showRight) {
+      el.classList.add('show-right');
+      el.appendChild(picture(g.src, g.alt ? 'Верная картинка: ' + g.alt : 'Верная картинка'));
+      const mine = document.createElement('span');
+      mine.className = 'itg-fix';
+      mine.title = 'Ваш ответ';
+      mine.appendChild(picture(card.src, 'Ваш ответ' + (card.alt ? ': ' + card.alt : '')));
+      el.appendChild(mine);
+    } else if (card) el.appendChild(picture(card.src, card.alt));
     el.onclick = () => place(idx);
     el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); place(idx); } };
     // Картинку из пропуска можно перетащить в другой пропуск или обратно в банк
     if (card && !frozen(g)) el.addEventListener('pointerdown', e => armDrag(e, { from: idx, src: card.src }));
-    // После завершения (если включено в «Поведении» и ученик нажал переключатель): рядом с неверной картинкой верная
-    if (showFix && finished && g.state === 'bad' && g.src) {
-      const fx = document.createElement('span');
-      fx.className = 'itg-fix';
-      fx.title = 'Верная картинка';
-      fx.appendChild(picture(g.src, g.alt ? 'Верная картинка: ' + g.alt : 'Верная картинка'));
-      el.appendChild(fx);
-    }
     // Номер на углу пропуска (как в Fill Blanks)
     if (look.numbered) {
       const num = document.createElement('span');
@@ -142,7 +145,7 @@ const ImageToGapsPlayer = (() => {
     bar.className = 'itg-fixbar';
     const b = document.createElement('button');
     b.type = 'button';
-    b.textContent = showFix ? 'Скрыть верные картинки' : 'Показать верные картинки';
+    b.textContent = showFix ? 'Показать мои ответы' : 'Показать верные картинки';
     b.setAttribute('aria-pressed', String(showFix));
     b.onclick = () => { showFix = !showFix; render(); };
     bar.appendChild(b);
