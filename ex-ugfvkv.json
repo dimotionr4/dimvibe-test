@@ -45,7 +45,7 @@
   "distractors": [],
   "instruction": {
     "title": "Please insert",
-    "text": "**let us try this text ** and *then *we can *continue*",
+    "text": "**let **us **try this text ** and *then *we can **continu",
     "image": {
       "url": "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
       "alt": "",
@@ -61,10 +61,13 @@
     "showInstruction": true,
     "showImage": true,
     "gap": {
-      "shape": "free",
-      "dashed": false,
+      "shape": "line",
+      "dashed": true,
       "width": "auto",
-      "numbered": true
-    }
+      "numbered": false
+    },
+    "style": "comic",
+    "comicLine": "black",
+    "comicWidth": "normal"
   }
 }
