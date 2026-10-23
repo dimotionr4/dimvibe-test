@@ -17,11 +17,11 @@ const MEDIA_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
 // Допустимые файлы (те же ограничения стоят в правилах хранилища): расширение → тип и вид
 const MEDIA_TYPES = {
   jpg: ['image/jpeg', 'image'], jpeg: ['image/jpeg', 'image'], png: ['image/png', 'image'], webp: ['image/webp', 'image'],
-  mp3: ['audio/mpeg', 'audio'], m4a: ['audio/mp4', 'audio'], ogg: ['audio/ogg', 'audio'],
+  mp3: ['audio/mpeg', 'audio'], m4a: ['audio/mp4', 'audio'], ogg: ['audio/ogg', 'audio'], wav: ['audio/wav', 'audio'],
 };
 const MEDIA_MAX = { image: 2 * 1024 * 1024, audio: 10 * 1024 * 1024 };
-const MEDIA_ACCEPT = { image: '.jpg,.jpeg,.png,.webp', audio: '.mp3,.m4a,.ogg' };
-const MEDIA_NAMES = { image: 'Картинка: JPEG, PNG или WebP, до 2 МБ', audio: 'Звук: MP3, M4A или OGG, до 10 МБ' };
+const MEDIA_ACCEPT = { image: '.jpg,.jpeg,.png,.webp', audio: '.mp3,.m4a,.ogg,.wav' };
+const MEDIA_NAMES = { image: 'Картинка: JPEG, PNG или WebP, до 2 МБ', audio: 'Звук: MP3, M4A, OGG или WAV, до 10 МБ' };
 
 // Путь вида media/<папка>/<файл>; без «..», пробелов и других необычных знаков
 function safeMediaPath(path) {

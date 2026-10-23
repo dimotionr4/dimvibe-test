@@ -105,7 +105,7 @@
 </footer>
 
 <script src="core/design.js?v=5"></script>
-<script src="core/media.js?v=2"></script>
+<script src="core/media.js?v=3"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=7"></script>
 <script>
@@ -278,7 +278,7 @@ $('main').addEventListener('scroll', closePop);
 function instructionBlock() {
   const ins = data.instruction || {}, design = data.design || {};
   const title = String(ins.title || '').trim(), text = String(ins.text || '').trim();
-  const showText = (title || text) && design.showInstruction !== false;
+  const showText = (title || text || mediaSrc(ins.audio)) && design.showInstruction !== false; // звук один, без текста, тоже показывается
   const image = design.showImage === false ? null : instructionImageEl(ins.image);
   if (!showText && !image) return null;
   const box = document.createElement('section');
