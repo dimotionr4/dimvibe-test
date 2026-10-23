@@ -537,7 +537,6 @@ const PV_ICONS = {
 
 // Области макета: название панели и подсказка
 const REGIONS = {
-  instr: 'Инструкция и картинка',
   gap: 'Пропуск',
   check: 'Кнопка «Проверить»',
   page: 'Страница (макет)',
@@ -564,12 +563,12 @@ function designMock(c) {
   const bg = pg.background === 'backdrop' ? `<rect x="1.5" y="1.5" width="357" height="247" rx="10" fill="${ac}" fill-opacity=".16"/>` : '';
   const colBox = pg.background === 'card' ? `<rect x="${cx - 6}" y="7" width="${cw + 12}" height="236" rx="8" fill="var(--card)" stroke="var(--text)" stroke-width="1.5"/>` : '';
   const page = region('page', `<rect class="pv-win" x="1.5" y="1.5" width="357" height="247" rx="10"/>${bg}${colBox}${act('page') ? sel(1.5, 1.5, 357, 247).replace('rx="8"', 'rx="12"') : ''}${hit(1.5, 1.5, 357, 247)}`);
-  // Инструкция и картинка (скрытые рисуются бледным пунктиром)
+  // Инструкция и картинка: нажатие на блок включает или скрывает его (скрытые рисуются бледным пунктиром)
   const iy = 18, ih = 44, dim = on => on ? '' : ' stroke-dasharray="4 4" opacity=".4"';
-  const instr = region('instr', `
-    ${act('instr') ? sel(cx, iy, cw, ih) : ''}${hit(cx, iy, cw, ih)}
-    <g${dim(showI)}>${box(cx, iy, cw, ih, 6, `fill="var(--card)" ${stroke}`)}</g>${L(cx + 12, iy + 15, cw * .55, showI ? 1 : .4)}${L(cx + 12, iy + 29, cw * .4, showI ? 1 : .4)}
-    ${(() => { const y = iy + ih + 12 * m, s = 64; return `${act('instr') ? sel(cx, y, s, s) : ''}${hit(cx, y, s, s)}<g${dim(showImg)}>${box(cx, y, s, s, 6, `fill="var(--card)" ${stroke}`)}</g><path d="M${cx + 8} ${y + s - 10}l16-18 12 12 9-8 11 14" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linejoin="round" opacity="${showImg ? 1 : .4}"/>`; })()}`);
+  const tgl = (id, label, on, inner) => `<g class="rg" data-tg="${id}" role="switch" aria-checked="${on}" tabindex="0" aria-label="${esc(label)}"><title>${esc(label)}: ${on ? 'показывается, нажмите чтобы скрыть' : 'скрыто, нажмите чтобы показать'}</title>${inner}</g>`;
+  const iby = iy + ih + 12 * m, isz = 64;
+  const instr = tgl('showInstruction', 'Инструкция', showI, `${hit(cx, iy, cw, ih)}<g${dim(showI)}>${box(cx, iy, cw, ih, 6, `fill="var(--card)" ${stroke}`)}</g>${L(cx + 12, iy + 15, cw * .55, showI ? 1 : .4)}${L(cx + 12, iy + 29, cw * .4, showI ? 1 : .4)}`)
+    + tgl('showImage', 'Картинка', showImg, `${hit(cx, iby, isz, isz)}<g${dim(showImg)}>${box(cx, iby, isz, isz, 6, `fill="var(--card)" ${stroke}`)}</g><path d="M${cx + 8} ${iby + isz - 10}l16-18 12 12 9-8 11 14" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linejoin="round" opacity="${showImg ? 1 : .4}"/>`);
   // Текст с пропуском справа от картинки
   const ty = iy + ih + 12 * m, tx = cx + 64 + 14, tw = cx + cw - tx;
   const gw = { auto: 52, narrow: 34, wide: 86 }[gd.width], gx = tx + 8, gy = ty + 28;
@@ -612,8 +611,6 @@ function renderDesign() {
   const tog = (id, on, label, icon, hidden) => `<div class="po"${hidden ? ' hidden' : ''}><span class="po-l">${esc(label)}</span><span class="po-b"><button class="${on ? 'active' : ''}" data-toggle="${id}" aria-pressed="${on}" data-tip="${esc(label + (on ? ': вкл' : ': выкл'))}" aria-label="${esc(label)}">${icon}</button></span></div>`;
   const accNames = Object.fromEntries(Object.entries(ACCENTS).map(([k, a]) => [k, a.label]));
   const panels = {
-    instr: tog('showInstruction', showI, 'Инструкция', PV_ICONS.instr) + tog('showImage', showImg, 'Картинка', PV_ICONS.image) +
-      '<p class="muted po-note">Скрытое не удаляется, его можно вернуть. Текст и ссылку на картинку меняют на вкладке «Содержимое».</p>',
     // Форма: повторное нажатие на выбранные «Линию» или «Рамку» включает и выключает пунктир
     gap: opts('gap', 'shape', 'Форма', { ...GAP_SHAPES, line: 'Линия (ещё раз — пунктир)', frame: 'Рамка (ещё раз — пунктир)' }, gd.shape,
         { ...OPT_ICONS.shape, ...(gdRaw.dashed ? { line: O('<path d="M3 17h4M10 17h4M17 17h4"/>'), frame: O('<rect x="4" y="7" width="16" height="10" rx="2" stroke-dasharray="3 2.5"/>') } : {}) }) +
@@ -624,7 +621,7 @@ function renderDesign() {
   };
   const panel = dzRegion
     ? `<div class="dz-panel"><h3>${esc(REGIONS[dzRegion])}</h3>${panels[dzRegion]}</div>`
-    : '<div class="dz-panel dz-hint muted">Нажмите на часть макета: инструкцию, картинку, пропуск, кнопку «Проверить» или фон страницы, и здесь появятся её настройки.</div>';
+    : '<div class="dz-panel dz-hint muted">Нажмите на пропуск, кнопку «Проверить» или фон страницы, и здесь появятся их настройки. Инструкция и картинка включаются и скрываются нажатием прямо на макете (скрытое не удаляется).</div>';
   $('content').innerHTML = `
     <section class="dz-top">
       <span class="po-b" role="group" aria-label="Стиль упражнения">
@@ -663,6 +660,8 @@ function renderDesign() {
   });
   const pickRegion = el => {
     // Ширина и нумерация выбираются прямо на макете
+    const tg = el.closest('[data-tg]');
+    if (tg) { setDesign({ [tg.dataset.tg]: tg.getAttribute('aria-checked') !== 'true' }); return; }
     const w = el.closest('[data-w]'), n = el.closest('[data-num]');
     if (w || n) { dzRegion = 'gap'; patchDesign('gap', w ? { ...gdRaw, width: w.dataset.w } : { ...gdRaw, numbered: !gd.numbered }); return; }
     const r = el.closest('[data-r]'); if (!r) return; dzRegion = dzRegion === r.dataset.r ? null : r.dataset.r; renderDesign(); };
