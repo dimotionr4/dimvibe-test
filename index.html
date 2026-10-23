@@ -381,7 +381,9 @@ function updateStatus() {
   else if (finished) s.textContent = `Результат: ${ok} из ${total} (${Math.round(ok / total * 100)}%)`;
   else if (checksUsed === 0) s.textContent = `Заполнено: ${gaps.filter(isFilled).length} из ${total}`;
   else s.textContent = `Верно: ${ok} из ${total} · Проверок осталось: ${maxChecks - checksUsed}`;
-  $('check').textContent = finished ? 'Начать заново' : 'Проверить';
+  // Подпись меняем только если она правда изменилась: перезапись текста стирает нарисованный контур кнопки (Comic)
+  const label = finished ? 'Начать заново' : 'Проверить';
+  if ($('check').textContent !== label) { $('check').textContent = label; if (window.roughen) roughen($('check').parentElement); }
 }
 
 function check() {
