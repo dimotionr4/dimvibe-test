@@ -94,10 +94,12 @@
   }
 
   function paint(el) {
-    const w = el.offsetWidth, h = el.offsetHeight;
-    if (!w || !h) return;
     const old = [...el.children].find(c => c.classList && c.classList.contains('rough'));
     if (old) old.remove();
+    // Наблюдатель за размером может вызвать перерисовку уже после того, как элемент перестал быть рамкой (класс снят)
+    if (!el.matches(SELECTOR) || !el.closest('.style-comic')) { if (observer) observer.unobserve(el); return; }
+    const w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
     const rand = rng(hash(keyOf(el)));
     const shape = shapeOf(el, h);
     const d = shape.line ? openLine(w, h, rand) : closedPath(wobble(outline(w, h, shape.radii), rand));
@@ -135,6 +137,12 @@
       if (!root) { document.querySelectorAll('svg.rough').forEach(s => s.remove()); if (observer) observer.disconnect(); }
       return;
     }
+    // Элемент перестал подходить под контур (например, фон «Карточка» выключили, у блока результата пропала рамка): старый рисунок убираем,
+    // иначе он остаётся на странице огромным белым пятном
+    (root || document).querySelectorAll('svg.rough').forEach(s => {
+      const p = s.parentElement;
+      if (p && !p.matches(SELECTOR)) { s.remove(); if (observer) observer.unobserve(p); }
+    });
     (root || document).querySelectorAll(SELECTOR).forEach(el => {
       paint(el);
       if (observer) observer.observe(el);

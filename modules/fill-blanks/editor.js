@@ -200,12 +200,23 @@ const FillBlanksEditor = (() => {
       drawPanel();
     };
     card.append(ed);
+    // Озвучка предложения целиком: значок динамика открывает загрузку звука под предложением (серый — звука нет, цветной — есть)
+    const aud = el('div', 'fb-aud');
+    aud.hidden = !item.audio;
+    const sound = el('button', 'fb-icon fb-sound', '🔊');
+    sound.title = isText() ? 'Озвучка абзаца' : 'Озвучка предложения';
+    sound.setAttribute('aria-label', sound.title);
+    sound.classList.toggle('has', !!item.audio);
+    sound.onclick = () => { aud.hidden = !aud.hidden; };
+    if (window.mediaPicker) aud.append(window.mediaPicker('audio', () => item.audio || '', v => { item.audio = v; sound.classList.toggle('has', !!v); save(); }, isText() ? 'Загрузить озвучку абзаца' : 'Загрузить озвучку предложения'));
+    card.append(sound);
     if (d.items.length > 1) {
       const del = el('button', 'fb-icon', '×');
       del.title = isText() ? 'Удалить абзац' : 'Удалить предложение';
       del.onclick = () => removeSentence(item);
       card.append(del);
     }
+    card.append(aud);
     return card;
   }
 
@@ -486,7 +497,8 @@ const FillBlanksEditor = (() => {
           if (k === i.parts.length - 1) s = s.trimEnd();
           return s;
         }).filter(p => p !== '');
-        return { id: i.id, parts };
+        const voice = window.safeMediaPath && window.safeMediaPath(i.audio);
+        return voice ? { id: i.id, parts, audio: { media: voice } } : { id: i.id, parts };
       });
     const gaps = {};
     items.forEach(i => i.parts.filter(isGap).forEach(p => {
@@ -527,7 +539,7 @@ const FillBlanksEditor = (() => {
     });
     const items = file.items.map((i, k) => {
       const parts = (Array.isArray(i.parts) ? i.parts : []).filter(p => typeof p === 'string' || (p && gaps[p.gap]));
-      return { id: String(i.id || 's' + (k + 1)), parts: parts.length ? parts : [''] };
+      return { id: String(i.id || 's' + (k + 1)), parts: parts.length ? parts : [''], audio: (i.audio && i.audio.media) || '' };
     });
     return {
       ...create(),
