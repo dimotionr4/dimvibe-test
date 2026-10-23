@@ -30,7 +30,23 @@
   .instr-sample { border-left:4px solid var(--accent); padding:2px 12px; background:var(--bg); border-radius:8px; display:flow-root; }
   .instr-sample p { margin:.4em 0; }
   .warn-inline { color:var(--bad); font-size:.85rem; margin:-2px 0 6px; }
-  .img-opts { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:4px 0 8px; }
+  .img-opts { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:4px 0 2px; }
+  .instr-ed { padding:6px 10px; margin-bottom:12px; }
+  .instr-head { width:100%; display:flex; align-items:center; gap:8px; border:none; background:transparent; text-align:left; padding:4px 2px; min-height:36px; }
+  .instr-head svg { width:20px; height:20px; flex:none; fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .instr-head b { font-weight:600; flex:none; }
+  .instr-sum { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.85rem; }
+  .instr-chev { flex:none; display:inline-flex; transition:transform .15s; }
+  .instr-head[aria-expanded="true"] .instr-chev { transform:rotate(180deg); }
+  #instrBody { padding:4px 2px 8px; }
+  .rt-bar { align-items:center; }
+  .rt-bar button { position:relative; min-width:34px; min-height:32px; }
+  .row-help { display:flex; gap:6px; align-items:center; }
+  .row-help input { flex:1; min-width:0; }
+  .help { flex:none; width:22px; height:22px; min-height:22px; padding:0; border-radius:50%; font-size:.75rem; line-height:1; color:var(--muted); background:transparent; }
+  .help:hover { color:var(--accent); border-color:var(--accent); }
+  .helpbub { position:fixed; z-index:60; max-width:300px; background:var(--text); color:var(--bg); padding:8px 10px; border-radius:8px; font-size:.82rem; line-height:1.4; box-shadow:0 6px 20px rgba(0,0,0,.28); }
+  .helpbub[hidden] { display:none; }
   .img-opts select { min-height:32px; padding:2px 8px; margin-left:4px; }
   .shapes { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
   .shape { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 14px; min-width:104px; }
@@ -193,7 +209,7 @@
   }
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
-<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=9">
+<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=10">
 </head>
 <body>
 <header id="bar">
@@ -257,6 +273,8 @@
 </div>
 </div>
 
+<div id="helpBubble" class="helpbub" role="tooltip" hidden></div>
+
 <div id="kindDialog" class="modal" hidden>
   <div class="modal-box choose">
     <h3 style="margin:0 0 4px">Какое упражнение создать?</h3>
@@ -270,9 +288,9 @@
 <script src="core/design.js?v=5"></script>
 <script src="core/richtext.js?v=4"></script>
 <script src="core/rough.js?v=7"></script>
-<script src="modules/fill-blanks/editor.js?v=9"></script>
+<script src="modules/fill-blanks/editor.js?v=10"></script>
 <script>
-const ASSET_V = 9;
+const ASSET_V = 10;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -421,56 +439,91 @@ function exerciseFor(draft, published) {
   };
 }
 
-// Блок «Инструкция» вверху вкладки «Содержимое»; общий для модулей. Форматирование: **жирный**, *курсив*
+// Пояснение по нажатию на «?»: короткий текст рядом со значком вместо абзацев на странице. Нужен и модулю (глобальная функция)
+let helpFor = null;
+function hideHelp() { helpFor = null; $('helpBubble').hidden = true; }
+function helpIcon(text) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'help';
+  b.textContent = '?';
+  b.setAttribute('aria-label', 'Пояснение');
+  b.onclick = e => {
+    e.stopPropagation();
+    if (helpFor === b) return hideHelp();
+    helpFor = b;
+    const bub = $('helpBubble');
+    bub.textContent = text;
+    bub.hidden = false;
+    const r = b.getBoundingClientRect();
+    bub.style.left = Math.max(8, Math.min(r.left - 8, innerWidth - bub.offsetWidth - 8)) + 'px';
+    bub.style.top = (r.bottom + 6) + 'px';
+  };
+  return b;
+}
+
+// Блок «Инструкция и картинка» вверху вкладки «Содержимое»; общий для модулей. Свёрнут в одну строку. Форматирование: **жирный**, *курсив*
+let instrOpen = false;
 function renderInstruction(box) {
   const ins = current.instruction || (current.instruction = { title: '', text: '' });
   const im = ins.image || (ins.image = { url: '', alt: '', size: 'medium', align: 'center' });
+  const ic = (tip, key, v, cur, svg) => `<button data-${key}="${v}" class="${v === cur ? 'active' : ''}" aria-pressed="${v === cur}" data-tip="${tip}" aria-label="${tip}">${O(svg)}</button>`;
+  const SIZES = [['small', 'Компактный', '<rect x="9" y="9" width="6" height="6"/>'], ['medium', 'Средний', '<rect x="6" y="6" width="12" height="12"/>'], ['large', 'Широкий', '<rect x="3" y="3" width="18" height="18"/>']];
+  const ALIGNS = [['left', 'Слева', '<rect x="4" y="7" width="7" height="10"/><path d="M14 8h6M14 12h6M14 16h6"/>'], ['center', 'По центру', '<rect x="8" y="4" width="8" height="8"/><path d="M5 16h14M7 20h10"/>'], ['right', 'Справа', '<rect x="13" y="7" width="7" height="10"/><path d="M4 8h6M4 12h6M4 16h6"/>']];
   box.innerHTML = `
     <section class="instr-ed">
-      <h3>Инструкция для ученика</h3>
-      <p class="muted">Необязательно. Ученик видит её над заданием и может свернуть. Новая строка — новый абзац.</p>
-      <input id="instrTitle" placeholder="Заголовок (если пусто, будет «Инструкция»)">
-      <div class="rt-bar">
-        <button data-fmt="**" title="Жирный: выделите слово и нажмите"><b>Ж</b></button>
-        <button data-fmt="*" title="Курсив: выделите слово и нажмите"><i>К</i></button>
+      <button class="instr-head" id="instrHead" aria-expanded="${instrOpen}" aria-controls="instrBody">
+        ${iconSvg('info')}<b>Инструкция и картинка</b><span class="muted instr-sum" id="instrSum"></span><span class="instr-chev" aria-hidden="true">${iconSvg('chevron')}</span>
+      </button>
+      <div id="instrBody"${instrOpen ? '' : ' hidden'}>
+        <input id="instrTitle" placeholder="Заголовок (если пусто, будет «Инструкция»)">
+        <div class="rt-bar" id="instrBar">
+          <button data-fmt="**" data-tip="Жирный: выделите слово и нажмите" aria-label="Жирный"><b>Ж</b></button>
+          <button data-fmt="*" data-tip="Курсив: выделите слово и нажмите" aria-label="Курсив"><i>К</i></button>
+        </div>
+        <textarea id="instrText" rows="3" placeholder="Например: Вставьте слова из банка в пропуски."></textarea>
+        <div class="row-help"><input id="imgUrl" type="url" placeholder="Ссылка на картинку: https://…/picture.jpg"><span id="imgHelp"></span></div>
+        <div class="warn-inline" id="imgUrlWarn" hidden></div>
+        <input id="imgAlt" placeholder="Описание картинки (для незрячих и если не загрузится)">
+        <div class="img-opts">
+          <span class="po-b" role="group" aria-label="Размер картинки">${SIZES.map(([v, t, s]) => ic(t, 'isz', v, im.size, s)).join('')}</span>
+          <span class="po-b" role="group" aria-label="Выравнивание картинки">${ALIGNS.map(([v, t, s]) => ic(t, 'ial', v, im.align, s)).join('')}</span>
+        </div>
       </div>
-      <textarea id="instrText" rows="3" placeholder="Например: Вставьте слова из банка в пропуски."></textarea>
-      <h3 style="margin-top:12px">Изображение</h3>
-      <p class="muted">Необязательно. Вставьте ссылку на файл картинки (адрес должен начинаться с https:// и вести прямо на изображение).</p>
-      <input id="imgUrl" type="url" placeholder="https://…/picture.jpg">
-      <div class="warn-inline" id="imgUrlWarn" hidden></div>
-      <input id="imgAlt" placeholder="Короткое описание картинки (для незрячих и если картинка не загрузится)">
-      <div class="img-opts">
-        <label class="muted">Размер <select id="imgSize"><option value="small">Компактный</option><option value="medium">Средний</option><option value="large">Широкий</option></select></label>
-        <label class="muted">Выравнивание <select id="imgAlign"><option value="left">Слева</option><option value="center">По центру</option><option value="right">Справа</option></select></label>
-        <button disabled title="Появится после подключения хранилища файлов">Загрузить файл (скоро)</button>
-      </div>
-      <div class="muted" id="instrSampleLabel">Так увидит ученик:</div>
-      <div class="instr-sample" id="instrSample"></div>
     </section>`;
+  $('imgHelp').append(helpIcon('Вставьте ссылку на файл картинки: адрес должен начинаться с https:// и вести прямо на изображение. Загрузка файла появится после подключения хранилища. Размер и выравнивание — значки ниже.'));
+  $('instrBar').append(helpIcon('Инструкцию ученик видит над заданием и может свернуть. Новая строка — новый абзац. Показать или скрыть её можно на вкладке «Дизайн».'));
   $('instrTitle').value = ins.title;
   $('instrText').value = ins.text;
-  const paintSample = () => {
-    const img = instructionImageEl(im);
-    $('instrSample').replaceChildren(...(img ? [img] : []), richText(ins.text));
-    const empty = !ins.text.trim() && !img;
-    $('instrSample').hidden = empty;
-    $('instrSampleLabel').hidden = empty;
+  const summary = () => {
+    const t = ins.text.trim().replace(/\s+/g, ' ');
+    const parts = [t ? (t.length > 46 ? t.slice(0, 46) + '…' : t) : '', im.url.trim() ? 'есть картинка' : ''].filter(Boolean);
+    $('instrSum').textContent = parts.length ? parts.join(' · ') : 'не заполнено (необязательно)';
   };
   const checkUrl = () => {
     const bad = im.url.trim() && !safeImageUrl(im.url);
     $('imgUrlWarn').hidden = !bad;
     $('imgUrlWarn').textContent = bad ? 'Нужен полный адрес с https://, например https://example.com/picture.jpg' : '';
   };
-  $('imgUrl').value = im.url; $('imgAlt').value = im.alt; $('imgSize').value = im.size; $('imgAlign').value = im.align;
-  $('imgUrl').oninput = () => { im.url = $('imgUrl').value; checkUrl(); paintSample(); touch(); };
-  $('imgAlt').oninput = () => { im.alt = $('imgAlt').value; paintSample(); touch(); };
-  $('imgSize').onchange = () => { im.size = $('imgSize').value; paintSample(); touch(); };
-  $('imgAlign').onchange = () => { im.align = $('imgAlign').value; paintSample(); touch(); };
+  $('imgUrl').value = im.url; $('imgAlt').value = im.alt;
+  $('imgUrl').oninput = () => { im.url = $('imgUrl').value; checkUrl(); summary(); touch(); };
+  $('imgAlt').oninput = () => { im.alt = $('imgAlt').value; touch(); };
+  const pickIn = (key, field) => box.querySelectorAll(`[data-${key}]`).forEach(b => b.onclick = () => {
+    im[field] = b.dataset[key];
+    box.querySelectorAll(`[data-${key}]`).forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+    touch();
+  });
+  pickIn('isz', 'size');
+  pickIn('ial', 'align');
   checkUrl();
-  paintSample();
+  summary();
+  $('instrHead').onclick = () => {
+    instrOpen = !instrOpen;
+    $('instrBody').hidden = !instrOpen;
+    $('instrHead').setAttribute('aria-expanded', String(instrOpen));
+  };
   $('instrTitle').oninput = () => { ins.title = $('instrTitle').value; touch(); };
-  $('instrText').oninput = () => { ins.text = $('instrText').value; paintSample(); touch(); };
+  $('instrText').oninput = () => { ins.text = $('instrText').value; summary(); touch(); };
   box.querySelectorAll('[data-fmt]').forEach(b => {
     b.onmousedown = e => e.preventDefault(); // иначе кнопка сбросит выделение в поле
     b.onclick = () => {
@@ -792,6 +845,7 @@ const ICONS = {
   layout: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>',
   check: '<path d="M5 12l5 5 9-10"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  chevron: '<path d="M6 9l6 6 6-6"/>',
 };
 const iconSvg = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
 document.querySelectorAll('[data-icon]').forEach(el => el.insertAdjacentHTML('afterbegin', iconSvg(el.dataset.icon)));
@@ -1004,6 +1058,8 @@ $('title').oninput = () => {
   if (tab === 'publish') renderPublish();
 };
 document.querySelectorAll('.tabs [data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+addEventListener('pointerdown', e => { if (helpFor && !e.target.closest('.help, #helpBubble')) hideHelp(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && helpFor) hideHelp(); });
 
 readStore();
 let last = null;

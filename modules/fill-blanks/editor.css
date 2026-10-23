@@ -16,10 +16,6 @@
 .fb-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
 .fb-warn { color:var(--bad); font-size:.85rem; margin:-4px 0 8px; }
 
-/* Слева предложения и банк, справа панель пропуска */
-.fb-grid { display:grid; grid-template-columns:minmax(0, 1fr) 300px; gap:20px; align-items:start; }
-/* Ширина считается по колонке редактора (она делит экран с предпросмотром), а не по окну */
-@container (max-width: 760px) { .fb-grid { grid-template-columns:1fr; } }
 
 .fb-sentence { display:flex; gap:8px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 10px; margin-bottom:8px; }
 .fb-num { color:var(--muted); min-width:1.6em; padding-top:6px; }
@@ -32,7 +28,23 @@
 .fb-icon:hover { color:var(--bad); }
 .fb-add { margin:4px 0 8px; }
 
-.fb-panel-box { position:sticky; top:12px; }
+.fb-wrap { position:relative; }
+.fb-panel-box { position:absolute; z-index:8; box-shadow:0 8px 28px rgba(0,0,0,.28); border-radius:12px; }
+.fb-panel-box[hidden] { display:none; }
+.fb-panel-tools { display:inline-flex; gap:2px; align-items:center; }
+.fb-trash { position:relative; }
+.fb-trash:hover { color:var(--bad); }
+.fb-labelrow { display:flex; align-items:center; gap:6px; }
+.fb-labelrow h3 { margin:0; }
+.fb-panel > input { width:100%; margin-bottom:6px; }
+.fb-tools { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.fb-grow { flex:1; }
+.fb-kindtag { font-size:.8rem; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 10px; }
+.fb-modes { display:inline-flex; gap:4px; }
+.fb-modes button { position:relative; width:38px; min-height:36px; height:36px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:9px; }
+.fb-modes button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.fb-ico { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.fb-trash .fb-ico { width:18px; height:18px; }
 .fb-panel { background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:12px; }
 .fb-panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 .fb-label { font-size:.9rem; color:var(--muted); margin-bottom:4px; }

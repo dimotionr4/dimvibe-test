@@ -88,27 +88,49 @@ const FillBlanksEditor = (() => {
     msgTimer = setTimeout(() => { msg.hidden = true; }, 6000);
   }
 
+  // Значки способов ответа (подписи — в подсказках)
+  const MODES = [
+    ['word_bank', 'Банк слов', '<rect x="2" y="5" width="9" height="5" rx="2.5"/><rect x="13" y="5" width="9" height="5" rx="2.5"/><rect x="6" y="14" width="12" height="5" rx="2.5"/>'],
+    ['dropdown', 'Выпадающий список', '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M9 11l3 3 3-3"/>'],
+    ['typing', 'Ввод вручную', '<rect x="2" y="7" width="20" height="11" rx="2"/><path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M7 15h10"/>'],
+  ];
+  const svg = inner => `<svg class="fb-ico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
+
   function draw() {
     root.innerHTML = '';
-    const opts = el('div', 'fb-row');
-    const kind = el('div', 'fb-field', 'Вид текста');
-    kind.append(el('div', 'fb-kind', LAYOUT_NAME[d.layout]), el('small', '', 'Выбирается при создании упражнения'));
-    opts.append(
-      kind,
-      select('Способ ответа', [['word_bank', 'Банк слов'], ['dropdown', 'Выпадающий список'], ['typing', 'Ввод вручную']], d.mode, v => { d.mode = v; save(); })
-    );
-
-    const bar = el('div', 'fb-bar');
+    root.className = 'fb-wrap';
+    // Одна строка: способ ответа значками, «Сделать пропуском», счётчик, вид текста и «?»
+    const tools = el('div', 'fb-tools');
+    const modes = el('span', 'fb-modes');
+    modes.setAttribute('role', 'group');
+    modes.setAttribute('aria-label', 'Способ ответа');
+    MODES.forEach(([v, label, icon]) => {
+      const b = el('button', d.mode === v ? 'active' : '');
+      b.innerHTML = svg(icon);
+      b.dataset.tip = 'Способ ответа: ' + label;
+      b.setAttribute('aria-label', label);
+      b.setAttribute('aria-pressed', String(d.mode === v));
+      b.onclick = () => {
+        d.mode = v;
+        save();
+        modes.querySelectorAll('button').forEach((x, i) => { x.classList.toggle('active', MODES[i][0] === v); x.setAttribute('aria-pressed', String(MODES[i][0] === v)); });
+      };
+      modes.append(b);
+    });
     const make = el('button', 'primary', 'Сделать пропуском');
     make.onmousedown = e => e.preventDefault(); // иначе нажатие на кнопку сбросит выделение в тексте
     make.onclick = makeGap;
     counter = el('span', 'fb-muted');
-    bar.append(make, counter);
+    const kind = el('span', 'fb-kindtag', LAYOUT_NAME[d.layout]);
+    kind.title = 'Вид текста выбирается при создании упражнения и не меняется';
+    tools.append(modes, make, counter, el('span', 'fb-grow'), kind,
+      help((isText() ? 'Вставьте или наберите текст, Enter начинает новый абзац. ' : '')
+        + `Выделите слово или фразу ${isText() ? 'в тексте' : 'в предложении'} (двойной щелчок выделяет одно слово) и нажмите «Сделать пропуском». Нажмите на пропуск, чтобы настроить ответ.`));
 
     msg = el('div', 'fb-msg');
     msg.hidden = true;
 
-    const grid = el('div', 'fb-grid');
     const left = el('div', 'fb-left');
     d.items.forEach((item, i) => left.append(sentence(item, i)));
     left.classList.toggle('fb-textmode', isText());
@@ -116,32 +138,11 @@ const FillBlanksEditor = (() => {
     add.onclick = () => addSentence(d.items.length);
     left.append(add, bankSection());
     panelBox = el('div', 'fb-panel-box');
-    grid.append(left, panelBox);
-
-    root.append(opts, bar,
-      el('p', 'fb-help', (isText() ? 'Вставьте или наберите текст, Enter начинает новый абзац. ' : '')
-        + `Выделите слово или фразу ${isText() ? 'в тексте' : 'в предложении'} (двойной щелчок выделяет одно слово) и нажмите «Сделать пропуском». Нажмите на пропуск, чтобы настроить ответ.`),
-      msg, grid);
+    root.append(tools, msg, left, panelBox);
     updateCounter();
     drawBank();
     drawPanel();
   }
-
-  function select(label, options, value, onPick) {
-    const wrap = el('label', 'fb-field', label);
-    const s = el('select');
-    options.forEach(([v, text, disabled]) => {
-      const o = el('option', '', text);
-      o.value = v;
-      o.disabled = !!disabled;
-      s.append(o);
-    });
-    s.value = value;
-    s.onchange = () => onPick(s.value);
-    wrap.append(s);
-    return wrap;
-  }
-
   function sentence(item, i) {
     const card = el('div', 'fb-sentence');
     if (!isText()) card.append(el('span', 'fb-num', `${i + 1}.`));
@@ -153,6 +154,7 @@ const FillBlanksEditor = (() => {
     ed.oninput = () => {
       item.parts = readDom(ed);
       markEmpty(ed, item.parts);
+      placePanel();
       updateCounter();
       drawBank();
       if (openGap && !gapOrder().includes(openGap)) { openGap = null; drawPanel(); }
@@ -218,7 +220,7 @@ const FillBlanksEditor = (() => {
 
   function updateCounter() {
     const n = gapOrder().length;
-    counter.textContent = `Пропусков: ${n} из ${MAX_GAPS}`;
+    counter.textContent = `Пропусков: ${n}/${MAX_GAPS}`;
     counter.classList.toggle('fb-limit', n >= MAX_GAPS);
   }
 
@@ -329,19 +331,43 @@ const FillBlanksEditor = (() => {
     return { wrap, inp };
   }
 
+  // Панель пропуска стоит рядом с самим пропуском (под ним) и закрывается щелчком мимо
+  function placePanel() {
+    if (!openGap || !panelBox.firstChild) return;
+    const chip = root.querySelector(`.fb-chip[data-gap="${openGap}"]`);
+    if (!chip) return;
+    const r = root.getBoundingClientRect(), c = chip.getBoundingClientRect();
+    const w = Math.min(320, r.width);
+    panelBox.style.width = w + 'px';
+    panelBox.style.left = Math.max(0, Math.min(c.left - r.left, r.width - w)) + 'px';
+    panelBox.style.top = (c.bottom - r.top + 6) + 'px';
+  }
+
+  function closePanel() {
+    if (!openGap) return;
+    openGap = null;
+    markChips();
+    drawPanel();
+  }
+
   function drawPanel() {
     panelBox.innerHTML = '';
-    if (!openGap) {
-      panelBox.append(el('p', 'fb-muted', 'Нажмите на пропуск в тексте, чтобы настроить ответ.'));
-      return;
-    }
+    panelBox.hidden = !openGap;
+    if (!openGap) return;
     const id = openGap, g = d.gaps[id];
     const p = el('div', 'fb-panel');
     const head = el('div', 'fb-panel-head');
+    const del = el('button', 'fb-icon fb-trash', '');
+    del.innerHTML = svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>');
+    del.dataset.tip = 'Удалить пропуск: слово вернётся в текст';
+    del.setAttribute('aria-label', 'Удалить пропуск');
+    del.onclick = () => removeGap(id);
     const close = el('button', 'fb-icon', '×');
     close.title = 'Закрыть';
-    close.onclick = () => { openGap = null; markChips(); drawPanel(); };
-    head.append(el('strong', '', `Пропуск ${gapOrder().indexOf(id) + 1}`), close);
+    close.onclick = closePanel;
+    const tools = el('span', 'fb-panel-tools');
+    tools.append(del, close);
+    head.append(el('strong', '', `Пропуск ${gapOrder().indexOf(id) + 1}`), tools);
 
     const ans = input(g.answer, 'Правильный ответ');
     const noAnswer = el('div', 'fb-warn', 'Без ответа пропуск нельзя будет опубликовать.');
@@ -352,6 +378,7 @@ const FillBlanksEditor = (() => {
       const c = root.querySelector(`.fb-chip[data-gap="${id}"]`);
       if (c) c.textContent = g.answer || '?';
       drawBank();
+      placePanel();
       save();
     };
 
@@ -368,26 +395,33 @@ const FillBlanksEditor = (() => {
       drawAlts();
     });
 
-    const hint = input(g.hint, 'Необязательно');
+    const hint = input(g.hint, 'Подсказка (необязательно)');
     hint.oninput = () => { g.hint = hint.value; save(); };
 
-    const del = el('button', 'fb-danger', 'Удалить пропуск');
-    del.onclick = () => removeGap(id);
+    const altHead = el('div', 'fb-label fb-labelrow', 'Другие верные ответы');
+    altHead.append(help('Засчитываются как верные. В выпадающий список попадают сами, в банк слов — нет (добавьте их ловушкой, если нужно).'));
+    const hintHead = el('div', 'fb-label fb-labelrow', 'Подсказка для ученика');
+    hintHead.append(help('Значок подсказки откроется у ученика после второй проверки, если пропуск останется неверным или пустым. Баллы и проверки подсказка не тратит. Подсказка не покажется, если проверка всего одна.'));
 
-    p.append(head,
-      field('Правильный ответ', ans), noAnswer,
-      el('div', 'fb-label', 'Другие верные ответы'), altsBox, altAdder.wrap,
-      el('p', 'fb-help', 'Засчитываются как верные. В выпадающий список попадают сами, в банк слов — нет (добавьте их ловушкой, если нужно).'),
-      field('Подсказка для ученика', hint),
-      el('p', 'fb-help', 'Значок подсказки откроется у ученика после второй проверки, если пропуск останется неверным или пустым. Баллы и проверки подсказка не тратит. Подсказка не покажется, если проверка всего одна.'),
-      del, el('p', 'fb-help', 'Слово вернётся в текст.'));
+    p.append(head, ans, noAnswer, altHead, altsBox, altAdder.wrap, hintHead, hint);
     panelBox.append(p);
+    placePanel();
+  }
+
+  // Щелчок мимо панели закрывает её (щелчки по пропускам, внутри панели и по подсказкам «?» не в счёт)
+  if (!window.__fbOutside) {
+    window.__fbOutside = true;
+    addEventListener('pointerdown', e => {
+      if (openGap && root && root.isConnected && !e.target.closest('.fb-panel-box, .fb-chip, .help, .helpbub')) closePanel();
+    });
+    addEventListener('resize', () => placePanel());
   }
 
   function bankSection() {
     const box = el('div', 'fb-bank');
     bankChips = el('div', 'fb-chips');
-    const open = el('button', 'fb-add', '+ Добавить слово');
+    const open = el('button', 'fb-add', '+ Ловушка');
+    open.dataset.tip = 'Добавить неверный вариант';
     const trapAdder = adder('Неверный вариант', text => {
       if (gapOrder().some(id => norm(d.gaps[id].answer) === norm(text))) return 'Это слово уже есть среди ответов пропусков.';
       if (d.distractors.some(w => norm(w) === norm(text))) return 'Такое слово уже есть.';
@@ -397,12 +431,12 @@ const FillBlanksEditor = (() => {
     });
     trapAdder.wrap.hidden = true;
     open.onclick = () => { open.hidden = true; trapAdder.wrap.hidden = false; trapAdder.inp.focus(); };
-    box.append(el('h3', '', 'Банк слов и выпадающий список'),
-      el('p', 'fb-help', 'Ответы пропусков (серые) добавляются сами. Слова-ловушки — неверные варианты; они появятся и в банке слов, и в выпадающем списке.'),
-      bankChips, open, trapAdder.wrap);
+    const head = el('div', 'fb-labelrow');
+    head.append(el('h3', '', 'Банк слов и список'),
+      help('Ответы пропусков (серые) добавляются сами. Слова-ловушки — неверные варианты; они появятся и в банке слов, и в выпадающем списке.'));
+    box.append(head, bankChips, open, trapAdder.wrap);
     return box;
   }
-
   function drawBank() {
     bankChips.innerHTML = '';
     gapOrder().forEach(id => {
