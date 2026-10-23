@@ -26,6 +26,9 @@
   .rt-bar button { min-width:36px; padding:2px 8px; }
   .instr-sample { border-left:4px solid var(--accent); padding:2px 12px; background:var(--bg); border-radius:8px; }
   .instr-sample p { margin:.4em 0; }
+  .warn-inline { color:var(--bad); font-size:.85rem; margin:-2px 0 6px; }
+  .img-opts { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:4px 0 8px; }
+  .img-opts select { min-height:32px; padding:2px 8px; margin-left:4px; }
   .check { display:flex; align-items:center; gap:8px; margin:6px 0; }
   .sample { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
   .sample .primary { background:var(--demo); border-color:var(--demo); color:var(--on-demo); }
@@ -170,7 +173,7 @@
 </div>
 
 <script src="core/design.js?v=1"></script>
-<script src="core/richtext.js?v=1"></script>
+<script src="core/richtext.js?v=3"></script>
 <script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
 const ASSET_V = 7;
@@ -301,20 +304,26 @@ function exerciseFor(draft, published) {
   const checks = draft.behavior && draft.behavior.checks;
   const accent = draft.design && ACCENTS[draft.design.accent] ? draft.design.accent : DEFAULT_ACCENT;
   const showInstruction = !draft.design || draft.design.showInstruction !== false;
+  const showImage = !draft.design || draft.design.showImage !== false;
   const ins = draft.instruction || {};
   // Текст инструкции: строки без лишних пробелов, пустые строки выброшены (каждая строка — абзац)
   const text = String(ins.text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).join('\n');
+  // Изображение попадает в файл только с правильной ссылкой (https); неправильную публикация не пропустит
+  const im = ins.image || {}, url = safeImageUrl(im.url);
+  const instruction = { title: String(ins.title || '').trim(), text };
+  if (url) instruction.image = { url, alt: String(im.alt || '').trim(), size: ['small', 'medium', 'large'].includes(im.size) ? im.size : 'medium', align: ['left', 'center', 'right'].includes(im.align) ? im.align : 'center' };
   return {
     id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
-    instruction: { title: String(ins.title || '').trim(), text },
+    instruction,
     behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
-    design: { accent, showInstruction },
+    design: { accent, showInstruction, showImage },
   };
 }
 
 // Блок «Инструкция» вверху вкладки «Содержимое»; общий для модулей. Форматирование: **жирный**, *курсив*
 function renderInstruction(box) {
   const ins = current.instruction || (current.instruction = { title: '', text: '' });
+  const im = ins.image || (ins.image = { url: '', alt: '', size: 'medium', align: 'center' });
   box.innerHTML = `
     <section class="instr-ed">
       <h3>Инструкция для ученика</h3>
@@ -325,17 +334,39 @@ function renderInstruction(box) {
         <button data-fmt="*" title="Курсив: выделите слово и нажмите"><i>К</i></button>
       </div>
       <textarea id="instrText" rows="3" placeholder="Например: Вставьте слова из банка в пропуски."></textarea>
+      <h3 style="margin-top:12px">Изображение</h3>
+      <p class="muted">Необязательно. Вставьте ссылку на файл картинки (адрес должен начинаться с https:// и вести прямо на изображение).</p>
+      <input id="imgUrl" type="url" placeholder="https://…/picture.jpg">
+      <div class="warn-inline" id="imgUrlWarn" hidden></div>
+      <input id="imgAlt" placeholder="Короткое описание картинки (для незрячих и если картинка не загрузится)">
+      <div class="img-opts">
+        <label class="muted">Размер <select id="imgSize"><option value="small">Компактный</option><option value="medium">Средний</option><option value="large">Широкий</option></select></label>
+        <label class="muted">Выравнивание <select id="imgAlign"><option value="left">Слева</option><option value="center">По центру</option><option value="right">Справа</option></select></label>
+        <button disabled title="Появится после подключения хранилища файлов">Загрузить файл (скоро)</button>
+      </div>
       <div class="muted" id="instrSampleLabel">Так увидит ученик:</div>
       <div class="instr-sample" id="instrSample"></div>
     </section>`;
   $('instrTitle').value = ins.title;
   $('instrText').value = ins.text;
   const paintSample = () => {
-    $('instrSample').replaceChildren(richText(ins.text));
-    const empty = !ins.text.trim();
+    const img = instructionImageEl(im);
+    $('instrSample').replaceChildren(...(img ? [img] : []), richText(ins.text));
+    const empty = !ins.text.trim() && !img;
     $('instrSample').hidden = empty;
     $('instrSampleLabel').hidden = empty;
   };
+  const checkUrl = () => {
+    const bad = im.url.trim() && !safeImageUrl(im.url);
+    $('imgUrlWarn').hidden = !bad;
+    $('imgUrlWarn').textContent = bad ? 'Нужен полный адрес с https://, например https://example.com/picture.jpg' : '';
+  };
+  $('imgUrl').value = im.url; $('imgAlt').value = im.alt; $('imgSize').value = im.size; $('imgAlign').value = im.align;
+  $('imgUrl').oninput = () => { im.url = $('imgUrl').value; checkUrl(); paintSample(); touch(); };
+  $('imgAlt').oninput = () => { im.alt = $('imgAlt').value; paintSample(); touch(); };
+  $('imgSize').onchange = () => { im.size = $('imgSize').value; paintSample(); touch(); };
+  $('imgAlign').onchange = () => { im.align = $('imgAlign').value; paintSample(); touch(); };
+  checkUrl();
   paintSample();
   $('instrTitle').oninput = () => { ins.title = $('instrTitle').value; touch(); };
   $('instrText').oninput = () => { ins.text = $('instrText').value; paintSample(); touch(); };
@@ -375,9 +406,15 @@ function renderDesign() {
       <h3 style="margin-top:22px">Инструкция</h3>
       <label class="check"><input type="checkbox" id="showInstr"${current.design && current.design.showInstruction === false ? '' : ' checked'}> Показывать инструкцию ученику</label>
       <p class="muted">${(current.instruction && (current.instruction.title.trim() || current.instruction.text.trim())) ? 'Если снять отметку, текст инструкции не удаляется, а просто скрывается.' : 'Инструкция пока не написана: её можно добавить на вкладке «Содержимое».'}</p>
+      <label class="check"><input type="checkbox" id="showImg"${current.design && current.design.showImage === false ? '' : ' checked'}> Показывать изображение ученику</label>
+      <p class="muted">${current.instruction && current.instruction.image && current.instruction.image.url.trim() ? 'Если снять отметку, ссылка на изображение не удаляется, а просто скрывается.' : 'Изображение пока не добавлено: ссылку можно вставить на вкладке «Содержимое».'}</p>
     </section>`;
   $('showInstr').onchange = () => {
     current.design = { ...current.design, showInstruction: $('showInstr').checked };
+    touch();
+  };
+  $('showImg').onchange = () => {
+    current.design = { ...current.design, showImage: $('showImg').checked };
     touch();
   };
   const paint = key => {
@@ -437,6 +474,12 @@ function publicationStatus() {
 function renderPublish() {
   const { errors, warnings } = MODULES[current.module].validate(current);
   if (!current.title.trim()) warnings.push('Нет названия: ученик увидит пустой заголовок.');
+  // Изображение инструкции: неправильная ссылка молча пропала бы из файла, поэтому публикацию не пускаем
+  const pic = current.instruction && current.instruction.image;
+  if (pic && pic.url.trim()) {
+    if (!safeImageUrl(pic.url)) errors.push('Изображение инструкции: ссылка должна быть полным адресом с https://. Исправьте её на вкладке «Содержимое» или очистите поле.');
+    else if (!pic.alt.trim()) warnings.push('У изображения инструкции нет описания: его не увидят незрячие ученики, а при ошибке загрузки будет пустое место.');
+  }
   const id = current.id;
   const url = new URL('./', location.href).href + '?id=' + id;
   const code = `<iframe src="${url}" width="100%" height="600" style="border:0;" title="${esc(current.title.trim() || id)}"></iframe>`;
@@ -584,8 +627,18 @@ async function openFile(f) {
       design: {
         accent: file.design && ACCENTS[file.design.accent] ? file.design.accent : DEFAULT_ACCENT,
         showInstruction: !file.design || file.design.showInstruction !== false,
+        showImage: !file.design || file.design.showImage !== false,
       },
-      instruction: { title: String((file.instruction && file.instruction.title) || ''), text: String((file.instruction && file.instruction.text) || '') },
+      instruction: {
+        title: String((file.instruction && file.instruction.title) || ''),
+        text: String((file.instruction && file.instruction.text) || ''),
+        image: {
+          url: String((file.instruction && file.instruction.image && file.instruction.image.url) || ''),
+          alt: String((file.instruction && file.instruction.image && file.instruction.image.alt) || ''),
+          size: (file.instruction && file.instruction.image && file.instruction.image.size) || 'medium',
+          align: (file.instruction && file.instruction.image && file.instruction.image.align) || 'center',
+        },
+      },
       updatedAt: new Date().toISOString(),
     };
     draft.publication = { state: file.published === false ? 'unpublished' : 'published', at: null, snapshot: snapshot(draft) };

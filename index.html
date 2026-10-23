@@ -95,7 +95,7 @@
 </footer>
 
 <script src="core/design.js?v=1"></script>
-<script src="core/richtext.js?v=1"></script>
+<script src="core/richtext.js?v=3"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -198,12 +198,22 @@ addEventListener('resize', closePop);
 $('main').addEventListener('scroll', closePop);
 
 // Инструкция показывается, если в ней что-то написано и преподаватель не скрыл её; «Начать заново» разворачивает её снова
+// Текст и изображение скрываются независимо; изображение без текста показывается без заголовка и сворачивания
 function instructionBlock() {
-  const ins = data.instruction || {};
+  const ins = data.instruction || {}, design = data.design || {};
   const title = String(ins.title || '').trim(), text = String(ins.text || '').trim();
-  if ((!title && !text) || (data.design && data.design.showInstruction === false)) return null;
+  const showText = (title || text) && design.showInstruction !== false;
+  const image = design.showImage === false ? null : instructionImageEl(ins.image);
+  if (!showText && !image) return null;
   const box = document.createElement('section');
   box.className = 'instr';
+  if (!showText) {
+    const only = document.createElement('div');
+    only.className = 'instr-body';
+    only.appendChild(image);
+    box.appendChild(only);
+    return box;
+  }
   const head = document.createElement('button');
   head.className = 'instr-head';
   head.textContent = title || 'Инструкция';
@@ -216,6 +226,7 @@ function instructionBlock() {
   const body = document.createElement('div');
   body.className = 'instr-body';
   body.hidden = !instrOpen;
+  if (image) body.appendChild(image);
   body.appendChild(richText(text));
   box.append(head, body);
   return box;
