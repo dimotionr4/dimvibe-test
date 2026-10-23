@@ -1,0 +1,60 @@
+/* Редактор модуля True / False. Цвета берутся из переменных ядра (editor.html) */
+.tf-wrap { position:relative; }
+.tf-muted { color:var(--muted); }
+.tf-limit { color:var(--bad); font-weight:600; }
+.tf-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.tf-warn { color:var(--bad); font-size:.85rem; margin:6px 0; }
+.tf-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.tf-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.tf-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.tf-labelrow { display:flex; align-items:center; gap:6px; }
+.tf-labelrow h3 { margin:0; font-size:1rem; }
+.tf-label { font-size:.9rem; color:var(--muted); margin:12px 0 4px; }
+
+/* Общий формат ответов */
+.tf-block { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; }
+.tf-block .tf-labelrow { margin-bottom:8px; }
+.tf-fmt { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+.tf-fmt select, .tf-fmt > input { max-width:100%; }
+.tf-pair { display:flex; gap:6px; flex-wrap:wrap; }
+.tf-pair input { flex:1 1 140px; min-width:0; }
+.tf-check { display:flex; align-items:center; gap:6px; font-size:.9rem; margin:6px 0 2px; }
+.tf-soon { color:var(--muted); }
+.tf-badge { font-size:.72rem; border:1px solid var(--line); border-radius:999px; padding:0 8px; }
+
+/* Строки утверждений */
+.tf-row { background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:8px; position:relative; }
+.tf-row.open { border-color:var(--accent); }
+.tf-row.dragging { opacity:.5; }
+.tf-row.drop-before::before, .tf-row.drop-after::after { content:""; position:absolute; left:8px; right:8px; height:3px; border-radius:3px; background:var(--accent); }
+.tf-row.drop-before::before { top:-6px; }
+.tf-row.drop-after::after { bottom:-6px; }
+.tf-head { display:flex; align-items:center; gap:6px; padding:4px 6px 4px 4px; }
+.tf-grip { cursor:grab; color:var(--muted); padding:0 4px; user-select:none; touch-action:none; }
+.tf-state { flex:none; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; color:var(--muted); }
+.tf-state.a { color:var(--ok); background:color-mix(in srgb, var(--ok) 14%, transparent); }
+.tf-state.b { color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, transparent); }
+.tf-state.c { color:var(--accent); background:var(--accent-soft); }
+.tf-state.conflict { color:var(--bad); }
+.tf-sum { flex:1; min-width:0; display:flex; align-items:center; gap:8px; text-align:left; border:none; background:transparent; min-height:40px; padding:0 4px; color:var(--text); }
+.tf-n { color:var(--muted); flex:none; }
+.tf-txt { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tf-txt.empty { color:var(--muted); font-style:italic; }
+.tf-tag { flex:none; font-size:.72rem; color:var(--bad); border:1px solid var(--bad); border-radius:999px; padding:0 8px; }
+.tf-tag[hidden] { display:none; }
+.tf-tools2 { display:flex; align-items:center; gap:0; flex:none; }
+.tf-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.tf-ib:hover:not(:disabled) { color:var(--accent); }
+.tf-ib.tf-del:hover { color:var(--bad); }
+.tf-ib:disabled { opacity:.3; }
+.tf-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.tf-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.tf-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.tf-body { padding:4px 12px 12px; border-top:1px solid var(--line); }
+.tf-body textarea { width:100%; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.tf-rads { display:flex; flex-wrap:wrap; gap:6px; }
+.tf-rad { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:4px 12px; cursor:pointer; }
+.tf-rad:has(input:checked) { border-color:var(--accent); background:var(--accent-soft); }
+.tf-add { margin:4px 0 8px; }
+.tf-add:disabled { opacity:.5; }
+@media (max-width:480px) { .tf-tag { display:none; } }

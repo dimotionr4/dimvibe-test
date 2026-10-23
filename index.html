@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="core/check.css?v=1">
 <link rel="stylesheet" href="core/comic.css?v=12">
 <link rel="stylesheet" href="modules/image-to-gaps/player.css?v=3">
+<link rel="stylesheet" href="modules/true-false/player.css?v=1">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -110,12 +111,15 @@
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
 <script src="modules/image-to-gaps/player.js?v=3"></script>
+<script src="modules/true-false/player.js?v=1"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
 let data = null, mode = 'word_bank', gaps = [], selected = null;
 // Модуль упражнения: Fill Blanks (по умолчанию) или Image to Gaps (modules/image-to-gaps/player.js). Общие — шапка, инструкция, проверки, результат
 const isImg = () => !!data && data.module === 'image_to_gaps';
+// True / False (modules/true-false/player.js): вместо пропусков — утверждения; каждое утверждение работает как «пропуск» общего хода
+const isTF = () => !!data && data.module === 'true_false';
 // Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
 let maxChecks = 3, checksUsed = 0, finished = false, note = '', instrOpen = true;
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key
@@ -156,7 +160,8 @@ function applyLook() {
 // Формат 2: текст предложения — куски строк и пропуски {gap: ID}, данные пропусков лежат в data.gaps
 function build() {
   gaps = [];
-  data.items.forEach(item => {
+  if (isTF()) gaps = TrueFalsePlayer.units();
+  else data.items.forEach(item => {
     item.parts.forEach(p => {
       if (typeof p === 'string') return;
       const g = data.gaps[p.gap];
@@ -165,7 +170,8 @@ function build() {
   });
   mode = data.mode || 'word_bank';
   // Image to Gaps: свой способ ответа (банк картинок), кнопок режимов нет
-  document.body.classList.toggle('no-modes', isImg());
+  document.body.classList.toggle('no-modes', isImg() || isTF());
+  if (isTF()) TrueFalsePlayer.reset();
   applyLook();
   // Цвет упражнения; если файл с набором цветов не загрузился, остаётся стандартный фиолетовый
   if (typeof applyAccent === 'function') applyAccent(document.documentElement, data.design && data.design.accent);
@@ -179,6 +185,7 @@ function build() {
 // Банк: у каждого ответа свой экземпляр (два пропуска с ответом «the» — два слова в банке) и ловушки.
 // Выпадающий список: ответы, альтернативы и ловушки без повторов (общий пул)
 function shuffleWords() {
+  if (isTF()) { bankOrder = []; poolOrder = []; return; }
   if (isImg()) { bankOrder = ImageToGapsPlayer.shuffle(); return; }
   const answers = gaps.map(g => g.answer);
   const distractors = data.distractors || [];
@@ -331,6 +338,14 @@ function render() {
   root.innerHTML = '';
   const instr = instructionBlock();
   if (instr) root.appendChild(instr);
+  if (isTF()) {
+    TrueFalsePlayer.render(root);
+    renderBank();
+    updateStatus();
+    if (window.roughen) roughen();
+    main.scrollTop = scroll;
+    return;
+  }
   let gi = 0;
   // Отдельные предложения: у каждого своя карточка. Связный текст: одна карточка, предложения-абзацы внутри
   const isText = data.layout === 'text';
@@ -497,9 +512,12 @@ function check() {
   const missing = gaps.filter(g => !isFilled(g));
   if (missing.length) {
     gaps.forEach(g => { if (!g.locked) g.state = isFilled(g) ? null : 'missing'; });
-    note = missing.length === 1 ? 'Заполните пропуск, который остался пустым.' : `Заполните все пропуски: ещё ${missing.length}.`;
+    if (isTF()) {
+      note = missing.length === 1 ? 'Ответьте на утверждение, которое осталось без ответа.' : `Ответьте на все утверждения: ещё ${missing.length}.`;
+      TrueFalsePlayer.goMissing();
+    } else note = missing.length === 1 ? 'Заполните пропуск, который остался пустым.' : `Заполните все пропуски: ещё ${missing.length}.`;
     render();
-    const first = document.querySelector('.gap.missing');
+    const first = document.querySelector('.gap.missing, .tf-card.missing');
     if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return;
   }
@@ -520,6 +538,7 @@ function check() {
 function restart() {
   gaps.forEach(g => { g.value = ''; g.bankKey = null; g.locked = false; g.state = null; });
   checksUsed = 0; finished = false; note = ''; selected = null; instrOpen = true;
+  if (isTF()) TrueFalsePlayer.reset();
   shuffleWords();
   closeResetAsk();
   render();

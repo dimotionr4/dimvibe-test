@@ -1,0 +1,38 @@
+/* Плеер модуля True / False: карточки утверждений с крупными кнопками ответа. Цвета и состояния — из переменных страницы (index.html) */
+.tf-card { line-height:1.5; } /* общий .card рассчитан на значки пропусков и имеет увеличенный межстрочный интервал */
+.tf-q { display:flex; align-items:flex-start; gap:8px; font-size:1.05rem; margin-bottom:10px; }
+.tf-num { color:var(--muted); flex:none; }
+.tf-text { flex:1; min-width:0; overflow-wrap:anywhere; }
+.tf-voice { position:static; flex:none; }
+.tf-answers { display:flex; flex-wrap:wrap; gap:8px; }
+.tf-ans { flex:1 1 120px; min-height:48px; font-size:1rem; padding:6px 14px; }
+.tf-ans:disabled { cursor:default; }
+.tf-ans:disabled:not(.active) { opacity:.55; }
+.tf-ans.ok { border-color:var(--ok); }
+.tf-ans.bad { border-color:var(--bad); }
+.tf-ans.active.ok { background:color-mix(in srgb, var(--ok) 22%, var(--card)); color:var(--text); }
+.tf-ans.active.bad { background:color-mix(in srgb, var(--bad) 18%, var(--card)); color:var(--text); }
+.tf-card.missing { border-color:var(--bad); border-style:dashed; }
+.tf-mark { font-weight:700; }
+.tf-expl { margin-top:10px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+
+/* Режим «по одному» */
+.tf-dots { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.tf-dot { min-width:40px; min-height:40px; padding:0 8px; border-radius:999px; }
+.tf-dot.answered:not(.active) { border-color:var(--accent); }
+.tf-dot.ok:not(.active) { border-color:var(--ok); color:var(--ok); }
+.tf-dot.bad:not(.active) { border-color:var(--bad); color:var(--bad); }
+.tf-dot.missing:not(.active) { border-color:var(--bad); border-style:dashed; }
+.tf-pager { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.tf-pager button:disabled { opacity:.4; cursor:default; }
+.tf-count { color:var(--muted); }
+
+/* Comic: цвета состояний сохраняются (рисованный контур берёт --rc) */
+.style-comic .tf-ans.ok:not(.hintbtn):not(.instr-head) { --rc:var(--ok); }
+.style-comic .tf-ans.bad:not(.hintbtn):not(.instr-head) { --rc:var(--bad); }
+.style-comic .tf-ans.active.ok:not(.hintbtn):not(.instr-head) { --rb:color-mix(in srgb, var(--ok) 22%, var(--card)); }
+.style-comic .tf-ans.active.bad:not(.hintbtn):not(.instr-head) { --rb:color-mix(in srgb, var(--bad) 18%, var(--card)); }
+.style-comic .tf-ans.active.ok, .style-comic .tf-ans.active.bad { background:transparent; }
+.style-comic .tf-dot.ok:not(.active):not(.hintbtn) { --rc:var(--ok); }
+.style-comic .tf-dot.bad:not(.active):not(.hintbtn) { --rc:var(--bad); }
+.style-comic .tf-card.missing { --rc:var(--bad); }

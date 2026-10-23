@@ -273,6 +273,7 @@
   .modal[hidden] { display:none; }
   .modal-box { background:var(--bg); border-radius:12px; padding:12px; width:min(1000px, 100%); }  .modal-box.choose { width:min(460px, 100%); margin-top:15vh; }
   .kind { display:block; width:100%; text-align:left; margin-bottom:8px; padding:10px 12px; }
+  .kind[hidden] { display:none; }
   .kind b, .kind span { display:block; }
   .kind span { color:var(--muted); font-size:.9rem; }
   .modpick { display:flex; gap:8px; margin-bottom:12px; }
@@ -296,6 +297,7 @@
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
 <link rel="stylesheet" href="modules/fill-blanks/editor.css?v=24">
 <link rel="stylesheet" href="modules/image-to-gaps/editor.css?v=2">
+<link rel="stylesheet" href="modules/true-false/editor.css?v=1">
 <link rel="stylesheet" href="core/medialib.css?v=4">
 </head>
 <body>
@@ -374,10 +376,12 @@
     <div class="modpick" id="modPick" role="group" aria-label="Модуль">
       <button class="active" data-mod="fill_blanks" aria-pressed="true"><b>Fill Blanks</b><span>В пропуски — слова</span></button>
       <button data-mod="image_to_gaps" aria-pressed="false"><b>Image to Gaps</b><span>В пропуски — картинки</span></button>
+      <button data-mod="true_false" aria-pressed="false"><b>True / False</b><span>Верно или неверно</span></button>
     </div>
-    <p class="muted" style="margin:0 0 12px">Вид текста выбирается один раз и потом не меняется.</p>
+    <p class="muted" style="margin:0 0 12px" id="kindNote">Вид текста выбирается один раз и потом не меняется.</p>
     <button class="kind" data-kind="sentences"><b>Отдельные предложения</b><span>Каждое предложение — своё задание с пропусками.</span></button>
     <button class="kind" data-kind="text"><b>Связный текст</b><span>Один текст из нескольких абзацев с пропусками.</span></button>
+    <button class="kind" id="kindGo" data-kind="statements" hidden><b>Создать упражнение</b><span>Список утверждений, у каждого один верный ответ.</span></button>
     <button id="kindCancel" style="margin-top:10px">Отмена</button>
   </div>
 </div>
@@ -391,12 +395,13 @@
 <script src="core/gap-engine.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=25"></script>
 <script src="modules/image-to-gaps/editor.js?v=4"></script>
+<script src="modules/true-false/editor.js?v=1"></script>
 <script>
-const ASSET_V = 27;
+const ASSET_V = 28;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -1065,6 +1070,9 @@ function designMock(c) {
   const wx0 = rows === 1 ? gx + 4 * PITCH + 12 : gx, wy = rows === 1 ? chipsY : chipsY + PITCH;
   const widthChips = ['narrow', 'auto', 'wide'].map((k, i) => chip(wx0 + i * PITCH, wy, `gap|width|${k}`, OPT_ICONS.gapw[k], 'Ширина пропуска: ' + GAP_WIDTHS[k], k === gd.width)).join('');
   const text = `${L(tx, ty + 12, tw * .8)}${L(tx, nextY, tw * .9)}${L(tx, nextY + 16, tw * .5)}`;
+  // True / False: вместо пропуска — две кнопки ответа (настройки показа утверждений — полоса «Настройки модуля» под макетом)
+  const tfBtn = (x, on) => box(x, gy - 2, 66, 24, 12, on ? `fill="${ac}" fill-opacity=".3" stroke="${comic ? oc : ac}" stroke-width="${comic ? lw : 1.5}"` : `fill="var(--card)" stroke="${comic ? oc : 'var(--line)'}" stroke-width="${comic ? lw : 1.5}"`);
+  const tfButtons = `<g aria-hidden="true">${tfBtn(gx - 12, false)}${tfBtn(gx + 62, true)}<path d="M${gx + 8} ${gy + 10}h26M${gx + 82} ${gy + 10}h26" stroke="var(--text)" stroke-width="3" stroke-linecap="round" opacity=".5"/></g>`;
 
   // Размер и положение картинки (дублируют мини-макет на вкладке «Содержимое»)
   const SIZE_NAMES = { small: 'Компактный', medium: 'Средний', large: 'Широкий' }, ALIGN_NAMES = { left: 'Слева', center: 'По центру', right: 'Справа' };
@@ -1098,7 +1106,7 @@ function designMock(c) {
     ? [['accent', 'Контур: цвет упражнения', dotIc(ac)], ['black', 'Контур: чёрный', dotIc('#000')]].map(([k, n, ic], i) => chip(o0 + i * PITCH, 12, `style|comicLine|${k}`, ic, n, st.comicLine === k)).join('')
       + ['thin', 'normal', 'thick'].map((k, i) => chip(o0 + 2 * PITCH + 12 + i * PITCH, 12, `style|comicWidth|${k}`, OPT_ICONS.width[k], { thin: 'Линия: тонкая', normal: 'Линия: обычная', thick: 'Линия: толстая' }[k], st.comicWidth === k)).join('')
     : '';
-  return `<svg class="mock" viewBox="0 0 ${W} ${H}" role="group" aria-label="Макет упражнения">${page}${text}${side}${instr}${imgChips}${num}${shape}${shapeChips}${widthChips}${check}${checkChips}${colBtn}${styleBar}${outline}${colDrop}</svg>`;
+  return `<svg class="mock" viewBox="0 0 ${W} ${H}" role="group" aria-label="Макет упражнения">${page}${text}${side}${instr}${imgChips}${c.tf ? tfButtons : num + shape + shapeChips + widthChips}${check}${checkChips}${colBtn}${styleBar}${outline}${colDrop}</svg>`;
 }
 
 function renderDesign() {
@@ -1117,7 +1125,7 @@ function renderDesign() {
   // Дополнительные настройки модуля (например, размер картинки у Image to Gaps): модуль отдаёт описание, ядро рисует такие же значки
   const modOpts = (MODULES[current.module].designOptions ? MODULES[current.module].designOptions(current) : []).map(o => grp('mod', o.field, o.label, o.names, o.value, o.icons)).join('');
   $('content').innerHTML = `
-    <div class="dz-mock">${designMock({ ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
+    <div class="dz-mock">${designMock({ tf: current.module === 'true_false', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
     <div class="dz-page" role="group" aria-label="Настройки страницы">
       ${grp('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew)}
       ${grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density)}
@@ -1162,7 +1170,7 @@ function renderDesign() {
 
 // Вкладка «Поведение» общая для модулей: число проверок на прохождение (шкала 1–5 и режим «авто»)
 function renderBehavior() {
-  const gaps = Object.keys(MODULES[current.module].exportData(current).gaps).length;
+  const gaps = MODULES[current.module].unitCount ? MODULES[current.module].unitCount(current) : Object.keys(MODULES[current.module].exportData(current).gaps).length;
   const auto = gaps <= 5 ? 3 : 5;
   const manual = current.behavior && current.behavior.checks >= 1 ? Number(current.behavior.checks) : null;
   const shown = manual || auto;
@@ -1539,6 +1547,10 @@ let newModule = 'fill_blanks';
 document.querySelectorAll('#modPick [data-mod]').forEach(b => b.onclick = () => {
   newModule = b.dataset.mod;
   document.querySelectorAll('#modPick [data-mod]').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+  // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
+  const st = newModule === 'true_false';
+  document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
+  $('kindNote').hidden = st;
 });
 document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { closeKind(); createDraft(b.dataset.kind, newModule); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('kindDialog').hidden) closeKind(); });
