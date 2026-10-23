@@ -70,9 +70,9 @@
     "comicLine": "black",
     "comicWidth": "normal",
     "page": {
-      "width": "wide",
+      "width": "standard",
       "density": "loose",
-      "background": "card"
+      "background": "plain"
     }
   }
 }
