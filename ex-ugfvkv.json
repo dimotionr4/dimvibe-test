@@ -67,8 +67,8 @@
   },
   "design": {
     "accent": "violet",
-    "showInstruction": false,
-    "showImage": false,
+    "showInstruction": true,
+    "showImage": true,
     "gap": {
       "shape": "frame",
       "dashed": true,
@@ -80,11 +80,11 @@
     "comicWidth": "thin",
     "page": {
       "width": "standard",
-      "density": "comfortable",
-      "background": "plain"
+      "density": "compact",
+      "background": "backdrop"
     },
     "check": {
-      "variant": "soft",
+      "variant": "outline",
       "align": "left"
     }
   }
