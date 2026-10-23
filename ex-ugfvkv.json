@@ -5,7 +5,7 @@
   "published": true,
   "title": "wer",
   "layout": "text",
-  "mode": "word_bank",
+  "mode": "dropdown",
   "items": [
     {
       "id": "s1",
@@ -68,6 +68,11 @@
     },
     "style": "comic",
     "comicLine": "black",
-    "comicWidth": "normal"
+    "comicWidth": "normal",
+    "page": {
+      "width": "wide",
+      "density": "loose",
+      "background": "card"
+    }
   }
 }

@@ -301,6 +301,7 @@ function render() {
   });
   renderBank();
   updateStatus();
+  document.querySelectorAll('.gap input').forEach(i => fitInput(i.parentElement, i)); // поля ввода под уже набранный текст
   if (window.roughen) roughen(); // Comic: нарисовать контуры заново для новых элементов
   main.scrollTop = scroll;
 }
@@ -311,6 +312,22 @@ function edited(g, el) {
   el.classList.remove('bad', 'missing');
   note = '';
   updateStatus();
+}
+
+// Пропуск в режиме ввода растёт вместе с текстом (и сжимается при стирании), но не меньше ширины из дизайна и не шире строки.
+// Ширину по умолчанию читаем из стилей, поэтому «Узкая», «Авто» и «Широкая» работают как начальный размер.
+let measureCtx = null;
+function fitInput(el, input) {
+  if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d');
+  const cs = getComputedStyle(input);
+  measureCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  el.style.minWidth = '';
+  const base = parseFloat(getComputedStyle(el).minWidth) || 0;
+  const need = Math.ceil(measureCtx.measureText(input.value).width) + 40; // запас на поля пропуска, каретку и значки
+  // Не шире строки: min-width сильнее max-width, поэтому предел считаем здесь; совсем длинный ответ прокручивается внутри поля
+  const p = el.parentElement, pcs = p ? getComputedStyle(p) : null;
+  const room = Math.max(base, p ? p.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight) - 12 : need); // 12 = поля пропуска по бокам
+  el.style.minWidth = Math.max(base, Math.min(need, room)) + 'px';
 }
 
 function makeGap(idx) {
@@ -325,7 +342,7 @@ function makeGap(idx) {
     input.value = g.value;
     input.placeholder = '…';
     input.readOnly = frozen(g);
-    input.oninput = () => { g.value = input.value; g.bankKey = null; edited(g, el); };
+    input.oninput = () => { g.value = input.value; g.bankKey = null; fitInput(el, input); edited(g, el); };
     // Ждём, пока откроется клавиатура, и сдвигаем пропуск в середину
     input.onfocus = () => setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
     el.appendChild(input);
