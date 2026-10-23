@@ -39,8 +39,28 @@
   .instr-chev { flex:none; display:inline-flex; transition:transform .15s; }
   .instr-head[aria-expanded="true"] .instr-chev { transform:rotate(180deg); }
   #instrBody { padding:4px 2px 8px; }
+  .rt-edit { min-height:76px; padding:8px 10px; margin:6px 0; border:1px solid var(--line); background:var(--card); border-radius:8px; line-height:1.5; outline:none; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .rt-edit:focus { border-color:var(--accent); }
+  .rt-edit.empty::before { content:attr(data-placeholder); color:var(--muted); pointer-events:none; }
+  #instrBody { position:relative; }
+  .selbar { position:absolute; z-index:9; display:flex; gap:2px; padding:3px; background:var(--text); border-radius:9px; box-shadow:0 6px 18px rgba(0,0,0,.3); }
+  .selbar[hidden] { display:none; }
+  .selbar button { position:relative; min-height:30px; min-width:32px; padding:2px 10px; border:none; border-radius:6px; background:transparent; color:var(--bg); font-size:.9rem; }
+  .selbar button:hover, .selbar button.active { background:var(--accent); color:#fff; }
+  .selbar button[data-tip]::after { top:calc(100% + 8px); }
   .rt-bar { align-items:center; }
   .rt-bar button { position:relative; min-width:34px; min-height:32px; }
+  .instr-grid { display:grid; grid-template-columns:minmax(0, 1fr); gap:0 14px; align-items:start; }
+  @container (min-width: 560px) { .instr-grid { grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); } .instr-fields .rt-edit { min-height:132px; } }
+  .instr-grid { align-items:stretch; }
+  .instr-fields { display:flex; flex-direction:column; }
+  .instr-fields .rt-edit { flex:1; margin:6px 0 0; }
+  .instr-side > input { margin:6px 0 0; }
+  .instr-side .row-help input, .instr-fields .row-help input { margin:0; }
+  #imMockBox { position:relative; width:fit-content; max-width:100%; margin:8px auto 0; }
+  #imMockBox[data-tip]::after { top:calc(100% + 4px); }
+  .imock { width:100%; max-width:360px; height:auto; display:block; }
+  .im-cap { font-size:.82rem; margin-top:6px; }
   .row-help { display:flex; gap:6px; align-items:center; }
   .row-help input { flex:1; min-width:0; }
   .help { flex:none; width:22px; height:22px; min-height:22px; padding:0; border-radius:50%; font-size:.75rem; line-height:1; color:var(--muted); background:transparent; }
@@ -133,6 +153,11 @@
   .pv-note { margin:10px 0 0; font-size:.8rem; }
   .dot-i { width:16px; height:16px; border-radius:50%; background:var(--c); box-shadow:0 0 0 1px var(--line); display:block; }
   .dz-top { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:8px 12px; margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:14px; }
+  .stb { fill:var(--card); stroke:var(--line); stroke-width:1.2; }
+  .stbtn { color:var(--muted); }
+  .stbtn.active { color:var(--accent); }
+  .stbtn.active .stb { fill:var(--accent-soft); stroke:var(--accent); }
+  .stbtn:hover .stb { stroke:var(--accent); }
   .dz-stage { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start; }
   .dz-mock { flex:1 1 320px; max-width:520px; min-width:0; }
   .mock { width:100%; height:auto; display:block; }
@@ -175,6 +200,43 @@
   #empty { margin:15vh auto 0; text-align:center; color:var(--muted); }
 
   /* Вкладка «Публикация» */
+  .beh { max-width:520px; }
+  .scale-row { display:flex; align-items:flex-start; gap:14px; margin-top:6px; }
+  .auto-btn { position:relative; width:40px; min-height:40px; height:40px; padding:0; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; flex:none; }
+  .auto-btn.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .auto-btn svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .scale { flex:1; min-width:0; transition:opacity .15s; }
+  .scale.is-auto { opacity:.5; }
+  .scale input[type=range] { width:100%; margin:8px 0 0; padding:0; min-height:24px; border:none; background:transparent; accent-color:var(--accent); cursor:pointer; }
+  .ticks { display:flex; justify-content:space-between; padding:0 7px; font-size:.8rem; color:var(--muted); }
+  .scale-val { flex:none; width:36px; height:36px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; font-weight:600; }
+  .beh .po { padding:8px 0; justify-content:flex-start; gap:8px; }
+  .beh .po-b { margin-left:12px; }
+  .pubx { max-width:760px; }
+  .st-card { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 14px; background:var(--card); border:1px solid var(--line); border-radius:14px; }
+  .st-dot { width:12px; height:12px; border-radius:50%; flex:none; background:var(--muted); }
+  .st-ok { background:var(--ok); } .st-changed { background:#e5a50a; } .st-off { background:var(--bad); }
+  .st-main { flex:1; min-width:180px; display:flex; align-items:center; gap:8px; }
+  .st-actions { display:flex; align-items:center; gap:6px; }
+  .pub-main { display:inline-flex; align-items:center; gap:6px; }
+  .pub-main svg, .step svg, .prob-chip svg, .cr-ic svg { width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .prob-chip { display:flex; align-items:center; gap:8px; margin-top:10px; padding:4px 12px; border-radius:999px; }
+  .prob-chip.bad { border-color:var(--bad); color:var(--bad); }
+  .prob-chip[aria-expanded="true"] .instr-chev { transform:rotate(180deg); }
+  .pubx .problems { margin-top:8px; }
+  .steps { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+  .step { display:flex; align-items:center; gap:8px; flex:1 1 190px; padding:8px 12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+  .step .num { flex:none; width:22px; height:22px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-size:.8rem; font-weight:600; display:inline-flex; align-items:center; justify-content:center; }
+  .step svg { color:var(--accent); }
+  .step-t { flex:1; min-width:0; font-size:.9rem; }
+  .step-t code { white-space:nowrap; font-size:.8rem; }
+  .copyrow { display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .cr-ic { position:relative; display:inline-flex; width:28px; justify-content:center; color:var(--muted); }
+  .copyrow.top { align-items:flex-start; }
+  .copyrow.top .cr-ic, .copyrow.top .icon-btn { margin-top:4px; }
+  .code-ta { flex:1; min-width:0; resize:none; overflow:hidden; overflow-wrap:anywhere; font-family:ui-monospace, Consolas, monospace; font-size:.85rem; line-height:1.4; padding:8px 10px; }
+  .copyrow input { flex:1; min-width:0; font-family:ui-monospace, Consolas, monospace; font-size:.85rem; }
+  .copyrow .icon-btn.done { color:var(--ok); }
   .pub { max-width:720px; }
   .pub h3 { font-size:1rem; margin:22px 0 6px; }
   .pub ol { padding-left:22px; margin:6px 0; }
@@ -209,7 +271,7 @@
   }
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
-<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=10">
+<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=16">
 </head>
 <body>
 <header id="bar">
@@ -288,9 +350,9 @@
 <script src="core/design.js?v=5"></script>
 <script src="core/richtext.js?v=4"></script>
 <script src="core/rough.js?v=7"></script>
-<script src="modules/fill-blanks/editor.js?v=10"></script>
+<script src="modules/fill-blanks/editor.js?v=16"></script>
 <script>
-const ASSET_V = 10;
+const ASSET_V = 16;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -462,41 +524,119 @@ function helpIcon(text) {
   return b;
 }
 
-// Блок «Инструкция и картинка» вверху вкладки «Содержимое»; общий для модулей. Свёрнут в одну строку. Форматирование: **жирный**, *курсив*
+// Плавающая панелька над выделенным текстом (форматирование в инструкции, «Пропуск» в предложениях).
+// bar — элемент панельки внутри box (box должен быть position:relative); range — выделение
+function placeSelBar(bar, box, range) {
+  const r = range.getBoundingClientRect(), b = box.getBoundingClientRect();
+  bar.hidden = false;
+  const w = bar.offsetWidth, h = bar.offsetHeight;
+  const x = Math.max(0, Math.min(r.left + r.width / 2 - b.left - w / 2, b.width - w));
+  let y = r.top - b.top - h - 8;
+  if (r.top - h - 8 < 0) y = r.bottom - b.top + 8; // сверху нет места — ставим под выделением
+  bar.style.left = x + 'px';
+  bar.style.top = y + 'px';
+}
+const selBarHooks = new Set(); // функции, которые обновляют панельки открытых редакторов при смене выделения
+document.addEventListener('selectionchange', () => selBarHooks.forEach(h => h()));
+
+// Поле инструкции показывает жирный и курсив как есть, без служебных знаков. В файле хранится текст с **жирный** и *курсив*
+function mdToDom(md, ed) {
+  ed.textContent = '';
+  String(md || '').split('\n').forEach((line, i) => {
+    if (i) ed.append(document.createElement('br'));
+    const re = /\*\*(.+?)\*\*|\*(.+?)\*/g;
+    let last = 0, m;
+    while ((m = re.exec(line))) {
+      if (m.index > last) ed.append(line.slice(last, m.index));
+      const el = document.createElement(m[1] !== undefined ? 'b' : 'i');
+      el.textContent = m[1] !== undefined ? m[1] : m[2];
+      ed.append(el);
+      last = re.lastIndex;
+    }
+    if (last < line.length) ed.append(line.slice(last));
+  });
+}
+
+function domToMd(ed) {
+  let out = '';
+  const nl = () => { if (out && !out.endsWith('\n')) out += '\n'; };
+  const wrap = (mark, s) => s.split('\n').map(x => (x.trim() ? mark + x + mark : x)).join('\n');
+  // inner — внутри жирного или курсива: вложенное форматирование отбрасываем (разметка файла его не знает)
+  const walk = (n, inner) => {
+    let s = '';
+    n.childNodes.forEach(c => {
+      if (c.nodeType === Node.TEXT_NODE) s += c.data.replace(/ /g, ' ');
+      else if (c.nodeName === 'BR') s += '\n';
+      else if (/^(B|STRONG)$/.test(c.nodeName) && !inner) s += wrap('**', walk(c, true));
+      else if (/^(I|EM)$/.test(c.nodeName) && !inner) s += wrap('*', walk(c, true));
+      else if (/^(DIV|P)$/.test(c.nodeName)) { s += (s && !s.endsWith('\n') ? '\n' : '') + walk(c, inner) + '\n'; }
+      else s += walk(c, inner);
+    });
+    return s;
+  };
+  out = walk(ed, false);
+  return out.replace(/\n+$/, '');
+}
+
+// Маленький макет инструкции во вкладке «Содержимое»: карточка с картинкой и текстом. Нажатие на бледный контур выбирает размер или положение картинки
+function imageMock(im, shown) {
+  const SZ = { small: [40, 36], medium: [64, 52], large: [100, 68] }, SZN = { small: 'Компактный', medium: 'Средний', large: 'Широкий' }, ALN = { left: 'Слева', center: 'По центру', right: 'Справа' };
+  const size = SZ[im.size] ? im.size : 'medium', align = ALN[im.align] ? im.align : 'center';
+  const cx = 28, cw = 304, top = 18;
+  const wFor = (k, al) => (al === 'center' ? Math.round(SZ[k][0] * 1.5) : SZ[k][0]);
+  const posX = (al, w) => (al === 'left' ? cx + 10 : al === 'right' ? cx + cw - 10 - w : cx + (cw - w) / 2);
+  const [w, h] = [wFor(size, align), SZ[size][1]], x = posX(align, w);
+  const side = align !== 'center';
+  const tx = side ? (align === 'left' ? cx + 10 + w + 14 : cx + 14) : cx + 14, tw = side ? cw - w - 38 : cw - 28, ty = side ? top + 6 : top + h + 14;
+  const L = (lx, ly, lw) => `<path class="pv-t" d="M${lx} ${ly}h${lw}"/>`;
+  const dash = shown ? '' : ' stroke-dasharray="4 4" opacity=".4"';
+  const ghost = (k, al, attr, title) => `<rect class="ghost wg" ${attr} x="${posX(al, wFor(k, al))}" y="${top}" width="${wFor(k, al)}" height="${SZ[k][1]}" rx="6" stroke="var(--accent)"><title>${title}</title></rect>`;
+  const others = ['large', 'medium', 'small'].filter(k => k !== size);
+  const big = shown ? others.filter(k => SZ[k][0] > SZ[size][0]).map(k => ghost(k, align, `data-isz="${k}"`, 'Размер: ' + SZN[k])).join('') : '';
+  const small = shown ? others.filter(k => SZ[k][0] < SZ[size][0]).map(k => ghost(k, align, `data-isz="${k}"`, 'Размер: ' + SZN[k])).join('') : '';
+  const pos = shown ? ['left', 'center', 'right'].filter(a => a !== align).map(a => ghost(size, a, `data-ial="${a}"`, 'Положение: ' + ALN[a])).join('') : '';
+  const mount = `M${x + 6} ${top + h - 6}L${x + w * .36} ${top + h * .42}L${x + w * .52} ${top + h * .66}L${x + w * .66} ${top + h * .5}L${x + w - 6} ${top + h - 6}`;
+  const H = top + Math.max(side ? 76 : h + 14 + 40, h) + 14;
+  return `<svg class="imock" viewBox="0 0 360 ${H}" role="group" aria-label="Макет картинки в инструкции">
+    <rect x="${cx}" y="6" width="${cw}" height="${H - 12}" rx="8" fill="var(--card)" stroke="var(--line)" stroke-width="1.5"/>
+    ${L(tx, ty + 6, tw * .9)}${L(tx, ty + 20, tw * .75)}${L(tx, ty + 34, tw * .85)}${side ? L(tx, ty + 48, tw * .5) : ''}
+    ${big}<rect x="${x}" y="${top}" width="${w}" height="${h}" rx="6" fill="var(--bg)" stroke="var(--text)" stroke-width="1.5"${dash}/><path d="${mount}" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linejoin="round" opacity="${shown ? 1 : .4}"/>${small}${pos}
+  </svg>`;
+}
+// Блок «Инструкция и картинка» вверху вкладки «Содержимое»; общий для модулей. Свёрнут в одну строку
 let instrOpen = false;
 function renderInstruction(box) {
   const ins = current.instruction || (current.instruction = { title: '', text: '' });
   const im = ins.image || (ins.image = { url: '', alt: '', size: 'medium', align: 'center' });
-  const ic = (tip, key, v, cur, svg) => `<button data-${key}="${v}" class="${v === cur ? 'active' : ''}" aria-pressed="${v === cur}" data-tip="${tip}" aria-label="${tip}">${O(svg)}</button>`;
-  const SIZES = [['small', 'Компактный', '<rect x="9" y="9" width="6" height="6"/>'], ['medium', 'Средний', '<rect x="6" y="6" width="12" height="12"/>'], ['large', 'Широкий', '<rect x="3" y="3" width="18" height="18"/>']];
-  const ALIGNS = [['left', 'Слева', '<rect x="4" y="7" width="7" height="10"/><path d="M14 8h6M14 12h6M14 16h6"/>'], ['center', 'По центру', '<rect x="8" y="4" width="8" height="8"/><path d="M5 16h14M7 20h10"/>'], ['right', 'Справа', '<rect x="13" y="7" width="7" height="10"/><path d="M4 8h6M4 12h6M4 16h6"/>']];
   box.innerHTML = `
     <section class="instr-ed">
       <button class="instr-head" id="instrHead" aria-expanded="${instrOpen}" aria-controls="instrBody">
         ${iconSvg('info')}<b>Инструкция и картинка</b><span class="muted instr-sum" id="instrSum"></span><span class="instr-chev" aria-hidden="true">${iconSvg('chevron')}</span>
       </button>
       <div id="instrBody"${instrOpen ? '' : ' hidden'}>
-        <input id="instrTitle" placeholder="Заголовок (если пусто, будет «Инструкция»)">
-        <div class="rt-bar" id="instrBar">
-          <button data-fmt="**" data-tip="Жирный: выделите слово и нажмите" aria-label="Жирный"><b>Ж</b></button>
-          <button data-fmt="*" data-tip="Курсив: выделите слово и нажмите" aria-label="Курсив"><i>К</i></button>
+       <div class="instr-grid"><div class="instr-fields">
+        <div class="row-help"><input id="instrTitle" placeholder="Заголовок (если пусто, будет «Инструкция»)"><span id="instrHelp"></span></div>
+        <div id="instrText" class="rt-edit empty" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Текст инструкции" data-placeholder="Например: Вставьте слова из банка в пропуски."></div>
+        <div class="selbar" id="fmtBar" hidden>
+          <button data-cmd="bold" data-tip="Жирный (Ctrl+B)" aria-label="Жирный"><b>Ж</b></button>
+          <button data-cmd="italic" data-tip="Курсив (Ctrl+I)" aria-label="Курсив"><i>К</i></button>
         </div>
-        <textarea id="instrText" rows="3" placeholder="Например: Вставьте слова из банка в пропуски."></textarea>
+       </div><div class="instr-side">
         <div class="row-help"><input id="imgUrl" type="url" placeholder="Ссылка на картинку: https://…/picture.jpg"><span id="imgHelp"></span></div>
         <div class="warn-inline" id="imgUrlWarn" hidden></div>
         <input id="imgAlt" placeholder="Описание картинки (для незрячих и если не загрузится)">
-        <div class="img-opts">
-          <span class="po-b" role="group" aria-label="Размер картинки">${SIZES.map(([v, t, s]) => ic(t, 'isz', v, im.size, s)).join('')}</span>
-          <span class="po-b" role="group" aria-label="Выравнивание картинки">${ALIGNS.map(([v, t, s]) => ic(t, 'ial', v, im.align, s)).join('')}</span>
-        </div>
+        <div id="imMockBox"></div>
+       </div></div>
       </div>
     </section>`;
-  $('imgHelp').append(helpIcon('Вставьте ссылку на файл картинки: адрес должен начинаться с https:// и вести прямо на изображение. Загрузка файла появится после подключения хранилища. Размер и выравнивание — значки ниже.'));
-  $('instrBar').append(helpIcon('Инструкцию ученик видит над заданием и может свернуть. Новая строка — новый абзац. Показать или скрыть её можно на вкладке «Дизайн».'));
+  $('imgHelp').append(helpIcon('Вставьте ссылку на файл картинки: адрес должен начинаться с https:// и вести прямо на изображение. Размер и положение картинки выбираются на маленьком макете ниже. Загрузка файла появится после подключения хранилища.'));
+  $('instrHelp').append(helpIcon('Инструкцию ученик видит над заданием и может свернуть. Выделите слово, чтобы сделать его жирным или курсивом. Новая строка — новый абзац. Показать или скрыть инструкцию можно на вкладке «Дизайн».'));
+  const ed = $('instrText');
   $('instrTitle').value = ins.title;
-  $('instrText').value = ins.text;
+  mdToDom(ins.text, ed);
+  ed.classList.toggle('empty', !ed.textContent.trim());
   const summary = () => {
-    const t = ins.text.trim().replace(/\s+/g, ' ');
+    const t = ins.text.replace(/[*]/g, '').trim().replace(/\s+/g, ' ');
     const parts = [t ? (t.length > 46 ? t.slice(0, 46) + '…' : t) : '', im.url.trim() ? 'есть картинка' : ''].filter(Boolean);
     $('instrSum').textContent = parts.length ? parts.join(' · ') : 'не заполнено (необязательно)';
   };
@@ -508,32 +648,70 @@ function renderInstruction(box) {
   $('imgUrl').value = im.url; $('imgAlt').value = im.alt;
   $('imgUrl').oninput = () => { im.url = $('imgUrl').value; checkUrl(); summary(); touch(); };
   $('imgAlt').oninput = () => { im.alt = $('imgAlt').value; touch(); };
-  const pickIn = (key, field) => box.querySelectorAll(`[data-${key}]`).forEach(b => b.onclick = () => {
-    im[field] = b.dataset[key];
-    box.querySelectorAll(`[data-${key}]`).forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
-    touch();
-  });
-  pickIn('isz', 'size');
-  pickIn('ial', 'align');
   checkUrl();
   summary();
+  // Макет картинки: размер и положение выбираются нажатием на бледный контур
+  const paintMock = () => {
+    const shown = !(current.design && current.design.showImage === false);
+    $('imMockBox').innerHTML = imageMock(im, shown);
+    $('imMockBox').dataset.tip = shown ? 'Размер и положение картинки: нажмите на бледный контур' : 'Картинка скрыта (включается на вкладке «Дизайн»)';
+  };
+  paintMock();
+  $('imMockBox').onclick = e => {
+    const sz = e.target.closest('[data-isz]'), al = e.target.closest('[data-ial]');
+    if (!sz && !al) return;
+    if (sz) im.size = sz.dataset.isz; else im.align = al.dataset.ial;
+    paintMock();
+    touch();
+  };
   $('instrHead').onclick = () => {
     instrOpen = !instrOpen;
     $('instrBody').hidden = !instrOpen;
     $('instrHead').setAttribute('aria-expanded', String(instrOpen));
   };
   $('instrTitle').oninput = () => { ins.title = $('instrTitle').value; touch(); };
-  $('instrText').oninput = () => { ins.text = $('instrText').value; summary(); touch(); };
-  box.querySelectorAll('[data-fmt]').forEach(b => {
-    b.onmousedown = e => e.preventDefault(); // иначе кнопка сбросит выделение в поле
-    b.onclick = () => {
-      const t = $('instrText'), m = b.dataset.fmt, s = t.selectionStart, e = t.selectionEnd;
-      t.setRangeText(m + t.value.slice(s, e) + m, s, e, 'end');
-      if (s === e) t.setSelectionRange(s + m.length, s + m.length); // без выделения: курсор между знаками
-      t.focus();
-      t.oninput();
-    };
+
+  // Жирный и курсив не сочетаются (файл хранит одно из двух): включая один, выключаем другой
+  const toggleFmt = cmd => {
+    const other = cmd === 'bold' ? 'italic' : 'bold';
+    if (!document.queryCommandState(cmd) && document.queryCommandState(other)) document.execCommand(other);
+    document.execCommand(cmd);
+    ed.oninput();
+    updateBar();
+  };
+  const bar = $('fmtBar');
+  bar.querySelectorAll('[data-cmd]').forEach(b => {
+    b.onmousedown = e => e.preventDefault(); // иначе кнопка сбросит выделение
+    b.onclick = () => toggleFmt(b.dataset.cmd);
   });
+  function updateBar() {
+    if (!ed.isConnected) { selBarHooks.delete(updateBar); return; }
+    const s = getSelection();
+    if (!s.rangeCount || s.isCollapsed || !ed.contains(s.anchorNode) || !ed.contains(s.focusNode)) { bar.hidden = true; return; }
+    placeSelBar(bar, $('instrBody'), s.getRangeAt(0));
+    bar.querySelectorAll('[data-cmd]').forEach(b => b.classList.toggle('active', document.queryCommandState(b.dataset.cmd)));
+  }
+  selBarHooks.add(updateBar);
+  ed.oninput = () => {
+    ins.text = domToMd(ed);
+    ed.classList.toggle('empty', !ed.textContent.trim());
+    summary();
+    touch();
+  };
+  ed.onkeydown = e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.execCommand('insertLineBreak'); ed.oninput(); return; }
+    if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyB' || e.code === 'KeyI')) { e.preventDefault(); toggleFmt(e.code === 'KeyB' ? 'bold' : 'italic'); }
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyU') e.preventDefault();
+  };
+  // Вставка только текстом, без чужого оформления
+  ed.onpaste = e => {
+    e.preventDefault();
+    const lines = e.clipboardData.getData('text/plain').replace(/\r/g, '').split('\n');
+    lines.forEach((l, i) => { if (i) document.execCommand('insertLineBreak'); if (l) document.execCommand('insertText', false, l); });
+    ed.oninput();
+  };
+  ed.ondrop = e => e.preventDefault();
+  ed.onblur = () => { setTimeout(() => { if (!ed.contains(getSelection().anchorNode)) bar.hidden = true; }, 0); };
 }
 
 // Переключатель Classic/Comic: две кнопки вверху редактора (на любой вкладке) и такие же во вкладке «Дизайн»
@@ -548,7 +726,10 @@ const O = (inner, extra = '') => `<svg viewBox="0 0 24 24" aria-hidden="true"${e
 const FILL = ' fill="currentColor" fill-opacity=".28"';
 const WOB = 'M4 8c3-2 13-2 16 0 1.5 3 1.5 5 0 8-3 2-13 2-16 0-1.5-3-1.5-5 0-8z';
 const OPT_ICONS = {
-  style: { classic: O('<rect x="4" y="6" width="16" height="12" rx="1"/>'), comic: O(`<path d="${WOB}"/>`) },
+  style: {
+    classic: O('<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M8 10h8M8 14h5"/>'),
+    comic: O('<path d="M5 7c4-2.4 10-2.4 14 0 2 3 2 6 0 8.4-2 1.4-5 2-7 1.8L8 20.5v-3.6C6.2 16.4 5 15.4 4.4 14 3.4 11.4 3.6 8.8 5 7z"/><path d="M9 11.2c1-.8 2-.8 3 0s2 .8 3 0"/>'),
+  },
   width: { thin: O('<path d="M4 12h16" stroke-width="1.5"/>'), normal: O('<path d="M4 12h16" stroke-width="3"/>'), thick: O('<path d="M4 12h16" stroke-width="5"/>') },
   shape: {
     line: O('<path d="M4 17h16"/>'), frame: O('<rect x="4" y="7" width="16" height="10" rx="2"/>'),
@@ -591,14 +772,16 @@ const PV_ICONS = {
 // Области макета: название панели и подсказка
 const REGIONS = {
   gap: 'Пропуск',
+  outline: 'Контур (Comic)',
   check: 'Кнопка «Проверить»',
   page: 'Страница (макет)',
 };
 let dzRegion = null; // какая область макета выбрана
+let dzColorOpen = false; // раскрыта ли панель цветов в углу макета
 
 // Рисунок макета: отражает текущие настройки; области кликаются (data-r)
 function designMock(c) {
-  const { ac, st, gd, gdRaw, pg, ck, showI, showImg } = c, comic = st.style === 'comic';
+  const { ac, st, gd, gdRaw, pg, ck, showI, showImg, im, chosen, shade } = c, comic = st.style === 'comic';
   const lw = comic ? { thin: 1.5, normal: 3, thick: 5 }[st.comicWidth] : 1.5;
   const oc = comic && st.comicLine === 'accent' ? ac : 'var(--text)';
   const stroke = `stroke="${oc}" stroke-width="${lw}" stroke-linejoin="round" stroke-linecap="round"`;
@@ -612,19 +795,28 @@ function designMock(c) {
   const hit = (x, y, w, h) => `<rect class="hit" x="${x - 5}" y="${y - 5}" width="${w + 10}" height="${h + 10}" rx="8"/>`;
   const region = (r, inner) => `<g class="rg${act(r) ? ' active' : ''}" data-r="${r}" role="button" tabindex="0" aria-label="${esc(REGIONS[r])}"><title>${esc(REGIONS[r])}</title>${inner}</g>`;
   // Колонка: ширина, плотность, фон
+  const H = 294;
   const cw = { compact: 200, standard: 280, wide: 344 }[pg.width], cx = (360 - cw) / 2, m = { compact: 0.6, comfortable: 1, loose: 1.5 }[pg.density];
-  const bg = pg.background === 'backdrop' ? `<rect x="1.5" y="1.5" width="357" height="247" rx="10" fill="${ac}" fill-opacity=".16"/>` : '';
-  const colBox = pg.background === 'card' ? `<rect x="${cx - 6}" y="7" width="${cw + 12}" height="236" rx="8" fill="var(--card)" stroke="var(--text)" stroke-width="1.5"/>` : '';
-  const page = region('page', `<rect class="pv-win" x="1.5" y="1.5" width="357" height="247" rx="10"/>${bg}${colBox}${act('page') ? sel(1.5, 1.5, 357, 247).replace('rx="8"', 'rx="12"') : ''}${hit(1.5, 1.5, 357, 247)}`);
-  // Инструкция и картинка: нажатие на блок включает или скрывает его (скрытые рисуются бледным пунктиром)
-  const iy = 18, ih = 44, dim = on => on ? '' : ' stroke-dasharray="4 4" opacity=".4"';
+  const bg = pg.background === 'backdrop' ? `<rect x="1.5" y="1.5" width="357" height="${H - 3}" rx="10" fill="${ac}" fill-opacity=".16"/>` : '';
+  const colBox = pg.background === 'card' ? `<rect x="${cx - 6}" y="7" width="${cw + 12}" height="${H - 14}" rx="8" fill="var(--card)" stroke="var(--text)" stroke-width="1.5"/>` : '';
+  const page = region('page', `<rect class="pv-win" x="1.5" y="1.5" width="357" height="${H - 3}" rx="10"/>${bg}${colBox}${act('page') ? sel(1.5, 1.5, 357, H - 3).replace('rx="8"', 'rx="12"') : ''}${hit(1.5, 1.5, 357, H - 3)}`);
+  // Инструкция: нажатие на блок включает или скрывает его (скрытые рисуются бледным пунктиром)
+  const iy = 32, ih = 44, dim = on => on ? '' : ' stroke-dasharray="4 4" opacity=".4"';
   const tgl = (id, label, on, inner) => `<g class="rg" data-tg="${id}" role="switch" aria-checked="${on}" tabindex="0" aria-label="${esc(label)}"><title>${esc(label)}: ${on ? 'показывается, нажмите чтобы скрыть' : 'скрыто, нажмите чтобы показать'}</title>${inner}</g>`;
-  const iby = iy + ih + 12 * m, isz = 64;
+  // Картинка: нажатие на неё включает или скрывает; бледные контуры вокруг — другие размеры и положения, нажатие выбирает
+  const SZ = { small: [40, 36], medium: [64, 52], large: [100, 68] }, SZ_NAMES = { small: 'Компактный', medium: 'Средний', large: 'Широкий' }, AL_NAMES = { left: 'Слева', center: 'По центру', right: 'Справа' };
+  const imSize = SZ[im && im.size] ? im.size : 'medium', imAlign = AL_NAMES[im && im.align] ? im.align : 'center', sideImg = imAlign !== 'center';
+  const wFor = (k, al) => (al === 'center' ? Math.min(Math.round(SZ[k][0] * 1.5), cw) : SZ[k][0]);
+  const posX = (al, w) => (al === 'left' ? cx : al === 'right' ? cx + cw - w : cx + (cw - w) / 2);
+  const iby = iy + ih + 12 * m, iw = wFor(imSize, imAlign), ih2 = SZ[imSize][1], imx = posX(imAlign, iw);
+  const mount = `M${imx + 6} ${iby + ih2 - 6}L${imx + iw * .36} ${iby + ih2 * .42}L${imx + iw * .52} ${iby + ih2 * .66}L${imx + iw * .66} ${iby + ih2 * .5}L${imx + iw - 6} ${iby + ih2 - 6}`;
   const instr = tgl('showInstruction', 'Инструкция', showI, `${hit(cx, iy, cw, ih)}<g${dim(showI)}>${box(cx, iy, cw, ih, 6, `fill="var(--card)" ${stroke}`)}</g>${L(cx + 12, iy + 15, cw * .55, showI ? 1 : .4)}${L(cx + 12, iy + 29, cw * .4, showI ? 1 : .4)}`)
-    + tgl('showImage', 'Картинка', showImg, `${hit(cx, iby, isz, isz)}<g${dim(showImg)}>${box(cx, iby, isz, isz, 6, `fill="var(--card)" ${stroke}`)}</g><path d="M${cx + 8} ${iby + isz - 10}l16-18 12 12 9-8 11 14" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linejoin="round" opacity="${showImg ? 1 : .4}"/>`);
-  // Текст с пропуском справа от картинки
-  const ty = iy + ih + 12 * m, tx = cx + 64 + 14, tw = cx + cw - tx;
-  const gw = { auto: 52, narrow: 34, wide: 86 }[gd.width], gx = tx + 8, gy = ty + 28;
+    + tgl('showImage', 'Картинка', showImg, `${hit(imx, iby, iw, ih2)}<g${dim(showImg)}>${box(imx, iby, iw, ih2, 6, `fill="var(--card)" ${stroke}`)}</g><path d="${mount}" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linejoin="round" opacity="${showImg ? 1 : .4}"/>`)
+;
+  // Текст с пропуском: рядом с картинкой, а при положении «по центру» — под ней
+  const tx = sideImg ? (imAlign === 'left' ? cx + iw + 14 : cx) : cx, tw = sideImg ? cw - iw - 14 : cw, ty = sideImg ? iby : iby + ih2 + 10;
+  const GW = { auto: Math.min(52, tw - 20), narrow: Math.min(34, tw - 20), wide: Math.min(86, tw - 20) };
+  const gw = GW[gd.width], gx = tx + 8, gy = ty + 28;
   const dash = gdRaw.dashed && (gd.shape === 'line' || gd.shape === 'frame') ? ' stroke-dasharray="6 5"' : '';
   const shape = {
     line: `<path d="M${gx} ${gy + 14}h${gw}" stroke="${ac}" stroke-width="${comic ? lw : 3}" stroke-linecap="round" fill="none"${dash}/>`,
@@ -633,18 +825,26 @@ function designMock(c) {
     free: `<path d="M${gx + 3} ${gy + 1}c${gw * .3} -3 ${gw * .6} -3 ${gw - 6} 0 4 5 4 11 0 15 -${gw * .3} 3 -${gw * .6} 3 -${gw - 6} 0 -4 -5 -4 -11 0 -15z" fill="${ac}" fill-opacity=".18" stroke="${ac}" stroke-width="2"/>`,
   }[gd.shape];
   // Нумерация: значок «1» на углу пропуска; бледный — выключена, нажатие включает. Ширина: бледные контуры вариантов, нажатие выбирает
-  const num = `<g class="ghost${gd.numbered ? ' on' : ''}" data-num="1"><title>Нумерация пропусков</title><circle cx="${gx + gw}" cy="${gy}" r="9" fill="${gd.numbered ? ac : 'transparent'}" ${gd.numbered ? '' : `stroke="${ac}" stroke-dasharray="2 2"`}/><text x="${gx + gw}" y="${gy + 3.5}" font-size="9.5" font-weight="700" fill="${gd.numbered ? '#fff' : ac}" text-anchor="middle">1</text></g>`;
-  const GW = { auto: 52, narrow: 34, wide: 86 };
+  const num = `<g class="ghost${gd.numbered ? ' on' : ''}" data-num="1"><title>Нумерация пропусков</title><circle cx="${gx}" cy="${gy - 6}" r="9" fill="${gd.numbered ? ac : 'transparent'}" ${gd.numbered ? '' : `stroke="${ac}" stroke-dasharray="2 2"`}/><text x="${gx}" y="${gy - 2.5}" font-size="9.5" font-weight="700" fill="${gd.numbered ? '#fff' : ac}" text-anchor="middle">1</text></g>`;
+  const GP = { narrow: 3, auto: 8, wide: 13 }; // вертикальные «поля» контуров: полосы между ними не накладываются
   const ghosts = Object.keys(GW).sort((a, b) => GW[b] - GW[a]).filter(k => k !== gd.width).map(k =>
-    `<rect class="ghost wg" data-w="${k}" x="${gx}" y="${gy - 2}" width="${GW[k]}" height="21" rx="5" stroke="${ac}"><title>Ширина: ${esc(GAP_WIDTHS[k])}</title></rect>`).join('');
+    `<rect class="ghost wg" data-w="${k}" x="${gx}" y="${gy - GP[k]}" width="${GW[k]}" height="${17 + 2 * GP[k]}" rx="${5 + GP[k] / 2}" stroke="${ac}"><title>Ширина: ${esc(GAP_WIDTHS[k])}</title></rect>`).join('');
   const text = `${L(tx, ty + 14, tw * .8)}${L(tx, ty + 60, tw * .9)}${L(tx, ty + 74, tw * .5)}`;
   const gap = region('gap', `${act('gap') ? sel(gx, gy, gw, 17) : ''}${hit(gx, gy, gw, 17)}${shape}${ghosts}${num}`);
   // Кнопка «Проверить» внизу
-  const bw = 96, bh = 28, by = 208, bx = { left: cx, center: 180 - bw / 2, right: cx + cw - bw }[ck.align];
+  const bw = 96, bh = 28, by = H - 40, bx = { left: cx, center: 180 - bw / 2, right: cx + cw - bw }[ck.align];
   const bs = ck.variant === 'filled' ? `fill="${ac}" stroke="${comic ? oc : 'none'}" stroke-width="${comic ? lw : 0}"` : ck.variant === 'outline' ? `fill="none" stroke="${ac}" stroke-width="${comic ? lw : 2}"` : `fill="${ac}" fill-opacity=".3" stroke="${comic ? oc : 'none'}" stroke-width="${comic ? lw : 0}"`;
   const side = ck.align === 'left' ? L(bx + bw + 16, by + 14, 90) : ck.align === 'right' ? L(cx, by + 14, 90) : '';
   const check = region('check', `${act('check') ? sel(bx, by, bw, bh) : ''}${hit(bx, by, bw, bh)}${box(bx, by, bw, bh, 14, bs)}<path d="M${bx + bw / 2 - 18} ${by + 14}h36" stroke="${ck.variant === 'filled' ? '#fff' : ac}" stroke-width="3" stroke-linecap="round"/>`);
-  return `<svg class="mock" viewBox="0 0 360 250" role="group" aria-label="Макет упражнения">${page}${text}${side}${instr}${gap}${check}</svg>`;
+  // Контур Comic (цвет и толщина линии): значок пера в углу макета, виден только в стиле Comic
+  // Цвет (слева, выпадающая панель) и переключатель стиля (по центру)
+  const nest = (svgStr, x, y, s) => svgStr.replace('<svg viewBox="0 0 24 24" aria-hidden="true"', `<svg x="${x}" y="${y}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"`);
+  const colBtn = `<g class="rg" data-colbtn="1" role="button" tabindex="0" aria-label="Цвет упражнения" aria-expanded="${dzColorOpen}"><title>Цвет упражнения</title><circle class="hit" cx="22" cy="15" r="15"/><circle cx="22" cy="15" r="11" fill="var(--card)" stroke="${dzColorOpen ? 'var(--accent)' : 'var(--line)'}" stroke-width="1.5"/><circle cx="22" cy="15" r="7" fill="${ac}"/></g>`;
+  const colDrop = dzColorOpen ? `<g><rect x="8" y="31" width="166" height="36" rx="11" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/>${Object.entries(ACCENTS).map(([k, a], i) => `<g class="rg" data-col="${k}" role="button" tabindex="0" aria-label="${esc(a.label)}"><title>${esc(a.label)}</title><circle cx="${26 + i * 26}" cy="49" r="10" fill="${shade(a)}" stroke="${k === chosen ? 'var(--text)' : 'none'}" stroke-width="2.5"/></g>`).join('')}</g>` : '';
+  const stBtn = (k, x, title) => `<g class="rg stbtn${st.style === k ? ' active' : ''}" data-st="${k}" role="button" tabindex="0" aria-pressed="${st.style === k}" aria-label="${title}"><title>${title}</title><rect class="stb" x="${x - 14}" y="3" width="28" height="24" rx="8"/>${nest(OPT_ICONS.style[k], x - 9, 6, 18)}</g>`;
+  const styleBar = stBtn('classic', 165, 'Classic: строгий вид') + stBtn('comic', 195, 'Comic: нарисованный от руки');
+  const outline = comic ? region('outline', `${act('outline') ? `<circle class="pv-sel" cx="338" cy="15" r="14"/>` : ''}<circle class="hit" cx="338" cy="15" r="14"/><circle cx="338" cy="15" r="10.5" fill="var(--card)" ${stroke}/><path d="M333 20l1.2-4 6.6-6.6 2.8 2.8-6.6 6.6z" fill="none" stroke="var(--text)" stroke-width="1.6" stroke-linejoin="round"/>`) : '';
+  return `<svg class="mock" viewBox="0 0 360 ${H}" role="group" aria-label="Макет упражнения">${page}${text}${side}${instr}${gap}${check}${colBtn}${styleBar}${outline}${colDrop}</svg>`;
 }
 
 function renderDesign() {
@@ -663,35 +863,24 @@ function renderDesign() {
     `<button data-g="${g}" data-f="${f}" data-v="${k}" class="${k === cur ? 'active' : ''}" aria-pressed="${k === cur}" data-tip="${esc(names[k])}" aria-label="${esc(names[k])}">${icons[k]}</button>`).join('')}</span></div>`;
   const tog = (id, on, label, icon, hidden) => `<div class="po"${hidden ? ' hidden' : ''}><span class="po-l">${esc(label)}</span><span class="po-b"><button class="${on ? 'active' : ''}" data-toggle="${id}" aria-pressed="${on}" data-tip="${esc(label + (on ? ': вкл' : ': выкл'))}" aria-label="${esc(label)}">${icon}</button></span></div>`;
   const accNames = Object.fromEntries(Object.entries(ACCENTS).map(([k, a]) => [k, a.label]));
+  if (dzRegion === 'outline' && !comic) dzRegion = null;
   const panels = {
     // Форма: повторное нажатие на выбранные «Линию» или «Рамку» включает и выключает пунктир
     gap: opts('gap', 'shape', 'Форма', { ...GAP_SHAPES, line: 'Линия (ещё раз — пунктир)', frame: 'Рамка (ещё раз — пунктир)' }, gd.shape,
         { ...OPT_ICONS.shape, ...(gdRaw.dashed ? { line: O('<path d="M3 17h4M10 17h4M17 17h4"/>'), frame: O('<rect x="4" y="7" width="16" height="10" rx="2" stroke-dasharray="3 2.5"/>') } : {}) }) +
       '<p class="muted po-note">Ширину выбирайте на макете: бледные контуры рядом с пропуском. Значок «1» на углу пропуска включает нумерацию.</p>',
+    outline: opts('style', 'comicLine', 'Цвет контура', { accent: 'Цвет упражнения', black: 'Чёрный' }, st.comicLine, { accent: dot(ac), black: dot('#000') }) +
+      opts('style', 'comicWidth', 'Линия', { thin: 'Тонкая', normal: 'Обычная', thick: 'Толстая' }, st.comicWidth, OPT_ICONS.width),
     check: opts('check', 'variant', 'Вид', CHECK_VARIANTS, ck.variant, OPT_ICONS.variant) + opts('check', 'align', 'Положение', CHECK_ALIGNS, ck.align, OPT_ICONS.align),
     page: opts('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew) + opts('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density) +
       opts('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background),
   };
   const panel = dzRegion
     ? `<div class="dz-panel"><h3>${esc(REGIONS[dzRegion])}</h3>${panels[dzRegion]}</div>`
-    : '<div class="dz-panel dz-hint muted">Нажмите на пропуск, кнопку «Проверить» или фон страницы, и здесь появятся их настройки. Инструкция и картинка включаются и скрываются нажатием прямо на макете (скрытое не удаляется).</div>';
+    : '<div class="dz-panel dz-hint muted">Нажмите на пропуск, кнопку «Проверить», фон страницы или (в Comic) значок пера в углу, и здесь появятся их настройки. Инструкция и картинка включаются и скрываются нажатием прямо на макете (скрытое не удаляется). Размер и положение картинки выбираются на вкладке «Содержимое», в блоке «Инструкция и картинка». Цвет — кружок в левом верхнем углу макета, стиль Classic/Comic — переключатель сверху по центру.</div>';
   $('content').innerHTML = `
-    <section class="dz-top">
-      <span class="po-b" role="group" aria-label="Стиль упражнения">
-        ${[['classic', 'Classic: строгий вид'], ['comic', 'Comic: нарисованный от руки']].map(([k, n]) =>
-          `<button class="big${st.style === k ? ' active' : ''}" data-g="style" data-f="style" data-v="${k}" aria-pressed="${st.style === k}" data-tip="${esc(n)}" aria-label="${esc(n)}">${OPT_ICONS.style[k]}</button>`).join('')}
-      </span>
-      <span class="po-b" role="radiogroup" aria-label="Цвет упражнения">
-        ${Object.entries(ACCENTS).map(([key, a]) => `<button class="dot${key === chosen ? ' on' : ''}" role="radio" aria-checked="${key === chosen}" data-g="style" data-f="accent" data-v="${key}" data-tip="${esc(a.label)}" aria-label="${esc(a.label)}" style="--c:${shade(a)}"></button>`).join('')}
-      </span>
-      ${comic ? `<span class="po-b" role="group" aria-label="Цвет контура">${[['accent', 'Контур: цвет упражнения', ac], ['black', 'Контур: чёрный', '#000']].map(([k, n, col]) =>
-          `<button class="${st.comicLine === k ? 'active' : ''}" data-g="style" data-f="comicLine" data-v="${k}" aria-pressed="${st.comicLine === k}" data-tip="${esc(n)}" aria-label="${esc(n)}">${dot(col)}</button>`).join('')}</span>
-      <span class="po-b" role="group" aria-label="Толщина линии">${['thin', 'normal', 'thick'].map(k => {
-        const n = { thin: 'Линия: тонкая', normal: 'Линия: обычная', thick: 'Линия: толстая' }[k];
-        return `<button class="${st.comicWidth === k ? 'active' : ''}" data-g="style" data-f="comicWidth" data-v="${k}" aria-pressed="${st.comicWidth === k}" data-tip="${esc(n)}" aria-label="${esc(n)}">${OPT_ICONS.width[k]}</button>`; }).join('')}</span>` : ''}
-    </section>
     <div class="dz-stage">
-      <div class="dz-mock">${designMock({ ac, st, gd, gdRaw, pg, ck, showI, showImg })}</div>
+      <div class="dz-mock">${designMock({ ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
       ${panel}
     </div>
     <p class="muted dz-note">Результат виден в предпросмотре справа.</p>`;
@@ -713,6 +902,12 @@ function renderDesign() {
   });
   const pickRegion = el => {
     // Ширина и нумерация выбираются прямо на макете
+    const dc = el.closest('[data-col]');
+    if (dc) { dzColorOpen = false; setDesign({ accent: dc.dataset.col }); return; }
+    if (el.closest('[data-colbtn]')) { dzColorOpen = !dzColorOpen; renderDesign(); return; }
+    const sb = el.closest('[data-st]');
+    if (sb) { dzColorOpen = false; setDesign({ style: sb.dataset.st }); return; }
+    if (dzColorOpen) { dzColorOpen = false; }
     const tg = el.closest('[data-tg]');
     if (tg) { setDesign({ [tg.dataset.tg]: tg.getAttribute('aria-checked') !== 'true' }); return; }
     const w = el.closest('[data-w]'), n = el.closest('[data-num]');
@@ -723,24 +918,32 @@ function renderDesign() {
   svg.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickRegion(e.target); } };
 }
 
-// Вкладка «Поведение» общая для модулей: число проверок на прохождение
+// Вкладка «Поведение» общая для модулей: число проверок на прохождение (шкала 1–5 и режим «авто»)
 function renderBehavior() {
   const gaps = Object.keys(MODULES[current.module].exportData(current).gaps).length;
   const auto = gaps <= 5 ? 3 : 5;
-  const value = current.behavior && current.behavior.checks >= 1 ? String(current.behavior.checks) : 'auto';
-  const options = [['auto', `Автоматически (сейчас ${auto})`], ...[1, 2, 3, 4, 5].map(n => [String(n), String(n)])];
+  const manual = current.behavior && current.behavior.checks >= 1 ? Number(current.behavior.checks) : null;
+  const shown = manual || auto;
   $('content').innerHTML = `
-    <section class="pub">
-      <label class="muted" for="checks">Сколько раз ученик может нажать «Проверить»</label><br>
-      <select id="checks">${options.map(([v, t]) => `<option value="${v}"${v === value ? ' selected' : ''}>${t}</option>`).join('')}</select>
-      <p class="muted">Автоматически: 3 проверки, если в задании 1–5 пропусков, и 5, если 6 и больше. Нажатие на «Проверить» при неполном ответе проверку не тратит. Верные ответы после проверки закрепляются. Упражнение заканчивается, когда всё верно или проверки закончились.</p>
+    <section class="beh">
+      <div class="po"><span class="po-l" id="chkLabel">Проверок на прохождение</span><span id="chkHelp"></span></div>
+      <div class="scale-row">
+        <button class="auto-btn${manual ? '' : ' active'}" id="chkAuto" aria-pressed="${!manual}" data-tip="Автоматически (сейчас ${auto})" aria-label="Автоматически, сейчас ${auto}">${OPT_ICONS.gapw.auto}</button>
+        <div class="scale${manual ? '' : ' is-auto'}">
+          <input type="range" id="chkRange" min="1" max="5" step="1" value="${shown}" aria-labelledby="chkLabel" aria-valuetext="${shown}">
+          <div class="ticks" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+        </div>
+        <span class="scale-val" id="chkVal">${shown}</span>
+      </div>
     </section>`;
-  $('checks').onchange = () => {
-    current.behavior = { checks: $('checks').value === 'auto' ? 'auto' : Number($('checks').value) };
-    touch();
-  };
+  $('chkHelp').append(helpIcon(`Сколько раз ученик может нажать «Проверить». Двигайте ползунок от 1 до 5 или включите «авто»: 3 проверки при 1–5 пропусках и 5 при 6 и больше. Нажатие при неполном ответе проверку не тратит. Верные ответы после проверки закрепляются. Упражнение заканчивается, когда всё верно или проверки закончились.`));
+  const set = v => { current.behavior = { checks: v }; touch(); renderBehavior(); };
+  $('chkAuto').onclick = () => set('auto');
+  $('chkRange').oninput = () => { const v = Number($('chkRange').value); $('chkVal').textContent = v; };
+  $('chkRange').onchange = () => set(Number($('chkRange').value));
+  // Нажатие на шкалу при «авто» сразу переходит на ручное значение, даже если ползунок остался на месте
+  $('chkRange').onclick = () => { if (!manual) set(Number($('chkRange').value)); };
 }
-
 const snapshot = draft => JSON.stringify(exerciseFor(draft, true));
 
 function download(exercise) {
@@ -752,18 +955,20 @@ function download(exercise) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+// Состояние публикации: key для цвета точки, title — коротко, text — подробнее (в «?»)
 function publicationStatus() {
   const pub = current.publication;
-  if (!pub) return { text: 'Ещё не публиковалось.' };
+  if (!pub) return { key: 'none', title: 'Не опубликовано', text: 'Упражнение ещё не публиковалось: ученики его не видят.' };
   if (pub.state === 'unpublished') {
     const base = pub.at ? `Файл «снято с публикации» скачан ${when(pub.at)}.` : 'Черновик открыт из файла упражнения, снятого с публикации.';
-    return { text: `${base} После отправки через GitHub Desktop ученик видит «Упражнение сейчас недоступно».` };
+    return { key: 'off', title: 'Снято с публикации', text: `${base} После отправки через GitHub Desktop ученик видит «Упражнение сейчас недоступно».` };
   }
   const base = pub.at ? `Файл публикации скачан ${when(pub.at)}.` : 'Черновик открыт из файла опубликованного упражнения.';
-  if (pub.snapshot !== snapshot(current)) return { text: `${base} После этого есть изменения: ученики их не увидят, пока вы не опубликуете снова.`, changed: true };
-  return { text: `${base} После отправки через GitHub Desktop ученики видят эту версию.` };
+  if (pub.snapshot !== snapshot(current)) return { key: 'changed', title: 'Есть неопубликованные изменения', text: `${base} После этого есть изменения: ученики их не увидят, пока вы не опубликуете снова.` };
+  return { key: 'ok', title: 'Опубликовано', text: `${base} После отправки через GitHub Desktop ученики видят эту версию.` };
 }
 
+let pubProblemsOpen = null; // null — раскрыть сами, если есть ошибки
 function renderPublish() {
   const { errors, warnings } = MODULES[current.module].validate(current);
   if (!current.title.trim()) warnings.push('Нет названия: ученик увидит пустой заголовок.');
@@ -778,33 +983,44 @@ function renderPublish() {
   const code = `<iframe src="${url}" width="100%" height="600" style="border:0;" title="${esc(current.title.trim() || id)}"></iframe>`;
   const status = publicationStatus();
   const list = items => '<ul>' + items.map(t => `<li>${esc(t)}</li>`).join('') + '</ul>';
+  const plural = (n, a, b, c) => (n % 10 === 1 && n % 100 !== 11 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c);
+  const probOpen = pubProblemsOpen === null ? errors.length > 0 : pubProblemsOpen;
+  const probLabel = [errors.length ? `${errors.length} ${plural(errors.length, 'ошибка', 'ошибки', 'ошибок')}` : '', warnings.length ? `${warnings.length} ${plural(warnings.length, 'замечание', 'замечания', 'замечаний')}` : ''].filter(Boolean).join(' · ');
+  const step = (n, icon, text, help, helpId) => `<div class="step"><span class="num">${n}</span>${iconSvg(icon)}<span class="step-t">${text}</span><span id="${helpId}"></span></div>`;
   $('content').innerHTML = `
-    <section class="pub">
-      <p class="status${status.changed ? ' changed' : ''}">${esc(status.text)}</p>
-      ${errors.length ? `<div class="problems bad"><b>Чтобы опубликовать, исправьте:</b>${list(errors)}</div>` : ''}
-      ${warnings.length ? `<div class="problems"><b>Обратите внимание:</b>${list(warnings)}</div>` : ''}
-      <div class="pub-actions">
-        <button class="primary" id="publish"${errors.length ? ' disabled' : ''}>Опубликовать (скачать файл)</button>
-        <button id="unpublish">Снять с публикации (скачать файл)</button>
+    <section class="pubx">
+      <div class="st-card">
+        <span class="st-dot st-${status.key}" aria-hidden="true"></span>
+        <div class="st-main"><b>${esc(status.title)}</b><span id="stHelp"></span></div>
+        <div class="st-actions">
+          <button class="primary pub-main" id="publish"${errors.length ? ' disabled' : ''}>${iconSvg('download')}Опубликовать</button>
+          <button class="icon-btn" id="unpublish" data-tip="Снять с публикации (скачать файл)" aria-label="Снять с публикации">${iconSvg('eyeoff')}</button>
+        </div>
       </div>
-
-      <h3>Как отправить файл ученикам</h3>
-      <ol>
-        <li>Нажмите кнопку выше. В папку «Загрузки» скачается файл <code>${id}.json</code>.</li>
-        <li>Переложите его в папку проекта <code>dimvibe-test</code>, рядом с <code>index.html</code>. Если там уже есть файл с таким именем, замените его.
-          Если браузер назвал файл <code>${id} (1).json</code>, переименуйте его в <code>${id}.json</code>.</li>
-        <li>В GitHub Desktop: Commit to main, затем Push origin. Через минуту ученики увидят новую версию.</li>
-      </ol>
-      <p class="muted">Пока файл не отправлен, ученики видят прежнюю версию. Черновик в редакторе им не виден.</p>
-
-      <h3>Ссылка для ученика</h3>
-      <div class="copy"><input readonly value="${esc(url)}"><button data-copy>Копировать</button></div>
-
-      <h3>Код для LearnWorlds (блок Embed)</h3>
-      <div class="copy"><textarea readonly rows="3">${esc(code)}</textarea><button data-copy>Копировать</button></div>
-      <p class="muted">Код вставляется один раз. После новых публикаций его менять не нужно.</p>
+      ${probLabel ? `<button class="prob-chip${errors.length ? ' bad' : ''}" id="probBtn" aria-expanded="${probOpen}">${iconSvg('warn')}<span>${probLabel}</span><span class="instr-chev" aria-hidden="true">${iconSvg('chevron')}</span></button>
+        <div class="problems${errors.length ? ' bad' : ''}" id="probList"${probOpen ? '' : ' hidden'}>${errors.length ? `<b>Чтобы опубликовать, исправьте:</b>${list(errors)}` : ''}${warnings.length ? `<b>Обратите внимание:</b>${list(warnings)}` : ''}</div>` : ''}
+      <div class="steps" aria-label="Как отправить файл ученикам">
+        ${step(1, 'download', `Файл <code>${id}.json</code>`, '', 'h1')}
+        ${step(2, 'folder', 'В папку проекта', '', 'h2')}
+        ${step(3, 'branch', 'Commit и Push', '', 'h3')}
+      </div>
+      <div class="copyrow"><span class="cr-ic" data-tip="Ссылка для ученика" aria-label="Ссылка для ученика">${iconSvg('link')}</span><input readonly value="${esc(url)}" aria-label="Ссылка для ученика"><button class="icon-btn" data-copy data-tip="Копировать ссылку" aria-label="Копировать ссылку">${iconSvg('copy')}</button><span id="h4"></span></div>
+      <div class="copyrow top"><span class="cr-ic" data-tip="Код для LearnWorlds (блок Embed)" aria-label="Код для LearnWorlds">${iconSvg('code')}</span><textarea readonly rows="1" class="code-ta" aria-label="Код для LearnWorlds">${esc(code)}</textarea><button class="icon-btn" data-copy data-tip="Копировать код" aria-label="Копировать код">${iconSvg('copy')}</button><span id="h5"></span></div>
     </section>`;
-
+  $('stHelp').append(helpIcon(status.text + ' Пока файл не отправлен, ученики видят прежнюю версию. Черновик в редакторе им не виден.'));
+  $('h1').append(helpIcon('Нажмите «Опубликовать»: в папку «Загрузки» скачается файл упражнения. Кнопка с перечёркнутым глазом скачивает файл «снято с публикации».'));
+  $('h2').append(helpIcon(`Переложите файл в папку проекта dimvibe-test, рядом с index.html. Если там уже есть файл с таким именем, замените его. Если браузер назвал файл «${id} (1).json», переименуйте его в «${id}.json».`));
+  $('h3').append(helpIcon('В GitHub Desktop: Commit to main, затем Push origin. Через минуту ученики увидят новую версию.'));
+  const fitCode = () => { const ta = document.querySelector('.code-ta'); if (ta && ta.isConnected) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; } };
+  fitCode();
+  window.__fitCode = fitCode;
+  $('h4').append(helpIcon('Ссылка на страницу упражнения для ученика.'));
+  $('h5').append(helpIcon('Код вставляется в LearnWorlds один раз (блок Embed). После новых публикаций его менять не нужно.'));
+  if ($('probBtn')) $('probBtn').onclick = () => {
+    pubProblemsOpen = $('probList').hidden;
+    $('probList').hidden = !pubProblemsOpen;
+    $('probBtn').setAttribute('aria-expanded', String(pubProblemsOpen));
+  };
   $('publish').onclick = () => {
     download(exerciseFor(current, true));
     current.publication = { state: 'published', at: new Date().toISOString(), snapshot: snapshot(current) };
@@ -820,7 +1036,7 @@ function renderPublish() {
   $('content').querySelectorAll('[data-copy]').forEach(btn => btn.onclick = () => {
     const field = btn.previousElementSibling;
     field.select();
-    const done = () => { btn.textContent = 'Скопировано'; setTimeout(() => { btn.textContent = 'Копировать'; }, 1500); };
+    const done = () => { btn.classList.add('done'); btn.dataset.tip = 'Скопировано'; setTimeout(() => { btn.classList.remove('done'); btn.dataset.tip = btn.getAttribute('aria-label'); }, 1500); };
     if (navigator.clipboard) navigator.clipboard.writeText(field.value).then(done, () => { document.execCommand('copy'); done(); });
     else { document.execCommand('copy'); done(); }
   });
@@ -846,6 +1062,13 @@ const ICONS = {
   check: '<path d="M5 12l5 5 9-10"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   chevron: '<path d="M6 9l6 6 6-6"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+  download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  eyeoff: '<path d="M3 3l18 18"/><path d="M10.6 6.2A9.8 9.8 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3.2 3.8M6.5 7.6A15.7 15.7 0 0 0 2.5 12S6 18 12 18c1.2 0 2.3-.2 3.3-.6"/><path d="M9.9 10a3 3 0 0 0 4.2 4.2"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',
+  code: '<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',
+  warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  branch: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8M18 11c0 4-6 3-12 5"/>',
 };
 const iconSvg = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
 document.querySelectorAll('[data-icon]').forEach(el => el.insertAdjacentHTML('afterbegin', iconSvg(el.dataset.icon)));
@@ -1058,6 +1281,8 @@ $('title').oninput = () => {
   if (tab === 'publish') renderPublish();
 };
 document.querySelectorAll('.tabs [data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+addEventListener('resize', () => { if (window.__fitCode) window.__fitCode(); });
+addEventListener('pointerdown', e => { if (dzColorOpen && !e.target.closest('.mock')) { dzColorOpen = false; renderDesign(); } });
 addEventListener('pointerdown', e => { if (helpFor && !e.target.closest('.help, #helpBubble')) hideHelp(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && helpFor) hideHelp(); });
 

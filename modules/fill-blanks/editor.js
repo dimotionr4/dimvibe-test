@@ -3,7 +3,7 @@
 const FillBlanksEditor = (() => {
   const MAX_GAPS = 10;
   let d, root, save, openGap = null, msgTimer = null;
-  let counter, msg, panelBox, altsBox, bankChips;
+  let counter, msg, panelBox, altsBox, bankChips, gapBar;
 
   const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
   const isGap = p => typeof p !== 'string';
@@ -30,6 +30,8 @@ const FillBlanksEditor = (() => {
     d = draft;
     save = onSave;
     openGap = null;
+    // Кнопка «Пропуск» над выделением: ядро (editor.html) следит за выделением и вызывает эту функцию
+    if (typeof selBarHooks !== 'undefined') selBarHooks.add(updateGapBar);
     draw();
   }
 
@@ -100,7 +102,7 @@ const FillBlanksEditor = (() => {
   function draw() {
     root.innerHTML = '';
     root.className = 'fb-wrap';
-    // Одна строка: способ ответа значками, «Сделать пропуском», счётчик, вид текста и «?»
+    // Одна строка: способ ответа значками, счётчик, вид текста и «?»
     const tools = el('div', 'fb-tools');
     const modes = el('span', 'fb-modes');
     modes.setAttribute('role', 'group');
@@ -118,15 +120,13 @@ const FillBlanksEditor = (() => {
       };
       modes.append(b);
     });
-    const make = el('button', 'primary', 'Сделать пропуском');
-    make.onmousedown = e => e.preventDefault(); // иначе нажатие на кнопку сбросит выделение в тексте
-    make.onclick = makeGap;
     counter = el('span', 'fb-muted');
     const kind = el('span', 'fb-kindtag', LAYOUT_NAME[d.layout]);
     kind.title = 'Вид текста выбирается при создании упражнения и не меняется';
-    tools.append(modes, make, counter, el('span', 'fb-grow'), kind,
-      help((isText() ? 'Вставьте или наберите текст, Enter начинает новый абзац. ' : '')
-        + `Выделите слово или фразу ${isText() ? 'в тексте' : 'в предложении'} (двойной щелчок выделяет одно слово) и нажмите «Сделать пропуском». Нажмите на пропуск, чтобы настроить ответ.`));
+    const right = el('span', 'fb-right');
+    right.append(kind, help((isText() ? 'Вставьте или наберите текст, Enter начинает новый абзац. ' : '')
+        + `Выделите слово или фразу ${isText() ? 'в тексте' : 'в предложении'} (двойной щелчок выделяет одно слово): над ним появится кнопка «Пропуск». Нажмите на готовый пропуск, чтобы настроить ответ.`));
+    tools.append(counter, modes, right);
 
     msg = el('div', 'fb-msg');
     msg.hidden = true;
@@ -138,7 +138,15 @@ const FillBlanksEditor = (() => {
     add.onclick = () => addSentence(d.items.length);
     left.append(add, bankSection());
     panelBox = el('div', 'fb-panel-box');
-    root.append(tools, msg, left, panelBox);
+    // Кнопка «Пропуск» плавает над выделенным текстом
+    gapBar = el('div', 'selbar');
+    gapBar.hidden = true;
+    const gb = el('button', '');
+    gb.innerHTML = svg('<rect x="3" y="8" width="18" height="8" rx="3.5"/>') + ' Пропуск';
+    gb.onmousedown = e => e.preventDefault(); // иначе нажатие на кнопку сбросит выделение в тексте
+    gb.onclick = () => { gapBar.hidden = true; makeGap(); };
+    gapBar.append(gb);
+    root.append(tools, msg, left, panelBox, gapBar);
     updateCounter();
     drawBank();
     drawPanel();
@@ -408,6 +416,14 @@ const FillBlanksEditor = (() => {
     placePanel();
   }
 
+  // Показывать кнопку «Пропуск», пока в предложении выделен текст
+  function updateGapBar() {
+    if (!root || !root.isConnected || !gapBar) return;
+    const s = getSelection();
+    const inEd = n => n && (n.nodeType === Node.TEXT_NODE ? n.parentElement : n).closest && (n.nodeType === Node.TEXT_NODE ? n.parentElement : n).closest('.fb-edit');
+    if (!s.rangeCount || s.isCollapsed || !inEd(s.anchorNode) || !root.contains(s.anchorNode) || !s.toString().trim()) { gapBar.hidden = true; return; }
+    placeSelBar(gapBar, root, s.getRangeAt(0));
+  }
   // Щелчок мимо панели закрывает её (щелчки по пропускам, внутри панели и по подсказкам «?» не в счёт)
   if (!window.__fbOutside) {
     window.__fbOutside = true;
