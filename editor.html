@@ -197,6 +197,8 @@
   .po-b { display:inline-flex; gap:4px; }
   .po-b button { position:relative; width:36px; min-height:36px; height:36px; padding:0; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; }
   .po-b button.big { width:44px; height:40px; }
+  .po-b button.txt { width:auto; padding:0 14px; font-size:.88rem; }
+  .po-b .sz { font-size:.85rem; font-weight:700; line-height:1; }
   .po-b button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
   .po-b svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .po-b .dot { width:28px; height:28px; min-height:28px; }
@@ -293,7 +295,7 @@
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
 <link rel="stylesheet" href="modules/fill-blanks/editor.css?v=24">
-<link rel="stylesheet" href="modules/image-to-gaps/editor.css?v=1">
+<link rel="stylesheet" href="modules/image-to-gaps/editor.css?v=2">
 <link rel="stylesheet" href="core/medialib.css?v=4">
 </head>
 <body>
@@ -388,9 +390,9 @@
 <script src="core/rough.js?v=9"></script>
 <script src="core/gap-engine.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=25"></script>
-<script src="modules/image-to-gaps/editor.js?v=3"></script>
+<script src="modules/image-to-gaps/editor.js?v=4"></script>
 <script>
-const ASSET_V = 25;
+const ASSET_V = 26;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -1112,6 +1114,8 @@ function renderDesign() {
   // Настройки страницы (ширина, плотность, фон) — под макетом
   const grp = (g, f, label, names, cur, icons) => `<div class="pg-grp"><span class="po-l">${esc(label)}</span><span class="po-b" role="group" aria-label="${esc(label)}">${Object.keys(icons).map(k =>
     `<button data-g="${g}" data-f="${f}" data-v="${k}" class="${k === cur ? 'active' : ''}" aria-pressed="${k === cur}" data-tip="${esc(label + ': ' + names[k])}" aria-label="${esc(label + ': ' + names[k])}">${icons[k]}</button>`).join('')}</span></div>`;
+  // Дополнительные настройки модуля (например, размер картинки у Image to Gaps): модуль отдаёт описание, ядро рисует такие же значки
+  const modOpts = (MODULES[current.module].designOptions ? MODULES[current.module].designOptions(current) : []).map(o => grp('mod', o.field, o.label, o.names, o.value, o.icons)).join('');
   $('content').innerHTML = `
     <div class="dz-mock">${designMock({ ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
     <div class="dz-page" role="group" aria-label="Настройки страницы">
@@ -1119,12 +1123,14 @@ function renderDesign() {
       ${grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density)}
       ${grp('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background)}
     </div>
+    ${modOpts ? `<div class="dz-page" role="group" aria-label="Настройки модуля">${modOpts}</div>` : ''}
     <p class="muted dz-note">Нажимайте на элементы макета: блоки инструкции и картинки включаются и скрываются, значки рядом меняют вид. Результат виден в предпросмотре справа.</p>`;
   const root = $('content');
   // Настройки хранятся как выбраны (например, «прерывистая» не теряется при смене формы на плашку и обратно)
   const patchDesign = (key, patch) => { current.design = { ...current.design, [key]: { ...(current.design && current.design[key]), ...patch } }; touch(); renderDesign(); };
   const setDesign = patch => { current.design = { ...current.design, ...patch }; touch(); renderDesign(); };
   const applySet = (g, f, v) => {
+    if (g === 'mod') { current[f] = v; touch(); renderDesign(); return; }
     if (g === 'img') {
       const ins = current.instruction || (current.instruction = { title: '', text: '' });
       (ins.image || (ins.image = { url: '', alt: '', size: 'medium', align: 'center' }))[f] = v;
@@ -1172,6 +1178,19 @@ function renderBehavior() {
         <span class="scale-val" id="chkVal">${shown}</span>
       </div>
     </section>`;
+  // Настройки поведения от модуля (например, «Показать верные картинки в конце» у Image to Gaps): переключатель выкл / вкл
+  const behOpts = MODULES[current.module].behaviorOptions ? MODULES[current.module].behaviorOptions(current) : [];
+  behOpts.forEach((o, i) => {
+    const sec = document.createElement('section');
+    sec.className = 'beh';
+    sec.innerHTML = `<div class="po"><span class="po-l">${esc(o.label)}</span><span id="bo${i}"></span></div>
+      <span class="po-b" role="group" aria-label="${esc(o.label)}"><button class="txt${o.value ? '' : ' active'}" aria-pressed="${!o.value}">Выкл</button><button class="txt${o.value ? ' active' : ''}" aria-pressed="${!!o.value}">Вкл</button></span>`;
+    $('content').append(sec);
+    if (o.help) $('bo' + i).append(helpIcon(o.help));
+    const [off, on] = sec.querySelectorAll('.po-b button'); // не путать с кнопкой «?» из пояснения
+    off.onclick = () => { current[o.field] = false; touch(); renderBehavior(); };
+    on.onclick = () => { current[o.field] = true; touch(); renderBehavior(); };
+  });
   $('chkHelp').append(helpIcon(`Сколько раз ученик может нажать «Проверить». Двигайте ползунок от 1 до 5 или включите «авто»: 3 проверки при 1–5 пропусках и 5 при 6 и больше. Нажатие при неполном ответе проверку не тратит. Верные ответы после проверки закрепляются. Упражнение заканчивается, когда всё верно или проверки закончились.`));
   const set = v => { current.behavior = { checks: v }; touch(); renderBehavior(); };
   $('chkAuto').onclick = () => set('auto');

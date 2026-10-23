@@ -72,3 +72,13 @@
 .ig-card-x:hover { color:var(--bad); border-color:var(--bad); }
 .ig-trapbox { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; max-width:360px; display:flex; flex-direction:column; gap:8px; }
 .ig-trapbox[hidden] { display:none; }
+
+/* Озвучка предложения, подсказки и «заменить во всех» */
+.ig-sound { font-size:1rem; opacity:.45; }
+.ig-sound:hover { color:var(--accent); opacity:1; }
+.ig-sound.has { opacity:1; }
+.ig-aud { flex-basis:100%; padding-left:1.6em; }
+.ig-aud[hidden] { display:none; }
+.ig-check { display:flex; align-items:center; gap:6px; font-size:.85rem; color:var(--muted); margin:2px 0 4px; }
+.ig-check[hidden] { display:none; }
+.ig-lib { align-self:flex-start; min-height:32px; padding:2px 10px; font-size:.85rem; }

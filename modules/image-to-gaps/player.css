@@ -24,3 +24,17 @@
   .gap.itg-gap.size-s { --iw:56px; --ih:48px; }
   .gap.itg-gap.size-l { --iw:100px; --ih:82px; }
 }
+
+/* Перетаскивание: карточка под пальцем, подсветка пропуска и банка, на который можно отпустить */
+.itg-card, .gap.itg-gap.has-img { user-select:none; -webkit-user-select:none; }
+.itg-card { cursor:grab; }
+.itg-ghost { position:fixed; left:0; top:0; z-index:60; width:60px; height:60px; padding:3px; border:2px solid var(--accent); border-radius:10px; background:var(--card); box-shadow:0 6px 18px rgba(0,0,0,.35); pointer-events:none; opacity:.92; }
+.itg-ghost img { display:block; width:100%; height:100%; object-fit:contain; }
+.itg-dragging, .itg-dragging * { cursor:grabbing !important; }
+.gap.itg-gap.drop-hot { outline:3px solid var(--accent); outline-offset:2px; background:color-mix(in srgb, var(--accent) 20%, transparent); }
+.bank.drop-hot { outline:2px dashed var(--accent); outline-offset:2px; border-radius:10px; }
+
+/* Верная картинка рядом с неверной (после завершения, по переключателю) */
+.gap.itg-gap .itg-fix { position:absolute; right:-10px; bottom:-12px; width:44%; aspect-ratio:1; padding:2px; border:2px solid var(--ok); border-radius:10px; background:var(--card); z-index:2; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+.gap.itg-gap .itg-fix img { display:block; width:100%; height:100%; padding:0; border-radius:6px; }
+.itg-fixbar { margin:8px 0 0; text-align:center; }

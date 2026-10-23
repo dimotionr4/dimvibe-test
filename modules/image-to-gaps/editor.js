@@ -36,10 +36,12 @@ const ImageToGapsEditor = (() => {
     const url = typeof safeImageUrl === 'function' && safeImageUrl(im.url);
     return url ? { url, alt } : null;
   }
+  // Звук попадает в файл только с правильным путём в хранилище
+  const audioOut = path => { const m = window.safeMediaPath && safeMediaPath(path); return m ? { media: m } : null; };
   const imageKey = im => (im ? mediaKey(imageOut(im)) : '');
 
   function create(layout) {
-    return { module: 'image_to_gaps', format: 1, layout: layout === 'text' ? 'text' : 'sentences', items: [{ id: 's1', parts: [''] }], gaps: {}, distractors: [], imageSize: 'm', imageFit: 'contain' };
+    return { module: 'image_to_gaps', format: 1, layout: layout === 'text' ? 'text' : 'sentences', items: [{ id: 's1', parts: [''] }], gaps: {}, distractors: [], imageSize: 'm', imageFit: 'contain', showCorrect: false };
   }
 
   function render(container, draft, onSave) {
@@ -77,28 +79,12 @@ const ImageToGapsEditor = (() => {
     root.className = 'ig-wrap';
     const tools = el('div', 'ig-tools');
     counter = el('span', 'ig-muted');
-    // Размер картинки в пропуске и способ вписывания — общие для всего упражнения
-    const seg = (title, values, get, set) => {
-      const g = el('span', 'ig-seg');
-      g.setAttribute('role', 'group');
-      g.setAttribute('aria-label', title);
-      Object.entries(values).forEach(([v, label]) => {
-        const b = el('button', get() === v ? 'active' : '', v.length === 1 ? v.toUpperCase() : label);
-        b.dataset.tip = `${title}: ${label}`;
-        b.setAttribute('aria-pressed', String(get() === v));
-        b.onclick = () => { set(v); save(); g.querySelectorAll('button').forEach((x, i) => { const on = Object.keys(values)[i] === v; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); }); };
-        g.append(b);
-      });
-      return g;
-    };
-    const fitGroup = seg('Картинка в рамке', FITS, () => d.imageFit, v => { d.imageFit = v; });
-    fitGroup.classList.add('ig-seg-wide');
     const kind = el('span', 'ig-kindtag', LAYOUT_NAME[d.layout]);
     kind.title = 'Вид текста выбирается при создании упражнения и не меняется';
     const right = el('span', 'ig-right');
     right.append(kind, help((isText() ? 'Вставьте или наберите текст, Enter начинает новый абзац. ' : '')
-      + `Выделите слово или фразу ${isText() ? 'в тексте' : 'в предложении'}: над ним появится кнопка «Пропуск». Нажмите на пропуск и выберите картинку: она станет правильным ответом. Неверные картинки (ловушки) добавляются в банк внизу. Размер картинки в пропуске задаёт S / M / L.`));
-    tools.append(counter, seg('Размер картинки', SIZES, () => d.imageSize, v => { d.imageSize = v; }), fitGroup, right);
+      + `Выделите слово или фразу ${isText() ? 'в тексте' : 'в предложении'}: над ним появится кнопка «Пропуск». Нажмите на пропуск и выберите картинку: она станет правильным ответом. Неверные картинки (ловушки) добавляются в банк внизу. Размер картинки и вписывание — во вкладке «Дизайн», показ верных картинок в конце — в «Поведении».`));
+    tools.append(counter, right);
 
     msg = el('div', 'ig-msg');
     msg.hidden = true;
@@ -170,12 +156,23 @@ const ImageToGapsEditor = (() => {
       drawPanel();
     };
     card.append(ed);
+    // Озвучка предложения целиком: значок динамика открывает загрузку звука под предложением (серый — звука нет, цветной — есть)
+    const aud = el('div', 'ig-aud');
+    aud.hidden = !item.audio;
+    const sound = el('button', 'ig-icon ig-sound', '🔊');
+    sound.title = isText() ? 'Озвучка абзаца' : 'Озвучка предложения';
+    sound.setAttribute('aria-label', sound.title);
+    sound.classList.toggle('has', !!item.audio);
+    sound.onclick = () => { aud.hidden = !aud.hidden; };
+    if (window.mediaPicker) aud.append(window.mediaPicker('audio', () => item.audio || '', v => { item.audio = v; sound.classList.toggle('has', !!v); save(); }, isText() ? 'Загрузить озвучку абзаца' : 'Загрузить озвучку предложения'));
+    card.append(sound);
     if (d.items.length > 1) {
       const del = el('button', 'ig-icon', '×');
       del.title = isText() ? 'Удалить абзац' : 'Удалить предложение';
       del.onclick = () => removeSentence(item);
       card.append(del);
     }
+    card.append(aud);
     return card;
   }
 
@@ -213,7 +210,7 @@ const ImageToGapsEditor = (() => {
   function makeGap() {
     const r = GapEngine.fromSelection({ items: d.items, hasGap, editClass: 'ig-edit', chipClass: 'ig-chip', count: gapOrder().length, max: MAX_GAPS, newId: () => nextId('g', Object.keys(d.gaps)) });
     if (r.error) return say(r.error);
-    d.gaps[r.id] = { word: r.text, image: emptyImage() };
+    d.gaps[r.id] = { word: r.text, image: emptyImage(), hint: '', audio: '', hintAudio: '' };
     openGap = r.id;
     save();
     draw();
@@ -347,17 +344,44 @@ const ImageToGapsEditor = (() => {
       }
     };
     showCurrent();
+    // «Заменить во всех связанных пропусках»: по умолчанию меняется только этот пропуск; другие пропуски с той же картинкой — по явному выбору
+    const oldKey = imageKey(g.image);
+    const others = oldKey ? gapOrder().filter(x => x !== id && imageKey(d.gaps[x].image) === oldKey) : [];
+    let replaceAll = false;
+    const allRow = el('label', 'ig-check');
+    const allBox = el('input');
+    allBox.type = 'checkbox';
+    allBox.onchange = () => { replaceAll = allBox.checked; };
+    allRow.append(allBox, document.createTextNode(` Заменить и в других пропусках с этой картинкой (${others.length})`));
+    allRow.hidden = !others.length;
     const picker = imagePicker(im => {
-      g.image = { ...emptyImage(), ...im, alt: g.image.alt || im.alt || '' };
-      save();
-      refreshChip(id);
+      const apply = x => { x.image = { ...emptyImage(), ...im, alt: x.image.alt || im.alt || '' }; };
+      apply(g);
+      const changed = [id, ...(replaceAll ? others : [])];
+      if (replaceAll) changed.slice(1).forEach(o => apply(d.gaps[o]));
+      save(); // одно действие: Undo вернёт все пропуски сразу
+      changed.forEach(refreshChip);
       drawGrid();
+      if (replaceAll) { drawPanel(); return; }
       showCurrent();
       placePanel();
     });
     const pickHead = el('div', 'ig-label ig-labelrow', 'Правильная картинка');
     pickHead.append(help('Эта картинка — верный ответ пропуска. Она сама попадёт в банк картинок для ученика. Одну и ту же картинку можно поставить в несколько пропусков.'));
-    p.append(head, cur, noPic, alt, pickHead, picker);
+
+    // Подсказка и звуки (как в Fill Blanks): подсказка открывается после второй проверки; озвучка пропуска — значок динамика у ученика
+    const hint = el('input');
+    hint.placeholder = 'Подсказка (необязательно)';
+    hint.value = g.hint || '';
+    hint.oninput = () => { g.hint = hint.value; save(); };
+    const hintHead = el('div', 'ig-label ig-labelrow', 'Подсказка для ученика');
+    hintHead.append(help('Значок подсказки откроется у ученика после второй проверки, если пропуск останется неверным или пустым. Баллы и проверки подсказка не тратит. Не покажется, если проверка всего одна.'));
+    const pickAudio = (field, label) => (window.mediaPicker ? window.mediaPicker('audio', () => g[field] || '', v => { g[field] = v; save(); placePanel(); }, label) : document.createTextNode(''));
+    const hintAudioHead = el('div', 'ig-label ig-labelrow', 'Звук подсказки');
+    hintAudioHead.append(help('Звучит в окне подсказки (после второй проверки), вместе с текстом подсказки или вместо него.'));
+    const voiceHead = el('div', 'ig-label ig-labelrow', 'Озвучка пропуска');
+    voiceHead.append(help('Ученик нажимает значок динамика в правом верхнем углу пропуска и слышит этот звук. Он не зависит от проверок и подсказок.'));
+    p.append(head, cur, noPic, alt, pickHead, allRow, picker, hintHead, hint, hintAudioHead, pickAudio('hintAudio', 'Загрузить звук подсказки'), voiceHead, pickAudio('audio', 'Загрузить озвучку'));
     panelBox.append(p);
     placePanel();
   }
@@ -453,18 +477,20 @@ const ImageToGapsEditor = (() => {
           if (k === i.parts.length - 1) s = s.trimEnd();
           return s;
         }).filter(p => p !== ''),
+        ...(audioOut(i.audio) ? { audio: audioOut(i.audio) } : {}),
       }));
     const gaps = {};
     items.forEach(i => i.parts.filter(isGap).forEach(p => {
       const g = draft.gaps[p.gap];
       const image = imageOut(g.image, g.word);
-      gaps[p.gap] = image ? { image } : {};
+      gaps[p.gap] = { ...(image ? { image } : {}), ...(clean(g.hint) ? { hint: clean(g.hint) } : {}), ...(audioOut(g.audio) ? { audio: audioOut(g.audio) } : {}), ...(audioOut(g.hintAudio) ? { hintAudio: audioOut(g.hintAudio) } : {}) };
     }));
     const distractors = draft.distractors.map(t => imageOut(t.image)).filter(Boolean);
     return {
       module: 'image_to_gaps', format: 1, layout: draft.layout, items, gaps, distractors,
       imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm',
       imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain',
+      ...(draft.showCorrect ? { showCorrect: true } : {}),
     };
   }
 
@@ -505,11 +531,11 @@ const ImageToGapsEditor = (() => {
     const gaps = {};
     Object.entries(file.gaps || {}).forEach(([id, g]) => {
       const image = imageIn(g && g.image);
-      gaps[id] = { word: image.alt, image };
+      gaps[id] = { word: image.alt, image, hint: String((g && g.hint) || ''), audio: (g && g.audio && g.audio.media) || '', hintAudio: (g && g.hintAudio && g.hintAudio.media) || '' };
     });
     const items = file.items.map((i, k) => {
       const parts = (Array.isArray(i.parts) ? i.parts : []).filter(p => typeof p === 'string' || (p && gaps[p.gap]));
-      return { id: String(i.id || 's' + (k + 1)), parts: parts.length ? parts : [''] };
+      return { id: String(i.id || 's' + (k + 1)), parts: parts.length ? parts : [''], audio: (i.audio && i.audio.media) || '' };
     });
     return {
       ...create(),
@@ -519,8 +545,25 @@ const ImageToGapsEditor = (() => {
       distractors: (Array.isArray(file.distractors) ? file.distractors : []).map((im, k) => ({ id: 't' + (k + 1), image: imageIn(im) })),
       imageSize: SIZES[file.imageSize] ? file.imageSize : 'm',
       imageFit: FITS[file.imageFit] ? file.imageFit : 'contain',
+      showCorrect: file.showCorrect === true,
     };
   }
 
-  return { create, render, load, exportData, validate };
+  // Настройки модуля во вкладке «Дизайн»: значки размера и вписывания картинки (рисует ядро, поля лежат в черновике)
+  const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  function designOptions(draft) {
+    return [
+      { field: 'imageSize', label: 'Размер картинки', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } },
+      { field: 'imageFit', label: 'Картинка в рамке', value: FITS[draft.imageFit] ? draft.imageFit : 'contain', names: FITS,
+        icons: { contain: sq('<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>'), cover: sq('<rect x="3" y="5" width="18" height="14" rx="2" fill="currentColor" fill-opacity=".35"/>') } },
+    ];
+  }
+
+  // Настройки модуля во вкладке «Поведение»: переключатель «Вкл / Выкл»
+  function behaviorOptions(draft) {
+    return [{ field: 'showCorrect', label: 'Показать верные картинки в конце', value: !!draft.showCorrect,
+      help: 'После завершения у ученика появится переключатель: для неверных пропусков он увидит рядом верную картинку. Баллы и число проверок не меняются. По умолчанию выключено.' }];
+  }
+
+  return { create, render, load, exportData, validate, designOptions, behaviorOptions };
 })();
