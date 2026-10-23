@@ -3,7 +3,7 @@
   "module": "fill_blanks",
   "format": 2,
   "published": true,
-  "title": "",
+  "title": "wer",
   "layout": "text",
   "mode": "word_bank",
   "items": [
@@ -43,10 +43,22 @@
     }
   },
   "distractors": [],
+  "instruction": {
+    "title": "Please insert",
+    "text": "**let us try this text ** and *then *we can *continue*",
+    "image": {
+      "url": "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      "alt": "",
+      "size": "medium",
+      "align": "left"
+    }
+  },
   "behavior": {
     "checks": "auto"
   },
   "design": {
-    "accent": "blue"
+    "accent": "blue",
+    "showInstruction": true,
+    "showImage": true
   }
 }
