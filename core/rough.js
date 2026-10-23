@@ -130,7 +130,11 @@
   // Без аргумента — вся страница (стиль включён на <html>); с аргументом — только образец внутри элемента со стилем (редактор)
   window.roughen = function (root) {
     const comic = root ? root.closest('.style-comic') : document.documentElement.classList.contains('style-comic');
-    if (!comic) return;
+    if (!comic) {
+      // Стиль сменился на Classic: у кнопок, которые не перерисовываются, остались старые контуры. Убираем их, иначе они раздуются без стилей Comic
+      if (!root) { document.querySelectorAll('svg.rough').forEach(s => s.remove()); if (observer) observer.disconnect(); }
+      return;
+    }
     (root || document).querySelectorAll(SELECTOR).forEach(el => {
       paint(el);
       if (observer) observer.observe(el);

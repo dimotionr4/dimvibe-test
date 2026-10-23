@@ -60,9 +60,10 @@
   .icon-btn.active, .icon-btn[aria-pressed="true"] { background:var(--accent-soft); color:var(--accent); }
   .icon-btn svg, .side-btn svg { width:20px; height:20px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   /* Подсказка при наведении (и при фокусе с клавиатуры) */
-  [data-tip]::after { content:attr(data-tip); position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); white-space:nowrap; background:var(--text); color:var(--bg); font-size:.78rem; line-height:1.3; padding:4px 8px; border-radius:6px; pointer-events:none; opacity:0; z-index:40; transition:opacity .12s; }
+  [data-tip]::after { content:attr(data-tip); position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); white-space:nowrap; background:var(--text); color:var(--bg); font-size:.78rem; line-height:1.3; padding:4px 8px; border-radius:6px; pointer-events:none; z-index:40; display:none; }
   [data-tip].tip-end::after { left:auto; right:0; transform:none; }
-  [data-tip]:hover::after, [data-tip]:focus-visible::after { opacity:1; transition-delay:.35s; }
+  [data-tip]:hover::after, [data-tip]:focus-visible::after { display:block; animation:tipin .12s .35s both; }
+  @keyframes tipin { from { opacity:0; } to { opacity:1; } }
   /* Переключатель темы: солнце — светлая, луна — тёмная */
   .theme-switch { position:relative; display:inline-flex; align-items:center; justify-content:space-between; width:60px; min-height:32px; height:32px; padding:0 7px; border-radius:999px; background:var(--accent-soft); border:1px solid var(--line); }
   .theme-switch svg { width:16px; height:16px; fill:none; stroke:var(--muted); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; position:relative; z-index:1; }
@@ -114,15 +115,40 @@
   .pv-bar b { margin-right:8px; }
   .pv-body { flex:1; min-height:0; overflow:auto; padding:12px; }
   .pv-note { margin:10px 0 0; font-size:.8rem; }
-  .dz-bar { display:flex; gap:2px; }
-  .dz-bar[hidden] { display:none; }
-  .popover { position:fixed; z-index:50; overflow-y:auto; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px 14px; box-shadow:0 8px 28px rgba(0,0,0,.28); }
-  .popover[hidden] { display:none; }
-  .pop-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-  .pop-head .icon-btn { width:32px; min-height:32px; height:32px; }
-  .popover .seg { max-width:100%; }
-  .popover .sample { background:var(--bg); }
-  .popover .gapsample, .popover .chksample { margin-top:8px; }
+  .dot-i { width:16px; height:16px; border-radius:50%; background:var(--c); box-shadow:0 0 0 1px var(--line); display:block; }
+  .dz-top { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:8px 12px; margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:14px; }
+  .dz-stage { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start; }
+  .dz-mock { flex:1 1 320px; max-width:520px; min-width:0; }
+  .mock { width:100%; height:auto; display:block; }
+  .pv-win { fill:var(--bg); stroke:var(--line); stroke-width:1.5; }
+  .pv-t { stroke:var(--muted); stroke-width:3; stroke-linecap:round; fill:none; }
+  .rg { cursor:pointer; outline:none; }
+  .rg .hit { fill:transparent; stroke:none; }
+  .ghost { cursor:pointer; }
+  .ghost.wg { fill:transparent; stroke-opacity:.28; stroke-width:1.2; stroke-dasharray:3 3; }
+  .ghost.wg:hover { stroke-opacity:.9; fill:var(--accent-soft); fill-opacity:.4; }
+  .ghost:not(.on):not(.wg) { opacity:.45; }
+  .ghost:not(.on):not(.wg):hover { opacity:1; }
+  .rg:hover .hit, .rg:focus-visible .hit { stroke:var(--accent); stroke-width:1.5; stroke-dasharray:4 3; }
+  .pv-sel { fill:var(--accent-soft); fill-opacity:.55; stroke:var(--accent); stroke-width:2; }
+  .dz-panel { flex:1 1 230px; min-width:210px; max-width:340px; background:var(--card); border:1px solid var(--accent); border-radius:14px; padding:8px 14px 12px; }
+  .dz-panel h3 { margin:0 0 6px; font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); }
+  .dz-hint { border-color:var(--line); border-style:dashed; padding:14px; font-size:.9rem; }
+  .po { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:5px 0; }
+  .po[hidden] { display:none; }
+  .po-l { font-size:.88rem; color:var(--muted); }
+  .po-b { display:inline-flex; gap:4px; }
+  .po-b button { position:relative; width:36px; min-height:36px; height:36px; padding:0; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; }
+  .po-b button.big { width:44px; height:40px; }
+  .po-b button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .po-b svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .po-b .dot { width:28px; height:28px; min-height:28px; }
+  .po-note { font-size:.78rem; margin:6px 0 0; }
+  .dz-note { font-size:.8rem; margin:10px 0 0; }
+  .dot-i { width:16px; height:16px; border-radius:50%; background:var(--c); box-shadow:0 0 0 1px var(--line); display:block; }
+  .dots { display:grid; grid-template-columns:repeat(6, 30px); gap:8px; padding:4px 0 2px; }
+  .dot { position:relative; width:30px; height:30px; min-height:30px; padding:0; border-radius:50%; background:var(--c); border:2px solid transparent; box-shadow:0 0 0 1px var(--line) inset; }
+  .dot.on { border-color:var(--card); box-shadow:0 0 0 2px var(--text); }
   .top { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
   #title { flex:1; min-width:220px; font-size:1.2rem; font-weight:600; }
   .muted { color:var(--muted); font-size:.9rem; }
@@ -167,7 +193,7 @@
   }
 </style>
 <!-- При изменении файлов модуля меняйте номер версии (?v=) здесь, в ASSET_V и в строке <script> ниже: так браузер не возьмёт старую копию -->
-<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=8">
+<link rel="stylesheet" href="modules/fill-blanks/editor.css?v=9">
 </head>
 <body>
 <header id="bar">
@@ -199,11 +225,11 @@
     <div class="top">
       <input id="title" placeholder="Название упражнения">
       <span class="muted" id="saved"></span>
-      <div class="dz-bar" id="dzBar" role="toolbar" aria-label="Оформление упражнения"></div>
     </div>
     <div class="muted" style="margin:-4px 0 10px">Номер: <span id="draftId"></span> · черновик хранится только в этом браузере</div>
     <nav class="tabs">
       <button data-tab="content">Содержимое</button>
+      <button data-tab="design">Дизайн</button>
       <button data-tab="behavior">Поведение</button>
       <button data-tab="publish">Публикация</button>
     </nav>
@@ -231,8 +257,6 @@
 </div>
 </div>
 
-<div id="dzPop" class="popover" role="dialog" aria-label="Настройки оформления" hidden></div>
-
 <div id="kindDialog" class="modal" hidden>
   <div class="modal-box choose">
     <h3 style="margin:0 0 4px">Какое упражнение создать?</h3>
@@ -245,10 +269,10 @@
 
 <script src="core/design.js?v=5"></script>
 <script src="core/richtext.js?v=4"></script>
-<script src="core/rough.js?v=6"></script>
-<script src="modules/fill-blanks/editor.js?v=8"></script>
+<script src="core/rough.js?v=7"></script>
+<script src="modules/fill-blanks/editor.js?v=9"></script>
 <script>
-const ASSET_V = 8;
+const ASSET_V = 9;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -309,8 +333,6 @@ function open(id) {
   $('title').value = current.title;
   $('draftId').textContent = current.id;
   showTab(tab);
-  closeDesign();
-  $('dzBar').hidden = false;
   renderList();
   if (narrow()) setSide(true, false);
   schedulePreview();
@@ -321,6 +343,7 @@ function showTab(name) {
   document.querySelectorAll('.tabs [data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   if (name === 'publish') renderPublish();
   else if (name === 'behavior') renderBehavior();
+  else if (name === 'design') renderDesign();
   else {
     // Содержимое: общая инструкция сверху, под ней редактор модуля
     $('content').innerHTML = '';
@@ -347,8 +370,6 @@ function removeDraft(id) {
 function showEmpty() {
   $('editor').hidden = true;
   $('empty').hidden = false;
-  $('dzBar').hidden = true;
-  closeDesign();
   schedulePreview();
 }
 
@@ -469,164 +490,185 @@ function setStyle(style) {
   renderDesign();
 }
 
-// Оформление упражнения: значки над предпросмотром открывают всплывающие панели (наборы значений — в core/design.js)
-const DESIGN_PANELS = [
-  ['accent', 'palette', 'Цвет'],
-  ['style', 'pen', 'Стиль: Classic / Comic'],
-  ['gap', 'gap', 'Пропуск'],
-  ['page', 'layout', 'Макет'],
-  ['check', 'check', 'Кнопка «Проверить»'],
-  ['instr', 'info', 'Показ инструкции и картинки'],
-];
-let dzOpen = null;
+// Вкладка «Дизайн» общая для модулей: компактные карточки с переключателями-значками (наборы значений — в core/design.js)
+const O = (inner, extra = '') => `<svg viewBox="0 0 24 24" aria-hidden="true"${extra}>${inner}</svg>`;
+const FILL = ' fill="currentColor" fill-opacity=".28"';
+const WOB = 'M4 8c3-2 13-2 16 0 1.5 3 1.5 5 0 8-3 2-13 2-16 0-1.5-3-1.5-5 0-8z';
+const OPT_ICONS = {
+  style: { classic: O('<rect x="4" y="6" width="16" height="12" rx="1"/>'), comic: O(`<path d="${WOB}"/>`) },
+  width: { thin: O('<path d="M4 12h16" stroke-width="1.5"/>'), normal: O('<path d="M4 12h16" stroke-width="3"/>'), thick: O('<path d="M4 12h16" stroke-width="5"/>') },
+  shape: {
+    line: O('<path d="M4 17h16"/>'), frame: O('<rect x="4" y="7" width="16" height="10" rx="2"/>'),
+    pill: O(`<rect x="4" y="7" width="16" height="10" rx="5"${FILL}/>`), free: O(`<path d="${WOB}"/>`),
+  },
+  gapw: { auto: O('<path d="M12 5l1.6 5.4L19 12l-5.4 1.6L12 19l-1.6-5.4L5 12l5.4-1.6z"/>'), narrow: O('<path d="M9 12h6M9 9v6M15 9v6"/>'), wide: O('<path d="M2 12h20M2 9v6M22 9v6"/>') },
+  pagew: {
+    compact: O(`<rect x="2" y="4" width="20" height="16" rx="2"/><rect x="9" y="7" width="6" height="10"${FILL}/>`),
+    standard: O(`<rect x="2" y="4" width="20" height="16" rx="2"/><rect x="6" y="7" width="12" height="10"${FILL}/>`),
+    wide: O(`<rect x="2" y="4" width="20" height="16" rx="2"/><rect x="4" y="7" width="16" height="10"${FILL}/>`),
+  },
+  density: {
+    compact: O('<path d="M5 7h14M5 10h14M5 13h14M5 16h14"/>'), comfortable: O('<path d="M5 7h14M5 12h14M5 17h14"/>'), loose: O('<path d="M5 6h14M5 18h14"/>'),
+  },
+  background: {
+    plain: O('<path d="M6 9h12M6 13h8"/>'),
+    backdrop: O(`<rect x="3" y="4" width="18" height="16" rx="3"${FILL} stroke="none"/><path d="M7 10h10M7 14h6"/>`),
+    card: O('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 10h10M7 14h6"/>'),
+  },
+  variant: {
+    filled: O('<rect x="3" y="7" width="18" height="10" rx="4" fill="currentColor"/>'),
+    outline: O('<rect x="3" y="7" width="18" height="10" rx="4"/>'),
+    soft: O(`<rect x="3" y="7" width="18" height="10" rx="4"${FILL} stroke="none"/>`),
+  },
+  align: {
+    left: O('<path d="M4 6h16"/><rect x="4" y="12" width="8" height="6" rx="2"/>'),
+    center: O('<path d="M4 6h16"/><rect x="8" y="12" width="8" height="6" rx="2"/>'),
+    right: O('<path d="M4 6h16"/><rect x="12" y="12" width="8" height="6" rx="2"/>'),
+  },
+};
 
-function buildDesignBar() {
-  $('dzBar').innerHTML = DESIGN_PANELS.map(([k, icon, label]) =>
-    `<button class="icon-btn" data-dz="${k}" data-tip="${esc(label)}" aria-label="${esc(label)}" aria-pressed="false" aria-haspopup="dialog">${iconSvg(icon)}</button>`).join('');
-  $('dzBar').querySelectorAll('[data-dz]').forEach(b => b.onclick = () => (dzOpen === b.dataset.dz ? closeDesign() : openDesign(b.dataset.dz)));
+// Интерактивный макет упражнения: нажимаешь на область — рядом появляется панель её настроек
+const PV_ICONS = {
+  dashed: O('<path d="M3 12h4M10 12h4M17 12h4"/>'),
+  numbered: O('<path d="M9 4L7 20M17 4l-2 16M4 9h17M3 15h17"/>'),
+  instr: O('<path d="M5 6h14M5 11h14M5 16h9"/>'),
+  image: O('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 17l5-5 4 4 3-3 6 6"/>'),
+};
+
+// Области макета: название панели и подсказка
+const REGIONS = {
+  instr: 'Инструкция и картинка',
+  gap: 'Пропуск',
+  check: 'Кнопка «Проверить»',
+  page: 'Страница (макет)',
+};
+let dzRegion = null; // какая область макета выбрана
+
+// Рисунок макета: отражает текущие настройки; области кликаются (data-r)
+function designMock(c) {
+  const { ac, st, gd, gdRaw, pg, ck, showI, showImg } = c, comic = st.style === 'comic';
+  const lw = comic ? { thin: 1.5, normal: 3, thick: 5 }[st.comicWidth] : 1.5;
+  const oc = comic && st.comicLine === 'accent' ? ac : 'var(--text)';
+  const stroke = `stroke="${oc}" stroke-width="${lw}" stroke-linejoin="round" stroke-linecap="round"`;
+  const act = r => dzRegion === r;
+  // Контур прямоугольника: строгий (Classic) или слегка неровный (Comic)
+  const box = (x, y, w, h, r, extra) => comic
+    ? `<path d="M${x + 3} ${y + 1}Q${x + w / 2} ${y - 2} ${x + w - 2} ${y + 1}Q${x + w + 2} ${y + h / 2} ${x + w - 1} ${y + h - 1}Q${x + w / 2} ${y + h + 2} ${x + 2} ${y + h - 1}Q${x - 2} ${y + h / 2} ${x + 3} ${y + 1}Z" ${extra}/>`
+    : `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" ${extra}/>`;
+  const L = (x, y, w, o = 1) => `<path class="pv-t" d="M${x} ${y}h${w}" opacity="${o}"/>`;
+  const sel = (x, y, w, h) => `<rect class="pv-sel" x="${x - 5}" y="${y - 5}" width="${w + 10}" height="${h + 10}" rx="8"/>`;
+  const hit = (x, y, w, h) => `<rect class="hit" x="${x - 5}" y="${y - 5}" width="${w + 10}" height="${h + 10}" rx="8"/>`;
+  const region = (r, inner) => `<g class="rg${act(r) ? ' active' : ''}" data-r="${r}" role="button" tabindex="0" aria-label="${esc(REGIONS[r])}"><title>${esc(REGIONS[r])}</title>${inner}</g>`;
+  // Колонка: ширина, плотность, фон
+  const cw = { compact: 200, standard: 280, wide: 344 }[pg.width], cx = (360 - cw) / 2, m = { compact: 0.6, comfortable: 1, loose: 1.5 }[pg.density];
+  const bg = pg.background === 'backdrop' ? `<rect x="1.5" y="1.5" width="357" height="247" rx="10" fill="${ac}" fill-opacity=".16"/>` : '';
+  const colBox = pg.background === 'card' ? `<rect x="${cx - 6}" y="7" width="${cw + 12}" height="236" rx="8" fill="var(--card)" stroke="var(--text)" stroke-width="1.5"/>` : '';
+  const page = region('page', `<rect class="pv-win" x="1.5" y="1.5" width="357" height="247" rx="10"/>${bg}${colBox}${act('page') ? sel(1.5, 1.5, 357, 247).replace('rx="8"', 'rx="12"') : ''}${hit(1.5, 1.5, 357, 247)}`);
+  // Инструкция и картинка (скрытые рисуются бледным пунктиром)
+  const iy = 18, ih = 44, dim = on => on ? '' : ' stroke-dasharray="4 4" opacity=".4"';
+  const instr = region('instr', `
+    ${act('instr') ? sel(cx, iy, cw, ih) : ''}${hit(cx, iy, cw, ih)}
+    <g${dim(showI)}>${box(cx, iy, cw, ih, 6, `fill="var(--card)" ${stroke}`)}</g>${L(cx + 12, iy + 15, cw * .55, showI ? 1 : .4)}${L(cx + 12, iy + 29, cw * .4, showI ? 1 : .4)}
+    ${(() => { const y = iy + ih + 12 * m, s = 64; return `${act('instr') ? sel(cx, y, s, s) : ''}${hit(cx, y, s, s)}<g${dim(showImg)}>${box(cx, y, s, s, 6, `fill="var(--card)" ${stroke}`)}</g><path d="M${cx + 8} ${y + s - 10}l16-18 12 12 9-8 11 14" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linejoin="round" opacity="${showImg ? 1 : .4}"/>`; })()}`);
+  // Текст с пропуском справа от картинки
+  const ty = iy + ih + 12 * m, tx = cx + 64 + 14, tw = cx + cw - tx;
+  const gw = { auto: 52, narrow: 34, wide: 86 }[gd.width], gx = tx + 8, gy = ty + 28;
+  const dash = gdRaw.dashed && (gd.shape === 'line' || gd.shape === 'frame') ? ' stroke-dasharray="6 5"' : '';
+  const shape = {
+    line: `<path d="M${gx} ${gy + 14}h${gw}" stroke="${ac}" stroke-width="${comic ? lw : 3}" stroke-linecap="round" fill="none"${dash}/>`,
+    frame: box(gx, gy, gw, 17, 4, `fill="none" stroke="${comic ? ac : ac}" stroke-width="${comic ? lw : 2}"${dash}`),
+    pill: `<rect x="${gx}" y="${gy}" width="${gw}" height="17" rx="8.5" fill="${ac}" fill-opacity=".3"/>`,
+    free: `<path d="M${gx + 3} ${gy + 1}c${gw * .3} -3 ${gw * .6} -3 ${gw - 6} 0 4 5 4 11 0 15 -${gw * .3} 3 -${gw * .6} 3 -${gw - 6} 0 -4 -5 -4 -11 0 -15z" fill="${ac}" fill-opacity=".18" stroke="${ac}" stroke-width="2"/>`,
+  }[gd.shape];
+  // Нумерация: значок «1» на углу пропуска; бледный — выключена, нажатие включает. Ширина: бледные контуры вариантов, нажатие выбирает
+  const num = `<g class="ghost${gd.numbered ? ' on' : ''}" data-num="1"><title>Нумерация пропусков</title><circle cx="${gx + gw}" cy="${gy}" r="9" fill="${gd.numbered ? ac : 'transparent'}" ${gd.numbered ? '' : `stroke="${ac}" stroke-dasharray="2 2"`}/><text x="${gx + gw}" y="${gy + 3.5}" font-size="9.5" font-weight="700" fill="${gd.numbered ? '#fff' : ac}" text-anchor="middle">1</text></g>`;
+  const GW = { auto: 52, narrow: 34, wide: 86 };
+  const ghosts = Object.keys(GW).sort((a, b) => GW[b] - GW[a]).filter(k => k !== gd.width).map(k =>
+    `<rect class="ghost wg" data-w="${k}" x="${gx}" y="${gy - 2}" width="${GW[k]}" height="21" rx="5" stroke="${ac}"><title>Ширина: ${esc(GAP_WIDTHS[k])}</title></rect>`).join('');
+  const text = `${L(tx, ty + 14, tw * .8)}${L(tx, ty + 60, tw * .9)}${L(tx, ty + 74, tw * .5)}`;
+  const gap = region('gap', `${act('gap') ? sel(gx, gy, gw, 17) : ''}${hit(gx, gy, gw, 17)}${shape}${ghosts}${num}`);
+  // Кнопка «Проверить» внизу
+  const bw = 96, bh = 28, by = 208, bx = { left: cx, center: 180 - bw / 2, right: cx + cw - bw }[ck.align];
+  const bs = ck.variant === 'filled' ? `fill="${ac}" stroke="${comic ? oc : 'none'}" stroke-width="${comic ? lw : 0}"` : ck.variant === 'outline' ? `fill="none" stroke="${ac}" stroke-width="${comic ? lw : 2}"` : `fill="${ac}" fill-opacity=".3" stroke="${comic ? oc : 'none'}" stroke-width="${comic ? lw : 0}"`;
+  const side = ck.align === 'left' ? L(bx + bw + 16, by + 14, 90) : ck.align === 'right' ? L(cx, by + 14, 90) : '';
+  const check = region('check', `${act('check') ? sel(bx, by, bw, bh) : ''}${hit(bx, by, bw, bh)}${box(bx, by, bw, bh, 14, bs)}<path d="M${bx + bw / 2 - 18} ${by + 14}h36" stroke="${ck.variant === 'filled' ? '#fff' : ac}" stroke-width="3" stroke-linecap="round"/>`);
+  return `<svg class="mock" viewBox="0 0 360 250" role="group" aria-label="Макет упражнения">${page}${text}${side}${instr}${gap}${check}</svg>`;
 }
 
-function closeDesign() {
-  dzOpen = null;
-  $('dzPop').hidden = true;
-  document.querySelectorAll('[data-dz]').forEach(b => b.setAttribute('aria-pressed', 'false'));
-}
-
-function openDesign(name) {
-  dzOpen = name;
-  document.querySelectorAll('[data-dz]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dz === name)));
-  $('dzPop').hidden = false;
-  renderDesign();
-  // Панель стоит под значком; на узком экране прижимается к краям окна
-  const r = document.querySelector(`[data-dz="${name}"]`).getBoundingClientRect(), pop = $('dzPop');
-  const w = Math.min(380, innerWidth - 16);
-  pop.style.width = w + 'px';
-  pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
-  pop.style.top = (r.bottom + 6) + 'px';
-  pop.style.maxHeight = (innerHeight - r.bottom - 18) + 'px';
-}
-
-// Нарисовать открытую панель заново (после каждого изменения настройки панель остаётся открытой)
 function renderDesign() {
-  if (!current || !dzOpen) return;
+  if (!current || tab !== 'design') return;
   const chosen = current.design && ACCENTS[current.design.accent] ? current.design.accent : DEFAULT_ACCENT;
-  const dark = theme === 'dark';
-  const shade = a => (dark ? a.dark : a.light);
+  const shade = a => (theme === 'dark' ? a.dark : a.light);
   const gdRaw = (current.design && current.design.gap) || {}, gd = normalizeGapDesign(gdRaw);
-  const st = normalizeStyle(current.design), comic = st.style === 'comic', sc = styleClasses(st);
+  const st = normalizeStyle(current.design), comic = st.style === 'comic';
   const pg = normalizePage(current.design && current.design.page);
   const ck = normalizeCheck(current.design && current.design.check);
-  const title = DESIGN_PANELS.find(p => p[0] === dzOpen)[2];
-  const seg = (attr, map, cur) => Object.entries(map).map(([k, l]) => `<button data-${attr}="${k}" class="${k === cur ? 'active' : ''}">${esc(l)}</button>`).join('');
+  const showI = !(current.design && current.design.showInstruction === false), showImg = !(current.design && current.design.showImage === false);
+  const ac = shade(ACCENTS[chosen]);
+  const dot = col => `<span class="dot-i" style="--c:${col}"></span>`;
+  // Ряд значков-вариантов с подписью; названия — в подсказках
+  const opts = (g, f, label, names, cur, icons) => `<div class="po"><span class="po-l">${esc(label)}</span><span class="po-b" role="group" aria-label="${esc(label)}">${Object.keys(icons).map(k =>
+    `<button data-g="${g}" data-f="${f}" data-v="${k}" class="${k === cur ? 'active' : ''}" aria-pressed="${k === cur}" data-tip="${esc(names[k])}" aria-label="${esc(names[k])}">${icons[k]}</button>`).join('')}</span></div>`;
+  const tog = (id, on, label, icon, hidden) => `<div class="po"${hidden ? ' hidden' : ''}><span class="po-l">${esc(label)}</span><span class="po-b"><button class="${on ? 'active' : ''}" data-toggle="${id}" aria-pressed="${on}" data-tip="${esc(label + (on ? ': вкл' : ': выкл'))}" aria-label="${esc(label)}">${icon}</button></span></div>`;
+  const accNames = Object.fromEntries(Object.entries(ACCENTS).map(([k, a]) => [k, a.label]));
   const panels = {
-    accent: `
-      <div class="swatches" role="radiogroup" aria-label="Цвет упражнения">
-        ${Object.entries(ACCENTS).map(([key, a]) => `
-          <button class="swatch${key === chosen ? ' on' : ''}" role="radio" aria-checked="${key === chosen}" data-accent="${key}">
-            <i style="background:${shade(a)}"></i>${esc(a.label)}
-          </button>`).join('')}
-      </div>
-      <p class="muted">Цвет кнопки «Проверить», линий пропусков и выбранных слов. Красный и зелёный результата не меняются.</p>
-      <div class="sample ${sc}" id="sample">
-        <span>Образец:</span>
-        <button class="primary" tabindex="-1">Проверить</button>
-        <span class="chipdemo">слово</span>
-        <span class="gapdemo">ответ</span>
-      </div>`,
-    style: `
-      <p class="muted" style="margin-top:0">Classic — строгий вид, Comic — «нарисованный от руки».</p>
-      <div class="seg" role="group" aria-label="Стиль упражнения">
-        <button data-style-pick="classic" class="${comic ? '' : 'active'}">Classic</button>
-        <button data-style-pick="comic" class="${comic ? 'active' : ''}">Comic</button>
-      </div>
-      ${comic ? `
-        <div class="muted" style="margin-top:10px" id="lineLabel">Цвет контура</div>
-        <div class="seg" role="group" aria-labelledby="lineLabel">
-          <button data-cline="accent" class="${st.comicLine === 'accent' ? 'active' : ''}">Цвет упражнения</button>
-          <button data-cline="black" class="${st.comicLine === 'black' ? 'active' : ''}">Чёрный</button>
-        </div>
-        <div class="muted" style="margin-top:10px" id="lwLabel">Толщина линии</div>
-        <div class="seg" role="group" aria-labelledby="lwLabel">
-          <button data-cw="thin" class="${st.comicWidth === 'thin' ? 'active' : ''}">Тонкая</button>
-          <button data-cw="normal" class="${st.comicWidth === 'normal' ? 'active' : ''}">Обычная</button>
-          <button data-cw="thick" class="${st.comicWidth === 'thick' ? 'active' : ''}">Толстая</button>
-        </div>` : ''}`,
-    gap: `
-      <div class="muted" id="shapeLabel">Форма</div>
-      <div class="shapes" role="radiogroup" aria-labelledby="shapeLabel" style="--accent:${shade(ACCENTS[chosen])}">
-        ${Object.entries(GAP_SHAPES).map(([k, l]) => `
-          <button class="shape${k === gd.shape ? ' on' : ''}" role="radio" aria-checked="${k === gd.shape}" data-shape="${k}">
-            <span class="gap ${gapClasses({ shape: k, width: 'auto', dashed: !!gdRaw.dashed && (k === 'line' || k === 'frame') })}">слово</span>
-            <small>${esc(l)}</small>
-          </button>`).join('')}
-      </div>
-      <label class="check" id="dashedRow"${gd.shape === 'line' || gd.shape === 'frame' ? '' : ' hidden'}><input type="checkbox" id="gapDashed"${gdRaw.dashed ? ' checked' : ''}> Прерывистая ${gd.shape === 'frame' ? 'рамка' : 'линия'}</label>
-      <div class="muted" style="margin-top:8px" id="widthLabel">Ширина</div>
-      <div class="seg" id="widthSeg" role="group" aria-labelledby="widthLabel">${seg('gapw', GAP_WIDTHS, gd.width)}</div>
-      <label class="check"><input type="checkbox" id="gapNum"${gd.numbered ? ' checked' : ''}> Нумеровать пропуски</label>
-      <p class="muted">Пропуск у ученика: пустой (с подсказкой), верный и неверный.</p>
-      <div class="gapsample ${sc}" style="--accent:${shade(ACCENTS[chosen])}">
-        She <span class="gap ${gapClasses(gd)}">&nbsp;<button class="hintbtn" tabindex="-1" aria-hidden="true">💡</button>${gd.numbered ? '<span class="gap-num">1</span>' : ''}</span> in the
-        <span class="gap ${gapClasses(gd)} ok">bar${gd.numbered ? '<span class="gap-num">2</span>' : ''}</span> and
-        <span class="gap ${gapClasses(gd)} bad">pub${gd.numbered ? '<span class="gap-num">3</span>' : ''}</span>.
-      </div>`,
-    page: `
-      <div class="muted" id="pwLabel">Ширина</div>
-      <div class="seg" role="group" aria-labelledby="pwLabel">${seg('pw', PAGE_WIDTHS, pg.width)}</div>
-      <div class="muted" style="margin-top:10px" id="pdLabel">Плотность</div>
-      <div class="seg" role="group" aria-labelledby="pdLabel">${seg('pd', PAGE_DENSITIES, pg.density)}</div>
-      <div class="muted" style="margin-top:10px" id="pbLabel">Фон</div>
-      <div class="seg" role="group" aria-labelledby="pbLabel">${seg('pb', PAGE_BACKGROUNDS, pg.background)}</div>
-      <p class="muted">«Компактная» — узкая колонка по центру, «Широкая» — на всю ширину окна. «Подложка» — лёгкий цвет упражнения под содержимым, «Карточка» — всё упражнение в одной рамке.</p>`,
-    check: `
-      <div class="muted" id="cvLabel">Вид</div>
-      <div class="seg" role="group" aria-labelledby="cvLabel">${seg('cv', CHECK_VARIANTS, ck.variant)}</div>
-      <div class="muted" style="margin-top:10px" id="caLabel">Расположение</div>
-      <div class="seg" role="group" aria-labelledby="caLabel">${seg('ca', CHECK_ALIGNS, ck.align)}</div>
-      <p class="muted">Нижняя панель после проверки. До первой проверки показывается только «Заполнено N из M», в конце — итог с процентом.</p>
-      <div class="chksample ${sc} ${checkClasses(ck).join(' ')}" style="--accent:${shade(ACCENTS[chosen])}">
-        <div class="actions">
-          <div class="score result"><span>Верно: 2 из 3 · Неверно: 1 · Проверок осталось: 2</span></div>
-          <button class="primary check-btn" tabindex="-1">Проверить</button>
-        </div>
-      </div>`,
-    instr: `
-      <label class="check"><input type="checkbox" id="showInstr"${current.design && current.design.showInstruction === false ? '' : ' checked'}> Показывать инструкцию ученику</label>
-      <p class="muted">${(current.instruction && (current.instruction.title.trim() || current.instruction.text.trim())) ? 'Если снять отметку, текст не удаляется, а просто скрывается.' : 'Инструкция пока не написана: её можно добавить на вкладке «Содержимое».'}</p>
-      <label class="check"><input type="checkbox" id="showImg"${current.design && current.design.showImage === false ? '' : ' checked'}> Показывать изображение ученику</label>
-      <p class="muted">${current.instruction && current.instruction.image && current.instruction.image.url.trim() ? 'Если снять отметку, ссылка не удаляется, а просто скрывается.' : 'Изображение пока не добавлено: ссылку можно вставить на вкладке «Содержимое».'}</p>`,
+    instr: tog('showInstruction', showI, 'Инструкция', PV_ICONS.instr) + tog('showImage', showImg, 'Картинка', PV_ICONS.image) +
+      '<p class="muted po-note">Скрытое не удаляется, его можно вернуть. Текст и ссылку на картинку меняют на вкладке «Содержимое».</p>',
+    // Форма: повторное нажатие на выбранные «Линию» или «Рамку» включает и выключает пунктир
+    gap: opts('gap', 'shape', 'Форма', { ...GAP_SHAPES, line: 'Линия (ещё раз — пунктир)', frame: 'Рамка (ещё раз — пунктир)' }, gd.shape,
+        { ...OPT_ICONS.shape, ...(gdRaw.dashed ? { line: O('<path d="M3 17h4M10 17h4M17 17h4"/>'), frame: O('<rect x="4" y="7" width="16" height="10" rx="2" stroke-dasharray="3 2.5"/>') } : {}) }) +
+      '<p class="muted po-note">Ширину выбирайте на макете: бледные контуры рядом с пропуском. Значок «1» на углу пропуска включает нумерацию.</p>',
+    check: opts('check', 'variant', 'Вид', CHECK_VARIANTS, ck.variant, OPT_ICONS.variant) + opts('check', 'align', 'Положение', CHECK_ALIGNS, ck.align, OPT_ICONS.align),
+    page: opts('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew) + opts('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density) +
+      opts('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background),
   };
-  const pop = $('dzPop');
-  pop.innerHTML = `<div class="pop-head"><b>${esc(title)}</b><button class="icon-btn" id="dzClose" aria-label="Закрыть панель">${iconSvg('close')}</button></div>${panels[dzOpen]}`;
-  $('dzClose').onclick = closeDesign;
-  const on = (id, fn) => { const el = $(id); if (el) el.onchange = fn; };
-  const each = (sel, fn) => pop.querySelectorAll(sel).forEach(b => b.onclick = () => fn(b));
+  const panel = dzRegion
+    ? `<div class="dz-panel"><h3>${esc(REGIONS[dzRegion])}</h3>${panels[dzRegion]}</div>`
+    : '<div class="dz-panel dz-hint muted">Нажмите на часть макета: инструкцию, картинку, пропуск, кнопку «Проверить» или фон страницы, и здесь появятся её настройки.</div>';
+  $('content').innerHTML = `
+    <section class="dz-top">
+      <span class="po-b" role="group" aria-label="Стиль упражнения">
+        ${[['classic', 'Classic: строгий вид'], ['comic', 'Comic: нарисованный от руки']].map(([k, n]) =>
+          `<button class="big${st.style === k ? ' active' : ''}" data-g="style" data-f="style" data-v="${k}" aria-pressed="${st.style === k}" data-tip="${esc(n)}" aria-label="${esc(n)}">${OPT_ICONS.style[k]}</button>`).join('')}
+      </span>
+      <span class="po-b" role="radiogroup" aria-label="Цвет упражнения">
+        ${Object.entries(ACCENTS).map(([key, a]) => `<button class="dot${key === chosen ? ' on' : ''}" role="radio" aria-checked="${key === chosen}" data-g="style" data-f="accent" data-v="${key}" data-tip="${esc(a.label)}" aria-label="${esc(a.label)}" style="--c:${shade(a)}"></button>`).join('')}
+      </span>
+      ${comic ? `<span class="po-b" role="group" aria-label="Цвет контура">${[['accent', 'Контур: цвет упражнения', ac], ['black', 'Контур: чёрный', '#000']].map(([k, n, col]) =>
+          `<button class="${st.comicLine === k ? 'active' : ''}" data-g="style" data-f="comicLine" data-v="${k}" aria-pressed="${st.comicLine === k}" data-tip="${esc(n)}" aria-label="${esc(n)}">${dot(col)}</button>`).join('')}</span>
+      <span class="po-b" role="group" aria-label="Толщина линии">${['thin', 'normal', 'thick'].map(k => {
+        const n = { thin: 'Линия: тонкая', normal: 'Линия: обычная', thick: 'Линия: толстая' }[k];
+        return `<button class="${st.comicWidth === k ? 'active' : ''}" data-g="style" data-f="comicWidth" data-v="${k}" aria-pressed="${st.comicWidth === k}" data-tip="${esc(n)}" aria-label="${esc(n)}">${OPT_ICONS.width[k]}</button>`; }).join('')}</span>` : ''}
+    </section>
+    <div class="dz-stage">
+      <div class="dz-mock">${designMock({ ac, st, gd, gdRaw, pg, ck, showI, showImg })}</div>
+      ${panel}
+    </div>
+    <p class="muted dz-note">Результат виден в предпросмотре справа.</p>`;
+  const root = $('content');
   // Настройки хранятся как выбраны (например, «прерывистая» не теряется при смене формы на плашку и обратно)
   const patchDesign = (key, patch) => { current.design = { ...current.design, [key]: { ...(current.design && current.design[key]), ...patch } }; touch(); renderDesign(); };
   const setDesign = patch => { current.design = { ...current.design, ...patch }; touch(); renderDesign(); };
-  each('[data-shape]', b => patchDesign('gap', { ...gdRaw, shape: b.dataset.shape }));
-  each('[data-gapw]', b => patchDesign('gap', { ...gdRaw, width: b.dataset.gapw }));
-  on('gapDashed', () => patchDesign('gap', { ...gdRaw, dashed: $('gapDashed').checked }));
-  on('gapNum', () => patchDesign('gap', { ...gdRaw, numbered: $('gapNum').checked }));
-  on('showInstr', () => { current.design = { ...current.design, showInstruction: $('showInstr').checked }; touch(); });
-  on('showImg', () => { current.design = { ...current.design, showImage: $('showImg').checked }; touch(); });
-  each('[data-cv]', b => patchDesign('check', { variant: b.dataset.cv }));
-  each('[data-ca]', b => patchDesign('check', { align: b.dataset.ca }));
-  each('[data-pw]', b => patchDesign('page', { width: b.dataset.pw }));
-  each('[data-pd]', b => patchDesign('page', { density: b.dataset.pd }));
-  each('[data-pb]', b => patchDesign('page', { background: b.dataset.pb }));
-  each('[data-style-pick]', b => setStyle(b.dataset.stylePick));
-  each('[data-cline]', b => setDesign({ comicLine: b.dataset.cline }));
-  each('[data-cw]', b => setDesign({ comicWidth: b.dataset.cw }));
-  each('[data-accent]', b => setDesign({ accent: b.dataset.accent }));
-  const sample = $('sample');
-  if (sample) {
-    const a = ACCENTS[chosen];
-    sample.style.setProperty('--demo', shade(a));
-    sample.style.setProperty('--on-demo', dark ? '#16161f' : '#fff');
-    sample.style.setProperty('--accent', shade(a)); // для рисованных контуров Comic в образце
-  }
-  if (comic) pop.querySelectorAll('.sample, .gapsample, .chksample').forEach(el => roughen(el)); // нарисовать контуры в образцах
+  root.querySelectorAll('button[data-g]').forEach(b => b.onclick = () => {
+    const g = b.dataset.g, patch = { [b.dataset.f]: b.dataset.v };
+    if (g === 'style') setDesign(patch);
+    else if (g === 'gap' && b.dataset.f === 'shape' && b.dataset.v === gd.shape && (gd.shape === 'line' || gd.shape === 'frame')) patchDesign('gap', { ...gdRaw, dashed: !gdRaw.dashed });
+    else patchDesign(g, g === 'gap' ? { ...gdRaw, ...patch } : patch);
+  });
+  root.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => {
+    const id = b.dataset.toggle, on = b.getAttribute('aria-pressed') !== 'true';
+    if (id === 'gap.dashed') patchDesign('gap', { ...gdRaw, dashed: on });
+    else if (id === 'gap.numbered') patchDesign('gap', { ...gdRaw, numbered: on });
+    else setDesign({ [id]: on });
+  });
+  const pickRegion = el => {
+    // Ширина и нумерация выбираются прямо на макете
+    const w = el.closest('[data-w]'), n = el.closest('[data-num]');
+    if (w || n) { dzRegion = 'gap'; patchDesign('gap', w ? { ...gdRaw, width: w.dataset.w } : { ...gdRaw, numbered: !gd.numbered }); return; }
+    const r = el.closest('[data-r]'); if (!r) return; dzRegion = dzRegion === r.dataset.r ? null : r.dataset.r; renderDesign(); };
+  const svg = root.querySelector('.mock');
+  svg.onclick = e => pickRegion(e.target);
+  svg.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickRegion(e.target); } };
 }
 
 // Вкладка «Поведение» общая для модулей: число проверок на прохождение
@@ -971,10 +1013,6 @@ if (drafts[last]) open(last);
 else if (sorted().length) open(sorted()[0].id);
 else showEmpty();
 renderList();
-buildDesignBar();
-// Панель оформления закрывается щелчком мимо неё и клавишей Esc
-addEventListener('pointerdown', e => { if (dzOpen && !e.target.closest('#dzPop, #dzBar')) closeDesign(); });
-addEventListener('keydown', e => { if (e.key === 'Escape' && dzOpen) closeDesign(); });
 setPreviewOpen(!narrow()); // на широком экране предпросмотр открыт сразу, на узком открывается кнопкой
 </script>
 </body>
