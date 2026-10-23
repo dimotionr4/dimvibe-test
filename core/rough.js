@@ -4,7 +4,7 @@
 // Форма контура зависит только от «ключа» элемента (какой это пропуск, какое слово), а не от порядка перерисовок,
 // поэтому при нажатиях контуры не меняются. Номер версии `?v=` у подключения поднимайте при изменении.
 (() => {
-  const SELECTOR = '.gap, .chip, .card, .instr, .panel, button:not(.hintbtn):not(.instr-head)';
+  const SELECTOR = '.gap, .chip, .card, .instr, .panel, .score.result, button:not(.hintbtn):not(.instr-head)';
   const INSET = 2.5, STEP = 14, WOBBLE = 1.1, NS = 'http://www.w3.org/2000/svg';
 
   // Воспроизводимые «случайные» числа

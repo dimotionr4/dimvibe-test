@@ -57,6 +57,19 @@ const pageClasses = p => [
   p.background !== 'plain' ? 'bg-' + p.background : '',
 ].filter(Boolean);
 
+// Кнопка «Проверить»: вид (залитая, контурная, мягкая) и расположение (справа, слева, по центру). По умолчанию — как раньше.
+const CHECK_VARIANTS = { filled: 'Залитая', outline: 'Контурная', soft: 'Мягкая' };
+const CHECK_ALIGNS = { right: 'Справа', left: 'Слева', center: 'По центру' };
+
+function normalizeCheck(c) {
+  c = c || {};
+  return { variant: CHECK_VARIANTS[c.variant] ? c.variant : 'filled', align: CHECK_ALIGNS[c.align] ? c.align : 'right' };
+}
+
+// Классы на <html> плеера или контейнере образца (стили — core/check.css); для значений по умолчанию классов нет
+const CHECK_CLASSES = ['chk-outline', 'chk-soft', 'chk-left', 'chk-center'];
+const checkClasses = c => [c.variant !== 'filled' ? 'chk-' + c.variant : '', c.align !== 'right' ? 'chk-' + c.align : ''].filter(Boolean);
+
 // Стиль упражнения: Classic или Comic; у Comic ещё цвет контура (акцентный или чёрный) и толщина линии.
 // Неизвестные значения заменяются на допустимые.
 function normalizeStyle(d) {

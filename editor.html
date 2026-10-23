@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
 <link rel="stylesheet" href="core/gap.css?v=4">
-<link rel="stylesheet" href="core/comic.css?v=10">
+<link rel="stylesheet" href="core/check.css?v=1">
+<link rel="stylesheet" href="core/comic.css?v=12">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
@@ -37,6 +38,8 @@
   .shape small { color:var(--muted); }
   .shape .gap { margin:0; min-width:64px; min-height:34px; pointer-events:none; }
   .gapsample { padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); line-height:3.5; }
+  .chksample { padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--bg); }
+  .chksample .actions { width:100%; }
   .check[hidden] { display:none; }
   .check { display:flex; align-items:center; gap:8px; margin:6px 0; }
   .sample { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
@@ -188,9 +191,9 @@
   </div>
 </div>
 
-<script src="core/design.js?v=4"></script>
+<script src="core/design.js?v=5"></script>
 <script src="core/richtext.js?v=4"></script>
-<script src="core/rough.js?v=5"></script>
+<script src="core/rough.js?v=6"></script>
 <script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
 const ASSET_V = 7;
@@ -334,7 +337,7 @@ function exerciseFor(draft, published) {
     id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
     instruction,
     behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
-    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design), page: normalizePage(draft.design && draft.design.page) },
+    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design), page: normalizePage(draft.design && draft.design.page), check: normalizeCheck(draft.design && draft.design.check) },
   };
 }
 
@@ -424,6 +427,7 @@ function renderDesign() {
   const gdRaw = (current.design && current.design.gap) || {}, gd = normalizeGapDesign(gdRaw);
   const st = normalizeStyle(current.design), comic = st.style === 'comic', sc = styleClasses(st);
   const pg = normalizePage(current.design && current.design.page);
+  const ck = normalizeCheck(current.design && current.design.check);
   $('content').innerHTML = `
     <section class="pub">
       <div class="muted" id="accentLabel">Цвет упражнения</div>
@@ -494,6 +498,22 @@ function renderDesign() {
         ${Object.entries(PAGE_BACKGROUNDS).map(([k, l]) => `<button data-pb="${k}" class="${k === pg.background ? 'active' : ''}">${esc(l)}</button>`).join('')}
       </div>
       <p class="muted">Ширина «Компактная» — узкая колонка по центру, «Широкая» — на всю ширину окна. «Подложка» — лёгкий цвет упражнения под всем содержимым, «Карточка» — всё упражнение в одной рамке.</p>
+      <h3 style="margin-top:22px">Кнопка «Проверить»</h3>
+      <div class="muted" id="cvLabel">Вид</div>
+      <div class="seg" role="group" aria-labelledby="cvLabel" style="max-width:420px">
+        ${Object.entries(CHECK_VARIANTS).map(([k, l]) => `<button data-cv="${k}" class="${k === ck.variant ? 'active' : ''}">${esc(l)}</button>`).join('')}
+      </div>
+      <div class="muted" style="margin-top:10px" id="caLabel">Расположение</div>
+      <div class="seg" role="group" aria-labelledby="caLabel" style="max-width:420px">
+        ${Object.entries(CHECK_ALIGNS).map(([k, l]) => `<button data-ca="${k}" class="${k === ck.align ? 'active' : ''}">${esc(l)}</button>`).join('')}
+      </div>
+      <p class="muted">Так выглядит нижняя панель после проверки. До первой проверки показывается только «Заполнено N из M», в конце — итог с процентом и полоской. На узком экране при расположении «По центру» кнопка растягивается на всю ширину.</p>
+      <div class="chksample ${sc} ${checkClasses(ck).join(' ')}" style="--accent:${shade(ACCENTS[chosen])}">
+        <div class="actions">
+          <div class="score result"><span>Верно: 2 из 3 · Неверно: 1 · Проверок осталось: 2</span></div>
+          <button class="primary check-btn" tabindex="-1">Проверить</button>
+        </div>
+      </div>
       <h3 style="margin-top:22px">Инструкция</h3>
       <label class="check"><input type="checkbox" id="showInstr"${current.design && current.design.showInstruction === false ? '' : ' checked'}> Показывать инструкцию ученику</label>
       <p class="muted">${(current.instruction && (current.instruction.title.trim() || current.instruction.text.trim())) ? 'Если снять отметку, текст инструкции не удаляется, а просто скрывается.' : 'Инструкция пока не написана: её можно добавить на вкладке «Содержимое».'}</p>
@@ -518,6 +538,10 @@ function renderDesign() {
     current.design = { ...current.design, showImage: $('showImg').checked };
     touch();
   };
+  // Кнопка «Проверить»: вид и расположение
+  const setCheck = patch => { current.design = { ...current.design, check: { ...(current.design && current.design.check), ...patch } }; touch(); renderDesign(); };
+  $('content').querySelectorAll('[data-cv]').forEach(b => b.onclick = () => setCheck({ variant: b.dataset.cv }));
+  $('content').querySelectorAll('[data-ca]').forEach(b => b.onclick = () => setCheck({ align: b.dataset.ca }));
   // Макет страницы: настройки хранятся как выбраны
   const setPage = patch => { current.design = { ...current.design, page: { ...(current.design && current.design.page), ...patch } }; touch(); renderDesign(); };
   $('content').querySelectorAll('[data-pw]').forEach(b => b.onclick = () => setPage({ width: b.dataset.pw }));
@@ -534,7 +558,7 @@ function renderDesign() {
     $('sample').style.setProperty('--accent', shade(a)); // для рисованных контуров Comic в образце
   };
   paint(chosen);
-  if (comic) { roughen($('sample')); roughen(document.querySelector('.gapsample')); } // нарисовать контуры в образцах
+  if (comic) { roughen($('sample')); roughen(document.querySelector('.gapsample')); roughen(document.querySelector('.chksample')); } // нарисовать контуры в образцах
   $('content').querySelectorAll('[data-accent]').forEach(b => b.onclick = () => {
     current.design = { ...current.design, accent: b.dataset.accent };
     touch();
@@ -744,6 +768,7 @@ async function openFile(f) {
         gap: normalizeGapDesign(file.design && file.design.gap),
         ...normalizeStyle(file.design),
         page: normalizePage(file.design && file.design.page),
+        check: normalizeCheck(file.design && file.design.check),
       },
       instruction: {
         title: String((file.instruction && file.instruction.title) || ''),

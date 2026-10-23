@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — тест Fill Blanks</title>
 <link rel="stylesheet" href="core/gap.css?v=4">
-<link rel="stylesheet" href="core/comic.css?v=10">
+<link rel="stylesheet" href="core/check.css?v=1">
+<link rel="stylesheet" href="core/comic.css?v=12">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -70,9 +71,7 @@
   .chip { display:inline-flex; align-items:center; min-height:36px; padding:2px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer; user-select:none; }
   .chip.used { opacity:.35; cursor:default; }
   .chip.selected { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
-  .actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-  .score { color:var(--muted); flex:1; min-width:140px; }
-  .score.warn { color:var(--bad); }
+  /* Нижняя панель: кнопка «Проверить» и блок результата — в core/check.css */
   .unavailable { flex:1; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; color:var(--muted); font-size:1.1rem; }
 </style>
 </head>
@@ -97,14 +96,17 @@
 <footer>
   <div class="bank" id="bank"></div>
   <div class="actions">
-    <span class="score" id="score" role="status" aria-live="polite"></span>
-    <button class="primary" id="check">Проверить</button>
+    <div class="score" id="score" role="status" aria-live="polite">
+      <span id="scoreText"></span>
+      <span class="bar" id="scoreBar" hidden><i></i></span>
+    </div>
+    <button class="primary check-btn" id="check">Проверить</button>
   </div>
 </footer>
 
-<script src="core/design.js?v=4"></script>
+<script src="core/design.js?v=5"></script>
 <script src="core/richtext.js?v=4"></script>
-<script src="core/rough.js?v=5"></script>
+<script src="core/rough.js?v=6"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -136,8 +138,8 @@ function applyLook() {
   }
   // Макет: ширина колонки, плотность, фон (core/design.js); «Карточка» — рамка вокруг всего упражнения
   const page = normalizePage(dz.page);
-  document.documentElement.classList.remove(...PAGE_CLASSES);
-  document.documentElement.classList.add(...pageClasses(page));
+  document.documentElement.classList.remove(...PAGE_CLASSES, ...CHECK_CLASSES);
+  document.documentElement.classList.add(...pageClasses(page), ...checkClasses(normalizeCheck(dz.check)));
   $('root').classList.toggle('panel', page.background === 'card');
   document.documentElement.classList.toggle('style-comic', (q('style') || dz.style) === 'comic');
   document.documentElement.classList.toggle('line-black', (q('line') || dz.comicLine) === 'black');
@@ -407,12 +409,20 @@ function renderBank() {
 // Строка внизу: до первой проверки — сколько заполнено, потом результат и остаток проверок, в конце — итог
 function updateStatus() {
   const total = gaps.length, ok = gaps.filter(g => g.locked).length;
-  const s = $('score');
+  const s = $('score'), t = $('scoreText'), pct = total ? Math.round(ok / total * 100) : 0;
+  const wrong = gaps.filter(g => g.state === 'bad').length;
   s.classList.toggle('warn', !!note);
-  if (note) s.textContent = note;
-  else if (finished) s.textContent = `Результат: ${ok} из ${total} (${Math.round(ok / total * 100)}%)`;
-  else if (checksUsed === 0) s.textContent = `Заполнено: ${gaps.filter(isFilled).length} из ${total}`;
-  else s.textContent = `Верно: ${ok} из ${total} · Проверок осталось: ${maxChecks - checksUsed}`;
+  // До первой проверки результата нет (только сколько заполнено); после проверки появляется рамка; в конце — итог и полоса с процентом
+  s.classList.toggle('result', checksUsed > 0 || !!note);
+  s.classList.toggle('final', finished && !note);
+  if (note) t.textContent = note;
+  else if (finished) t.textContent = `Результат: ${ok} из ${total} (${pct}%)`;
+  else if (checksUsed === 0) t.textContent = `Заполнено: ${gaps.filter(isFilled).length} из ${total}`;
+  else t.textContent = `Верно: ${ok} из ${total} · Неверно: ${wrong} · Проверок осталось: ${maxChecks - checksUsed}`;
+  const showBar = finished && !note;
+  $('scoreBar').hidden = !showBar;
+  $('scoreBar').firstElementChild.style.width = pct + '%';
+  if (window.roughen) roughen(s.parentElement); // Comic: рамка блока результата появляется и меняет размер
   // Подпись меняем только если она правда изменилась: перезапись текста стирает нарисованный контур кнопки (Comic)
   const label = finished ? 'Начать заново' : 'Проверить';
   if ($('check').textContent !== label) { $('check').textContent = label; if (window.roughen) roughen($('check').parentElement); }

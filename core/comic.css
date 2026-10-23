@@ -34,6 +34,12 @@
 .style-comic button.primary:not(.hintbtn):not(.instr-head), .style-comic button.active:not(.hintbtn):not(.instr-head), .style-comic .chip.selected { --rb:var(--accent); --rc:var(--accent); }
 .style-comic.line-black button.primary:not(.hintbtn):not(.instr-head), .style-comic.line-black button.active:not(.hintbtn):not(.instr-head), .style-comic.line-black .chip.selected { --rc:var(--text); }
 
+/* Кнопка «Проверить»: контурная и мягкая в Comic (залитая — как у всех заливных кнопок выше). Блок результата — рамка от руки */
+.style-comic.chk-outline button.check-btn:not(.hintbtn):not(.instr-head), .style-comic.chk-soft button.check-btn:not(.hintbtn):not(.instr-head) { background:transparent; border:1px solid transparent; }
+.style-comic.chk-outline button.check-btn:not(.hintbtn):not(.instr-head) { --rb:var(--card); }
+.style-comic.chk-soft button.check-btn:not(.hintbtn):not(.instr-head) { --rb:color-mix(in srgb, var(--accent) 22%, var(--card)); }
+.style-comic .score.result { position:relative; isolation:isolate; border-color:transparent; background:transparent; --rb:var(--card); }
+
 /* Пропуск: контур акцентный или чёрный, а состояния (верно, неверно, не заполнено) остаются своими цветами.
    Заливка у плашки и свободной формы — лёгкий оттенок цвета контура */
 .style-comic .gap:not(.ok):not(.bad):not(.missing) { --gap-c:var(--comic-line); }

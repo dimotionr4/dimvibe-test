@@ -1,0 +1,25 @@
+/* Нижняя панель упражнения: кнопка «Проверить» и блок результата. Общая для плеера и образца в редакторе.
+   Вид кнопки (залитая по умолчанию, контурная, мягкая) и расположение (справа по умолчанию, слева, по центру) задаются классами
+   chk-outline, chk-soft, chk-left, chk-center на <html> плеера или на контейнере образца. Нужны переменные страницы: --accent, --on-accent, --card, --line, --muted, --text, --bad, --ok.
+   Номер версии `?v=` у подключения поднимайте при изменении. */
+.actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+
+/* Блок результата. До первой проверки — обычный текст, после проверки — рамка; в конце ещё полоса с процентом */
+.score { color:var(--muted); flex:1; min-width:140px; }
+.score.warn { color:var(--bad); }
+.score.result { color:var(--text); border:1px solid var(--line); border-radius:10px; padding:4px 12px; background:var(--card); }
+.score.result.warn { color:var(--bad); }
+.score .bar { display:block; height:8px; margin-top:4px; border-radius:999px; background:color-mix(in srgb, var(--accent) 18%, transparent); overflow:hidden; }
+.score .bar[hidden] { display:none; }
+.score .bar i { display:block; height:100%; border-radius:999px; background:var(--ok); }
+
+/* Вид кнопки */
+.chk-outline .check-btn { background:transparent; color:var(--accent); border:2px solid var(--accent); }
+.chk-soft .check-btn { background:color-mix(in srgb, var(--accent) 20%, var(--card)); color:var(--text); border-color:transparent; }
+
+/* Расположение: слева — кнопка слева, результат справа; по центру — результат над кнопкой, оба по центру (на узком экране кнопка на всю ширину) */
+.chk-left .actions { flex-direction:row-reverse; }
+.chk-left .score { text-align:right; }
+.chk-center .actions { flex-direction:column; align-items:center; gap:8px; }
+.chk-center .score { flex:none; width:100%; text-align:center; }
+@media (max-width: 480px) { .chk-center .check-btn { width:100%; } }
