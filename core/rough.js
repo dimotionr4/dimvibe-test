@@ -4,7 +4,7 @@
 // Форма контура зависит только от «ключа» элемента (какой это пропуск, какое слово), а не от порядка перерисовок,
 // поэтому при нажатиях контуры не меняются. Номер версии `?v=` у подключения поднимайте при изменении.
 (() => {
-  const SELECTOR = '.gap, .chip, .card, .instr, button:not(.hintbtn):not(.instr-head)';
+  const SELECTOR = '.gap, .chip, .card, .instr, .panel, button:not(.hintbtn):not(.instr-head)';
   const INSET = 2.5, STEP = 14, WOBBLE = 1.1, NS = 'http://www.w3.org/2000/svg';
 
   // Воспроизводимые «случайные» числа
@@ -22,6 +22,7 @@
     if (el.dataset.idx !== undefined) return 'gap' + el.dataset.idx;
     if (el.classList.contains('gap')) return 'gap' + el.textContent; // образец в редакторе без номера
     if (el.classList.contains('chip')) return 'chip' + el.textContent;
+    if (el.classList.contains('panel')) return 'panel';
     const kind = el.classList.contains('card') ? 'card' : el.classList.contains('instr') ? 'instr' : 'btn';
     return kind + [...document.querySelectorAll(kind === 'btn' ? 'button' : '.' + kind)].indexOf(el) + (el.id || '');
   }
@@ -87,6 +88,7 @@
       return { line: true };
     }
     if (el.classList.contains('chip')) return { radii: [h / 2, h / 2, h / 2, h / 2] };
+    if (el.classList.contains('panel')) return { radii: [18, 18, 18, 18] };
     if (el.classList.contains('card') || el.classList.contains('instr')) return { radii: [14, 14, 14, 14] };
     return { radii: [10, 10, 10, 10] };
   }

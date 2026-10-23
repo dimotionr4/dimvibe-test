@@ -7,7 +7,7 @@
 .style-comic.lw-thin { --lw:2px; }
 .style-comic.lw-thick { --lw:4.5px; }
 
-.style-comic .gap, .style-comic .chip, .style-comic .card, .style-comic .instr,
+.style-comic .gap, .style-comic .chip, .style-comic .card, .style-comic .instr, .style-comic .panel,
 .style-comic button:not(.hintbtn):not(.instr-head) { position:relative; isolation:isolate; }
 
 /* Рисунок контура: под содержимым, нажатия не ловит */
@@ -17,7 +17,8 @@
 
 /* Классические рамки и фон убираем: заливка и контур рисуются рисунком */
 .style-comic .card, .style-comic .instr, .style-comic .chip, .style-comic button:not(.hintbtn):not(.instr-head) { border-color:transparent; background:transparent; }
-.style-comic .card, .style-comic .instr, .style-comic .chip, .style-comic button:not(.hintbtn):not(.instr-head) { --rb:var(--card); }
+.style-comic .card, .style-comic .instr, .style-comic .chip, .style-comic .panel, .style-comic button:not(.hintbtn):not(.instr-head) { --rb:var(--card); }
+.style-comic #root.panel { border-color:transparent; background:transparent; box-shadow:none; } /* рамку «Карточки» рисует рисунок */
 .style-comic .instr { border:1px solid transparent; } /* без толстой левой полоски Classic: иначе рисунок сдвигается */
 
 /* Заливные кнопки и выбранные слова: заливка и контур в цвет акцента, при чёрных контурах контур чёрный */

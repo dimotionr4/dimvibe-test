@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
 <link rel="stylesheet" href="core/gap.css?v=4">
-<link rel="stylesheet" href="core/comic.css?v=7">
+<link rel="stylesheet" href="core/comic.css?v=8">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
@@ -185,9 +185,9 @@
   </div>
 </div>
 
-<script src="core/design.js?v=3"></script>
+<script src="core/design.js?v=4"></script>
 <script src="core/richtext.js?v=4"></script>
-<script src="core/rough.js?v=4"></script>
+<script src="core/rough.js?v=5"></script>
 <script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
 const ASSET_V = 7;
@@ -331,7 +331,7 @@ function exerciseFor(draft, published) {
     id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
     instruction,
     behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
-    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design) },
+    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design), page: normalizePage(draft.design && draft.design.page) },
   };
 }
 
@@ -420,6 +420,7 @@ function renderDesign() {
   const shade = a => (dark ? a.dark : a.light);
   const gdRaw = (current.design && current.design.gap) || {}, gd = normalizeGapDesign(gdRaw);
   const st = normalizeStyle(current.design), comic = st.style === 'comic', sc = styleClasses(st);
+  const pg = normalizePage(current.design && current.design.page);
   $('content').innerHTML = `
     <section class="pub">
       <div class="muted" id="accentLabel">Цвет упражнения</div>
@@ -475,6 +476,21 @@ function renderDesign() {
         <span class="gap ${gapClasses(gd)} ok">bar${gd.numbered ? '<span class="gap-num">2</span>' : ''}</span> and
         <span class="gap ${gapClasses(gd)} bad">pub${gd.numbered ? '<span class="gap-num">3</span>' : ''}</span>.
       </div>
+      <h3 style="margin-top:22px">Макет</h3>
+      <p class="muted" style="margin-top:0">Как выглядит страница упражнения целиком. Результат лучше смотреть в предпросмотре (на компьютере и на телефоне).</p>
+      <div class="muted" id="pwLabel">Ширина</div>
+      <div class="seg" role="group" aria-labelledby="pwLabel" style="max-width:420px">
+        ${Object.entries(PAGE_WIDTHS).map(([k, l]) => `<button data-pw="${k}" class="${k === pg.width ? 'active' : ''}">${esc(l)}</button>`).join('')}
+      </div>
+      <div class="muted" style="margin-top:10px" id="pdLabel">Плотность</div>
+      <div class="seg" role="group" aria-labelledby="pdLabel" style="max-width:420px">
+        ${Object.entries(PAGE_DENSITIES).map(([k, l]) => `<button data-pd="${k}" class="${k === pg.density ? 'active' : ''}">${esc(l)}</button>`).join('')}
+      </div>
+      <div class="muted" style="margin-top:10px" id="pbLabel">Фон</div>
+      <div class="seg" role="group" aria-labelledby="pbLabel" style="max-width:420px">
+        ${Object.entries(PAGE_BACKGROUNDS).map(([k, l]) => `<button data-pb="${k}" class="${k === pg.background ? 'active' : ''}">${esc(l)}</button>`).join('')}
+      </div>
+      <p class="muted">Ширина «Компактная» — узкая колонка по центру, «Широкая» — на всю ширину окна. «Подложка» — лёгкий цвет упражнения под всем содержимым, «Карточка» — всё упражнение в одной рамке.</p>
       <h3 style="margin-top:22px">Инструкция</h3>
       <label class="check"><input type="checkbox" id="showInstr"${current.design && current.design.showInstruction === false ? '' : ' checked'}> Показывать инструкцию ученику</label>
       <p class="muted">${(current.instruction && (current.instruction.title.trim() || current.instruction.text.trim())) ? 'Если снять отметку, текст инструкции не удаляется, а просто скрывается.' : 'Инструкция пока не написана: её можно добавить на вкладке «Содержимое».'}</p>
@@ -499,6 +515,11 @@ function renderDesign() {
     current.design = { ...current.design, showImage: $('showImg').checked };
     touch();
   };
+  // Макет страницы: настройки хранятся как выбраны
+  const setPage = patch => { current.design = { ...current.design, page: { ...(current.design && current.design.page), ...patch } }; touch(); renderDesign(); };
+  $('content').querySelectorAll('[data-pw]').forEach(b => b.onclick = () => setPage({ width: b.dataset.pw }));
+  $('content').querySelectorAll('[data-pd]').forEach(b => b.onclick = () => setPage({ density: b.dataset.pd }));
+  $('content').querySelectorAll('[data-pb]').forEach(b => b.onclick = () => setPage({ background: b.dataset.pb }));
   // Стиль упражнения: Classic/Comic, цвет контура и толщина линии Comic
   $('content').querySelectorAll('[data-style-pick]').forEach(b => b.onclick = () => setStyle(b.dataset.stylePick));
   $('content').querySelectorAll('[data-cline]').forEach(b => b.onclick = () => { current.design = { ...current.design, comicLine: b.dataset.cline }; touch(); renderDesign(); });
@@ -719,6 +740,7 @@ async function openFile(f) {
         showImage: !file.design || file.design.showImage !== false,
         gap: normalizeGapDesign(file.design && file.design.gap),
         ...normalizeStyle(file.design),
+        page: normalizePage(file.design && file.design.page),
       },
       instruction: {
         title: String((file.instruction && file.instruction.title) || ''),

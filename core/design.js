@@ -34,6 +34,29 @@ function normalizeGapDesign(g) {
 // Классы пропуска по настройкам (стили — в core/gap.css)
 const gapClasses = g => `shape-${g.shape} w-${g.width}${g.dashed ? ' dashed' : ''}`;
 
+// Макет страницы упражнения: ширина колонки, плотность отступов, фон. Один набор для редактора и плеера.
+// Значения по умолчанию (стандартная, комфортно, обычный) = прежний вид.
+const PAGE_WIDTHS = { compact: 'Компактная', standard: 'Стандартная', wide: 'Широкая' };
+const PAGE_DENSITIES = { compact: 'Компактно', comfortable: 'Комфортно', loose: 'Свободно' };
+const PAGE_BACKGROUNDS = { plain: 'Обычный', backdrop: 'Подложка', card: 'Карточка' };
+
+function normalizePage(p) {
+  p = p || {};
+  return {
+    width: PAGE_WIDTHS[p.width] ? p.width : 'standard',
+    density: PAGE_DENSITIES[p.density] ? p.density : 'comfortable',
+    background: PAGE_BACKGROUNDS[p.background] ? p.background : 'plain',
+  };
+}
+
+// Классы на <html> плеера или образца (стили — в index.html); для значений по умолчанию классов нет
+const PAGE_CLASSES = ['width-compact', 'width-wide', 'dens-compact', 'dens-loose', 'bg-backdrop', 'bg-card'];
+const pageClasses = p => [
+  p.width !== 'standard' ? 'width-' + p.width : '',
+  p.density !== 'comfortable' ? 'dens-' + p.density : '',
+  p.background !== 'plain' ? 'bg-' + p.background : '',
+].filter(Boolean);
+
 // Стиль упражнения: Classic или Comic; у Comic ещё цвет контура (акцентный или чёрный) и толщина линии.
 // Неизвестные значения заменяются на допустимые.
 function normalizeStyle(d) {
