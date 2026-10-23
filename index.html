@@ -50,6 +50,7 @@
   /* Значок подсказки — в core/gap.css (в углу пропуска): замок до второй проверки, потом лампочка */
   .pop { position:fixed; z-index:20; width:max-content; max-width:min(280px, calc(100vw - 16px)); background:var(--card); color:var(--text); border:1px solid var(--accent); border-radius:10px; padding:8px 12px; line-height:1.4; box-shadow:0 4px 16px rgba(0,0,0,.3); overflow-wrap:anywhere; }
   /* width:0 + min-width:100%: собственная ширина поля не растягивает пропуск, его размер задаёт форма/ширина из дизайна */
+  .gap.w-auto select { width:auto; padding:0 8px; } /* «Авто» в списке: по самому длинному варианту, чтобы слова не обрезались */
   .gap input, .gap select { font:inherit; width:0; min-width:100%; min-height:38px; border:none; background:transparent; color:inherit; text-align:center; }
   .gap select option { background:var(--card); color:var(--text); }
   /* Банк занимает не больше четверти экрана и прокручивается сам */
