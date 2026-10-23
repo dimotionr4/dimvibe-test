@@ -18,7 +18,8 @@
 
 /* Слева предложения и банк, справа панель пропуска */
 .fb-grid { display:grid; grid-template-columns:minmax(0, 1fr) 300px; gap:20px; align-items:start; }
-@media (max-width: 1000px) { .fb-grid { grid-template-columns:1fr; } }
+/* Ширина считается по колонке редактора (она делит экран с предпросмотром), а не по окну */
+@container (max-width: 760px) { .fb-grid { grid-template-columns:1fr; } }
 
 .fb-sentence { display:flex; gap:8px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 10px; margin-bottom:8px; }
 .fb-num { color:var(--muted); min-width:1.6em; padding-top:6px; }
