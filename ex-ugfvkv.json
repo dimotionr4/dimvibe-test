@@ -29,7 +29,7 @@
     "g1": {
       "answer": "Tbilisi",
       "alternatives": [],
-      "hint": ""
+      "hint": "capital"
     },
     "g2": {
       "answer": "connect",
@@ -42,5 +42,11 @@
       "hint": ""
     }
   },
-  "distractors": []
+  "distractors": [],
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "blue"
+  }
 }
