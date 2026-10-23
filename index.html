@@ -92,9 +92,9 @@
   </div>
 </footer>
 
-<script src="core/design.js?v=2"></script>
+<script src="core/design.js?v=3"></script>
 <script src="core/richtext.js?v=4"></script>
-<script src="core/rough.js?v=3"></script>
+<script src="core/rough.js?v=4"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -116,9 +116,10 @@ const uniq = words => {
 };
 
 // Стиль упражнения (Classic или Comic) и цвет контуров Comic берутся из файла (design.style, design.comicLine).
-// Для пробы значения можно переопределить в ссылке: ?style=comic&line=black&lw=thin|thick&shape=pill&dashed=1&num=1&width=wide
+// Для пробы значения можно переопределить в ссылке, но только с признаком probe=1 (иначе ученик мог бы менять вид, дописав адрес):
+// ?probe=1&style=comic&line=black&lw=thin|thick&shape=pill&dashed=1&num=1&width=wide
 function applyLook() {
-  const q = k => params.get(k);
+  const q = k => (params.has('probe') ? params.get(k) : null);
   const dz = data.design = { ...(data.design || {}) };
   if (q('shape') || q('dashed') || q('num') || q('width')) {
     dz.gap = { ...(dz.gap || {}), ...(q('shape') ? { shape: q('shape') } : {}), ...(q('dashed') ? { dashed: q('dashed') === '1' } : {}), ...(q('num') ? { numbered: q('num') === '1' } : {}), ...(q('width') ? { width: q('width') } : {}) };

@@ -20,6 +20,7 @@
   // Ключ элемента: у пропуска его номер, у слова — само слово, у остальных — вид и порядковый номер среди таких же
   function keyOf(el) {
     if (el.dataset.idx !== undefined) return 'gap' + el.dataset.idx;
+    if (el.classList.contains('gap')) return 'gap' + el.textContent; // образец в редакторе без номера
     if (el.classList.contains('chip')) return 'chip' + el.textContent;
     const kind = el.classList.contains('card') ? 'card' : el.classList.contains('instr') ? 'instr' : 'btn';
     return kind + [...document.querySelectorAll(kind === 'btn' ? 'button' : '.' + kind)].indexOf(el) + (el.id || '');
@@ -124,8 +125,10 @@
   const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => entries.forEach(e => paint(e.target))) : null;
 
   // Вызывается после каждой перерисовки страницы; в стиле Classic ничего не делает
+  // Без аргумента — вся страница (стиль включён на <html>); с аргументом — только образец внутри элемента со стилем (редактор)
   window.roughen = function (root) {
-    if (!document.documentElement.classList.contains('style-comic')) return;
+    const comic = root ? root.closest('.style-comic') : document.documentElement.classList.contains('style-comic');
+    if (!comic) return;
     (root || document).querySelectorAll(SELECTOR).forEach(el => {
       paint(el);
       if (observer) observer.observe(el);

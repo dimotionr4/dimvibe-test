@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — редактор</title>
 <link rel="stylesheet" href="core/gap.css?v=4">
+<link rel="stylesheet" href="core/comic.css?v=7">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
@@ -138,6 +139,10 @@
     <div class="top">
       <input id="title" placeholder="Название упражнения">
       <span class="muted" id="saved"></span>
+      <span class="seg" id="styleTop" role="group" aria-label="Стиль упражнения">
+        <button data-style-pick="classic" title="Classic: строгий вид">Classic</button>
+        <button data-style-pick="comic" title="Comic: нарисованный от руки">Comic</button>
+      </span>
       <button id="previewBtn">Предпросмотр</button>
     </div>
     <div class="muted" style="margin:-4px 0 10px">Номер: <span id="draftId"></span> · черновик хранится только в этом браузере</div>
@@ -180,8 +185,9 @@
   </div>
 </div>
 
-<script src="core/design.js?v=2"></script>
+<script src="core/design.js?v=3"></script>
 <script src="core/richtext.js?v=4"></script>
+<script src="core/rough.js?v=4"></script>
 <script src="modules/fill-blanks/editor.js?v=7"></script>
 <script>
 const ASSET_V = 7;
@@ -243,6 +249,7 @@ function open(id) {
   $('title').value = current.title;
   $('draftId').textContent = current.id;
   showTab(tab);
+  syncStyleButtons();
   renderList();
 }
 
@@ -324,7 +331,7 @@ function exerciseFor(draft, published) {
     id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
     instruction,
     behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
-    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap) },
+    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design) },
   };
 }
 
@@ -390,12 +397,29 @@ function renderInstruction(box) {
   });
 }
 
+// Переключатель Classic/Comic: две кнопки вверху редактора (на любой вкладке) и такие же во вкладке «Дизайн»
+function setStyle(style) {
+  current.design = { ...current.design, style };
+  touch();
+  syncStyleButtons();
+  if (tab === 'design') renderDesign();
+}
+
+function syncStyleButtons() {
+  const s = normalizeStyle(current && current.design).style;
+  document.querySelectorAll('#styleTop [data-style-pick]').forEach(b => {
+    b.classList.toggle('active', b.dataset.stylePick === s);
+    b.setAttribute('aria-pressed', String(b.dataset.stylePick === s));
+  });
+}
+
 // Вкладка «Дизайн» общая для модулей. Сейчас: цвет упражнения из набора core/design.js
 function renderDesign() {
   const chosen = current.design && ACCENTS[current.design.accent] ? current.design.accent : DEFAULT_ACCENT;
   const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   const shade = a => (dark ? a.dark : a.light);
   const gdRaw = (current.design && current.design.gap) || {}, gd = normalizeGapDesign(gdRaw);
+  const st = normalizeStyle(current.design), comic = st.style === 'comic', sc = styleClasses(st);
   $('content').innerHTML = `
     <section class="pub">
       <div class="muted" id="accentLabel">Цвет упражнения</div>
@@ -406,12 +430,30 @@ function renderDesign() {
           </button>`).join('')}
       </div>
       <p class="muted">Цвет кнопки «Проверить», линий пропусков и выбранных слов. Красный и зелёный результата не меняются. Увидеть цвет в обеих темах можно в предпросмотре.</p>
-      <div class="sample" id="sample">
+      <div class="sample ${sc}" id="sample">
         <span>Образец:</span>
         <button class="primary" tabindex="-1">Проверить</button>
         <span class="chipdemo">слово</span>
         <span class="gapdemo">ответ</span>
       </div>
+      <h3 style="margin-top:22px">Стиль</h3>
+      <p class="muted" style="margin-top:0">Classic — строгий вид, Comic — «нарисованный от руки». Те же две кнопки есть вверху редактора на любой вкладке.</p>
+      <div class="seg" role="group" aria-label="Стиль упражнения" style="max-width:260px">
+        <button data-style-pick="classic" class="${comic ? '' : 'active'}">Classic</button>
+        <button data-style-pick="comic" class="${comic ? 'active' : ''}">Comic</button>
+      </div>
+      ${comic ? `
+        <div class="muted" style="margin-top:10px" id="lineLabel">Цвет контура</div>
+        <div class="seg" role="group" aria-labelledby="lineLabel" style="max-width:360px">
+          <button data-cline="accent" class="${st.comicLine === 'accent' ? 'active' : ''}">Цвет упражнения</button>
+          <button data-cline="black" class="${st.comicLine === 'black' ? 'active' : ''}">Чёрный</button>
+        </div>
+        <div class="muted" style="margin-top:10px" id="lwLabel">Толщина линии</div>
+        <div class="seg" role="group" aria-labelledby="lwLabel" style="max-width:360px">
+          <button data-cw="thin" class="${st.comicWidth === 'thin' ? 'active' : ''}">Тонкая</button>
+          <button data-cw="normal" class="${st.comicWidth === 'normal' ? 'active' : ''}">Обычная</button>
+          <button data-cw="thick" class="${st.comicWidth === 'thick' ? 'active' : ''}">Толстая</button>
+        </div>` : ''}
       <h3 style="margin-top:22px">Пропуск</h3>
       <div class="muted" id="shapeLabel">Форма</div>
       <div class="shapes" role="radiogroup" aria-labelledby="shapeLabel" style="--accent:${shade(ACCENTS[chosen])}">
@@ -428,7 +470,7 @@ function renderDesign() {
       </div>
       <label class="check"><input type="checkbox" id="gapNum"${gd.numbered ? ' checked' : ''}> Нумеровать пропуски</label>
       <p class="muted">Так будет выглядеть пропуск у ученика: пустой (с подсказкой), верный и неверный.</p>
-      <div class="gapsample" style="--accent:${shade(ACCENTS[chosen])}">
+      <div class="gapsample ${sc}" style="--accent:${shade(ACCENTS[chosen])}">
         She <span class="gap ${gapClasses(gd)}">&nbsp;<button class="hintbtn" tabindex="-1" aria-hidden="true">💡</button>${gd.numbered ? '<span class="gap-num">1</span>' : ''}</span> in the
         <span class="gap ${gapClasses(gd)} ok">bar${gd.numbered ? '<span class="gap-num">2</span>' : ''}</span> and
         <span class="gap ${gapClasses(gd)} bad">pub${gd.numbered ? '<span class="gap-num">3</span>' : ''}</span>.
@@ -457,12 +499,18 @@ function renderDesign() {
     current.design = { ...current.design, showImage: $('showImg').checked };
     touch();
   };
+  // Стиль упражнения: Classic/Comic, цвет контура и толщина линии Comic
+  $('content').querySelectorAll('[data-style-pick]').forEach(b => b.onclick = () => setStyle(b.dataset.stylePick));
+  $('content').querySelectorAll('[data-cline]').forEach(b => b.onclick = () => { current.design = { ...current.design, comicLine: b.dataset.cline }; touch(); renderDesign(); });
+  $('content').querySelectorAll('[data-cw]').forEach(b => b.onclick = () => { current.design = { ...current.design, comicWidth: b.dataset.cw }; touch(); renderDesign(); });
   const paint = key => {
     const a = ACCENTS[key];
     $('sample').style.setProperty('--demo', shade(a));
     $('sample').style.setProperty('--on-demo', dark ? '#16161f' : '#fff');
+    $('sample').style.setProperty('--accent', shade(a)); // для рисованных контуров Comic в образце
   };
   paint(chosen);
+  if (comic) { roughen($('sample')); roughen(document.querySelector('.gapsample')); } // нарисовать контуры в образцах
   $('content').querySelectorAll('[data-accent]').forEach(b => b.onclick = () => {
     current.design = { ...current.design, accent: b.dataset.accent };
     touch();
@@ -649,6 +697,7 @@ document.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
   $('stage').classList.toggle('phone', b.dataset.size === 'phone');
 });
 $('previewBtn').onclick = openPreview;
+document.querySelectorAll('#styleTop [data-style-pick]').forEach(b => b.onclick = () => setStyle(b.dataset.stylePick));
 $('previewClose').onclick = closePreview;
 $('preview').onclick = e => { if (e.target === $('preview')) closePreview(); };
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('preview').hidden) closePreview(); });
@@ -669,6 +718,7 @@ async function openFile(f) {
         showInstruction: !file.design || file.design.showInstruction !== false,
         showImage: !file.design || file.design.showImage !== false,
         gap: normalizeGapDesign(file.design && file.design.gap),
+        ...normalizeStyle(file.design),
       },
       instruction: {
         title: String((file.instruction && file.instruction.title) || ''),

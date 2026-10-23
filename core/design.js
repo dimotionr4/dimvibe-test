@@ -34,6 +34,22 @@ function normalizeGapDesign(g) {
 // Классы пропуска по настройкам (стили — в core/gap.css)
 const gapClasses = g => `shape-${g.shape} w-${g.width}${g.dashed ? ' dashed' : ''}`;
 
+// Стиль упражнения: Classic или Comic; у Comic ещё цвет контура (акцентный или чёрный) и толщина линии.
+// Неизвестные значения заменяются на допустимые.
+function normalizeStyle(d) {
+  d = d || {};
+  return {
+    style: d.style === 'comic' ? 'comic' : 'classic',
+    comicLine: d.comicLine === 'black' ? 'black' : 'accent',
+    comicWidth: d.comicWidth === 'thin' || d.comicWidth === 'thick' ? d.comicWidth : 'normal',
+  };
+}
+
+// Классы для страницы или образца (стили — core/comic.css); для Classic пусто
+const styleClasses = s => s.style === 'comic'
+  ? `style-comic${s.comicLine === 'black' ? ' line-black' : ''}${s.comicWidth === 'thin' ? ' lw-thin' : s.comicWidth === 'thick' ? ' lw-thick' : ''}`
+  : '';
+
 // Страница берёт из переменных --accent-l и --accent-d нужный оттенок в зависимости от темы
 function applyAccent(root, name) {
   const a = accentOf(name);
