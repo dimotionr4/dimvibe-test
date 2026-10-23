@@ -5,7 +5,7 @@
   "published": true,
   "title": "wer",
   "layout": "text",
-  "mode": "dropdown",
+  "mode": "word_bank",
   "items": [
     {
       "id": "s1",
@@ -45,7 +45,7 @@
   "distractors": [],
   "instruction": {
     "title": "Please insert",
-    "text": "**let **us **try this text ** and *then *we can **continu",
+    "text": "**let **us **try this text ** and *then *we can **continue later",
     "image": {
       "url": "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
       "alt": "",
@@ -73,6 +73,10 @@
       "width": "standard",
       "density": "loose",
       "background": "plain"
+    },
+    "check": {
+      "variant": "outline",
+      "align": "center"
     }
   }
 }
