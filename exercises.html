@@ -124,6 +124,58 @@
   .banner[hidden] { display:none; }
   #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 14px; border-radius:8px; font-size:.9rem; z-index:70; }
   #toast[hidden] { display:none; }
+  /* Папки: полоса над списком */
+  #folders { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .fchip { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:2px 10px; border:1px solid var(--line); background:var(--card); border-radius:999px; cursor:pointer; font-size:.88rem; }
+  .fchip:hover { background:var(--accent-soft); }
+  .fchip svg { width:16px; height:16px; color:var(--fc, var(--muted)); }
+  .fchip small { color:var(--muted); font-size:.75rem; }
+  .fchip[aria-pressed="true"] { border-color:var(--fc, var(--accent)); background:color-mix(in srgb, var(--fc, var(--accent)) 14%, var(--card)); font-weight:600; }
+  .fchip.drop { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+  .fedit { width:30px; height:30px; padding:0; border:none; background:transparent; border-radius:8px; color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .fedit svg { width:16px; height:16px; }
+  .fedit:hover { background:var(--accent-soft); color:var(--accent); }
+  .ftag { display:inline-flex; align-items:center; gap:4px; color:var(--fc); }
+  .ftag svg { width:13px; height:13px; }
+  /* Выбор нескольких */
+  .selrow { display:flex; align-items:center; gap:10px; margin:0 0 8px; font-size:.88rem; color:var(--muted); min-height:24px; }
+  .selrow[hidden], #folders[hidden] { display:none; }
+  .selrow label { display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+  input[type=checkbox].chk { width:18px; height:18px; flex:none; accent-color:var(--accent); cursor:pointer; margin:0; }
+  .ex.sel { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, var(--card)); }
+  .ex[draggable=true] { cursor:grab; }
+  .ex.dragging { opacity:.5; }
+  #floatBar { position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:50; display:flex; align-items:center; gap:4px; padding:6px 8px 6px 14px; background:var(--card); border:1px solid var(--accent); border-radius:14px; box-shadow:0 8px 28px rgba(0,0,0,.3); max-width:calc(100vw - 24px); flex-wrap:wrap; }
+  #floatBar[hidden] { display:none; }
+  #floatBar .cnt { font-weight:600; margin-right:6px; white-space:nowrap; }
+  #floatBar .fb { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:0 10px; border:none; background:transparent; border-radius:8px; cursor:pointer; white-space:nowrap; }
+  #floatBar .fb:hover { background:var(--accent-soft); color:var(--accent); }
+  #floatBar .fb svg { width:18px; height:18px; }
+  #floatBar .fb.danger:hover, #floatBar .fb.danger.arm { background:var(--bad); color:#fff; }
+  main.has-float { padding-bottom:96px; }
+  /* Окна */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; z-index:80; }
+  .modal[hidden] { display:none; }
+  .box { background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:16px; width:min(420px, 100%); margin-top:10vh; }
+  .box h3 { margin:0 0 10px; font-size:1.05rem; }
+  .box .lab { font-size:.82rem; color:var(--muted); margin:12px 0 6px; }
+  .box input[type=text] { width:100%; min-height:36px; padding:6px 10px; border:1px solid var(--line); background:var(--card); border-radius:8px; }
+  .box input[type=text]:focus { outline:none; border-color:var(--accent); }
+  .picks { display:flex; flex-wrap:wrap; gap:6px; }
+  .pick { width:36px; height:36px; padding:0; border:1px solid var(--line); background:var(--card); border-radius:10px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--muted); }
+  .pick svg { width:20px; height:20px; }
+  .pick[aria-pressed="true"] { border:2px solid var(--text); color:var(--text); }
+  .pick.col { border-radius:50%; background:var(--c); border-color:transparent; }
+  .pick.col[aria-pressed="true"] { box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--text); border:none; }
+  .box .foot { display:flex; gap:8px; align-items:center; margin-top:16px; flex-wrap:wrap; }
+  .box .foot .grow { flex:1; }
+  .btn { min-height:36px; padding:0 14px; border:1px solid var(--line); background:var(--card); border-radius:8px; cursor:pointer; }
+  .btn:hover { background:var(--accent-soft); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.danger.arm { background:var(--bad); border-color:var(--bad); color:#fff; }
+  .mvlist { display:grid; gap:4px; }
+  .mvlist .opt { display:flex; align-items:center; gap:8px; }
+  .mvlist .opt svg { width:18px; height:18px; color:var(--fc, var(--muted)); }
   @media (max-width:640px) { .bar-link .t { display:none; } .search { max-width:none; flex-basis:100%; } .ex .acts { flex-wrap:wrap; justify-content:flex-end; } .list .ex { flex-wrap:wrap; } .pop { right:auto; left:0; } }
 </style>
 </head>
@@ -180,11 +232,27 @@
       </div>
     </div>
   </div>
+  <div id="folders" aria-label="Папки"></div>
   <div class="banner" id="trashNote" hidden>Корзина: упражнения можно вернуть или удалить навсегда. Файлы, уже опубликованные на сайте, это не затрагивает.</div>
+  <div class="selrow" id="selRow"><label><input type="checkbox" class="chk" id="selAll"> Выбрать все</label><span id="selInfo"></span></div>
   <div class="items list" id="items"></div>
   <div class="empty" id="none" hidden></div>
 </main>
 </div>
+<div id="floatBar" role="toolbar" aria-label="Действия с выбранными" hidden></div>
+<div class="modal" id="moveDlg" hidden><div class="box" role="dialog" aria-label="Переместить"><h3>Переместить в папку</h3><div class="mvlist" id="mvList"></div><div class="foot"><span class="grow"></span><button class="btn" id="mvCancel">Отмена</button></div></div></div>
+<div class="modal" id="folderDlg" hidden><div class="box" role="dialog" aria-label="Папка">
+  <h3 id="fdTitle">Новая папка</h3>
+  <input type="text" id="fdName" maxlength="40" placeholder="Название папки" aria-label="Название папки">
+  <div class="lab">Значок</div><div class="picks" id="fdIcons"></div>
+  <div class="lab">Цвет</div><div class="picks" id="fdColors"></div>
+  <div class="foot">
+    <button class="btn" id="fdLeft" data-tip="Сдвинуть влево" aria-label="Сдвинуть папку влево">←</button><button class="btn" id="fdRight" data-tip="Сдвинуть вправо" aria-label="Сдвинуть папку вправо">→</button>
+    <button class="btn danger" id="fdDel">Удалить</button>
+    <span class="grow"></span><button class="btn" id="fdCancel">Отмена</button><button class="btn primary" id="fdSave">Сохранить</button>
+  </div>
+  <p class="lab" id="fdNote" style="margin:10px 0 0">Упражнения из удалённой папки не пропадают, а переходят в «Без папки».</p>
+</div></div>
 <div id="toast" role="status" hidden></div>
 <script>
 const $ = id => document.getElementById(id);
@@ -215,7 +283,25 @@ const K_DRAFTS = 'dimvibe.drafts.v1', K_TRASH = 'dimvibe.trash.v1', K_OPENED = '
 const rd = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
 function wr(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { toast('Не удалось сохранить в браузере.'); return false; } }
 const prefs = Object.assign({ view: 'list', sort: 'changed' }, rd(K_PREFS, {}));
-const view = { q: '', status: 'all', mod: 'all', trash: false, editing: null, armed: null };
+const view = { q: '', status: 'all', mod: 'all', folder: 'all', trash: false, editing: null, armed: null, sel: new Set(), bulkArm: false };
+
+// ---- Папки. Хранятся отдельно от черновиков (dimvibe.folders.v1): { folders: [{id, name, icon, color}], map: { номер упражнения: id папки } }.
+// Порядок папок — порядок в списке. Упражнение без записи в map лежит «Без папки». Редактор об этом ключе не знает.
+const K_FOLDERS = 'dimvibe.folders.v1';
+const FICONS = {
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  star: '<path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/>',
+  book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+  flag: '<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>',
+  heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+  tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/>',
+  bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>'
+};
+const FCOLORS = ['#6d4aff', '#1f9d55', '#e5a50a', '#d64545', '#0ea5e9', '#ec4899', '#f97316', '#64748b'];
+const rdF = () => { const f = rd(K_FOLDERS, {}); return { folders: Array.isArray(f.folders) ? f.folders : [], map: f.map && typeof f.map === 'object' ? f.map : {} }; };
+const folderOf = (f, id) => f.folders.find(x => x.id === f.map[id]);
+const ficon = k => svg(FICONS[k] || FICONS.folder);
 
 function toast(t) {
   $('toast').textContent = t; $('toast').hidden = false;
@@ -240,8 +326,10 @@ function items() {
   let list;
   if (view.trash) list = Object.values(rd(K_TRASH, {})).map(t => Object.assign({ _trashedAt: t.at }, t.draft));
   else list = Object.values(rd(K_DRAFTS, {}));
+  const fm = rdF();
   list = list.filter(d => d && d.id && (!q || (d.title || 'Без названия').toLowerCase().includes(q))
-    && (view.trash || ((view.status === 'all' || statusOf(d).key === view.status) && (view.mod === 'all' || d.module === view.mod))));
+    && (view.trash || ((view.status === 'all' || statusOf(d).key === view.status) && (view.mod === 'all' || d.module === view.mod)
+      && (view.folder === 'all' || (view.folder === 'none' ? !folderOf(fm, d.id) : fm.map[d.id] === view.folder)))));
   const t = d => (d.title || '').toLowerCase();
   const by = { changed: (a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''),
     opened: (a, b) => (opened[b.id] || '').localeCompare(opened[a.id] || '') || (b.updatedAt || '').localeCompare(a.updatedAt || ''),
@@ -249,38 +337,75 @@ function items() {
   return view.trash ? list.sort((a, b) => (b._trashedAt || '').localeCompare(a._trashedAt || '')) : list.sort(by[prefs.sort] || by.changed);
 }
 
-function row(d) {
-  const m = modOf(d), st = statusOf(d), title = d.title || 'Без названия';
+function row(d, fm) {
+  const m = modOf(d), st = statusOf(d), title = d.title || 'Без названия', fo = folderOf(fm, d.id);
   const pub = !view.trash && (st.key === 'published' || st.key === 'changed');
   const btn = (act, icon, tip, cls = '') => `<button class="act tip-end ${cls}" data-act="${act}" data-id="${esc(d.id)}" data-tip="${tip}" aria-label="${tip}">${svg(icon)}</button>`;
   const acts = view.trash
     ? btn('restore', I.restore, 'Вернуть') + btn('purge', I.trash, view.armed === d.id ? 'Нажмите ещё раз: удалить навсегда' : 'Удалить навсегда', 'danger' + (view.armed === d.id ? ' arm' : ''))
-    : btn('rename', I.pen, 'Переименовать') + btn('dup', I.dup, 'Дублировать')
+    : btn('rename', I.pen, 'Переименовать') + btn('move', FICONS.folder, 'Переместить в папку') + btn('dup', I.dup, 'Дублировать')
       + (pub ? btn('iframe', I.code, 'Копировать код iframe') + btn('student', I.eye, 'Открыть как ученик') : '')
       + btn('trash', I.trash, 'В корзину', 'danger');
   const name = view.editing === d.id
     ? `<input class="rename" data-rename="${esc(d.id)}" value="${esc(d.title || '')}" maxlength="120" aria-label="Название упражнения" placeholder="Название упражнения">`
     : view.trash ? `<b>${esc(title)}</b>` : `<button class="open" data-act="open" data-id="${esc(d.id)}" data-tip="Открыть в редакторе"><b>${esc(title)}</b></button>`;
-  const meta = `<span class="meta"><span>${esc(m.name)}</span>${view.trash ? `<span>В корзине с ${esc(when(d._trashedAt))}</span>` : `<span class="st ${st.key}"><i></i>${st.label}</span><span>${esc(when(d.updatedAt))}</span>`}<span>${esc(d.id)}</span></span>`;
+  const meta = `<span class="meta"><span>${esc(m.name)}</span>${fo ? `<span class="ftag" style="--fc:${esc(fo.color)}">${ficon(fo.icon)}${esc(fo.name)}</span>` : ''}${view.trash ? `<span>В корзине с ${esc(when(d._trashedAt))}</span>` : `<span class="st ${st.key}"><i></i>${st.label}</span><span>${esc(when(d.updatedAt))}</span>`}<span>${esc(d.id)}</span></span>`;
   const ic = `<span class="ic">${svg(m.icon)}</span>`;
+  const on = view.sel.has(d.id);
+  const chk = `<input type="checkbox" class="chk" data-sel="${esc(d.id)}" ${on ? 'checked' : ''} aria-label="Выбрать упражнение">`;
+  const attrs = `class="ex${on ? ' sel' : ''}" data-ex="${esc(d.id)}"${!view.trash && view.editing !== d.id ? ' draggable="true"' : ''}`;
   return prefs.view === 'cards'
-    ? `<div class="ex"><div class="head">${ic}<div class="body">${name}</div></div>${meta}<div class="acts">${acts}</div></div>`
-    : `<div class="ex">${ic}<div class="body">${name}${meta}</div><div class="acts">${acts}</div></div>`;
+    ? `<div ${attrs}><div class="head">${chk}${ic}<div class="body">${name}</div></div>${meta}<div class="acts">${acts}</div></div>`
+    : `<div ${attrs}>${chk}${ic}<div class="body">${name}${meta}</div><div class="acts">${acts}</div></div>`;
+}
+
+// Полоса папок: «Все», «Без папки», свои папки, «+ Папка»; у выбранной папки — кнопка изменения
+function renderFolders() {
+  const fm = rdF(), drafts = rd(K_DRAFTS, {});
+  const count = id => Object.keys(drafts).filter(k => (id === 'none' ? !folderOf(fm, k) : fm.map[k] === id)).length;
+  const chip = (key, label, icon, color, n) => `<button class="fchip" data-folder="${esc(key)}" aria-pressed="${view.folder === key}"${color ? ` style="--fc:${esc(color)}"` : ''}>${icon}${esc(label)} <small>${n}</small></button>`;
+  const cur = fm.folders.find(f => f.id === view.folder);
+  $('folders').hidden = view.trash;
+  $('folders').innerHTML = chip('all', 'Все', '', '', Object.keys(drafts).length) + chip('none', 'Без папки', '', '', count('none'))
+    + fm.folders.map(f => chip(f.id, f.name, ficon(f.icon), f.color, count(f.id))).join('')
+    + (cur ? `<button class="fedit" data-fedit="${esc(cur.id)}" data-tip="Изменить папку" aria-label="Изменить папку">${svg(I.pen)}</button>` : '')
+    + `<button class="fchip" data-fnew="1" data-tip="Новая папка" aria-label="Новая папка">${svg('<path d="M12 5v14M5 12h14"/>')}Папка</button>`;
+}
+
+// Выбор нескольких: чекбоксы, «Выбрать все» и плавающая панель действий
+function renderSelection(list) {
+  const ids = list.map(d => d.id);
+  for (const id of [...view.sel]) if (!ids.includes(id)) view.sel.delete(id); // выбранное, что исчезло из списка, не остаётся в выборе
+  const n = view.sel.size;
+  $('selRow').hidden = !list.length;
+  $('selAll').checked = n > 0 && n === ids.length;
+  $('selAll').indeterminate = n > 0 && n < ids.length;
+  $('selInfo').textContent = n ? `Выбрано: ${n}` : '';
+  const fb = (act, icon, label, cls = '') => `<button class="fb ${cls}" data-bulk="${act}">${svg(icon)}${label}</button>`;
+  $('floatBar').hidden = !n;
+  document.querySelector('main').classList.toggle('has-float', n > 0);
+  $('floatBar').innerHTML = n ? `<span class="cnt">Выбрано: ${n}</span>`
+    + (view.trash ? fb('restore', I.restore, 'Вернуть') + fb('purge', I.trash, view.bulkArm ? 'Удалить навсегда: ещё раз' : 'Удалить навсегда', 'danger' + (view.bulkArm ? ' arm' : ''))
+      : fb('move', FICONS.folder, 'Переместить') + fb('dup', I.dup, 'Дублировать') + fb('trash', I.trash, 'В корзину', 'danger'))
+    + fb('clear', '<path d="M6 6l12 12M18 6L6 18"/>', 'Снять выделение') : '';
 }
 
 function render() {
   const trashN = Object.keys(rd(K_TRASH, {})).length;
   const list = items();
   $('items').className = 'items ' + prefs.view;
-  $('items').innerHTML = list.map(row).join('');
+  const fm = rdF();
+  if (view.folder !== 'all' && view.folder !== 'none' && !fm.folders.some(f => f.id === view.folder)) view.folder = 'all'; // папку удалили в другой вкладке
+  renderSelection(list);
+  renderFolders();
+  $('items').innerHTML = list.map(d => row(d, fm)).join('');
   $('trashBtn').setAttribute('aria-pressed', String(view.trash));
   $('trashN').hidden = !trashN; $('trashN').textContent = trashN;
   $('trashNote').hidden = !view.trash;
   $('h1').textContent = view.trash ? 'Корзина' : 'Мои упражнения';
   $('lead').hidden = view.trash;
   $('filBtn').hidden = view.trash;
-  $('filDot').hidden = view.status === 'all' && view.mod === 'all';
-  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === prefs.view)));
+  $('filDot').hidden = view.status === 'all' && view.mod === 'all';  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === prefs.view)));
   $('searchBox').classList.toggle('has', !!view.q);
   const none = $('none');
   none.hidden = list.length > 0;
@@ -307,7 +432,7 @@ function newId(taken) {
   do { id = 'ex-' + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => abc[b % 36]).join(''); } while (taken[id]);
   return id;
 }
-function duplicate(id) {
+function duplicate(id, quiet) {
   const all = rd(K_DRAFTS, {}), src = all[id];
   if (!src) return;
   const taken = Object.assign({}, all, rd(K_TRASH, {}));
@@ -317,13 +442,16 @@ function duplicate(id) {
   delete copy.publication; // копия — новое неопубликованное упражнение
   copy.updatedAt = new Date().toISOString();
   all[copy.id] = copy;
-  if (wr(K_DRAFTS, all)) toast('Создана копия.');
+  if (!wr(K_DRAFTS, all)) return;
+  const fm = rdF();
+  if (fm.map[id]) { fm.map[copy.id] = fm.map[id]; wr(K_FOLDERS, fm); } // копия остаётся в той же папке
+  if (!quiet) toast('Создана копия.');
 }
 function rename(id, title) {
   const all = rd(K_DRAFTS, {});
   if (all[id] && all[id].title !== title) { all[id].title = title; all[id].updatedAt = new Date().toISOString(); wr(K_DRAFTS, all); }
 }
-function toTrash(id) {
+function toTrash(id, quiet) {
   const all = rd(K_DRAFTS, {}), d = all[id];
   if (!d) return;
   const tr = rd(K_TRASH, {});
@@ -331,27 +459,110 @@ function toTrash(id) {
   if (!wr(K_TRASH, tr)) return; // сначала сохраняем в корзину, и только потом убираем из черновиков
   delete all[id];
   wr(K_DRAFTS, all);
-  toast('Перенесено в корзину.');
+  if (!quiet) toast('Перенесено в корзину.');
 }
-function restore(id) {
+function restore(id, quiet) {
   const tr = rd(K_TRASH, {}), t = tr[id];
   if (!t) return;
   const all = rd(K_DRAFTS, {});
   const d = t.draft;
-  if (all[id]) d.id = newId(Object.assign({}, all, tr)); // такой номер уже занят
+  if (all[id]) {
+    d.id = newId(Object.assign({}, all, tr)); // такой номер уже занят
+    const fm = rdF();
+    if (fm.map[id]) { fm.map[d.id] = fm.map[id]; wr(K_FOLDERS, fm); }
+  }
   all[d.id] = d;
   if (!wr(K_DRAFTS, all)) return;
   delete tr[id];
   wr(K_TRASH, tr);
-  toast('Упражнение возвращено.');
+  if (!quiet) toast('Упражнение возвращено.');
 }
-function purge(id) {
+function purge(id, quiet) {
   const tr = rd(K_TRASH, {});
   delete tr[id];
   wr(K_TRASH, tr);
   const o = rd(K_OPENED, {}); delete o[id]; wr(K_OPENED, o);
-  toast('Удалено навсегда.');
+  const fm = rdF();
+  if (fm.map[id]) { delete fm.map[id]; wr(K_FOLDERS, fm); }
+  if (!quiet) toast('Удалено навсегда.');
 }
+
+// ---- Папки: перенос и правка
+function moveTo(ids, folderId) { // folderId null — «Без папки»
+  const fm = rdF();
+  ids.forEach(id => { if (folderId) fm.map[id] = folderId; else delete fm.map[id]; });
+  if (wr(K_FOLDERS, fm)) toast(ids.length > 1 ? `Перенесено: ${ids.length}.` : 'Перенесено.');
+}
+let moveIds = [];
+function askMove(ids) {
+  moveIds = ids;
+  const fm = rdF();
+  const item = (key, label, icon, color) => `<button class="opt" data-to="${esc(key)}"${color ? ` style="--fc:${esc(color)}"` : ''}>${icon}${esc(label)}</button>`;
+  $('mvList').innerHTML = item('', 'Без папки', ficon('folder'), '') + fm.folders.map(f => item(f.id, f.name, ficon(f.icon), f.color)).join('');
+  $('moveDlg').hidden = false;
+}
+$('mvList').addEventListener('click', e => {
+  const b = e.target.closest('[data-to]');
+  if (!b) return;
+  moveTo(moveIds, b.dataset.to || null);
+  $('moveDlg').hidden = true; render();
+});
+$('mvCancel').onclick = () => { $('moveDlg').hidden = true; };
+
+let fdId = null, fdIcon = 'folder', fdColor = FCOLORS[0], fdArm = false;
+function drawFolderPicks() {
+  $('fdIcons').innerHTML = Object.keys(FICONS).map(k => `<button class="pick" data-icon="${k}" aria-pressed="${fdIcon === k}" aria-label="Значок ${k}">${svg(FICONS[k])}</button>`).join('');
+  $('fdColors').innerHTML = FCOLORS.map(c => `<button class="pick col" style="--c:${c}" data-color="${c}" aria-pressed="${fdColor === c}" aria-label="Цвет ${c}"></button>`).join('');
+  $('fdDel').classList.toggle('arm', fdArm);
+  $('fdDel').textContent = fdArm ? 'Удалить: ещё раз' : 'Удалить';
+}
+function askFolder(id) { // id — правка, null — новая папка
+  const fm = rdF(), f = fm.folders.find(x => x.id === id);
+  fdId = f ? f.id : null; fdArm = false;
+  fdIcon = f ? f.icon : 'folder'; fdColor = f ? f.color : FCOLORS[0];
+  $('fdTitle').textContent = f ? 'Папка' : 'Новая папка';
+  $('fdName').value = f ? f.name : '';
+  ['fdLeft', 'fdRight', 'fdDel', 'fdNote'].forEach(k => { $(k).hidden = !f; });
+  drawFolderPicks();
+  $('folderDlg').hidden = false;
+  $('fdName').focus();
+}
+$('fdIcons').addEventListener('click', e => { const b = e.target.closest('[data-icon]'); if (b) { fdIcon = b.dataset.icon; drawFolderPicks(); } });
+$('fdColors').addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (b) { fdColor = b.dataset.color; drawFolderPicks(); } });
+$('fdCancel').onclick = () => { $('folderDlg').hidden = true; };
+function saveFolder() {
+  const name = $('fdName').value.trim();
+  if (!name) { $('fdName').focus(); toast('Введите название папки.'); return; }
+  const fm = rdF();
+  if (fdId) { const f = fm.folders.find(x => x.id === fdId); if (f) { f.name = name; f.icon = fdIcon; f.color = fdColor; } }
+  else {
+    const id = 'f-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    fm.folders.push({ id, name, icon: fdIcon, color: fdColor }); view.folder = id;
+  }
+  wr(K_FOLDERS, fm);
+  $('folderDlg').hidden = true; render();
+}
+$('fdSave').onclick = saveFolder;
+$('fdName').onkeydown = e => { if (e.key === 'Enter') saveFolder(); };
+function shiftFolder(dir) {
+  const fm = rdF(), i = fm.folders.findIndex(x => x.id === fdId), j = i + dir;
+  if (i < 0 || j < 0 || j >= fm.folders.length) return;
+  [fm.folders[i], fm.folders[j]] = [fm.folders[j], fm.folders[i]];
+  wr(K_FOLDERS, fm); render();
+}
+$('fdLeft').onclick = () => shiftFolder(-1);
+$('fdRight').onclick = () => shiftFolder(1);
+$('fdDel').onclick = () => {
+  if (!fdArm) { fdArm = true; drawFolderPicks(); return; }
+  const fm = rdF();
+  fm.folders = fm.folders.filter(x => x.id !== fdId);
+  Object.keys(fm.map).forEach(k => { if (fm.map[k] === fdId) delete fm.map[k]; }); // упражнения переходят в «Без папки»
+  wr(K_FOLDERS, fm);
+  if (view.folder === fdId) view.folder = 'all';
+  $('folderDlg').hidden = true; render(); toast('Папка удалена, упражнения остались.');
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('moveDlg').hidden = true; $('folderDlg').hidden = true; } });
+[$('moveDlg'), $('folderDlg')].forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
 const siteUrl = id => new URL('./', location.href).href + '?id=' + id;
 async function copyText(text, done) {
   try { await navigator.clipboard.writeText(text); toast(done); }
@@ -369,6 +580,7 @@ $('items').addEventListener('click', e => {
   if (act !== 'purge') view.armed = null;
   if (act === 'open') return openDraft(id);
   if (act === 'rename') { view.editing = id; return render(); }
+  if (act === 'move') return askMove([id]);
   if (act === 'dup') duplicate(id);
   else if (act === 'trash') toTrash(id);
   else if (act === 'restore') restore(id);
@@ -380,6 +592,62 @@ $('items').addEventListener('click', e => {
   }
   render();
 });
+// Выбор нескольких
+$('items').addEventListener('change', e => {
+  const id = e.target.dataset && e.target.dataset.sel;
+  if (!id) return;
+  if (e.target.checked) view.sel.add(id); else view.sel.delete(id);
+  view.bulkArm = false; render();
+});
+$('selAll').onchange = () => {
+  if ($('selAll').checked) items().forEach(d => view.sel.add(d.id)); else view.sel.clear();
+  view.bulkArm = false; render();
+};
+$('floatBar').addEventListener('click', e => {
+  const b = e.target.closest('[data-bulk]');
+  if (!b) return;
+  const ids = [...view.sel], act = b.dataset.bulk;
+  if (act !== 'purge') view.bulkArm = false;
+  if (act === 'clear') { view.sel.clear(); return render(); }
+  if (act === 'move') return askMove(ids);
+  if (act === 'dup') { ids.forEach(id => duplicate(id, true)); toast(`Создано копий: ${ids.length}.`); }
+  else if (act === 'trash') { ids.forEach(id => toTrash(id, true)); toast(`В корзину: ${ids.length}.`); view.sel.clear(); }
+  else if (act === 'restore') { ids.forEach(id => restore(id, true)); toast(`Возвращено: ${ids.length}.`); view.sel.clear(); }
+  else if (act === 'purge') { if (!view.bulkArm) { view.bulkArm = true; return render(); } ids.forEach(id => purge(id, true)); view.bulkArm = false; view.sel.clear(); toast(`Удалено навсегда: ${ids.length}.`); }
+  render();
+});
+// После переноса через окно выбор снимаем
+$('mvList').addEventListener('click', () => { view.sel.clear(); }, true);
+
+// Папки: выбор, правка, новая; перетаскивание упражнения на папку
+$('folders').addEventListener('click', e => {
+  const c = e.target.closest('[data-folder]'), ed = e.target.closest('[data-fedit]');
+  if (ed) return askFolder(ed.dataset.fedit);
+  if (e.target.closest('[data-fnew]')) return askFolder(null);
+  if (c) { view.folder = c.dataset.folder; view.sel.clear(); render(); }
+});
+let dragIds = [];
+$('items').addEventListener('dragstart', e => {
+  const ex = e.target.closest('[data-ex]');
+  if (!ex) return;
+  const id = ex.dataset.ex;
+  dragIds = view.sel.has(id) ? [...view.sel] : [id]; // перетаскивание выбранного переносит весь выбор
+  e.dataTransfer.setData('text/plain', dragIds.join(','));
+  e.dataTransfer.effectAllowed = 'move';
+  ex.classList.add('dragging');
+});
+$('items').addEventListener('dragend', () => { dragIds = []; document.querySelectorAll('.dragging, .drop').forEach(x => x.classList.remove('dragging', 'drop')); });
+const dropTarget = e => { const c = e.target.closest('[data-folder]'); return c && c.dataset.folder !== 'all' ? c : null; };
+$('folders').addEventListener('dragover', e => { const c = dropTarget(e); if (c && dragIds.length) { e.preventDefault(); c.classList.add('drop'); } });
+$('folders').addEventListener('dragleave', e => { const c = e.target.closest('[data-folder]'); if (c) c.classList.remove('drop'); });
+$('folders').addEventListener('drop', e => {
+  const c = dropTarget(e);
+  if (!c || !dragIds.length) return;
+  e.preventDefault();
+  moveTo(dragIds, c.dataset.folder === 'none' ? null : c.dataset.folder);
+  dragIds = []; view.sel.clear(); render();
+});
+
 // Переименование: Enter или выход из поля сохраняет, Esc отменяет
 $('items').addEventListener('keydown', e => {
   if (!e.target.dataset.rename) return;
@@ -399,7 +667,7 @@ $('q').oninput = () => { view.q = $('q').value; render(); };
 $('q').onkeydown = e => { if (e.key === 'Escape') { $('q').value = ''; view.q = ''; render(); } };
 $('qx').onclick = () => { $('q').value = ''; view.q = ''; render(); $('q').focus(); };
 document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { prefs.view = b.dataset.view; wr(K_PREFS, prefs); render(); });
-$('trashBtn').onclick = () => { view.trash = !view.trash; view.editing = null; view.armed = null; render(); };
+$('trashBtn').onclick = () => { view.trash = !view.trash; view.editing = null; view.armed = null; view.bulkArm = false; view.sel.clear(); render(); };
 $('filPop').addEventListener('click', e => {
   const s = e.target.closest('[data-st]'), m = e.target.closest('[data-mod]');
   if (s) view.status = s.dataset.st; else if (m) view.mod = m.dataset.mod; else return;
@@ -419,7 +687,7 @@ $('sortBtn').onclick = () => setPop('sort', $('sortPop').hidden);
 document.addEventListener('click', e => { if (!e.target.closest('.menuwrap')) setPop('', false); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setPop('', false); });
 // Если редактор в другой вкладке изменил черновики, список обновляется сам
-addEventListener('storage', e => { if ([K_DRAFTS, K_TRASH].includes(e.key) && !view.editing) render(); });
+addEventListener('storage', e => { if ([K_DRAFTS, K_TRASH, K_FOLDERS].includes(e.key) && !view.editing) render(); });
 
 // ---- Левая панель (общее состояние с редактором)
 const SIDE_KEY = 'dimvibe.sideCollapsed';
