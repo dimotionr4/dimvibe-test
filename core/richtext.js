@@ -18,8 +18,13 @@ function safeImageUrl(value) {
 function instructionImageEl(image) {
   const url = image && safeImageUrl(image.url);
   if (!url) return null;
-  const width = { small: '200px', medium: '400px', large: '100%' }[image.size] || '400px';
-  const margin = { left: '0.5em auto 0.5em 0', right: '0.5em 0 0.5em auto' }[image.align] || '0.5em auto';
+  // Размеры небольшие, чтобы картинка не забивала задание. Слева и справа текст обтекает её сбоку;
+  // на узком экране боковая картинка занимает не больше 45% ширины блока, поэтому текст остаётся рядом
+  const px = { small: 100, medium: 160, large: 240 }[image.size] || 160;
+  const side = image.align === 'left' || image.align === 'right';
+  const layout = side
+    ? `float:${image.align};width:${px}px;max-width:45%;margin:0.2em ${image.align === 'left' ? '12px 6px 0' : '0 6px 12px'};`
+    : `display:block;width:${px}px;max-width:100%;margin:0.5em auto;`;
   const alt = String(image.alt || '').trim();
   const img = document.createElement('img');
   // Обработчик ошибки ставим до адреса, чтобы не пропустить быструю ошибку
@@ -32,7 +37,7 @@ function instructionImageEl(image) {
   img.alt = alt;
   img.loading = 'lazy';
   img.referrerPolicy = 'no-referrer'; // сайту с картинкой не сообщаем, откуда её открыли
-  img.style.cssText = `display:block;width:${width};max-width:100%;height:auto;border-radius:8px;margin:${margin};`;
+  img.style.cssText = `${layout}height:auto;max-height:240px;object-fit:contain;border-radius:8px;`;
   img.src = url;
   return img;
 }
