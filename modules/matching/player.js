@@ -106,8 +106,13 @@ const MatchingPlayer = (() => {
     b.dataset.side = side;
     b.dataset.id = id;
     if (n) b.style.setProperty('--mt-c', `hsl(${HUES[(n - 1) % HUES.length]} 70% 52%)`);
+    const it = item(id), text = String(it[side] || '').trim();
+    const pic = picture(it[side + 'Image']);
+    const audio = mediaSrc(it[side + 'Audio']);
+    if (pic) b.classList.add('has-pic');
     if (n) b.append(el('span', 'mt-tag', String(n)));
-    b.append(el('span', 'mt-text', item(id)[side]));
+    if (pic) b.append(pic.box);
+    if (text || !pic) b.append(el('span', 'mt-text', text));
     if (state === 'bad') b.append(el('span', 'mt-mark', ' ✗'));
     if (state === 'ok' && lines()) b.append(el('span', 'mt-mark', ' ✓'));
     const names = [];
@@ -116,11 +121,22 @@ const MatchingPlayer = (() => {
     if (left && active === id) names.push('выбрана, теперь нажмите карточку справа');
     if (state === 'bad') names.push('неверно');
     if (state === 'missing') names.push('не соединена');
-    b.setAttribute('aria-label', `${left ? 'Слева' : 'Справа'}: ${item(id)[side]}` + (names.length ? ', ' + names.join(', ') : ''));
+    b.setAttribute('aria-label', `${left ? 'Слева' : 'Справа'}: ${text || (pic && pic.alt) || 'картинка'}` + (names.length ? ', ' + names.join(', ') : ''));
     if (left) b.setAttribute('aria-pressed', String(active === id));
     if (finished) b.disabled = true;
     else b.onclick = () => (left ? selectLeft(id) : pickRight(id));
     wrap.append(b);
+    // Значки поверх карточки (отдельные от неё элементы, карточку не выбирают): увеличение, звук, разрыв связи
+    const ctl = el('span', 'mt-ctl' + (pic ? ' top' : ''));
+    if (pic) {
+      const z = el('button', 'hintbtn mt-tool mt-zoom', '⤢');
+      z.type = 'button';
+      z.setAttribute('aria-label', 'Увеличить картинку');
+      z.title = 'Увеличить';
+      z.onclick = e => { e.stopPropagation(); openMediaViewer(pic.src, pic.alt); };
+      ctl.append(z);
+    }
+    if (audio) ctl.append(audioButton(audio, `m${side}${id}`, 'hintbtn mt-tool mt-voice', '🔊', 'Прослушать карточку'));
     // Разорвать связь: у левой карточки значок ×, у связанной правой тоже
     if (n && !finished) {
       const x = el('span', 'mt-x', '×');
@@ -130,14 +146,41 @@ const MatchingPlayer = (() => {
       const go = e => { e.stopPropagation(); unlink(linkedTo.id); };
       x.onclick = go;
       x.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(e); } };
-      wrap.append(x);
+      ctl.append(x);
     }
+    if (ctl.childElementCount) { wrap.append(ctl); b.style.setProperty('--mt-n', ctl.childElementCount); }
     return wrap;
+  }
+
+  // Картинка карточки: рамка по размеру и вписыванию из «Дизайна»; src и alt нужны для увеличения
+  function picture(im) {
+    const src = mediaSrc(im);
+    if (!src) return null;
+    const box = el('span', 'mt-pic');
+    const img = el('img');
+    img.alt = String(im.alt || '');
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    img.onerror = () => { box.classList.add('broken'); img.remove(); };
+    img.src = src;
+    box.append(img);
+    return { box, src, alt: img.alt };
+  }
+
+  // Одна сторона пары в списке верных пар: уменьшенная картинка и текст
+  function face(id, side) {
+    const s = el('span', 'mt-face');
+    const pic = picture(item(id)[side + 'Image']);
+    if (pic) { pic.box.classList.add('mini'); s.append(pic.box); }
+    const t = String(item(id)[side] || '').trim();
+    if (t || !pic) s.append(el('span', 'mt-text', t));
+    return s;
   }
 
   function pairRow(id, mark) {
     const r = el('div', 'card mt-pair' + (mark ? ' ok' : ''));
-    r.append(el('span', 'mt-text', item(id).left), el('span', 'mt-eq', '↔'), el('span', 'mt-text', item(id).right));
+    r.append(face(id, 'left'), el('span', 'mt-eq', '↔'), face(id, 'right'));
     if (mark) r.append(el('span', 'mt-mark', '✓'));
     return r;
   }
@@ -210,7 +253,7 @@ const MatchingPlayer = (() => {
     const num = numbers();
     // Выравнивание текста: «авто» — по центру, а если в упражнении есть длинная карточка, то у всех по левому краю
     const long = data.items.some(i => String(i.left).length > 40 || String(i.right).length > 40);
-    const wrapper = el('div', 'mt-wrap mt-al-' + (data.align === 'left' || (data.align !== 'center' && long) ? 'left' : 'center'));
+    const wrapper = el('div', 'mt-wrap mt-al-' + (data.align === 'left' || (data.align !== 'center' && long) ? 'left' : 'center') + ' mt-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm') + (data.imageFit === 'cover' ? ' mt-fit-cover' : ''));
     if (rest.length) {
       const hint = el('p', 'mt-hint', active ? 'Теперь нажмите карточку справа.' : 'Нажмите карточку слева, потом её пару справа.');
       hint.setAttribute('role', 'status');
