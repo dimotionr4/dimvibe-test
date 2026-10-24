@@ -19,8 +19,7 @@
   };
   const NAV = [
     { id: 'home', href: 'home.html', label: 'Модули' },
-    { id: 'exercises', href: 'exercises.html', label: 'Мои упражнения' },
-    { id: 'editor', href: 'editor.html', label: 'Редактор' }
+    { id: 'exercises', href: 'exercises.html', label: 'Мои упражнения' }
   ];
 
   const css = document.createElement('style');
