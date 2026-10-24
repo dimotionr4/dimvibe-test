@@ -201,7 +201,9 @@ const MistakeModePlayer = (() => {
       const g = unitAt(t, p.i), marked = marks[t.id].has(p.i);
       const state = g && g.locked ? 'ok' : !marked ? (finished && g ? 'miss' : '') : g && g.state === 'half' ? 'half' : flagged[t.id].has(p.i) || (finished && !g) ? 'bad' : 'on';
       const inRepl = marked && repl[t.id].has(p.i);
-      const w = el('span', 'mm-w' + (state ? ' ' + state : '') + (inRepl ? ' repl' : ''), p.s);
+      // fresh-ring / fresh-strike: слово только что отмечено или переведено в замену — в Classic кружок и линия плавно появляются (CSS)
+      const key = t.id + ':' + p.i;
+      const w = el('span', 'mm-w' + (state ? ' ' + state : '') + (inRepl ? ' repl' : '') + (marked && fresh === key ? ' fresh-ring' : '') + (inRepl && freshStrike === key ? ' fresh-strike' : ''), p.s);
       w.dataset.i = p.i;
       if (marked && comicNow() && state && state !== 'miss') w._ring = { ...lookOf(t.id, p.i), key: t.id + ':' + p.i, repl: inRepl };
       w.setAttribute('role', 'button');

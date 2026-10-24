@@ -28,8 +28,20 @@
 .mm-w.half { box-shadow:inset 0 0 0 2px var(--accent); background:color-mix(in srgb, var(--ok) 12%, transparent); }
 .mm-w.ok { box-shadow:inset 0 0 0 2px var(--ok); }
 .mm-w.bad { box-shadow:inset 0 0 0 2px var(--bad); }
-/* Comic: кружок нарисован от руки (SVG внутри слова, см. player.js), обычная рамка отключена */
-.style-comic .mm-w { position:relative; }
+/* Classic: плавное появление. Кружок — рамка «вспыхивает» и сжимается до места; линия перечёркивания вырастает слева направо */
+.mm-w { position:relative; --mm-c:var(--accent); }
+.mm-w.ok { --mm-c:var(--ok); }
+.mm-w.bad { --mm-c:var(--bad); }
+.mm-w.fresh-ring { animation:mm-ring-in .28s ease-out; }
+@keyframes mm-ring-in { from { box-shadow:inset 0 0 0 0 var(--mm-c), 0 0 0 8px transparent; } 60% { box-shadow:inset 0 0 0 2px var(--mm-c), 0 0 0 2px color-mix(in srgb, var(--mm-c) 35%, transparent); } to { box-shadow:inset 0 0 0 2px var(--mm-c), 0 0 0 0 transparent; } }
+.mm-w.repl { text-decoration:none; }
+.mm-w.repl::before { content:""; position:absolute; left:7px; right:7px; top:54%; height:2px; border-radius:2px; background:currentColor; transform-origin:left center; pointer-events:none; }
+.mm-w.fresh-strike::before { animation:mm-strike-in .28s ease-out; }
+@keyframes mm-strike-in { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@media (prefers-reduced-motion:reduce) { .mm-w.fresh-ring, .mm-w.fresh-strike::before { animation:none; } }
+/* Comic: кружок нарисован от руки (SVG внутри слова, см. player.js), обычная рамка и линия отключены */
+.style-comic .mm-w.fresh-ring { animation:none; }
+.style-comic .mm-w.repl::before { content:none; }
 .style-comic .mm-w.on, .style-comic .mm-w.ok, .style-comic .mm-w.bad, .style-comic .mm-w.half { box-shadow:none; }
 .mm-ring { position:absolute; left:-4px; top:-3px; overflow:visible; pointer-events:none; }
 .mm-ring path { fill:none; stroke:var(--accent); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
@@ -41,8 +53,7 @@
 .mm-ring path.mm-strike.draw { animation-duration:.3s; }
 @keyframes mm-draw { to { stroke-dashoffset:0; } }
 @media (prefers-reduced-motion:reduce) { .mm-ring path.draw { animation:none; stroke-dasharray:none; stroke-dashoffset:0; } }
-/* Слово, которое ученик решил заменить (значок ✎): перечёркнуто, справа от него поле для нового слова */
-.mm-w.repl { text-decoration:line-through; text-decoration-thickness:2px; }
+/* Слово, которое ученик решил заменить (значок ✎): перечёркнуто (линия ::before выше, в Comic — SVG), справа от него поле для нового слова */
 .mm-back { display:inline-flex; align-items:center; justify-content:center; min-width:30px; min-height:30px; border-radius:50%; color:var(--muted); cursor:pointer; user-select:none; -webkit-user-select:none; font-size:1rem; vertical-align:middle; touch-action:manipulation; }
 .mm-body.mm-fixmode { line-height:2.5; } /* запас под значок ✎ над словом и поле замены */
 /* Значок ✎ сидит в правом верхнем углу слова в кружке (слово и значок лежат в обёртке .mm-wwrap) */
