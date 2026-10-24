@@ -6,7 +6,7 @@ const MatchingEditor = (() => {
   const MODES = { standard: 'Стандартный: верные пары уходят вниз', lines_pair_colors: 'Линии: все карточки на месте, одна проверка' };
   const ALIGNS = { auto: 'Авто: короткие по центру, длинные слева', center: 'По центру', left: 'По левому краю' };
   const { nextId } = GapEngine;
-  let d, root, save, delAsk = null, delSetAsk = null, msgTimer = null, drag = null, openId = null; // openId — пара с раскрытой панелью картинок и звука
+  let d, root, save, delAsk = null, delSetAsk = null, msgTimer = null, drag = null;
   let msg, counter, listBox, addBtn;
 
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
@@ -71,7 +71,6 @@ const MatchingEditor = (() => {
     save = onSave;
     delAsk = null;
     normalize();
-    if (!allItems().some(i => i.id === openId)) openId = null;
     draw();
   }
 
@@ -215,6 +214,9 @@ const MatchingEditor = (() => {
     });
   }
 
+  // Колонка стороны пары: поле текста и под ним полоса картинки и звука
+  const fcol = (it, side, i) => { const c = el('div', 'mt-fcol'); c.append(field(it, side, i), mediaBar(it, side)); return c; };
+
   function field(it, side, i) {
     const ta = el('textarea', 'mt-in');
     ta.dataset.side = side;
@@ -259,7 +261,7 @@ const MatchingEditor = (() => {
       drawList();
     };
     const fields = el('div', 'mt-fields');
-    fields.append(field(it, 'left', i), el('span', 'mt-link', '↔'), field(it, 'right', i));
+    fields.append(fcol(it, 'left', i), el('span', 'mt-link', '↔'), fcol(it, 'right', i));
     const tools = el('span', 'mt-tools2');
     const btn = (cls, html, tip, fn, disabled) => {
       const b = el('button', 'mt-ib ' + cls);
@@ -271,10 +273,7 @@ const MatchingEditor = (() => {
       b.onclick = e => { e.stopPropagation(); fn(); };
       return b;
     };
-    const more = btn('mt-more' + (it.id === openId ? ' on' : '') + (hasMedia(it) ? ' has' : ''), svg('<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M3 17l5-5 4 4 3-3 6 6"/>'), 'Картинки и звук карточек', () => { openId = openId === it.id ? null : it.id; drawList(); });
-    more.setAttribute('aria-expanded', String(it.id === openId));
     tools.append(
-      more,
       btn('', svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', () => move(set, i, -1), i === 0),
       btn('', svg('<path d="M6 9l6 6 6-6"/>'), 'Ниже', () => move(set, i, 1), i === set.items.length - 1),
       btn('', svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать', () => duplicate(set, i), set.items.length >= MAX),
@@ -291,7 +290,6 @@ const MatchingEditor = (() => {
       tools.append(q);
     } else tools.append(btn('mt-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => askDelete(set, i)));
     r.append(grip, el('span', 'mt-n', `${i + 1}.`), fields, tools);
-    if (it.id === openId) r.append(mediaPanel(it));
     return r;
   }
 
@@ -359,85 +357,80 @@ const MatchingEditor = (() => {
   }
   const fromLibrary = (kind, done) => openMediaLibrary({ pick: true, multi: false, kind, onPick: items => done(items[0].path) });
 
-  // Панель пары: у каждой карточки (левой и правой) два значка — картинка и звук — и, если есть, миниатюра, описание и значок воспроизведения
-  function mediaPanel(it) {
-    const panel = el('div', 'mt-panel');
-    const refresh = () => { markDupes(); const b = listBox.querySelector(`.mt-row[data-id="${it.id}"] .mt-more`); if (b) b.classList.toggle('has', hasMedia(it)); };
+  // Полоса картинки и звука под полем карточки: два значка со списком, ▶ для звука, миниатюра и описание, поле ссылки. Стоит ровно под своим полем
+  const linkOpen = new Set(); // «ID пары:сторона» — открыто поле ссылки на картинку
+  function mediaBar(it, s) {
+    const col = el('div', 'mt-media');
+    const key = it.id + ':' + s;
+    if (it[s + 'Image'].url && !it[s + 'Image'].media) linkOpen.add(key);
     const draw = () => {
-      panel.innerHTML = '';
-      [['left', 'Левая карточка'], ['right', 'Правая карточка']].forEach(([s, title]) => {
-        const im = it[s + 'Image'], pic = hasPic(im), snd = it[s + 'Audio'];
-        const col = el('div', 'mt-pcol');
-        const status = el('span', 'mt-status');
-        const say2 = t => { status.textContent = t; status.classList.toggle('err', !!t && !/^Загрузка/.test(t)); };
-        const set = (obj, key, v) => { obj[key] = v; save(); draw(); refresh(); };
-        const head = el('div', 'mt-phead');
-        head.append(el('span', 'mt-ptitle', title));
-        const signed = typeof mediaUserNow !== 'undefined' && mediaUserNow;
-        head.append(
-          iconMenu(ICON_IMG, 'Изображение карточки', pic, [
-            { label: signed ? 'Загрузить изображение' : 'Войти для загрузки', fn: () => pickFile('image', say2, p => { im.url = ''; set(im, 'media', p); }) },
-            { label: 'Выбрать из медиатеки', fn: () => fromLibrary('image', p => { im.url = ''; set(im, 'media', p); }) },
-            { label: 'Ссылка на изображение', fn: () => { linkOpen[s] = true; draw(); } },
-            pic || im.url || im.media ? { label: 'Убрать изображение', danger: true, fn: () => { im.media = ''; im.url = ''; linkOpen[s] = false; save(); draw(); refresh(); } } : null,
-          ]),
-          iconMenu(ICON_SND, 'Звук карточки', !!snd, [
-            { label: signed ? 'Загрузить звук' : 'Войти для загрузки', fn: () => pickFile('audio', say2, p => set(it, s + 'Audio', p)) },
-            { label: 'Выбрать из медиатеки', fn: () => fromLibrary('audio', p => set(it, s + 'Audio', p)) },
-            snd ? { label: 'Убрать звук', danger: true, fn: () => set(it, s + 'Audio', '') } : null,
-          ]),
-        );
-        if (snd) {
-          const play = el('button', 'mt-play', '▶');
-          play.type = 'button';
-          play.title = 'Прослушать';
-          play.setAttribute('aria-label', 'Прослушать звук карточки');
-          play.onclick = () => {
-            const url = mediaUrl(snd);
-            if (!url) return;
-            if (panel._a) { panel._a.pause(); panel._a = null; document.querySelectorAll('.mt-play').forEach(x => { x.textContent = '▶'; }); return; }
-            const a = new Audio(url);
-            panel._a = a;
-            play.textContent = '■';
-            const end = () => { panel._a = null; play.textContent = '▶'; };
-            a.onended = a.onerror = end;
-            a.play().catch(end);
-          };
-          head.append(play);
-        }
-        head.append(status);
-        col.append(head);
-        if (pic) {
-          const line = el('div', 'mt-pline');
-          const th = el('span', 'mt-thumb');
-          const src = mediaSrc(safeMediaPath(im.media) ? { media: im.media } : { url: im.url });
-          if (src) { const img = el('img'); img.src = src; img.alt = ''; img.onerror = () => { th.classList.add('broken'); img.remove(); }; th.append(img); }
-          const alt = el('input');
-          alt.placeholder = 'Описание для незрячих учеников';
-          alt.value = im.alt || '';
-          alt.setAttribute('aria-label', 'Описание картинки');
-          alt.oninput = () => { im.alt = alt.value; save(); };
-          line.append(th, alt);
-          col.append(line);
-        }
-        if (linkOpen[s]) {
-          const link = el('input');
-          link.placeholder = 'Ссылка на картинку (https://…)';
-          link.value = im.url || '';
-          link.setAttribute('aria-label', 'Ссылка на картинку');
-          const bad = el('div', 'mt-warn');
-          bad.hidden = true;
-          link.oninput = () => { im.url = link.value; if (link.value.trim()) im.media = ''; bad.hidden = !link.value.trim() || !!safeImageUrl(link.value); bad.textContent = 'Нужен полный адрес с https://.'; save(); };
-          link.onchange = () => { draw(); refresh(); };
-          col.append(link, bad);
-          setTimeout(() => link.focus(), 0);
-        }
-        panel.append(col);
-      });
+      col.innerHTML = '';
+      const im = it[s + 'Image'], pic = hasPic(im), snd = it[s + 'Audio'];
+      const status = el('span', 'mt-status');
+      const say2 = t => { status.textContent = t; status.classList.toggle('err', !!t && !/^Загрузка/.test(t)); };
+      const done = fn => v => { fn(v); save(); draw(); markDupes(); };
+      const signed = typeof mediaUserNow !== 'undefined' && mediaUserNow;
+      const bar = el('div', 'mt-bar');
+      bar.append(
+        iconMenu(ICON_IMG, 'Изображение карточки', pic, [
+          { label: signed ? 'Загрузить изображение' : 'Войти для загрузки', fn: () => pickFile('image', say2, done(p => { im.url = ''; im.media = p; })) },
+          { label: 'Выбрать из медиатеки', fn: () => fromLibrary('image', done(p => { im.url = ''; im.media = p; })) },
+          { label: 'Ссылка на изображение', fn: () => { linkOpen.add(key); draw(); } },
+          pic || im.url || im.media ? { label: 'Убрать изображение', danger: true, fn: () => { linkOpen.delete(key); done(() => { im.media = ''; im.url = ''; })(); } } : null,
+        ]),
+        iconMenu(ICON_SND, 'Звук карточки', !!snd, [
+          { label: signed ? 'Загрузить звук' : 'Войти для загрузки', fn: () => pickFile('audio', say2, done(p => { it[s + 'Audio'] = p; })) },
+          { label: 'Выбрать из медиатеки', fn: () => fromLibrary('audio', done(p => { it[s + 'Audio'] = p; })) },
+          snd ? { label: 'Убрать звук', danger: true, fn: done(() => { it[s + 'Audio'] = ''; }) } : null,
+        ]),
+      );
+      if (snd) {
+        const play = el('button', 'mt-play', '▶');
+        play.type = 'button';
+        play.title = 'Прослушать';
+        play.setAttribute('aria-label', 'Прослушать звук карточки');
+        play.onclick = () => {
+          const url = mediaUrl(snd);
+          if (!url) return;
+          if (col._a) { col._a.pause(); col._a = null; play.textContent = '▶'; return; }
+          const a = new Audio(url);
+          col._a = a;
+          play.textContent = '■';
+          const end = () => { col._a = null; play.textContent = '▶'; };
+          a.onended = a.onerror = end;
+          a.play().catch(end);
+        };
+        bar.append(play);
+      }
+      bar.append(status);
+      col.append(bar);
+      if (pic) {
+        const line = el('div', 'mt-pline');
+        const th = el('span', 'mt-thumb');
+        const src = mediaSrc(safeMediaPath(im.media) ? { media: im.media } : { url: im.url });
+        if (src) { const img = el('img'); img.src = src; img.alt = ''; img.onerror = () => { th.classList.add('broken'); img.remove(); }; th.append(img); }
+        const alt = el('input');
+        alt.placeholder = 'Описание для незрячих учеников';
+        alt.value = im.alt || '';
+        alt.setAttribute('aria-label', 'Описание картинки');
+        alt.oninput = () => { im.alt = alt.value; save(); };
+        line.append(th, alt);
+        col.append(line);
+      }
+      if (linkOpen.has(key)) {
+        const link = el('input');
+        link.placeholder = 'Ссылка на картинку (https://…)';
+        link.value = im.url || '';
+        link.setAttribute('aria-label', 'Ссылка на картинку');
+        const bad = el('div', 'mt-warn');
+        bad.hidden = true;
+        link.oninput = () => { im.url = link.value; if (link.value.trim()) im.media = ''; bad.hidden = !link.value.trim() || !!safeImageUrl(link.value); bad.textContent = 'Нужен полный адрес с https://.'; save(); };
+        link.onchange = () => { draw(); markDupes(); };
+        col.append(link, bad);
+      }
     };
-    const linkOpen = { left: !!(it.leftImage.url && !it.leftImage.media), right: !!(it.rightImage.url && !it.rightImage.media) };
     draw();
-    return panel;
+    return col;
   }
   const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
 

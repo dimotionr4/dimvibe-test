@@ -80,3 +80,13 @@
 .mt-pline input { flex:1; min-width:0; }
 .mt-pcol > input { width:100%; margin-top:6px; }
 .mt-pcol:first-child .mt-menu { left:0; right:auto; }
+
+/* Полоса картинки и звука стоит прямо под своим полем: значки выровнены по левому краю поля */
+.mt-fcol { flex:1 1 130px; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.mt-fcol .mt-in { width:100%; flex:none; }
+.mt-media { min-width:0; }
+.mt-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.mt-media > input { width:100%; margin-top:6px; }
+.mt-fcol:first-child .mt-menu { left:0; right:auto; }
+.mt-fcol .mt-menu { right:auto; left:0; }
+.mt-fcol:last-child .mt-menu { left:auto; right:0; }
