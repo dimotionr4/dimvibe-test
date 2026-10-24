@@ -5,7 +5,20 @@
 // поэтому при нажатиях контуры не меняются. Номер версии `?v=` у подключения поднимайте при изменении.
 (() => {
   const SELECTOR = '.gap, .chip, .card, .instr, .panel, .score.result, button:not(.hintbtn):not(.instr-head)';
-  const INSET = 2.5, STEP = 14, WOBBLE = 1.1, NS = 'http://www.w3.org/2000/svg';
+  const INSET = 2.5, NS = 'http://www.w3.org/2000/svg';
+  // Виды очертаний (вкладка «Дизайн», класс ol-… рядом с style-comic): шаг точек, размах волны, вторая линия, прямые отрезки.
+  // «Аккуратная» — прежний вид
+  const OUTLINES = {
+    neat: { step: 14, wob: 1.1 },
+    wobbly: { step: 20, wob: 2.6 },
+    double: { step: 14, wob: 1.4, double: true },
+    angular: { step: 26, wob: 1.6, sharp: true },
+  };
+  const outlineOf = el => {
+    const c = el.closest('.style-comic');
+    const k = c && Object.keys(OUTLINES).find(k => c.classList.contains('ol-' + k));
+    return OUTLINES[k || 'neat'];
+  };
 
   // Воспроизводимые «случайные» числа
   const rng = seed => () => {
@@ -28,7 +41,7 @@
   }
 
   // Точки по контуру скруглённого прямоугольника (по часовой стрелке) с радиусами углов [лв, пв, пн, лн]
-  function outline(w, h, radii) {
+  function outline(w, h, radii, STEP) {
     const x0 = INSET, y0 = INSET, x1 = w - INSET, y1 = h - INSET, pts = [];
     const [tl, tr, br, bl] = radii.map(r => Math.max(0, Math.min(r, (x1 - x0) / 2, (y1 - y0) / 2)));
     const edge = (ax, ay, bx, by) => {
@@ -37,7 +50,7 @@
     };
     const arc = (cx, cy, r, a0, a1) => {
       if (!r) return;
-      const n = Math.max(3, Math.round(Math.abs(a1 - a0) * r / (STEP / 2)));
+      const n = Math.max(3, Math.round(Math.abs(a1 - a0) * r / Math.min(7, STEP / 2)));
       for (let i = 0; i < n; i++) { const a = a0 + (a1 - a0) * i / n; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
     };
     edge(x0 + tl, y0, x1 - tr, y0); arc(x1 - tr, y0 + tr, tr, -Math.PI / 2, 0);
@@ -48,7 +61,7 @@
   }
 
   // Плавные волны вместо случайных скачков: сумма двух синусоид со случайными фазами
-  function wobble(pts, rand) {
+  function wobble(pts, rand, WOBBLE) {
     const p = [0, 1, 2, 3].map(() => rand() * 6.28), f = 0.7 + rand() * 0.5;
     return pts.map(([x, y], i) => [
       x + WOBBLE * (Math.sin(i * f + p[0]) + 0.5 * Math.sin(i * f * 2.3 + p[1])),
@@ -60,23 +73,33 @@
   const f2 = n => Math.round(n * 100) / 100;
   const pt = p => `${f2(p[0])} ${f2(p[1])}`;
 
-  // Замкнутая гладкая кривая через середины отрезков (квадратичные кривые)
-  function closedPath(pts) {
+  // Замкнутая гладкая кривая через середины отрезков (квадратичные кривые); у угловатой — прямые отрезки
+  function closedPath(pts, sharp) {
     const n = pts.length;
+    if (sharp) return `M${pts.map(pt).join('L')}Z`;
     let d = `M${pt(mid(pts[n - 1], pts[0]))}`;
     for (let i = 0; i < n; i++) d += `Q${pt(pts[i])} ${pt(mid(pts[i], pts[(i + 1) % n]))}`;
     return d + 'Z';
   }
 
   // Открытая линия (для формы «Линия»): слегка волнистая
-  function openLine(w, h, rand) {
-    const y = h - INSET - 0.5, n = Math.max(2, Math.round((w - 2 * INSET) / STEP));
+  function openLine(w, h, rand, o) {
+    const y = h - INSET - 0.5, n = Math.max(2, Math.round((w - 2 * INSET) / o.step));
     const raw = [];
     for (let i = 0; i <= n; i++) raw.push([INSET + (w - 2 * INSET) * i / n, y]);
-    const pts = wobble(raw, rand);
+    const pts = wobble(raw, rand, o.wob);
+    if (o.sharp) return `M${pts.map(pt).join('L')}`;
     let d = `M${pt(pts[0])}`;
     for (let i = 1; i < pts.length - 1; i++) d += `Q${pt(pts[i])} ${pt(mid(pts[i], pts[i + 1]))}`;
     return d + `L${pt(pts[pts.length - 1])}`;
+  }
+
+  // Путь контура по виду очертаний; seed — чтобы вторая линия «двойной» шла немного иначе
+  function pathOf(w, h, shape, o, seed) {
+    const rand = rng(seed);
+    if (shape.line) return openLine(w, h, rand, o);
+    const radii = o.sharp ? shape.radii.map(r => Math.min(r, 5)) : shape.radii;
+    return closedPath(wobble(outline(w, h, radii, o.step), rand, o.wob), o.sharp);
   }
 
   // Какой формы контур нужен элементу
@@ -100,9 +123,9 @@
     if (!el.matches(SELECTOR) || !el.closest('.style-comic')) { if (observer) observer.unobserve(el); return; }
     const w = el.offsetWidth, h = el.offsetHeight;
     if (!w || !h) return;
-    const rand = rng(hash(keyOf(el)));
+    const seed = hash(keyOf(el)), o = outlineOf(el);
     const shape = shapeOf(el, h);
-    const d = shape.line ? openLine(w, h, rand) : closedPath(wobble(outline(w, h, shape.radii), rand));
+    const d = pathOf(w, h, shape, o, seed);
     // Прерывистые линии: пропуск с классом dashed или «не заполнен»
     const dashed = el.classList.contains('gap') && (el.classList.contains('dashed') || el.classList.contains('missing'));
     const svg = document.createElementNS(NS, 'svg');
@@ -122,6 +145,13 @@
     line.setAttribute('d', d);
     if (dashed) line.setAttribute('stroke-dasharray', '9 7');
     svg.appendChild(line);
+    if (o.double) { // «Двойная»: вторая, более тонкая линия рядом, как карандашный набросок
+      const second = document.createElementNS(NS, 'path');
+      second.setAttribute('class', 'rough-line rough-line2');
+      second.setAttribute('d', pathOf(w, h, shape, { ...o, wob: o.wob * 1.4 }, seed + 7));
+      if (dashed) second.setAttribute('stroke-dasharray', '9 7');
+      svg.appendChild(second);
+    }
     el.appendChild(svg);
   }
 

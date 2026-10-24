@@ -24,6 +24,8 @@
 .style-comic .rough { position:absolute; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; overflow:visible; }
 .style-comic .rough-line { fill:none; stroke:var(--rc, var(--comic-line)); stroke-width:var(--lw); stroke-linecap:round; stroke-linejoin:round; }
 .style-comic .rough-fill { fill:var(--rb, transparent); stroke:none; }
+/* Вторая линия очертаний «Двойная» (core/rough.js): тоньше и прозрачнее основной */
+.style-comic .rough-line2 { stroke-width:calc(var(--lw) * .55); opacity:.7; }
 
 /* Классические рамки и фон убираем: заливка и контур рисуются рисунком */
 .style-comic .card, .style-comic .instr, .style-comic .chip, .style-comic button:not(.hintbtn):not(.instr-head) { border-color:transparent; background:transparent; }

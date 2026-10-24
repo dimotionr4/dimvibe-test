@@ -6,7 +6,7 @@
 <title>DimVibe — редактор</title>
 <link rel="stylesheet" href="core/gap.css?v=6">
 <link rel="stylesheet" href="core/check.css?v=1">
-<link rel="stylesheet" href="core/comic.css?v=13">
+<link rel="stylesheet" href="core/comic.css?v=14">
 <link rel="stylesheet" href="core/fonts.css?v=1">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
@@ -182,7 +182,26 @@
   .stbtn.active .stb { fill:var(--accent-soft); stroke:var(--accent); }
   .stbtn:hover .stb { stroke:var(--accent); }
   .dz-mock { max-width:760px; margin:0 auto; min-width:0; }
-  .dz-page { max-width:760px; margin:14px auto 0; display:flex; flex-wrap:wrap; justify-content:center; gap:10px 28px; padding:8px 14px; background:var(--card); border:1px solid var(--line); border-radius:14px; }
+  /* Вкладка «Дизайн»: макет слева, тематические блоки настроек справа; в узкой колонке блоки уходят под макет */
+  .dz-wrap { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start; }
+  .dz-wrap .dz-mock { flex:3 1 380px; margin:0; }
+  .dz-side { flex:1 1 230px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+  .dz-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 12px 6px; }
+  .dz-card h4 { margin:0 0 2px; font-size:.75rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+  .dz-row { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:42px; }
+  .dz-pick { position:relative; flex:none; }
+  .dz-pbtn { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:2px 8px; border-radius:9px; }
+  .dz-pbtn:hover, .dz-pbtn[aria-expanded="true"] { border-color:var(--accent); }
+  .dz-pbtn svg, .dz-menu svg { width:20px; height:20px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .dz-pv { font-size:.88rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dz-caret { font-size:.7rem; color:var(--muted); }
+  .dz-menu { position:absolute; right:0; top:calc(100% + 4px); z-index:30; min-width:200px; display:flex; flex-direction:column; gap:2px; padding:4px; background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  .dz-menu[hidden] { display:none; }
+  .dz-menu button { display:flex; align-items:center; gap:10px; width:100%; border:none; background:transparent; text-align:left; padding:6px 10px; min-height:38px; border-radius:8px; }
+  .dz-menu button:hover { background:var(--accent-soft); }
+  .dz-menu button.active { background:var(--accent-soft); color:var(--accent); font-weight:600; }
+  .dz-pick .sz { font-size:.85rem; font-weight:700; line-height:1; min-width:20px; text-align:center; }
+  .dz-pick .fontname { font-size:1.05rem; line-height:1; min-width:20px; }
   .pg-grp { display:flex; align-items:center; gap:10px; }
   .mock { width:100%; height:auto; display:block; }
   .pv-win { fill:var(--bg); stroke:var(--line); stroke-width:1.5; }
@@ -209,7 +228,7 @@
   .po-b svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .po-b .dot { width:28px; height:28px; min-height:28px; }
   .po-note { font-size:.78rem; margin:6px 0 0; }
-  .dz-note { font-size:.8rem; margin:10px auto 0; max-width:760px; text-align:center; }
+  .dz-note { font-size:.8rem; margin:10px 0 0; text-align:center; }
   .dot-i { width:16px; height:16px; border-radius:50%; background:var(--c); box-shadow:0 0 0 1px var(--line); display:block; }
   .dots { display:grid; grid-template-columns:repeat(6, 30px); gap:8px; padding:4px 0 2px; }
   .dot { position:relative; width:30px; height:30px; min-height:30px; padding:0; border-radius:50%; background:var(--c); border:2px solid transparent; box-shadow:0 0 0 1px var(--line) inset; }
@@ -403,13 +422,13 @@
   </div>
 </div>
 
-<script src="core/design.js?v=7"></script>
+<script src="core/design.js?v=8"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
 <script src="core/mediabar.js?v=5"></script>
 <script src="core/richtext.js?v=5"></script>
-<script src="core/rough.js?v=9"></script>
+<script src="core/rough.js?v=10"></script>
 <script src="core/gap-engine.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=25"></script>
 <script src="modules/image-to-gaps/editor.js?v=6"></script>
@@ -420,7 +439,7 @@
 <script src="modules/mistake-mode/editor.js?v=5"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
-const ASSET_V = 46;
+const ASSET_V = 47;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -894,6 +913,13 @@ const OPT_ICONS = {
   density: {
     compact: O('<path d="M5 7h14M5 10h14M5 13h14M5 16h14"/>'), comfortable: O('<path d="M5 7h14M5 12h14M5 17h14"/>'), loose: O('<path d="M5 6h14M5 18h14"/>'),
   },
+  // Очертания Comic (core/rough.js)
+  outline: {
+    neat: O('<rect x="4" y="6" width="16" height="12" rx="4"/>'),
+    wobbly: O('<path d="M5 7c3-1.5 5 .8 8-.4s5-.6 6 .9c.8 2-.6 3.5.3 5.6.6 2-1.4 3.6-3.6 3.3-2.6-.4-4.4.9-7 .3C5.6 16.4 4 15 4.6 12.6c.5-2-1.2-4.2.4-5.6z"/>'),
+    double: O('<rect x="4" y="6.5" width="16" height="12" rx="4"/><rect x="5" y="5" width="15.5" height="12.5" rx="4" stroke-width="1" opacity=".7"/>'),
+    angular: O('<path d="M4.5 6.5L12 5.8l7.6.9-.6 5.6.5 5.4-7.8.6-7.2-.8.5-5.3z"/>'),
+  },
   // Размер текста: буква «А» разной высоты
   fontsize: Object.fromEntries([['s', 8], ['m', 11], ['l', 14], ['xl', 17]].map(([k, h]) => {
     const w = +(h * .4).toFixed(1), y = +(19 - h * .38).toFixed(1);
@@ -1055,29 +1081,39 @@ function renderDesign() {
   const ck = normalizeCheck(current.design && current.design.check);
   const showI = !(current.design && current.design.showInstruction === false), showImg = !(current.design && current.design.showImage === false);
   const ac = shade(ACCENTS[chosen]);
-  // Настройки страницы (ширина, плотность, фон) — под макетом
-  const grp = (g, f, label, names, cur, icons) => `<div class="pg-grp"><span class="po-l">${esc(label)}</span><span class="po-b" role="group" aria-label="${esc(label)}">${Object.keys(icons).map(k =>
-    `<button data-g="${g}" data-f="${f}" data-v="${k}" class="${k === cur ? 'active' : ''}" aria-pressed="${k === cur}" data-tip="${esc(label + ': ' + names[k])}" aria-label="${esc(label + ': ' + names[k])}">${icons[k]}</button>`).join('')}</span></div>`;
-  // Шрифт: набор зависит от стиля (Classic или Comic), на значке «Аа» написано этим шрифтом, название — в подсказке
+  // Настройка в блоке справа от макета: одна кнопка с текущим значением, варианты — во всплывающем списке (решение владельца 2026-10-25)
+  const grp = (g, f, label, names, cur, icons) => `<div class="dz-row"><span class="po-l">${esc(label)}</span><span class="dz-pick">
+    <button type="button" class="dz-pbtn" aria-haspopup="true" aria-expanded="false" aria-label="${esc(label + ': ' + names[cur])}">${icons[cur]}<span class="dz-pv">${esc(names[cur])}</span><span class="dz-caret" aria-hidden="true">▾</span></button>
+    <span class="dz-menu" role="menu" aria-label="${esc(label)}" hidden>${Object.keys(icons).map(k =>
+    `<button type="button" role="menuitemradio" data-g="${g}" data-f="${f}" data-v="${k}" class="${k === cur ? 'active' : ''}" aria-checked="${k === cur}">${icons[k]}<span>${esc(names[k])}</span></button>`).join('')}</span></span></div>`;
+  // Шрифт: набор зависит от стиля (Classic или Comic), «Аа» написано этим шрифтом
   const fontGrp = s => {
     const set = FONTS[s.style], field = s.style === 'comic' ? 'comicFont' : 'classicFont';
     const names = Object.fromEntries(Object.entries(set).map(([k, f]) => [k, f.label]));
     const icons = Object.fromEntries(Object.entries(set).map(([k, f]) => [k, `<span class="fontname" style='font-family:${f.stack}'>Аа</span>`]));
     return grp('style', field, 'Шрифт', names, s[field], icons);
   };
-  // Дополнительные настройки модуля (например, размер картинки у Image to Gaps): модуль отдаёт описание, ядро рисует такие же значки
+  // Дополнительные настройки модуля (например, размер картинки у Image to Gaps): модуль отдаёт описание, ядро рисует такие же кнопки
   const modOpts = (MODULES[current.module].designOptions ? MODULES[current.module].designOptions(current) : []).map(o => grp('mod', o.field, o.label, o.names, o.value, o.icons)).join('');
+  const card = (title, body) => `<section class="dz-card" aria-label="${esc(title)}"><h4>${esc(title)}</h4>${body}</section>`;
   $('content').innerHTML = `
-    <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode', mt: current.module === 'matching', mm: current.module === 'mistake_mode', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
-    <div class="dz-page" role="group" aria-label="Настройки страницы">
-      ${grp('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew)}
-      ${grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density)}
-      ${grp('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background)}
-      ${grp('page', 'fontSize', 'Текст', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize)}
-      ${fontGrp(st)}
+    <div class="dz-wrap">
+      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode', mt: current.module === 'matching', mm: current.module === 'mistake_mode', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
+      <div class="dz-side">
+        ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize))}
+        ${st.style === 'comic' ? card('Линии Comic', grp('style', 'comicOutline', 'Очертания', COMIC_OUTLINES, st.comicOutline, OPT_ICONS.outline)) : ''}
+        ${card('Страница', grp('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew) + grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density) + grp('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background))}
+        ${modOpts ? card((document.querySelector(`#modPick [data-mod="${current.module}"] b`) || {}).textContent || 'Модуль', modOpts) : ''}
+      </div>
     </div>
-    ${modOpts ? `<div class="dz-page" role="group" aria-label="Настройки модуля">${modOpts}</div>` : ''}
     <p class="muted dz-note">Нажимайте на элементы макета: блоки инструкции и картинки включаются и скрываются, значки рядом меняют вид. Результат виден в предпросмотре справа.</p>`;
+  // Всплывающий список: открыть по кнопке, закрыть выбором, нажатием мимо или Esc (общий обработчик — dzCloseMenus)
+  $('content').querySelectorAll('.dz-pbtn').forEach(b => b.onclick = () => {
+    const m = b.nextElementSibling, open = m.hidden;
+    dzCloseMenus();
+    m.hidden = !open;
+    b.setAttribute('aria-expanded', String(open));
+  });
   const root = $('content');
   // Настройки хранятся как выбраны (например, «прерывистая» не теряется при смене формы на плашку и обратно)
   const patchDesign = (key, patch) => { current.design = { ...current.design, [key]: { ...(current.design && current.design[key]), ...patch } }; touch(); renderDesign(); };
@@ -1532,6 +1568,12 @@ $('creditBtn').onclick = () => setCredit($('creditPop').hidden);
 addEventListener('pointerdown', e => { if (!$('creditPop').hidden && !e.target.closest('#creditPop, #creditBtn')) setCredit(false); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('creditPop').hidden) setCredit(false); });
 addEventListener('pointerdown', e => { if (dzColorOpen && !e.target.closest('.mock')) { dzColorOpen = false; renderDesign(); } });
+// Всплывающие списки настроек во вкладке «Дизайн»
+function dzCloseMenus() {
+  document.querySelectorAll('.dz-menu:not([hidden])').forEach(m => { m.hidden = true; m.previousElementSibling.setAttribute('aria-expanded', 'false'); });
+}
+addEventListener('pointerdown', e => { if (!e.target.closest('.dz-pick')) dzCloseMenus(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') dzCloseMenus(); });
 addEventListener('pointerdown', e => { if (helpFor && !e.target.closest('.help, #helpBubble')) hideHelp(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && helpFor) hideHelp(); });
 

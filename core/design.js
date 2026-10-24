@@ -91,6 +91,10 @@ const FONTS = {
 };
 const fontKey = (style, key) => (FONTS[style][key] ? key : Object.keys(FONTS[style])[0]);
 
+// Очертания Comic: вид линии «от руки» (форму рисует core/rough.js по классу ol-…). «Аккуратная» — прежний вид
+const COMIC_OUTLINES = { neat: 'Аккуратная', wobbly: 'Неровная', double: 'Двойная', angular: 'Угловатая' };
+const OUTLINE_CLASSES = ['ol-wobbly', 'ol-double', 'ol-angular'];
+
 // Стиль упражнения: Classic или Comic; у Comic ещё цвет контура (акцентный или чёрный) и толщина линии.
 // Шрифт хранится отдельно для каждого стиля (classicFont, comicFont): при переключении стиля выбор другого не теряется.
 // Неизвестные значения заменяются на допустимые.
@@ -102,6 +106,7 @@ function normalizeStyle(d) {
     comicWidth: d.comicWidth === 'thin' || d.comicWidth === 'thick' ? d.comicWidth : 'normal',
     classicFont: fontKey('classic', d.classicFont),
     comicFont: fontKey('comic', d.comicFont),
+    comicOutline: COMIC_OUTLINES[d.comicOutline] ? d.comicOutline : 'neat',
   };
 }
 
@@ -110,7 +115,7 @@ const fontStack = s => FONTS[s.style][s.style === 'comic' ? s.comicFont : s.clas
 
 // Классы для страницы или образца (стили — core/comic.css); для Classic пусто
 const styleClasses = s => s.style === 'comic'
-  ? `style-comic${s.comicLine === 'black' ? ' line-black' : ''}${s.comicWidth === 'thin' ? ' lw-thin' : s.comicWidth === 'thick' ? ' lw-thick' : ''}`
+  ? `style-comic${s.comicLine === 'black' ? ' line-black' : ''}${s.comicWidth === 'thin' ? ' lw-thin' : s.comicWidth === 'thick' ? ' lw-thick' : ''}${s.comicOutline !== 'neat' ? ' ol-' + s.comicOutline : ''}`
   : '';
 
 // Страница берёт из переменных --accent-l и --accent-d нужный оттенок в зависимости от темы
