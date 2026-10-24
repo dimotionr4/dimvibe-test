@@ -1,6 +1,14 @@
 /* Плеер модуля Mistake Mode: обычный текст со словами, на которые можно нажимать. Цвета и состояния — из переменных страницы (index.html) */
 .card.mm-card { line-height:1.5; }
 .mm-ins { margin:0 0 10px; color:var(--muted); }
+.mm-pic { position:relative; width:100%; height:160px; border-radius:10px; overflow:hidden; margin:0 0 10px; }
+.mm-pic img { display:block; width:100%; height:100%; object-fit:contain; }
+.mm-fit-cover .mm-pic img { object-fit:cover; }
+.mm-size-s .mm-pic { height:100px; }
+.mm-size-l .mm-pic { height:240px; }
+.mm-pic.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); min-height:40px; }
+.mm-zoom { position:absolute; top:6px; right:6px; }
+.mm-audio { margin:0 0 10px; }
 .mm-body { white-space:pre-wrap; overflow-wrap:anywhere; font-size:1.1rem; line-height:2; }
 .mm-w { cursor:pointer; border-radius:6px; padding:5px 2px; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
 .mm-w:hover { background:color-mix(in srgb, var(--accent) 12%, transparent); }
@@ -13,5 +21,16 @@
 .mm-w.miss { box-shadow:inset 0 -2px 0 var(--bad); text-decoration:underline dashed var(--bad); text-underline-offset:4px; cursor:default; }
 .mm-w[aria-disabled="true"] { cursor:default; }
 .mm-w[aria-disabled="true"]:hover:not(.ok):not(.bad):not(.on):not(.miss) { background:transparent; }
+.mm-w.half { background:color-mix(in srgb, var(--ok) 12%, var(--card)); box-shadow:inset 0 -2px 0 var(--accent); }
+.mm-fixes { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.mm-fixhint { margin:0; color:var(--muted); font-size:.9rem; }
+.mm-fixrow { display:flex; align-items:center; gap:8px; }
+.mm-fixw { flex:none; max-width:40%; overflow-wrap:anywhere; }
+.mm-fixrow input { flex:1; min-width:0; min-height:44px; font:inherit; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); }
+.mm-fixrow.ok input { border-color:var(--ok); }
+.mm-fixrow.bad input { border-color:var(--bad); }
+.mm-fixmark { flex:none; font-weight:700; }
+.mm-fixrow.ok .mm-fixmark { color:var(--ok); }
+.mm-fixrow.bad .mm-fixmark { color:var(--bad); }
 .mm-expl { margin-top:12px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
 .mm-expl p { margin:2px 0; }

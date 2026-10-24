@@ -12,6 +12,7 @@
 .mm-texttop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
 .mm-texttop .mm-tools2 { margin-left:auto; }
 .mm-in { width:100%; box-sizing:border-box; min-width:0; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.mm-media { margin-bottom:8px; }
 .mm-textins { margin-bottom:8px; min-height:38px; }
 .mm-body { line-height:1.5; min-height:96px; }
 .mm-count { font-size:.85rem; margin:2px 0 0; text-align:right; }
@@ -36,7 +37,13 @@
 
 /* Список ошибок */
 .mm-errs { margin-top:8px; }
-.mm-err { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:4px 0; }
+.mm-err { padding:4px 0; }
+.mm-errline { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+.mm-fix { margin:2px 0 6px 0; }
+.mm-fixon { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:.9rem; cursor:pointer; }
+.mm-fixfields { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.mm-fixfields[hidden] { display:none; }
+.mm-fixfields .mm-in { flex:1 1 220px; width:auto; min-height:34px; }
 .mm-errw { flex:none; max-width:100%; overflow-wrap:anywhere; }
 .mm-expl { flex:1 1 200px; width:auto; min-height:34px; }
 .mm-err.broken .mm-errw { color:var(--bad); }

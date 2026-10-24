@@ -18,9 +18,33 @@ const MistakeModeEditor = (() => {
   const wordCount = t => MistakeTokens.words(t.text).length;
   const allErrors = () => d.texts.flatMap(t => t.errors);
 
-  const newText = (id, text) => ({ id, instruction: '', text: text || '', errors: [] });
+  const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
+  const FITS = { contain: 'Вписать целиком', cover: 'Заполнить рамку' };
+  const emptyImage = () => ({ media: '', url: '', alt: '' });
+  const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
+  // Файл упражнения: картинка {media | url, alt} или нет; звук {media} или нет
+  const imageOut = im => {
+    if (!im) return null;
+    const alt = String(im.alt || '').trim().replace(/\s+/g, ' '), media = safeMediaPath(im.media);
+    if (media) return { media, alt };
+    const url = safeImageUrl(im.url);
+    return url ? { url, alt } : null;
+  };
+  const audioOut = p => { const m = safeMediaPath(p); return m ? { media: m } : null; };
+
+  const newText = (id, text) => ({ id, instruction: '', text: text || '', image: emptyImage(), audio: '', errors: [] });
   function create() {
-    return { module: 'mistake_mode', format: 1, texts: [newText('t1')] };
+    return { module: 'mistake_mode', format: 1, imageSize: 'm', imageFit: 'contain', texts: [newText('t1')] };
+  }
+
+  // Черновики, сделанные до картинок и звука, получают пустые поля
+  function normalize() {
+    if (!SIZES[d.imageSize]) d.imageSize = 'm';
+    if (!FITS[d.imageFit]) d.imageFit = 'contain';
+    d.texts.forEach(t => {
+      if (!t.image) t.image = emptyImage();
+      if (typeof t.audio !== 'string') t.audio = '';
+    });
   }
 
   function render(container, draft, onSave) {
@@ -28,6 +52,7 @@ const MistakeModeEditor = (() => {
     d = draft;
     save = onSave;
     delAsk = null;
+    normalize();
     draw();
   }
 
@@ -76,6 +101,12 @@ const MistakeModeEditor = (() => {
     const box = el('section', 'mm-text' + (many ? ' multi' : ''));
     box.dataset.id = t.id;
     if (many) box.append(head(t, k));
+
+    // Картинка и звук текста: общие компактные элементы (core/mediabar.js), значки со списком действий
+    const media = el('div', 'mm-media');
+    const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук');
+    media.append(MediaUI.imageControl(t.image, { save, after: audio }));
+    box.append(media);
 
     const ta = el('textarea', 'mm-in mm-body');
     ta.rows = 4;
@@ -134,7 +165,7 @@ const MistakeModeEditor = (() => {
       if (t.errors.filter(e => !e.broken).length >= MAX_ERRORS) return say(`В тексте не больше ${MAX_ERRORS} ошибок.`);
       const lost = t.errors.find(e => e.broken && e.word === word); // потерянная пометка возвращается на это слово вместе с пояснением
       if (lost) { lost.index = i; delete lost.broken; }
-      else t.errors.push({ id: newErrId(), index: i, word, explanation: '' });
+      else t.errors.push({ id: newErrId(), index: i, word, explanation: '', requiresCorrection: false, correction: '', alts: '' });
     }
     save();
     refresh();
@@ -143,8 +174,9 @@ const MistakeModeEditor = (() => {
   function errRow(t, e, refresh) {
     const r = el('div', 'mm-err' + (e.broken ? ' broken' : ''));
     r.dataset.id = e.id;
-    r.append(el('b', 'mm-errw', `«${e.word}»`));
-    if (e.broken) r.append(el('span', 'mm-bad', 'Пометка потеряна после правки текста: нажмите на это слово в тексте заново или удалите пометку.'));
+    const line = el('div', 'mm-errline');
+    line.append(el('b', 'mm-errw', `«${e.word}»`));
+    if (e.broken) line.append(el('span', 'mm-bad', 'Пометка потеряна после правки текста: нажмите на это слово в тексте заново или удалите пометку.'));
     else {
       const ta = el('input', 'mm-in mm-expl');
       ta.type = 'text';
@@ -152,7 +184,7 @@ const MistakeModeEditor = (() => {
       ta.value = e.explanation || '';
       ta.setAttribute('aria-label', `Пояснение к ошибке «${e.word}»`);
       ta.oninput = () => { e.explanation = ta.value; save(); };
-      r.append(ta);
+      line.append(ta);
     }
     const del = el('button', 'mm-ib mm-del');
     del.type = 'button';
@@ -160,8 +192,40 @@ const MistakeModeEditor = (() => {
     del.title = 'Снять пометку';
     del.setAttribute('aria-label', `Снять пометку с «${e.word}»`);
     del.onclick = () => { t.errors.splice(t.errors.indexOf(e), 1); save(); refresh(); };
-    r.append(del);
+    line.append(del);
+    r.append(line);
+    if (!e.broken) r.append(fixBox(e));
     return r;
+  }
+
+  // Исправление: включатель и поля ответов. Выключение не стирает введённое (поля просто скрываются)
+  function fixBox(e) {
+    const box = el('div', 'mm-fix');
+    const lab = el('label', 'mm-fixon');
+    const cb = el('input');
+    cb.type = 'checkbox';
+    cb.checked = !!e.requiresCorrection;
+    lab.append(cb, document.createTextNode(' Ученик должен ввести исправление'));
+    box.append(lab);
+    const fields = el('div', 'mm-fixfields');
+    fields.hidden = !e.requiresCorrection;
+    const main = el('input', 'mm-in');
+    main.type = 'text';
+    main.placeholder = 'Правильное исправление, например: goes';
+    main.value = e.correction || '';
+    main.setAttribute('aria-label', `Правильное исправление для «${e.word}»`);
+    main.oninput = () => { e.correction = main.value; save(); };
+    const alts = el('textarea', 'mm-in mm-alts');
+    alts.rows = 1;
+    alts.placeholder = 'Другие допустимые варианты, каждый с новой строки (необязательно)';
+    alts.value = e.alts || '';
+    alts.setAttribute('aria-label', `Допустимые варианты для «${e.word}»`);
+    const fit = () => { alts.style.height = 'auto'; alts.style.height = alts.scrollHeight + 2 + 'px'; };
+    alts.oninput = () => { e.alts = alts.value; fit(); save(); };
+    fields.append(main, alts);
+    cb.onchange = () => { e.requiresCorrection = cb.checked; fields.hidden = !cb.checked; save(); if (cb.checked) { fit(); main.focus(); } };
+    box.append(fields);
+    return box;
   }
 
   function head(t, k) {
@@ -237,12 +301,35 @@ const MistakeModeEditor = (() => {
   const textOut = t => ({
     id: t.id,
     ...(t.instruction.trim() ? { instruction: t.instruction.trim() } : {}),
+    ...(imageOut(t.image) ? { image: imageOut(t.image) } : {}),
+    ...(audioOut(t.audio) ? { audio: audioOut(t.audio) } : {}),
     text: t.text.replace(/\r\n?/g, '\n').trim(),
     errors: t.errors.filter(e => !e.broken).slice().sort((a, b) => a.index - b.index)
-      .map(e => ({ id: e.id, index: e.index, word: e.word, ...(String(e.explanation || '').trim() ? { explanation: String(e.explanation).trim() } : {}) })),
+      .map(errOut),
   });
+  // Исправление пишется в файл, только пока оно включено; повторы основного ответа среди допустимых отбрасываются
+  const altList = e => {
+    const main = String(e.correction || '').trim().toLowerCase();
+    const seen = new Set([main]);
+    return String(e.alts || '').split(/\r?\n/).map(s => s.trim()).filter(s => { const k = s.toLowerCase(); if (!s || seen.has(k)) return false; seen.add(k); return true; });
+  };
+  const errOut = e => {
+    const out = { id: e.id, index: e.index, word: e.word };
+    if (String(e.explanation || '').trim()) out.explanation = String(e.explanation).trim();
+    if (e.requiresCorrection) {
+      out.requiresCorrection = true;
+      out.correction = String(e.correction || '').trim();
+      const alts = altList(e);
+      if (alts.length) out.alternatives = alts;
+    }
+    return out;
+  };
   function exportData(draft) {
-    return { module: 'mistake_mode', format: 1, texts: draft.texts.map(textOut) };
+    return {
+      module: 'mistake_mode', format: 1,
+      ...(draft.texts.some(t => imageOut(t.image)) ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm', imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain' } : {}),
+      texts: draft.texts.map(textOut),
+    };
   }
 
   const unitCount = draft => draft.texts.reduce((n, t) => n + t.errors.length, 0);
@@ -260,7 +347,11 @@ const MistakeModeEditor = (() => {
       if (n > MAX_WORDS) errors.push(`${pre}в тексте ${n} слов, а можно не больше ${MAX_WORDS}. Разделите его на два текста.`);
       if (t.errors.some(e => e.broken)) errors.push(`${pre}есть потерянные пометки после правки текста: пометьте слова заново или снимите пометки.`);
       if (!good) errors.push(`${pre}не помечено ни одной ошибки.`);
+      const im = t.image;
+      if (im && !safeMediaPath(im.media) && String(im.url || '').trim() && !safeImageUrl(im.url)) errors.push(`${pre}ссылка на картинку должна быть полным адресом с https://.`);
+      if (hasPic(im) && !String(im.alt || '').trim()) warnings.push(`${pre}у картинки нет описания, незрячий ученик её не поймёт.`);
       if (good > MAX_ERRORS) errors.push(`${pre}ошибок больше ${MAX_ERRORS}.`);
+      t.errors.filter(e => !e.broken && e.requiresCorrection && !String(e.correction || '').trim()).forEach(e => errors.push(`${pre}у ошибки «${e.word}» включено исправление, но не указан правильный вариант.`));
     });
     return { errors, warnings };
   }
@@ -272,17 +363,32 @@ const MistakeModeEditor = (() => {
     const texts = file.texts.slice(0, MAX_TEXTS).map((s, k) => {
       const text = String((s && s.text) || '');
       const w = MistakeTokens.words(text);
+      const im = s && s.image;
       return {
         id: String((s && s.id) || 't' + (k + 1)), instruction: String((s && s.instruction) || ''), text,
+        image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') },
+        audio: (s && s.audio && safeMediaPath(s.audio.media)) || '',
         errors: (Array.isArray(s && s.errors) ? s.errors : []).map(e => {
-          const out = { id: String((e && e.id) || 'e' + (++n)), index: Number(e && e.index) || 0, word: String((e && e.word) || ''), explanation: String((e && e.explanation) || '') };
+          const out = { id: String((e && e.id) || 'e' + (++n)), index: Number(e && e.index) || 0, word: String((e && e.word) || ''), explanation: String((e && e.explanation) || ''),
+            requiresCorrection: !!(e && e.requiresCorrection), correction: String((e && e.correction) || ''), alts: Array.isArray(e && e.alternatives) ? e.alternatives.join('\n') : '' };
           if (w[out.index] !== out.word) out.broken = true;
           return out;
         }),
       };
     });
-    return { ...create(), texts };
+    return { ...create(), imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain', texts };
   }
 
-  return { create, render, load, exportData, validate, unitCount };
+  // Настройки во вкладке «Дизайн»: размер картинок и вписывание, только если в упражнении есть картинки (рисует ядро)
+  const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  function designOptions(draft) {
+    if (!draft.texts.some(t => hasPic(t.image))) return [];
+    return [
+      { field: 'imageSize', label: 'Размер картинок', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } },
+      { field: 'imageFit', label: 'Картинка в рамке', value: FITS[draft.imageFit] ? draft.imageFit : 'contain', names: FITS,
+        icons: { contain: sq('<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>'), cover: sq('<rect x="3" y="5" width="18" height="14" rx="2" fill="currentColor" fill-opacity=".35"/>') } },
+    ];
+  }
+
+  return { create, render, load, exportData, validate, unitCount, designOptions };
 })();
