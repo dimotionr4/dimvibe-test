@@ -4,6 +4,7 @@
 const MatchingEditor = (() => {
   const MAX = 10;
   const MODES = { standard: 'Стандартный: верные пары уходят вниз', lines_pair_colors: 'Линии: все карточки на месте, одна проверка' };
+  const ALIGNS = { auto: 'Авто: короткие по центру, длинные слева', center: 'По центру', left: 'По левому краю' };
   const { nextId } = GapEngine;
   let d, root, save, delAsk = null, msgTimer = null, drag = null;
   let msg, counter, listBox, addBtn;
@@ -24,7 +25,7 @@ const MatchingEditor = (() => {
   const newItem = id => ({ id, left: '', right: '' });
 
   function create() {
-    return { module: 'matching', format: 1, mode: 'standard', showCorrect: false, items: [newItem('p1'), newItem('p2'), newItem('p3')] };
+    return { module: 'matching', format: 1, mode: 'standard', align: 'auto', showCorrect: false, items: [newItem('p1'), newItem('p2'), newItem('p3')] };
   }
 
   function render(container, draft, onSave) {
@@ -217,6 +218,7 @@ const MatchingEditor = (() => {
     return {
       module: 'matching', format: 1,
       mode: MODES[draft.mode] ? draft.mode : 'standard',
+      ...(ALIGNS[draft.align] && draft.align !== 'auto' ? { align: draft.align } : {}),
       ...(draft.showCorrect ? { showCorrect: true } : {}),
       items: draft.items.map(it => ({ id: it.id, left: clean(it.left), right: clean(it.right) })),
     };
@@ -252,7 +254,7 @@ const MatchingEditor = (() => {
   function load(file) {
     if (!Array.isArray(file.items)) throw new Error('В файле нет пар.');
     const items = file.items.map((i, k) => ({ id: String(i.id || 'p' + (k + 1)), left: String(i.left || ''), right: String(i.right || '') }));
-    return { ...create(), mode: MODES[file.mode] ? file.mode : 'standard', showCorrect: file.showCorrect === true, items: items.length ? items : create().items };
+    return { ...create(), mode: MODES[file.mode] ? file.mode : 'standard', align: ALIGNS[file.align] ? file.align : 'auto', showCorrect: file.showCorrect === true, items: items.length ? items : create().items };
   }
 
   // Настройки во вкладке «Поведение»: показ верных пар в конце (рисует ядро, поле лежит в черновике)
@@ -269,6 +271,8 @@ const MatchingEditor = (() => {
     return [
       { field: 'mode', label: 'Показ пар', value: MODES[draft.mode] ? draft.mode : 'standard', names: MODES,
         icons: { standard: sq('<rect x="4" y="5" width="6" height="5" rx="1"/><rect x="14" y="5" width="6" height="5" rx="1"/><path d="M4 16h16M4 20h16"/>'), lines_pair_colors: sq('<rect x="3" y="5" width="6" height="5" rx="1"/><rect x="15" y="14" width="6" height="5" rx="1"/><path d="M9 8l6 8"/>') } },
+      { field: 'align', label: 'Текст в карточках', value: ALIGNS[draft.align] ? draft.align : 'auto', names: ALIGNS,
+        icons: { auto: sq('<path d="M7 7h10M5 12h14M7 17h6"/>'), center: sq('<path d="M6 7h12M8 12h8M6 17h12"/>'), left: sq('<path d="M5 7h14M5 12h9M5 17h12"/>') } },
     ];
   }
 

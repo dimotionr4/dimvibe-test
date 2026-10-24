@@ -156,18 +156,43 @@ const MatchingPlayer = (() => {
       svg.setAttribute('height', b.height);
       svg.setAttribute('aria-hidden', 'true');
       const num = numbers();
+      const comic = document.documentElement.classList.contains('style-comic');
       gaps.forEach(g => {
         if (!g.value) return;
         const l = board.querySelector(`.mt-card[data-side="left"][data-id="${g.id}"]`), r = board.querySelector(`.mt-card[data-side="right"][data-id="${g.value}"]`);
         if (!l || !r) return;
         const lr = l.getBoundingClientRect(), rr = r.getBoundingClientRect();
-        const line = document.createElementNS(NS, 'line');
-        line.setAttribute('x1', lr.right - b.left); line.setAttribute('y1', lr.top + lr.height / 2 - b.top);
-        line.setAttribute('x2', rr.left - b.left); line.setAttribute('y2', rr.top + rr.height / 2 - b.top);
-        line.setAttribute('stroke', g.state === 'ok' ? 'var(--ok)' : g.state === 'bad' ? 'var(--bad)' : `hsl(${HUES[(num[g.id] - 1) % HUES.length]} 70% 52%)`);
-        line.setAttribute('stroke-width', '3');
-        line.setAttribute('stroke-linecap', 'round');
-        svg.append(line);
+        const x1 = lr.right - b.left, y1 = lr.top + lr.height / 2 - b.top, x2 = rr.left - b.left, y2 = rr.top + rr.height / 2 - b.top;
+        const color = g.state === 'ok' ? 'var(--ok)' : g.state === 'bad' ? 'var(--bad)' : `hsl(${HUES[(num[g.id] - 1) % HUES.length]} 70% 52%)`;
+        const draw = (el, w, op) => {
+          el.setAttribute('stroke', color); el.setAttribute('stroke-width', w); el.setAttribute('stroke-linecap', 'round'); el.setAttribute('stroke-linejoin', 'round');
+          el.setAttribute('fill', 'none'); if (op) el.setAttribute('opacity', op);
+          svg.append(el);
+        };
+        if (comic) {
+          // Как нарисовано от руки: линия слегка виляет, рядом второй, тоньше, штрих. Неровность зависит от ID пары, поэтому не дрожит при перерисовке
+          const seed = [...g.id].reduce((s, c) => (s * 31 + c.charCodeAt(0)) % 9973, 7);
+          const rnd = k => ((Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453) % 1 + 1) % 1 - 0.5;
+          [0, 1].forEach(pass => {
+            const len = Math.hypot(x2 - x1, y2 - y1), n = Math.max(3, Math.round(len / 28));
+            const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+            const pts = Array.from({ length: n + 1 }, (_, k) => {
+              const t = k / n, off = k === 0 || k === n ? rnd(k + pass * 50) * 2 : rnd(k + pass * 50) * 7;
+              return [x1 + (x2 - x1) * t + nx * off, y1 + (y2 - y1) * t + ny * off];
+            });
+            let dd = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+            for (let k = 1; k < pts.length; k++) { const mx = (pts[k - 1][0] + pts[k][0]) / 2, my = (pts[k - 1][1] + pts[k][1]) / 2; dd += ` Q${pts[k - 1][0].toFixed(1)} ${pts[k - 1][1].toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`; }
+            dd += ` L${pts[n][0].toFixed(1)} ${pts[n][1].toFixed(1)}`;
+            const path = document.createElementNS(NS, 'path');
+            path.setAttribute('d', dd);
+            path.setAttribute('class', 'mt-hand');
+            draw(path, pass ? 1.5 : 3, pass ? 0.7 : 0);
+          });
+        } else {
+          const line = document.createElementNS(NS, 'line');
+          line.setAttribute('x1', x1); line.setAttribute('y1', y1); line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+          draw(line, 3, 0);
+        }
       });
       box.replaceChildren(svg);
     };
@@ -183,7 +208,9 @@ const MatchingPlayer = (() => {
     // В Lines связи остаются как есть: красные линии и карточки — итог единственной проверки
     if (!lines()) gaps.forEach(g => { if (g.state === 'bad' && g.value) { g.wrongRight = g.value; g.value = ''; } });
     const num = numbers();
-    const wrapper = el('div', 'mt-wrap');
+    // Выравнивание текста: «авто» — по центру, а если в упражнении есть длинная карточка, то у всех по левому краю
+    const long = data.items.some(i => String(i.left).length > 40 || String(i.right).length > 40);
+    const wrapper = el('div', 'mt-wrap mt-al-' + (data.align === 'left' || (data.align !== 'center' && long) ? 'left' : 'center'));
     if (rest.length) {
       const hint = el('p', 'mt-hint', active ? 'Теперь нажмите карточку справа.' : 'Нажмите карточку слева, потом её пару справа.');
       hint.setAttribute('role', 'status');

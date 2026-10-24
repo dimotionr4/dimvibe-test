@@ -6,6 +6,8 @@
 .mt-card { --mt-c:var(--line); display:flex; align-items:center; gap:8px; width:100%; min-height:52px; padding:8px 12px; border-radius:12px; text-align:left; line-height:1.4; }
 .mt-card:disabled { cursor:default; }
 .mt-text { flex:1; min-width:0; overflow-wrap:anywhere; }
+.mt-al-center .mt-text { text-align:center; }
+.mt-al-left .mt-text { text-align:left; }
 .mt-tag { flex:none; display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; border-radius:999px; background:var(--mt-c); color:#fff; font-size:.85rem; font-weight:700; }
 .mt-mark { flex:none; font-weight:700; }
 .mt-card.linked { border-color:var(--mt-c); background:color-mix(in srgb, var(--mt-c) 18%, var(--card)); padding-right:36px; }
