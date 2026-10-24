@@ -137,6 +137,14 @@ const MatchingPlayer = (() => {
       ctl.append(z);
     }
     if (audio) ctl.append(audioButton(audio, `m${side}${id}`, 'hintbtn mt-tool mt-voice', '🔊', 'Прослушать карточку'));
+    // Ручка для перетаскивания связи на правую карточку (необязательная замена двум нажатиям; ручка не мешает прокрутке страницы)
+    if (left && !finished) {
+      const h = el('span', 'mt-grab', '⠿');
+      h.setAttribute('aria-hidden', 'true');
+      h.title = 'Потяните к карточке справа';
+      h.onpointerdown = e => startDrag(e, id, b);
+      ctl.append(h);
+    }
     // Разорвать связь: у левой карточки значок ×, у связанной правой тоже
     if (n && !finished) {
       const x = el('span', 'mt-x', '×');
@@ -148,8 +156,48 @@ const MatchingPlayer = (() => {
       x.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(e); } };
       ctl.append(x);
     }
-    if (ctl.childElementCount) { wrap.append(ctl); b.style.setProperty('--mt-n', ctl.childElementCount); }
+    // Запас справа под значки; ручка перетаскивания в узком окне (телефон) скрыта и места не занимает
+    if (ctl.childElementCount) { wrap.append(ctl); b.style.setProperty('--mt-n', ctl.querySelectorAll('.mt-tool, .mt-x').length); b.style.setProperty('--mt-g', ctl.querySelector('.mt-grab') ? 1 : 0); }
     return wrap;
+  }
+
+  // Перетаскивание: от ручки левой карточки тянется линия за указателем, отпустили над правой карточкой — связь создана (как два нажатия)
+  function startDrag(e, id, btn) {
+    if (finished || (e.button !== undefined && e.button !== 0)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const h = e.currentTarget;
+    try { h.setPointerCapture(e.pointerId); } catch (err) { /* без захвата тоже работает: события придут на документ */ }
+    const NS = 'http://www.w3.org/2000/svg';
+    const r = btn.getBoundingClientRect(), x0 = r.right, y0 = r.top + r.height / 2;
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'mt-dragline');
+    svg.setAttribute('aria-hidden', 'true');
+    const line = document.createElementNS(NS, 'line');
+    [['x1', x0], ['y1', y0], ['x2', e.clientX], ['y2', e.clientY]].forEach(([k, v]) => line.setAttribute(k, v));
+    svg.append(line);
+    document.body.append(svg);
+    btn.classList.add('dragging');
+    let over = null;
+    const stop = () => {
+      h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', cancel);
+      svg.remove(); btn.classList.remove('dragging');
+      if (over) over.classList.remove('drop');
+    };
+    const move = ev => {
+      line.setAttribute('x2', ev.clientX); line.setAttribute('y2', ev.clientY);
+      const t = document.elementFromPoint(ev.clientX, ev.clientY), c = t && t.closest ? t.closest('.mt-card[data-side="right"]') : null;
+      if (c !== over) { if (over) over.classList.remove('drop'); over = c; if (over) over.classList.add('drop'); }
+    };
+    const up = () => {
+      const target = over && over.dataset.id;
+      stop();
+      if (target) { active = id; pickRight(target); }
+    };
+    const cancel = () => stop();
+    h.addEventListener('pointermove', move);
+    h.addEventListener('pointerup', up);
+    h.addEventListener('pointercancel', cancel);
   }
 
   // Картинка карточки: рамка по размеру и вписыванию из «Дизайна»; src и alt нужны для увеличения

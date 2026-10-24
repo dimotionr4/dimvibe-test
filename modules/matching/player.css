@@ -3,7 +3,7 @@
 .mt-board { display:grid; grid-template-columns:1fr 1fr; gap:10px 28px; align-items:start; margin-bottom:var(--card-gap); }
 .mt-col { display:flex; flex-direction:column; gap:8px; min-width:0; }
 .mt-cell { position:relative; }
-.mt-card { --mt-c:var(--line); position:relative; display:flex; align-items:center; gap:8px; width:100%; min-height:52px; padding:8px calc(12px + var(--mt-n, 0) * 30px) 8px 12px; border-radius:12px; text-align:left; line-height:1.4; }
+.mt-card { --mt-c:var(--line); position:relative; display:flex; align-items:center; gap:8px; width:100%; min-height:52px; padding:8px calc(12px + var(--mt-n, 0) * 30px + var(--mt-g, 0) * 26px) 8px 12px; border-radius:12px; text-align:left; line-height:1.4; }
 .mt-card:disabled { cursor:default; }
 .mt-text { flex:1; min-width:0; overflow-wrap:anywhere; }
 .mt-al-center .mt-text { text-align:center; }
@@ -72,3 +72,10 @@
 /* Карточка с картинкой: значки лежат на картинке, справа вверху, поэтому боковой запас не нужен */
 .mt-card.has-pic { padding-right:12px; }
 @media (max-width:520px) { .mt-card { padding-right:calc(8px + var(--mt-n, 0) * 28px); } .mt-card.has-pic { padding-right:8px; } .mt-ctl { right:5px; } }
+/* Перетаскивание связи: ручка у левой карточки, линия за указателем, подсветка правой карточки под ним */
+.mt-grab { flex:none; width:22px; height:24px; display:inline-flex; align-items:center; justify-content:center; color:var(--muted); cursor:grab; user-select:none; touch-action:none; font-size:1.1rem; line-height:1; }
+.mt-grab:active { cursor:grabbing; }
+.mt-dragline { position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:50; }
+.mt-dragline line { stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-dasharray:2 6; }
+.mt-card.dragging { border-color:var(--accent); }
+.mt-card.drop { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }@media (max-width:520px) { .mt-grab { display:none; } } /* на телефоне ручки нет: связь делается двумя нажатиями */
