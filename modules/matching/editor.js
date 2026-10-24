@@ -295,67 +295,150 @@ const MatchingEditor = (() => {
     return r;
   }
 
-  // Выбор картинки: загрузка и медиатека (mediaPicker из ядра), ссылка https, описание, «Убрать». im меняется на месте
-  function imageField(im, redraw) {
-    const box = el('div', 'mt-imgf');
-    const pic = hasPic(im);
-    if (pic) {
-      const th = el('span', 'mt-thumb');
-      const src = mediaSrc(safeMediaPath(im.media) ? { media: im.media } : { url: im.url });
-      if (src) { const img = el('img'); img.src = src; img.alt = ''; img.onerror = () => { th.classList.add('broken'); img.remove(); }; th.append(img); }
-      box.append(th);
-    }
-    const rowEl = el('div', 'mt-imgrow');
-    if (window.mediaPicker) rowEl.append(window.mediaPicker('image', () => im.media || '', v => { im.media = v; if (v) im.url = ''; save(); redraw(); }, 'Загрузить картинку'));
-    const linkBtn = el('button', '', 'Ссылка');
-    linkBtn.type = 'button';
-    rowEl.append(linkBtn);
-    if (pic || im.url || im.media) {
-      const rm = el('button', '', 'Убрать');
-      rm.type = 'button';
-      rm.onclick = () => { im.media = ''; im.url = ''; save(); redraw(); };
-      rowEl.append(rm);
-    }
-    box.append(rowEl);
-    const link = el('input');
-    link.placeholder = 'Ссылка на картинку (https://…)';
-    link.value = im.url || '';
-    link.hidden = !im.url;
-    link.setAttribute('aria-label', 'Ссылка на картинку');
-    const bad = el('div', 'mt-warn');
-    bad.hidden = true;
-    link.oninput = () => { im.url = link.value; if (link.value.trim()) im.media = ''; bad.hidden = !link.value.trim() || !!safeImageUrl(link.value); bad.textContent = 'Нужен полный адрес с https://.'; save(); };
-    link.onchange = redraw;
-    linkBtn.onclick = () => { link.hidden = !link.hidden; if (!link.hidden) link.focus(); };
-    box.append(link, bad);
-    if (pic) {
-      const alt = el('input');
-      alt.placeholder = 'Описание картинки для незрячих учеников';
-      alt.value = im.alt || '';
-      alt.setAttribute('aria-label', 'Описание картинки');
-      alt.oninput = () => { im.alt = alt.value; save(); };
-      box.append(alt);
-    }
-    return box;
+  // ---- Картинка и звук карточки: компактно, значками с выпадающим списком ----
+  const ICON_IMG = svg('<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M3 17l5-5 4 4 3-3 6 6"/>');
+  const ICON_SND = svg('<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>');
+  let menuWired = false;
+  // Закрываем выпадающие списки нажатием мимо и клавишей Esc (обработчики ставятся один раз)
+  function wireMenus() {
+    if (menuWired) return;
+    menuWired = true;
+    const closeAll = except => document.querySelectorAll('.mt-menu:not([hidden])').forEach(m => { if (m !== except) { m.hidden = true; const b = m.previousElementSibling; if (b) b.setAttribute('aria-expanded', 'false'); } });
+    document.addEventListener('pointerdown', e => { if (!e.target.closest('.mt-mw')) closeAll(null); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(null); });
+    wireMenus.closeAll = closeAll;
   }
-  const audioField = (get, set, label) => (window.mediaPicker ? window.mediaPicker('audio', get, set, label) : el('span'));
+  // Значок-кнопка со списком действий; items — [{label, fn}] (пустые пункты пропускаются)
+  function iconMenu(icon, title, has, items) {
+    wireMenus();
+    const w = el('span', 'mt-mw');
+    const b = el('button', 'mt-mb' + (has ? ' has' : ''));
+    b.type = 'button';
+    b.innerHTML = icon + '<span class="mt-caret" aria-hidden="true">▾</span>';
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.setAttribute('aria-haspopup', 'true');
+    b.setAttribute('aria-expanded', 'false');
+    const m = el('div', 'mt-menu');
+    m.hidden = true;
+    m.setAttribute('role', 'menu');
+    items.filter(Boolean).forEach(({ label, fn, danger }) => {
+      const i = el('button', 'mt-mi' + (danger ? ' danger' : ''), label);
+      i.type = 'button';
+      i.setAttribute('role', 'menuitem');
+      i.onclick = () => { m.hidden = true; b.setAttribute('aria-expanded', 'false'); fn(); };
+      m.append(i);
+    });
+    b.onclick = () => { const open = m.hidden; wireMenus.closeAll(m); m.hidden = !open; b.setAttribute('aria-expanded', String(open)); };
+    w.append(b, m);
+    return w;
+  }
 
-  // Панель пары: картинка и звук для левой и правой карточки (текст остаётся в строке)
+  // Загрузка файла в хранилище (общие функции редактора: вход через Google, проверка файла, медиатека)
+  function pickFile(kind, say2, done) {
+    if (typeof mediaUserNow !== 'undefined' && !mediaUserNow) { // не вошли через Google: пункт меню ведёт ко входу
+      mediaSignIn().catch(e => say2(mediaErrorText(e)));
+      return;
+    }
+    const f = document.createElement('input');
+    f.type = 'file';
+    f.accept = MEDIA_ACCEPT[kind];
+    f.onchange = async () => {
+      const file = f.files[0];
+      if (!file) return;
+      const bad = checkMediaFile(file, kind);
+      if (bad) return say2(bad);
+      say2('Загрузка…');
+      try {
+        const path = (await MediaLib.upload(file, {}, p => say2(`Загрузка ${Math.round(p * 100)}%`))).path;
+        say2('');
+        done(path);
+      } catch (e) { say2(e.userText || mediaErrorText(e)); }
+    };
+    f.click();
+  }
+  const fromLibrary = (kind, done) => openMediaLibrary({ pick: true, multi: false, kind, onPick: items => done(items[0].path) });
+
+  // Панель пары: у каждой карточки (левой и правой) два значка — картинка и звук — и, если есть, миниатюра, описание и значок воспроизведения
   function mediaPanel(it) {
     const panel = el('div', 'mt-panel');
+    const refresh = () => { markDupes(); const b = listBox.querySelector(`.mt-row[data-id="${it.id}"] .mt-more`); if (b) b.classList.toggle('has', hasMedia(it)); };
     const draw = () => {
       panel.innerHTML = '';
       [['left', 'Левая карточка'], ['right', 'Правая карточка']].forEach(([s, title]) => {
+        const im = it[s + 'Image'], pic = hasPic(im), snd = it[s + 'Audio'];
         const col = el('div', 'mt-pcol');
-        col.append(el('div', 'mt-label', title), imageField(it[s + 'Image'], () => { draw(); markDupes(); updateDot(); }), el('div', 'mt-label', 'Звук'), audioField(() => it[s + 'Audio'] || '', v => { it[s + 'Audio'] = v; save(); markDupes(); updateDot(); }, 'Загрузить звук'));
+        const status = el('span', 'mt-status');
+        const say2 = t => { status.textContent = t; status.classList.toggle('err', !!t && !/^Загрузка/.test(t)); };
+        const set = (obj, key, v) => { obj[key] = v; save(); draw(); refresh(); };
+        const head = el('div', 'mt-phead');
+        head.append(el('span', 'mt-ptitle', title));
+        const signed = typeof mediaUserNow !== 'undefined' && mediaUserNow;
+        head.append(
+          iconMenu(ICON_IMG, 'Изображение карточки', pic, [
+            { label: signed ? 'Загрузить изображение' : 'Войти для загрузки', fn: () => pickFile('image', say2, p => { im.url = ''; set(im, 'media', p); }) },
+            { label: 'Выбрать из медиатеки', fn: () => fromLibrary('image', p => { im.url = ''; set(im, 'media', p); }) },
+            { label: 'Ссылка на изображение', fn: () => { linkOpen[s] = true; draw(); } },
+            pic || im.url || im.media ? { label: 'Убрать изображение', danger: true, fn: () => { im.media = ''; im.url = ''; linkOpen[s] = false; save(); draw(); refresh(); } } : null,
+          ]),
+          iconMenu(ICON_SND, 'Звук карточки', !!snd, [
+            { label: signed ? 'Загрузить звук' : 'Войти для загрузки', fn: () => pickFile('audio', say2, p => set(it, s + 'Audio', p)) },
+            { label: 'Выбрать из медиатеки', fn: () => fromLibrary('audio', p => set(it, s + 'Audio', p)) },
+            snd ? { label: 'Убрать звук', danger: true, fn: () => set(it, s + 'Audio', '') } : null,
+          ]),
+        );
+        if (snd) {
+          const play = el('button', 'mt-play', '▶');
+          play.type = 'button';
+          play.title = 'Прослушать';
+          play.setAttribute('aria-label', 'Прослушать звук карточки');
+          play.onclick = () => {
+            const url = mediaUrl(snd);
+            if (!url) return;
+            if (panel._a) { panel._a.pause(); panel._a = null; document.querySelectorAll('.mt-play').forEach(x => { x.textContent = '▶'; }); return; }
+            const a = new Audio(url);
+            panel._a = a;
+            play.textContent = '■';
+            const end = () => { panel._a = null; play.textContent = '▶'; };
+            a.onended = a.onerror = end;
+            a.play().catch(end);
+          };
+          head.append(play);
+        }
+        head.append(status);
+        col.append(head);
+        if (pic) {
+          const line = el('div', 'mt-pline');
+          const th = el('span', 'mt-thumb');
+          const src = mediaSrc(safeMediaPath(im.media) ? { media: im.media } : { url: im.url });
+          if (src) { const img = el('img'); img.src = src; img.alt = ''; img.onerror = () => { th.classList.add('broken'); img.remove(); }; th.append(img); }
+          const alt = el('input');
+          alt.placeholder = 'Описание для незрячих учеников';
+          alt.value = im.alt || '';
+          alt.setAttribute('aria-label', 'Описание картинки');
+          alt.oninput = () => { im.alt = alt.value; save(); };
+          line.append(th, alt);
+          col.append(line);
+        }
+        if (linkOpen[s]) {
+          const link = el('input');
+          link.placeholder = 'Ссылка на картинку (https://…)';
+          link.value = im.url || '';
+          link.setAttribute('aria-label', 'Ссылка на картинку');
+          const bad = el('div', 'mt-warn');
+          bad.hidden = true;
+          link.oninput = () => { im.url = link.value; if (link.value.trim()) im.media = ''; bad.hidden = !link.value.trim() || !!safeImageUrl(link.value); bad.textContent = 'Нужен полный адрес с https://.'; save(); };
+          link.onchange = () => { draw(); refresh(); };
+          col.append(link, bad);
+          setTimeout(() => link.focus(), 0);
+        }
         panel.append(col);
       });
     };
-    const updateDot = () => { const b = listBox.querySelector(`.mt-row[data-id="${it.id}"] .mt-more`); if (b) b.classList.toggle('has', hasMedia(it)); };
+    const linkOpen = { left: !!(it.leftImage.url && !it.leftImage.media), right: !!(it.rightImage.url && !it.rightImage.media) };
     draw();
     return panel;
   }
-
   const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
 
   function addItem(set, index) {

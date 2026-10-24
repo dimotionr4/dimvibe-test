@@ -18,6 +18,7 @@ const MatchingPlayer = (() => {
   const maxChecks = () => (lines() ? 1 : 0);
   const live = g => lines() || !g.locked; // в Lines верные пары не уходят в зелёную зону, связи остаются
   let ros = []; // наблюдатели за размером полей, чтобы линии шли за карточками
+  let fresh = false, cache = null; // fresh: упражнение только что собрано (units); cache: порядок карточек для предпросмотра
   let sets = [], setOf = {}; // наборы пар упражнения и номер набора у каждой пары
 
   // Единицы общего хода: подсказок и звука пока нет
@@ -26,6 +27,7 @@ const MatchingPlayer = (() => {
     sets = Array.isArray(data.sets) ? data.sets : [{ id: 's1', instruction: '', items: data.items || [] }];
     data.items = sets.flatMap(s => s.items);
     setOf = {};
+    fresh = true;
     sets.forEach((s, k) => s.items.forEach(i => { setOf[i.id] = k; }));
     return data.items.map(it => ({
       id: it.id, answer: it.id, alternatives: [], hint: '', audio: null, hintAudio: null,
@@ -35,7 +37,11 @@ const MatchingPlayer = (() => {
 
   // Столбцы перемешиваются независимо; если вышло так, что пары стоят «по строкам», тасуем ещё раз
   function reset() {
-    // Каждый набор перемешивается отдельно
+    // Каждый набор перемешивается отдельно. В предпросмотре редактора каждая правка пересобирает упражнение: пока состав пар тот же, порядок карточек не меняем, чтобы они не прыгали
+    const sig = sets.map(s => s.items.map(i => i.id).join( )).join('|');
+    const reuse = fresh && params.has('preview') && cache && cache.sig === sig;
+    fresh = false;
+    if (reuse) { leftOrder = cache.l.slice(); rightOrder = cache.r.slice(); active = null; refocus = null; showAnswers = false; return; }
     leftOrder = []; rightOrder = [];
     sets.forEach(s => {
       const ids = s.items.map(i => i.id);
@@ -44,6 +50,7 @@ const MatchingPlayer = (() => {
       for (let k = 0; k < 6 && ids.length > 1 && r.every((x, i) => x === l[i]); k++) r = shuffle(ids);
       leftOrder.push(...l); rightOrder.push(...r);
     });
+    cache = { sig, l: leftOrder.slice(), r: rightOrder.slice() };
     active = null; refocus = null; showAnswers = false;
   }
 
