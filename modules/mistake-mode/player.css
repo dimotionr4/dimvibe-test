@@ -47,8 +47,13 @@
 .mm-body.mm-fixmode { line-height:2.5; } /* запас под значок ✎ над словом и поле замены */
 /* Значок ✎ сидит в правом верхнем углу слова в кружке (слово и значок лежат в обёртке .mm-wwrap) */
 .mm-wwrap { position:relative; display:inline-block; }
-.mm-edit { position:absolute; top:-15px; right:-13px; z-index:1; display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--card); border:1px solid var(--line); color:var(--muted); cursor:pointer; user-select:none; -webkit-user-select:none; font-size:.8rem; line-height:1; touch-action:manipulation; }
-.mm-edit::before { content:""; position:absolute; inset:-8px; } /* зона нажатия шире значка */
+.mm-edit { position:absolute; top:-19px; right:-17px; z-index:1; display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; background:var(--card); border:1px solid var(--line); color:var(--muted); cursor:pointer; user-select:none; -webkit-user-select:none; font-size:1.05rem; line-height:1; touch-action:manipulation; transform:scaleX(-1); /* карандаш отзеркален по горизонтали */ transition:opacity .12s; }
+.mm-edit::before { content:""; position:absolute; inset:-6px; } /* зона нажатия шире значка */
+/* Мышь: значок виден только при наведении на слово (и при фокусе с клавиатуры). Сенсорный экран наведения не имеет, там значок виден всегда */
+@media (hover:hover) {
+  .mm-edit { opacity:0; }
+  .mm-wwrap:hover .mm-edit, .mm-wwrap:focus-within .mm-edit, .mm-edit:focus-visible { opacity:1; }
+}
 .mm-edit:hover, .mm-back:hover { color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
 .mm-edit:focus-visible, .mm-back:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
 .mm-fixin.ok .mm-fixmark { display:none; } /* ✓ уже стоит у перечёркнутого слова */
