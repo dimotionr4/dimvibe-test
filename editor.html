@@ -134,6 +134,8 @@
   .side-btn { display:flex; align-items:center; gap:8px; text-align:left; position:relative; }
   a.side-btn { text-decoration:none; color:inherit; border:1px solid var(--line); background:var(--card); border-radius:8px; padding:6px 12px; min-height:36px; }
   a.side-btn:hover { background:var(--accent-soft); }
+  /* Ширина панели из «Настроек» (core/shell.js задаёт --sw); на узком экране панель выезжает со своей шириной */
+  @media (min-width: 901px) { aside { position:relative; } aside:not(.collapsed) { width:var(--sw, 260px); } }
   /* Свёрнутая панель: только значки, названия — в подсказках */
   aside.collapsed { width:56px; padding:14px 8px; align-items:center; }
   aside.collapsed .lbl, aside.collapsed #list { display:none; }
@@ -323,7 +325,8 @@
   <button class="side-btn" id="openLib" data-tip="Медиатека: картинки и звук"><span data-icon="image"></span><span class="lbl">Медиатека</span></button>
   <h2 class="lbl">Мои упражнения</h2>
   <div id="list"></div>
-  <button class="side-btn credit" id="creditBtn" data-tip="Авторство и лицензии" aria-haspopup="true" aria-expanded="false"><span data-icon="info"></span><span class="lbl">Авторство и лицензии</span></button>
+  <a class="side-btn credit" id="goSettings" href="settings.html" data-tip="Настройки"><span data-icon="gear"></span><span class="lbl">Настройки</span></a>
+  <button class="side-btn" id="creditBtn" data-tip="Авторство и лицензии" aria-haspopup="true" aria-expanded="false"><span data-icon="info"></span><span class="lbl">Авторство и лицензии</span></button>
 </aside>
 <div id="main">
 <div id="work">
@@ -403,6 +406,7 @@
 <script src="modules/image-to-gaps/editor.js?v=4"></script>
 <script src="modules/true-false/editor.js?v=2"></script>
 <script src="modules/multiple-choice/editor.js?v=5"></script>
+<script src="core/shell.js?v=1"></script>
 <script>
 const ASSET_V = 34;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
@@ -1315,6 +1319,7 @@ function renderPublish() {
 // Значки интерфейса: рисуются из этого списка в любой элемент с data-icon
 const ICONS = {
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10M10 20v-6h4v6"/>',
   undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
   redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>',
@@ -1352,11 +1357,11 @@ const THEME_KEY = 'dimvibe.theme';
 let theme = 'light', previewTheme = null; // previewTheme = null: предпросмотр следует за темой редактора
 const narrow = () => matchMedia('(max-width: 900px)').matches;
 
-function setTheme(t) {
+function setTheme(t, persist = true) {
   theme = t === 'dark' ? 'dark' : 'light';
   previewTheme = null;
   document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+  if (persist) { try { localStorage.setItem(THEME_KEY, theme); } catch (e) {} } // без сохранённого выбора («Авто») тема следует за устройством и не фиксируется
   $('themeSwitch').setAttribute('aria-checked', String(theme === 'dark'));
   pushPreviewTheme();
   renderDesign();
@@ -1365,7 +1370,8 @@ function setTheme(t) {
 (() => {
   let saved = null;
   try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
-  setTheme(saved === 'light' || saved === 'dark' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  const valid = saved === 'light' || saved === 'dark';
+  setTheme(valid ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'), valid);
 })();
 $('themeSwitch').onclick = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
@@ -1376,12 +1382,15 @@ function setSide(collapsed, save) {
   $('sideToggle').setAttribute('aria-expanded', String(!collapsed));
   if (save) { try { localStorage.setItem(SIDE_KEY, collapsed ? '1' : '0'); } catch (e) {} }
 }
-$('sideToggle').onclick = () => setSide(!$('side').classList.contains('collapsed'), !narrow());
+// Если в «Настройках» включено «сворачивать при открытии редактора», панель при каждом открытии свёрнута, а выбор здесь не пишется в общее состояние (его хранит главная)
+const autoCollapse = () => DimShell.read().autoCollapse;
+$('sideToggle').onclick = () => setSide(!$('side').classList.contains('collapsed'), !narrow() && !autoCollapse());
 (() => {
   let saved = null;
   try { saved = localStorage.getItem(SIDE_KEY); } catch (e) {}
-  setSide(narrow() || saved === '1', false);
+  setSide(narrow() || autoCollapse() || saved === '1', false);
 })();
+DimShell.init($('side'));
 
 // Предпросмотр справа: плеер (index.html?preview) сообщает, что готов, и получает данные черновика.
 // Пока панель открыта, он сам обновляется при правках.

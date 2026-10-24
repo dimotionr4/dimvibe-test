@@ -30,7 +30,7 @@
   #shell { display:flex; align-items:flex-start; }
   main { flex:1; min-width:0; max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
   /* Левая панель как в редакторе: сворачивается до значков, на узком экране выезжает поверх */
-  #side { flex:none; width:260px; position:sticky; top:48px; height:calc(100vh - 48px); height:calc(100dvh - 48px); overflow-y:auto; border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:10px; background:var(--bg); z-index:20; }
+  #side { flex:none; width:var(--sw, 260px); position:sticky; top:48px; height:calc(100vh - 48px); height:calc(100dvh - 48px); overflow-y:auto; border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:10px; background:var(--bg); z-index:20; }
   #side.collapsed { width:56px; padding:14px 8px; align-items:center; overflow:visible; }
   #side.collapsed .lbl { display:none; }
   #side.collapsed .side-btn { width:40px; padding:0; justify-content:center; }
@@ -49,7 +49,7 @@
   .draft b { display:block; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .draft small { color:var(--muted); }
   .side-none { color:var(--muted); font-size:.85rem; margin:0; padding:0 8px; }
-  .creditpop { position:fixed; z-index:60; left:12px; bottom:56px; max-width:300px; background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:10px 14px; font-size:.85rem; line-height:1.45; box-shadow:0 8px 28px rgba(0,0,0,.28); }
+  .creditpop { position:fixed; z-index:60; left:12px; bottom:100px; max-width:300px; background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:10px 14px; font-size:.85rem; line-height:1.45; box-shadow:0 8px 28px rgba(0,0,0,.28); }
   .creditpop[hidden] { display:none; }
   .creditpop p { margin:6px 0 0; }
   .creditpop a { color:var(--accent); }
@@ -149,6 +149,11 @@
   .v-icons .mod::after { content:attr(data-tip); }
   .v-icons .mod[data-tip]::after { top:calc(100% + 4px); left:0; transform:none; white-space:normal; width:max-content; max-width:220px; }
   .v-icons .mod[data-tip]:hover::after { display:block; animation:tipin .12s .35s both; }
+  .linkbtn { border:none; background:transparent; padding:0; color:var(--accent); cursor:pointer; text-decoration:underline; font-size:inherit; }
+  .pop .note[hidden] { display:none; }
+  .mod.dragging { opacity:.4; }
+  .mod.dropat { box-shadow:0 0 0 2px var(--accent); }
+  .mod[draggable=true] .main { cursor:grab; }
   .empty { color:var(--muted); text-align:center; padding:32px 0; }
   .empty[hidden] { display:none; }
   @media (max-width:520px) {
@@ -182,7 +187,8 @@
   <a class="side-btn" href="editor.html" data-tip="Открыть редактор"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg></span><span class="lbl">Редактор</span></a>
   <h3 class="lbl">Мои упражнения</h3>
   <div id="drafts" class="lbl"></div>
-  <button class="side-btn credit" id="creditBtn" data-tip="Авторство и лицензии" aria-haspopup="true" aria-expanded="false"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span><span class="lbl">Авторство и лицензии</span></button>
+  <a class="side-btn credit" href="settings.html" data-tip="Настройки"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span><span class="lbl">Настройки</span></a>
+  <button class="side-btn" id="creditBtn" data-tip="Авторство и лицензии" aria-haspopup="true" aria-expanded="false"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span><span class="lbl">Авторство и лицензии</span></button>
 </aside>
 <div id="scrim" hidden></div>
 <div id="creditPop" class="creditpop" role="dialog" aria-label="Авторство и лицензии" hidden>
@@ -208,6 +214,17 @@
         <button class="tb" data-view="icons" aria-pressed="false" data-tip="Значки" aria-label="Компактные значки"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
       </div>
       <div class="menuwrap">
+        <button class="tb" id="sortBtn" aria-expanded="false" aria-haspopup="true" data-tip="Порядок модулей" aria-label="Порядок модулей"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg></button>
+        <div class="pop" id="sortPop" role="menu" hidden>
+          <div class="row">
+            <div class="lab"><span>Порядок</span></div>
+            <div class="seg" id="sortSeg"><button data-sort="catalog">Как в каталоге</button><button data-sort="alpha">По алфавиту</button><button data-sort="custom">Свой</button></div>
+          </div>
+          <p class="note" id="sortNote">Выберите «Свой», чтобы менять порядок: перетаскивайте карточки или нажимайте Alt + стрелки на выбранной карточке.</p>
+          <p class="note" style="margin-top:8px"><button class="linkbtn" id="sortReset">Сбросить свой порядок</button></p>
+        </div>
+      </div>
+      <div class="menuwrap">
         <button class="tb" id="setBtn" aria-expanded="false" aria-haspopup="true" data-tip="Колонки и интервалы" aria-label="Настройки вида"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
         <div class="pop" id="pop" hidden>
           <div class="row" id="colRow">
@@ -230,6 +247,7 @@
   <p class="empty" id="none" hidden>Ничего не найдено.</p>
 </main>
 </div>
+<script src="core/shell.js?v=1"></script>
 <script>
 // Реестр модулей: чтобы добавить модуль, достаточно строки здесь (ready: true — модуль подключён в editor.html).
 // Названия «скоро» взяты из файлов спецификации docs/spec/04_MODULES; описания — только там, где они известны.
@@ -267,10 +285,36 @@ const EYE = '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle
 
 // Настройки хранятся в браузере преподавателя; без хранилища страница работает, но не помнит выбор
 const PREFS = 'dimvibe.home.v1';
-const st = { view: 'cards', cols: 0, gap: 14, fav: [], hid: [] }; // cols 0 = авто
+const st = { view: 'cards', cols: 0, gap: 14, fav: [], hid: [], sort: 'catalog', order: [] }; // cols 0 = авто; sort: catalog | alpha | custom
 try { Object.assign(st, JSON.parse(localStorage.getItem(PREFS)) || {}); } catch (e) {}
 const view = { q: '', favOnly: false, showHid: false };
 const save = () => { try { localStorage.setItem(PREFS, JSON.stringify(st)); } catch (e) {} };
+
+// Порядок внутри раздела («Готовы» и «Скоро» всегда отдельно). «Свой» порядок — список номеров st.order; новые модули встают в конец
+function sortMods(items) {
+  if (st.sort === 'alpha') return items.slice().sort((a, b) => a.name.localeCompare(b.name, 'en'));
+  if (st.sort === 'custom') {
+    const pos = m => { const i = st.order.indexOf(m.id); return i < 0 ? 1e6 + MODS.indexOf(m) : i; };
+    return items.slice().sort((a, b) => pos(a) - pos(b));
+  }
+  return items;
+}
+// Полный свой порядок всех модулей (для перестановки)
+const fullOrder = () => sortMods(MODS.slice()).map(m => m.id);
+function reorder(id, beforeId) { // beforeId — перед каким модулем поставить; null — в конец
+  const ord = fullOrder().filter(x => x !== id);
+  const i = beforeId ? ord.indexOf(beforeId) : -1;
+  ord.splice(i < 0 ? ord.length : i, 0, id);
+  st.sort = 'custom'; st.order = ord; save(); render();
+}
+function shiftMod(id, dir) { // на одно место влево или вправо среди модулей своего раздела
+  const m = MODS.find(x => x.id === id), grp = sortMods(MODS.filter(x => !!x.ready === !!m.ready)).map(x => x.id);
+  const i = grp.indexOf(id), j = i + dir;
+  if (j < 0 || j >= grp.length) return;
+  if (dir < 0) reorder(id, grp[j]); else reorder(id, grp[j + 1] || null);
+  const el = document.querySelector(`.mod[data-id="${id}"] .main`);
+  if (el) el.focus();
+}
 
 function cardHtml(m) {
   const fav = st.fav.includes(m.id), hid = st.hid.includes(m.id);
@@ -280,7 +324,8 @@ function cardHtml(m) {
     <button class="act tip-end ${fav ? 'on' : ''}" data-act="fav" data-id="${m.id}" aria-pressed="${fav}" data-tip="${fav ? 'Убрать из избранного' : 'В избранное'}" aria-label="${fav ? 'Убрать из избранного' : 'В избранное'}">${svg(STAR)}</button>
     <button class="act tip-end" data-act="hide" data-id="${m.id}" data-tip="${hid ? 'Вернуть' : 'Скрыть'}" aria-label="${hid ? 'Вернуть модуль' : 'Скрыть модуль'}">${svg(hid ? EYE : EYEOFF)}</button></span>`;
   const tip = st.view === 'icons' ? ` data-tip="${esc(m.name + (m.desc ? ' — ' + m.desc : '') + (m.ready ? '' : ' (скоро)'))}"` : '';
-  return `<div class="mod ${m.ready ? '' : 'soon'} ${hid ? 'is-hidden' : ''}"${tip}>${main}${acts}</div>`;
+  const drag = st.sort === 'custom' ? ' draggable="true"' : '';
+  return `<div class="mod ${m.ready ? '' : 'soon'} ${hid ? 'is-hidden' : ''}" data-id="${m.id}"${drag}${tip}>${main}${acts}</div>`;
 }
 
 function render() {
@@ -292,7 +337,7 @@ function render() {
     return !q || (m.name + ' ' + (m.desc || '')).toLowerCase().includes(q);
   });
   for (const [id, ready] of [['ready', true], ['soon', false]]) {
-    const items = list.filter(m => !!m.ready === ready);
+    const items = sortMods(list.filter(m => !!m.ready === ready));
     const g = $(id);
     g.className = 'grid v-' + st.view + (st.view === 'cards' && st.cols ? ' manual' : '');
     g.innerHTML = items.map(cardHtml).join('');
@@ -309,6 +354,8 @@ function render() {
   $('hidN').hidden = !st.hid.length;
   $('hidN').textContent = st.hid.length;
   $('searchBox').classList.toggle('has', !!view.q);
+  document.querySelectorAll('#sortSeg [data-sort]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === st.sort)));
+  $('sortReset').parentElement.hidden = !st.order.length;
   $('sideFav').setAttribute('aria-pressed', String(view.favOnly));
   $('colAuto').setAttribute('aria-pressed', String(!st.cols));
   $('colMan').setAttribute('aria-pressed', String(!!st.cols));
@@ -343,11 +390,50 @@ $('colMan').onclick = () => { st.cols = +$('cols').value || 4; save(); render();
 $('cols').oninput = () => { st.cols = +$('cols').value; save(); render(); };
 document.querySelectorAll('#gapSeg [data-gap]').forEach(b => b.onclick = () => { st.gap = +b.dataset.gap; save(); render(); });
 
-// Всплывающая панель настроек: закрывается по клику снаружи и по Esc
-const setPop = open => { $('pop').hidden = !open; $('setBtn').setAttribute('aria-expanded', String(open)); };
-$('setBtn').onclick = () => setPop($('pop').hidden);
-document.addEventListener('click', e => { if (!$('pop').hidden && !e.target.closest('.menuwrap')) setPop(false); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('pop').hidden) { setPop(false); $('setBtn').focus(); } });
+// Порядок модулей: выбор режима, сброс своего порядка, перестановка перетаскиванием и клавишами Alt + стрелки
+document.querySelectorAll('#sortSeg [data-sort]').forEach(b => b.onclick = () => {
+  if (b.dataset.sort === 'custom' && !st.order.length) st.order = fullOrder(); // свой порядок начинается с текущего
+  st.sort = b.dataset.sort; save(); render();
+});
+$('sortReset').onclick = () => { st.order = []; if (st.sort === 'custom') st.sort = 'catalog'; save(); render(); };
+let dragMod = null;
+document.querySelector('main').addEventListener('dragstart', e => {
+  const c = e.target.closest('.mod[data-id]');
+  if (!c || st.sort !== 'custom') return;
+  dragMod = c.dataset.id; e.dataTransfer.setData('text/plain', dragMod); e.dataTransfer.effectAllowed = 'move'; c.classList.add('dragging');
+});
+document.querySelector('main').addEventListener('dragover', e => {
+  const c = e.target.closest('.mod[data-id]');
+  if (!c || !dragMod || c.dataset.id === dragMod) return;
+  e.preventDefault();
+  document.querySelectorAll('.dropat').forEach(x => x.classList.remove('dropat'));
+  c.classList.add('dropat');
+});
+document.querySelector('main').addEventListener('drop', e => {
+  const c = e.target.closest('.mod[data-id]');
+  if (!c || !dragMod || c.dataset.id === dragMod) return;
+  e.preventDefault();
+  const id = dragMod; dragMod = null;
+  reorder(id, c.dataset.id);
+});
+document.querySelector('main').addEventListener('dragend', () => { dragMod = null; document.querySelectorAll('.dragging, .dropat').forEach(x => x.classList.remove('dragging', 'dropat')); });
+document.querySelector('main').addEventListener('keydown', e => {
+  if (!e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+  const c = e.target.closest('.mod[data-id]');
+  if (!c || st.sort !== 'custom') return;
+  e.preventDefault();
+  shiftMod(c.dataset.id, e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1);
+});
+
+// Всплывающие панели (порядок и колонки): закрываются по клику снаружи и по Esc
+const POPS = { sort: ['sortBtn', 'sortPop'], set: ['setBtn', 'pop'] };
+function setPop(name, open) {
+  for (const [k, [b, p]] of Object.entries(POPS)) { const on = k === name && open; $(p).hidden = !on; $(b).setAttribute('aria-expanded', String(on)); }
+}
+$('sortBtn').onclick = () => setPop('sort', $('sortPop').hidden);
+$('setBtn').onclick = () => setPop('set', $('pop').hidden);
+document.addEventListener('click', e => { if (!e.target.closest('.menuwrap')) setPop('', false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setPop('', false); });
 
 // Левая панель: состояние общее с редактором (dimvibe.sideCollapsed); на узком экране по умолчанию скрыта
 const SIDE_KEY = 'dimvibe.sideCollapsed';
@@ -360,6 +446,7 @@ function setSide(collapsed, saveIt) {
 }
 $('sideToggle').onclick = () => setSide(!$('side').classList.contains('collapsed'), !narrow());
 $('scrim').onclick = () => setSide(true, false);
+DimShell.init($('side'));
 $('sideFav').onclick = () => { view.favOnly = !view.favOnly; render(); if (narrow()) setSide(true, false); };
 (() => {
   let s = null;
@@ -393,15 +480,16 @@ addEventListener('keydown', e => { if (e.key === 'Escape' && !$('creditPop').hid
 
 // Тема: тот же ключ, что в редакторе
 const THEME_KEY = 'dimvibe.theme';
-function setTheme(t) {
+function setTheme(t, persist = true) {
   document.documentElement.dataset.theme = t;
   $('themeSwitch').setAttribute('aria-checked', String(t === 'dark'));
-  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+  if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} } // без сохранённого выбора («Авто») тема следует за устройством
 }
 (() => {
   let saved = null;
   try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
-  setTheme(saved === 'light' || saved === 'dark' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  const valid = saved === 'light' || saved === 'dark';
+  setTheme(valid ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'), valid);
 })();
 $('themeSwitch').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
 render();

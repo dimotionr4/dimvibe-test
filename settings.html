@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DimVibe — настройки</title>
+<style>
+  /* Страница самостоятельная. Пишет только настройки вида: тема (dimvibe.theme), панель (dimvibe.settings.v1),
+     вид табло (dimvibe.home.v1: view, cols, gap, sort, order) и списка упражнений (dimvibe.exercises.v1: view, sort).
+     Черновики, корзина, папки, избранное и скрытые модули здесь не трогаются. */
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --line:#c9c9d8; --bad:#d64545; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; --bad:#ff7070; }
+  }
+  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; --bad:#ff7070; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.5; }
+  button, a, input, select { font:inherit; color:inherit; }
+  svg { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  #bar { display:flex; align-items:center; gap:8px; height:48px; padding:0 16px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:25; }
+  .grow { flex:1; }
+  .tb { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 8px; border:1px solid transparent; background:transparent; border-radius:8px; cursor:pointer; }
+  .tb:hover { background:var(--accent-soft); }
+  .tb svg { width:20px; height:20px; }
+  [data-tip] { position:relative; }
+  [data-tip]::after { content:attr(data-tip); position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); white-space:nowrap; background:var(--text); color:var(--bg); font-size:.78rem; line-height:1.3; padding:4px 8px; border-radius:6px; pointer-events:none; z-index:40; display:none; font-weight:400; }
+  [data-tip]:hover::after, [data-tip]:focus-visible::after { display:block; animation:tipin .12s .35s both; }
+  @keyframes tipin { from { opacity:0; } to { opacity:1; } }
+  #shell { display:flex; align-items:flex-start; }
+  #side { flex:none; width:var(--sw, 260px); position:sticky; top:48px; height:calc(100vh - 48px); height:calc(100dvh - 48px); overflow-y:auto; border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:10px; background:var(--bg); z-index:20; }
+  #side.collapsed { width:56px; padding:14px 8px; align-items:center; overflow:visible; }
+  #side.collapsed .lbl { display:none; }
+  #side.collapsed .side-btn { width:40px; padding:0; justify-content:center; }
+  #side:not(.collapsed) [data-tip]::after { display:none; }
+  #side.collapsed [data-tip]::after { top:50%; left:calc(100% + 8px); transform:translateY(-50%); }
+  .side-btn { display:flex; align-items:center; gap:8px; min-height:36px; padding:6px 12px; border:1px solid var(--line); background:var(--card); border-radius:8px; text-align:left; text-decoration:none; cursor:pointer; position:relative; }
+  .side-btn:hover { background:var(--accent-soft); }
+  .side-btn.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .side-btn .si { display:inline-flex; flex:none; }
+  .side-btn svg { width:20px; height:20px; }
+  .side-btn.credit { margin-top:auto; }
+  #scrim { position:fixed; inset:48px 0 0 0; background:rgba(0,0,0,.4); z-index:15; }
+  #scrim[hidden] { display:none; }
+  @media (max-width:900px) {
+    #side { position:fixed; top:48px; left:0; bottom:0; height:auto; width:min(290px, 86vw); box-shadow:4px 0 16px rgba(0,0,0,.25); }
+    #side.collapsed { display:none; }
+  }
+  main { flex:1; min-width:0; max-width:760px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:1.5rem; margin:0 0 16px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:6px 16px; margin-bottom:14px; }
+  section h2 { font-size:.85rem; color:var(--muted); font-weight:600; margin:12px 0 4px; text-transform:uppercase; letter-spacing:.04em; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid var(--line); flex-wrap:wrap; }
+  section h2 + .row { border-top:none; }
+  .row .l { flex:1 1 220px; min-width:0; }
+  .row .l small { display:block; color:var(--muted); font-size:.82rem; }
+  .seg { display:flex; gap:4px; flex-wrap:wrap; }
+  .seg button { min-height:32px; padding:2px 12px; font-size:.88rem; border:1px solid var(--line); background:var(--card); border-radius:8px; cursor:pointer; white-space:nowrap; }
+  .seg button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .rng { display:flex; align-items:center; gap:10px; flex:1 1 220px; max-width:320px; }
+  .rng input { flex:1; accent-color:var(--accent); }
+  .rng output { min-width:52px; text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); }
+  .sw { position:relative; width:46px; height:26px; flex:none; border-radius:999px; border:1px solid var(--line); background:var(--bg); cursor:pointer; padding:0; }
+  .sw i { position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--muted); transition:transform .15s, background .15s; }
+  .sw[aria-checked="true"] { background:var(--accent-soft); border-color:var(--accent); }
+  .sw[aria-checked="true"] i { transform:translateX(20px); background:var(--accent); }
+  .btn { min-height:34px; padding:0 14px; border:1px solid var(--line); background:var(--card); border-radius:8px; cursor:pointer; }
+  .btn:hover { background:var(--accent-soft); }
+  .btn.arm { background:var(--bad); border-color:var(--bad); color:#fff; }
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 14px; border-radius:8px; font-size:.9rem; z-index:70; }
+  #toast[hidden] { display:none; }
+</style>
+</head>
+<body>
+<header id="bar">
+  <button class="tb" id="sideToggle" aria-expanded="true" data-tip="Левая панель" aria-label="Показать или скрыть левую панель"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <b>DimVibe</b>
+  <span class="grow"></span>
+</header>
+<div id="shell">
+<aside id="side">
+  <a class="side-btn" href="home.html" data-tip="Модули"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span><span class="lbl">Модули</span></a>
+  <a class="side-btn" href="exercises.html" data-tip="Мои упражнения"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="lbl">Мои упражнения</span></a>
+  <a class="side-btn" href="editor.html" data-tip="Открыть редактор"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg></span><span class="lbl">Редактор</span></a>
+  <a class="side-btn active credit" href="settings.html" data-tip="Настройки" aria-current="page"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span><span class="lbl">Настройки</span></a>
+</aside>
+<div id="scrim" hidden></div>
+<main>
+  <h1>Настройки</h1>
+  <section>
+    <h2>Оформление</h2>
+    <div class="row"><div class="l">Тема<small>«Авто» следует за устройством. Общая для табло, списка и редактора.</small></div>
+      <div class="seg" id="theme"><button data-v="auto">Авто</button><button data-v="light">Светлая</button><button data-v="dark">Тёмная</button></div></div>
+  </section>
+  <section>
+    <h2>Левая панель</h2>
+    <div class="row"><div class="l">Ширина<small>Развёрнутая панель на компьютере. Её можно тянуть и за правый край.</small></div>
+      <div class="rng"><input type="range" id="sw" min="200" max="400" step="10" aria-label="Ширина панели"><output id="swOut"></output><button class="btn" id="swReset" data-tip="Вернуть 260 px">↺</button></div></div>
+    <div class="row"><div class="l">Сворачивать при открытии редактора<small>В редакторе панель всегда свёрнута до значков. Состояние на других страницах не меняется.</small></div>
+      <button class="sw" id="auto" role="switch" aria-checked="false" aria-label="Сворачивать панель при открытии редактора"><i></i></button></div>
+  </section>
+  <section>
+    <h2>Табло модулей</h2>
+    <div class="row"><div class="l">Вид по умолчанию</div>
+      <div class="seg" id="hView"><button data-v="cards">Карточки</button><button data-v="list">Список</button><button data-v="icons">Значки</button></div></div>
+    <div class="row"><div class="l">Порядок модулей<small>«Свой» порядок задаётся перетаскиванием на табло.</small></div>
+      <div class="seg" id="hSort"><button data-v="catalog">Как в каталоге</button><button data-v="alpha">По алфавиту</button><button data-v="custom">Свой</button></div></div>
+    <div class="row"><div class="l">Свой порядок<small>Вернуть модули в порядок каталога.</small></div><button class="btn" id="orderReset">Сбросить</button></div>
+  </section>
+  <section>
+    <h2>Мои упражнения</h2>
+    <div class="row"><div class="l">Вид по умолчанию</div>
+      <div class="seg" id="eView"><button data-v="list">Список</button><button data-v="cards">Карточки</button></div></div>
+    <div class="row"><div class="l">Сортировка по умолчанию</div>
+      <div class="seg" id="eSort"><button data-v="changed">Изменённые</button><button data-v="opened">Открытые</button><button data-v="title">По названию</button><button data-v="module">По модулю</button></div></div>
+  </section>
+  <section>
+    <h2>Сброс</h2>
+    <div class="row"><div class="l">Вернуть настройки вида<small>Тема, панель, вид и порядок на табло, вид списка упражнений. Черновики, папки, избранное и скрытые модули остаются.</small></div><button class="btn" id="resetAll">Сбросить</button></div>
+  </section>
+</main>
+</div>
+<div id="toast" role="status" hidden></div>
+<script src="core/shell.js?v=1"></script>
+<script>
+const $ = id => document.getElementById(id);
+const rd = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
+const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { toast('Не удалось сохранить в браузере.'); return false; } };
+function toast(t) { $('toast').textContent = t; $('toast').hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { $('toast').hidden = true; }, 2000); }
+const HOME = 'dimvibe.home.v1', EX = 'dimvibe.exercises.v1';
+// В объекте настроек меняется только одно поле, остальные (избранное, скрытые и т. д.) остаются как были
+const patch = (key, field, val) => { const o = rd(key, {}); o[field] = val; wr(key, o); };
+
+// Сегменты: общий помощник «выбор одного значения»
+function seg(id, get, set) {
+  const draw = () => document.querySelectorAll('#' + id + ' [data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === get())));
+  document.querySelectorAll('#' + id + ' [data-v]').forEach(b => b.onclick = () => { set(b.dataset.v); draw(); });
+  draw();
+  return draw;
+}
+
+// Тема
+const themeNow = () => { try { const t = localStorage.getItem('dimvibe.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } };
+function applyTheme(v) {
+  if (v === 'auto') { document.documentElement.removeAttribute('data-theme'); try { localStorage.removeItem('dimvibe.theme'); } catch (e) {} }
+  else { document.documentElement.dataset.theme = v; try { localStorage.setItem('dimvibe.theme', v); } catch (e) {} }
+}
+const drawTheme = seg('theme', themeNow, applyTheme);
+if (themeNow() !== 'auto') document.documentElement.dataset.theme = themeNow();
+
+// Ширина панели и автосворачивание
+const sw = $('sw');
+function drawWidth() { const w = DimShell.read().sideWidth; sw.value = w; $('swOut').textContent = w + ' px'; }
+sw.oninput = () => { const s = DimShell.read(); s.sideWidth = DimShell.clamp(+sw.value); DimShell.write(s); DimShell.applyWidth(s.sideWidth); drawWidth(); };
+$('swReset').onclick = () => { const s = DimShell.read(); s.sideWidth = 260; DimShell.write(s); DimShell.applyWidth(260); drawWidth(); };
+function drawAuto() { $('auto').setAttribute('aria-checked', String(DimShell.read().autoCollapse)); }
+$('auto').onclick = () => { const s = DimShell.read(); s.autoCollapse = !s.autoCollapse; DimShell.write(s); drawAuto(); };
+DimShell.init($('side'), drawWidth);
+drawWidth(); drawAuto();
+
+// Табло и список упражнений
+const drawHView = seg('hView', () => rd(HOME, {}).view || 'cards', v => patch(HOME, 'view', v));
+const drawHSort = seg('hSort', () => rd(HOME, {}).sort || 'catalog', v => {
+  patch(HOME, 'sort', v);
+  if (v === 'custom' && !(rd(HOME, {}).order || []).length) toast('Расставьте модули перетаскиванием на табло.');
+});
+$('orderReset').onclick = () => { const o = rd(HOME, {}); o.order = []; if (o.sort === 'custom') o.sort = 'catalog'; wr(HOME, o); drawHSort(); toast('Порядок сброшен.'); };
+seg('eView', () => rd(EX, {}).view || 'list', v => patch(EX, 'view', v));
+seg('eSort', () => rd(EX, {}).sort || 'changed', v => patch(EX, 'sort', v));
+
+// Сброс настроек вида (со второго нажатия)
+let armed = false;
+$('resetAll').onclick = () => {
+  if (!armed) { armed = true; $('resetAll').classList.add('arm'); $('resetAll').textContent = 'Нажмите ещё раз'; setTimeout(() => { armed = false; $('resetAll').classList.remove('arm'); $('resetAll').textContent = 'Сбросить'; }, 4000); return; }
+  armed = false;
+  const h = rd(HOME, {}); ['view', 'cols', 'gap', 'sort', 'order'].forEach(k => delete h[k]); wr(HOME, h);
+  try { localStorage.removeItem(EX); localStorage.removeItem('dimvibe.settings.v1'); localStorage.removeItem('dimvibe.sideCollapsed'); } catch (e) {}
+  applyTheme('auto'); DimShell.applyWidth(260);
+  drawTheme(); drawWidth(); drawAuto(); drawHView(); drawHSort();
+  document.querySelectorAll('#eView [data-v], #eSort [data-v]').forEach(b => b.setAttribute('aria-pressed', String((b.parentElement.id === 'eView' ? 'list' : 'changed') === b.dataset.v)));
+  $('resetAll').classList.remove('arm'); $('resetAll').textContent = 'Сбросить';
+  toast('Настройки вида сброшены.');
+};
+
+// Левая панель
+const SIDE_KEY = 'dimvibe.sideCollapsed';
+const narrow = () => matchMedia('(max-width: 900px)').matches;
+function setSide(collapsed, saveIt) {
+  $('side').classList.toggle('collapsed', collapsed);
+  $('sideToggle').setAttribute('aria-expanded', String(!collapsed));
+  $('scrim').hidden = !(narrow() && !collapsed);
+  if (saveIt) { try { localStorage.setItem(SIDE_KEY, collapsed ? '1' : '0'); } catch (e) {} }
+}
+$('sideToggle').onclick = () => setSide(!$('side').classList.contains('collapsed'), !narrow());
+$('scrim').onclick = () => setSide(true, false);
+(() => { let s = null; try { s = localStorage.getItem(SIDE_KEY); } catch (e) {} setSide(narrow() ? true : s === '1', false); })();
+</script>
+</body>
+</html>
