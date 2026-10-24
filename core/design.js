@@ -73,7 +73,26 @@ function normalizeCheck(c) {
 const CHECK_CLASSES = ['chk-outline', 'chk-soft', 'chk-left', 'chk-center'];
 const checkClasses = c => [c.variant !== 'filled' ? 'chk-' + c.variant : '', c.align !== 'right' ? 'chk-' + c.align : ''].filter(Boolean);
 
+// Шрифт упражнения: свой набор у каждого стиля, первый в наборе — по умолчанию (прежний вид). Файлы шрифтов — core/fonts.css
+// (Blogger Sans — core/comic.css). Грузинского в шрифтах нет, поэтому в конце каждого набора запасные шрифты с ним.
+const FONT_TAIL = 'system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif';
+const FONTS = {
+  classic: {
+    system: { label: 'Системный', stack: FONT_TAIL },
+    nunito: { label: 'Nunito', stack: '"DV Nunito", ' + FONT_TAIL },
+    noto: { label: 'Noto Sans', stack: '"DV Noto Sans", ' + FONT_TAIL },
+  },
+  comic: {
+    blogger: { label: 'Blogger Sans', stack: '"Blogger Sans", ' + FONT_TAIL },
+    balsamiq: { label: 'Balsamiq Sans', stack: '"DV Balsamiq Sans", ' + FONT_TAIL },
+    pangolin: { label: 'Pangolin', stack: '"DV Pangolin", ' + FONT_TAIL },
+    neucha: { label: 'Neucha', stack: '"DV Neucha", ' + FONT_TAIL },
+  },
+};
+const fontKey = (style, key) => (FONTS[style][key] ? key : Object.keys(FONTS[style])[0]);
+
 // Стиль упражнения: Classic или Comic; у Comic ещё цвет контура (акцентный или чёрный) и толщина линии.
+// Шрифт хранится отдельно для каждого стиля (classicFont, comicFont): при переключении стиля выбор другого не теряется.
 // Неизвестные значения заменяются на допустимые.
 function normalizeStyle(d) {
   d = d || {};
@@ -81,8 +100,13 @@ function normalizeStyle(d) {
     style: d.style === 'comic' ? 'comic' : 'classic',
     comicLine: d.comicLine === 'black' ? 'black' : 'accent',
     comicWidth: d.comicWidth === 'thin' || d.comicWidth === 'thick' ? d.comicWidth : 'normal',
+    classicFont: fontKey('classic', d.classicFont),
+    comicFont: fontKey('comic', d.comicFont),
   };
 }
+
+// Набор шрифтов (font-family) для выбранного стиля; страница ставит его в переменную --ex-font
+const fontStack = s => FONTS[s.style][s.style === 'comic' ? s.comicFont : s.classicFont].stack;
 
 // Классы для страницы или образца (стили — core/comic.css); для Classic пусто
 const styleClasses = s => s.style === 'comic'

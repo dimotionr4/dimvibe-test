@@ -9,7 +9,8 @@
 @font-face { font-family:"Blogger Sans"; src:url("../fonts/blogger-sans/BloggerSans-Italic.woff") format("woff"); font-weight:400; font-style:italic; font-display:swap; }
 @font-face { font-family:"Blogger Sans"; src:url("../fonts/blogger-sans/BloggerSans-Bold.woff") format("woff"); font-weight:700; font-style:normal; font-display:swap; }
 @font-face { font-family:"Blogger Sans"; src:url("../fonts/blogger-sans/BloggerSans-BoldItalic.woff") format("woff"); font-weight:700; font-style:italic; font-display:swap; }
-.style-comic, .style-comic body { font-family:"Blogger Sans", system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; }
+/* Шрифт Comic выбирается во вкладке «Дизайн»: плеер кладёт его в --ex-font (core/design.js, FONTS); без неё — Blogger Sans */
+.style-comic, .style-comic body { font-family:var(--ex-font, "Blogger Sans", system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif); }
 
 .style-comic { --comic-line:var(--accent); --lw:3px; }
 .style-comic.line-black { --comic-line:var(--text); }

@@ -6,7 +6,8 @@
 <title>DimVibe — редактор</title>
 <link rel="stylesheet" href="core/gap.css?v=6">
 <link rel="stylesheet" href="core/check.css?v=1">
-<link rel="stylesheet" href="core/comic.css?v=12">
+<link rel="stylesheet" href="core/comic.css?v=13">
+<link rel="stylesheet" href="core/fonts.css?v=1">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
@@ -203,6 +204,7 @@
   .po-b button.big { width:44px; height:40px; }
   .po-b button.txt { width:auto; padding:0 14px; font-size:.88rem; }
   .po-b .sz { font-size:.85rem; font-weight:700; line-height:1; }
+  .po-b .fontname { font-size:1.05rem; line-height:1; }
   .po-b button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
   .po-b svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .po-b .dot { width:28px; height:28px; min-height:28px; }
@@ -379,6 +381,7 @@
 <div id="creditPop" class="creditpop" role="dialog" aria-label="Авторство и лицензии" hidden>
   <b>Авторство и лицензии</b>
   <p>Шрифт Comic: Blogger Sans, © Sergiy S. Tkachenko, <a href="https://creativecommons.org/licenses/by-nd/4.0/" target="_blank" rel="noopener">CC BY-ND 4.0</a></p>
+  <p>Шрифты Balsamiq Sans, Pangolin, Neucha, Nunito, Noto Sans: <a href="https://openfontlicense.org" target="_blank" rel="noopener">SIL Open Font License 1.1</a>, авторы и лицензии — в папке fonts</p>
 </div>
 
 <div id="kindDialog" class="modal" hidden>
@@ -400,7 +403,7 @@
   </div>
 </div>
 
-<script src="core/design.js?v=6"></script>
+<script src="core/design.js?v=7"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
@@ -417,7 +420,7 @@
 <script src="modules/mistake-mode/editor.js?v=5"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
-const ASSET_V = 45;
+const ASSET_V = 46;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -1055,6 +1058,13 @@ function renderDesign() {
   // Настройки страницы (ширина, плотность, фон) — под макетом
   const grp = (g, f, label, names, cur, icons) => `<div class="pg-grp"><span class="po-l">${esc(label)}</span><span class="po-b" role="group" aria-label="${esc(label)}">${Object.keys(icons).map(k =>
     `<button data-g="${g}" data-f="${f}" data-v="${k}" class="${k === cur ? 'active' : ''}" aria-pressed="${k === cur}" data-tip="${esc(label + ': ' + names[k])}" aria-label="${esc(label + ': ' + names[k])}">${icons[k]}</button>`).join('')}</span></div>`;
+  // Шрифт: набор зависит от стиля (Classic или Comic), на значке «Аа» написано этим шрифтом, название — в подсказке
+  const fontGrp = s => {
+    const set = FONTS[s.style], field = s.style === 'comic' ? 'comicFont' : 'classicFont';
+    const names = Object.fromEntries(Object.entries(set).map(([k, f]) => [k, f.label]));
+    const icons = Object.fromEntries(Object.entries(set).map(([k, f]) => [k, `<span class="fontname" style='font-family:${f.stack}'>Аа</span>`]));
+    return grp('style', field, 'Шрифт', names, s[field], icons);
+  };
   // Дополнительные настройки модуля (например, размер картинки у Image to Gaps): модуль отдаёт описание, ядро рисует такие же значки
   const modOpts = (MODULES[current.module].designOptions ? MODULES[current.module].designOptions(current) : []).map(o => grp('mod', o.field, o.label, o.names, o.value, o.icons)).join('');
   $('content').innerHTML = `
@@ -1064,6 +1074,7 @@ function renderDesign() {
       ${grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density)}
       ${grp('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background)}
       ${grp('page', 'fontSize', 'Текст', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize)}
+      ${fontGrp(st)}
     </div>
     ${modOpts ? `<div class="dz-page" role="group" aria-label="Настройки модуля">${modOpts}</div>` : ''}
     <p class="muted dz-note">Нажимайте на элементы макета: блоки инструкции и картинки включаются и скрываются, значки рядом меняют вид. Результат виден в предпросмотре справа.</p>`;
