@@ -422,7 +422,7 @@
   </div>
 </div>
 
-<script src="core/design.js?v=8"></script>
+<script src="core/design.js?v=9"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
@@ -439,7 +439,7 @@
 <script src="modules/mistake-mode/editor.js?v=5"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
-const ASSET_V = 47;
+const ASSET_V = 48;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -913,6 +913,11 @@ const OPT_ICONS = {
   density: {
     compact: O('<path d="M5 7h14M5 10h14M5 13h14M5 16h14"/>'), comfortable: O('<path d="M5 7h14M5 12h14M5 17h14"/>'), loose: O('<path d="M5 6h14M5 18h14"/>'),
   },
+  // Жирность текста: буква «Б» тонкой и толстой линией
+  weight: {
+    normal: O('<path d="M16 5H8v14h4.5a3.5 3.5 0 0 0 0-7H8" stroke-width="1.5"/>'),
+    bold: O('<path d="M16 5H8v14h4.5a3.5 3.5 0 0 0 0-7H8" stroke-width="3.2"/>'),
+  },
   // Очертания Comic (core/rough.js)
   outline: {
     neat: O('<rect x="4" y="6" width="16" height="12" rx="4"/>'),
@@ -1100,7 +1105,7 @@ function renderDesign() {
     <div class="dz-wrap">
       <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode', mt: current.module === 'matching', mm: current.module === 'mistake_mode', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
       <div class="dz-side">
-        ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize))}
+        ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize) + grp('page', 'fontWeight', 'Жирность', PAGE_WEIGHTS, pg.fontWeight, OPT_ICONS.weight))}
         ${st.style === 'comic' ? card('Линии Comic', grp('style', 'comicOutline', 'Очертания', COMIC_OUTLINES, st.comicOutline, OPT_ICONS.outline)) : ''}
         ${card('Страница', grp('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew) + grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density) + grp('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background))}
         ${modOpts ? card((document.querySelector(`#modPick [data-mod="${current.module}"] b`) || {}).textContent || 'Модуль', modOpts) : ''}

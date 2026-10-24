@@ -41,6 +41,8 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   html.fs-s { font-size:87.5%; }
   html.fs-l { font-size:112.5%; }
   html.fs-xl { font-size:125%; }
+  /* Жирность текста: весь текст упражнения жирный (кнопки и поля наследуют шрифт страницы) */
+  html.fw-bold body { font-weight:700; }
   #root, header > *, footer > * { max-width:var(--content-w); margin-left:auto; margin-right:auto; }
   .bg-backdrop main { background:color-mix(in srgb, var(--accent) 9%, var(--bg)); }
   /* «Карточка»: всё упражнение в одной рамке (класс panel ставится на #root) */
@@ -118,7 +120,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   </div>
 </footer>
 
-<script src="core/design.js?v=8"></script>
+<script src="core/design.js?v=9"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/mediaviewer.js?v=1"></script>
 <script src="core/richtext.js?v=5"></script>
