@@ -51,4 +51,3 @@
 .mt-fcol { flex:1 1 130px; min-width:0; display:flex; flex-direction:column; gap:4px; }
 .mt-fcol .mt-in { width:100%; flex:none; }
 .mt-media { min-width:0; }
-.mt-fcol:last-child .mb-menu { left:auto; right:0; }

@@ -34,6 +34,18 @@ const MediaUI = (() => {
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(null); });
   }
 
+  // Список раскрывается от правого края значка влево; если там не хватает места (левый край окна или прокручиваемого блока), — вправо
+  function place(m, b) {
+    m.style.left = ''; m.style.right = '';
+    let box = { left: 0, right: innerWidth };
+    for (let p = b.parentElement; p && p !== document.body; p = p.parentElement) {
+      const o = getComputedStyle(p).overflowX;
+      if (o !== 'visible') { const r = p.getBoundingClientRect(); box = { left: Math.max(box.left, r.left), right: Math.min(box.right, r.right) }; }
+    }
+    const r = m.getBoundingClientRect();
+    if (r.left < box.left + 4) { m.style.left = '0'; m.style.right = 'auto'; }
+  }
+
   // Значок со списком действий. items — [{label, fn, danger}], пустые пункты пропускаются. has — подсветка «файл уже есть»
   function iconMenu(icon, title, has, items) {
     wire();
@@ -55,7 +67,13 @@ const MediaUI = (() => {
       i.onclick = () => { m.hidden = true; b.setAttribute('aria-expanded', 'false'); fn(); };
       m.append(i);
     });
-    b.onclick = () => { const open = m.hidden; closeAll(m); m.hidden = !open; b.setAttribute('aria-expanded', String(open)); };
+    b.onclick = () => {
+      const open = m.hidden;
+      closeAll(m);
+      m.hidden = !open;
+      b.setAttribute('aria-expanded', String(open));
+      if (open) place(m, b);
+    };
     w.append(b, m);
     return w;
   }
