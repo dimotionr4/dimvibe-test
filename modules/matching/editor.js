@@ -2,11 +2,11 @@
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Всё, что видит автор, лежит в черновике (кроме удаляемой строки), поэтому отмена и повтор ядра работают сами.
 const MatchingEditor = (() => {
-  const MAX = 10;
+  const MAX = 10, MAX_SETS = 5; // пар в наборе и наборов в упражнении
   const MODES = { standard: 'Стандартный: верные пары уходят вниз', lines_pair_colors: 'Линии: все карточки на месте, одна проверка' };
   const ALIGNS = { auto: 'Авто: короткие по центру, длинные слева', center: 'По центру', left: 'По левому краю' };
   const { nextId } = GapEngine;
-  let d, root, save, delAsk = null, msgTimer = null, drag = null, openId = null; // openId — пара с раскрытой панелью картинок и звука
+  let d, root, save, delAsk = null, delSetAsk = null, msgTimer = null, drag = null, openId = null; // openId — пара с раскрытой панелью картинок и звука
   let msg, counter, listBox, addBtn;
 
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
@@ -36,13 +36,19 @@ const MatchingEditor = (() => {
   function normalize() {
     if (!SIZES[d.imageSize]) d.imageSize = 'm';
     if (!FITS[d.imageFit]) d.imageFit = 'contain';
-    d.items.forEach(it => {
+    // Черновики, сделанные до наборов, имели один плоский список пар
+    if (!Array.isArray(d.sets)) { d.sets = [{ id: 's1', instruction: '', items: Array.isArray(d.items) ? d.items : [] }]; delete d.items; }
+    allItems().forEach(it => {
       ['left', 'right'].forEach(s => {
         if (!it[s + 'Image']) it[s + 'Image'] = emptyImage();
         if (typeof it[s + 'Audio'] !== 'string') it[s + 'Audio'] = '';
       });
     });
+    d.sets.forEach(s => { if (typeof s.instruction !== 'string') s.instruction = ''; });
   }
+  const allItems = () => d.sets.flatMap(s => s.items);
+  const setOf = it => d.sets.find(s => s.items.includes(it));
+  const newSet = (id, ids) => ({ id, instruction: '', items: ids.map(newItem) });
 
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -56,7 +62,7 @@ const MatchingEditor = (() => {
   const newItem = id => ({ id, left: '', right: '', leftImage: emptyImage(), rightImage: emptyImage(), leftAudio: '', rightAudio: '' });
 
   function create() {
-    return { module: 'matching', format: 1, mode: 'standard', align: 'auto', imageSize: 'm', imageFit: 'contain', showCorrect: false, items: [newItem('p1'), newItem('p2'), newItem('p3')] };
+    return { module: 'matching', format: 1, mode: 'standard', align: 'auto', imageSize: 'm', imageFit: 'contain', showCorrect: false, sets: [newSet('s1', ['p1', 'p2', 'p3'])] };
   }
 
   function render(container, draft, onSave) {
@@ -65,7 +71,7 @@ const MatchingEditor = (() => {
     save = onSave;
     delAsk = null;
     normalize();
-    if (!d.items.some(i => i.id === openId)) openId = null;
+    if (!allItems().some(i => i.id === openId)) openId = null;
     draw();
   }
 
@@ -86,36 +92,123 @@ const MatchingEditor = (() => {
     tools.append(counter, right);
     msg = el('div', 'mt-msg');
     msg.hidden = true;
-    listBox = el('div', 'mt-list');
-    addBtn = el('button', 'mt-add', '+ Пара');
+    listBox = el('div', 'mt-sets');
+    addBtn = el('button', 'mt-add mt-addset', '+ Набор пар');
     addBtn.type = 'button';
-    addBtn.onclick = () => addItem(d.items.length);
+    addBtn.onclick = addSet;
     root.append(tools, msg, listBox, addBtn);
     drawList();
   }
 
   function updateCounter() {
-    const n = d.items.length;
-    counter.textContent = `Пар: ${n}/${MAX}`;
-    counter.classList.toggle('mt-limit', n >= MAX);
-    addBtn.disabled = n >= MAX;
+    const n = allItems().length;
+    counter.textContent = d.sets.length > 1 ? `Наборов: ${d.sets.length}/${MAX_SETS} · пар: ${n}` : `Пар: ${n}/${MAX}`;
+    counter.classList.toggle('mt-limit', d.sets.length === 1 && n >= MAX);
+    addBtn.disabled = d.sets.length >= MAX_SETS;
   }
 
+  // Набор пар: заголовок с инструкцией (если наборов больше одного), строки пар и кнопка «+ Пара»
   function drawList() {
     listBox.innerHTML = '';
-    d.items.forEach((it, i) => listBox.append(row(it, i)));
+    const many = d.sets.length > 1;
+    d.sets.forEach((set, k) => {
+      const box = el('section', 'mt-set' + (many ? ' multi' : ''));
+      box.dataset.id = set.id;
+      if (many) box.append(setHead(set, k));
+      const list = el('div', 'mt-list');
+      set.items.forEach((it, i) => list.append(row(it, i, set)));
+      const add = el('button', 'mt-add', '+ Пара');
+      add.type = 'button';
+      add.disabled = set.items.length >= MAX;
+      add.onclick = () => addItem(set, set.items.length);
+      box.append(list, add);
+      listBox.append(box);
+    });
+    listBox.dataset.n = d.sets.length;
     updateCounter();
     markDupes();
   }
 
-  // Подсвечиваем повторы внутри столбца сразу, без перерисовки (чтобы не терять фокус в поле)
+  function setHead(set, k) {
+    const head = el('div', 'mt-sethead');
+    const top = el('div', 'mt-settop');
+    top.append(el('b', '', `Набор ${k + 1}`), el('span', 'mt-muted', `пар: ${set.items.length}/${MAX}`));
+    const tools = el('span', 'mt-tools2');
+    const b = (html, tip, fn, disabled) => { const x = el('button', 'mt-ib'); x.type = 'button'; x.innerHTML = html; x.title = tip; x.setAttribute('aria-label', tip + ', набор ' + (k + 1)); x.disabled = !!disabled; x.onclick = fn; return x; };
+    tools.append(
+      b(svg('<path d="M6 15l6-6 6 6"/>'), 'Набор выше', () => moveSet(k, -1), k === 0),
+      b(svg('<path d="M6 9l6 6 6-6"/>'), 'Набор ниже', () => moveSet(k, 1), k === d.sets.length - 1),
+      b(svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать набор', () => duplicateSet(k), d.sets.length >= MAX_SETS),
+    );
+    if (delSetAsk === set.id) {
+      const q = el('span', 'mt-ask');
+      const yes = el('button', 'mt-yes', 'Удалить набор');
+      yes.type = 'button';
+      yes.onclick = () => removeSet(k);
+      const no = el('button', '', 'Нет');
+      no.type = 'button';
+      no.onclick = () => { delSetAsk = null; drawList(); };
+      q.append(yes, no);
+      tools.append(q);
+    } else tools.append(b(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить набор', () => { if (set.items.some(filled) || clean(set.instruction)) { delSetAsk = set.id; drawList(); } else removeSet(k); }));
+    top.append(tools);
+    const ins = el('textarea', 'mt-in mt-setins');
+    ins.rows = 1;
+    ins.placeholder = 'Инструкция к набору (необязательно), например: Соедините животных с их названиями';
+    ins.value = set.instruction;
+    ins.setAttribute('aria-label', `Инструкция к набору ${k + 1}`);
+    const fit = () => { ins.style.height = 'auto'; ins.style.height = ins.scrollHeight + 2 + 'px'; };
+    ins.oninput = () => { set.instruction = ins.value; fit(); save(); };
+    setTimeout(fit, 0);
+    head.append(top, ins);
+    return head;
+  }
+
+  const newSetId = () => nextId('s', d.sets.map(s => s.id));
+  const newPairId = () => nextId('p', allItems().map(i => i.id));
+  function addSet() {
+    if (d.sets.length >= MAX_SETS) return say(`Наборов не больше ${MAX_SETS}.`);
+    d.sets.push(newSet(newSetId(), [newPairId()]));
+    d.sets[d.sets.length - 1].items.push(newItem(nextId('p', allItems().map(i => i.id))));
+    save();
+    drawList();
+    const last = listBox.lastElementChild;
+    if (last) last.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+  function moveSet(k, dir) {
+    const j = k + dir;
+    if (j < 0 || j >= d.sets.length) return;
+    [d.sets[k], d.sets[j]] = [d.sets[j], d.sets[k]];
+    save();
+    drawList();
+  }
+  // Копия набора получает новые ID набора и пар
+  function duplicateSet(k) {
+    if (d.sets.length >= MAX_SETS) return say(`Наборов не больше ${MAX_SETS}.`);
+    const copy = JSON.parse(JSON.stringify(d.sets[k]));
+    copy.id = newSetId();
+    const ids = allItems().map(i => i.id);
+    copy.items.forEach(it => { it.id = nextId('p', ids); ids.push(it.id); });
+    d.sets.splice(k + 1, 0, copy);
+    save();
+    drawList();
+  }
+  function removeSet(k) {
+    d.sets.splice(k, 1);
+    delSetAsk = null;
+    if (!d.sets.length) d.sets.push(newSet('s1', ['p1', 'p2']));
+    save();
+    drawList();
+  }
+
+  // Подсвечиваем повторы внутри столбца набора сразу, без перерисовки (чтобы не терять фокус в поле)
   function markDupes() {
     ['left', 'right'].forEach(side => {
       const rows = [...listBox.querySelectorAll('.mt-row')];
       rows.forEach(r => {
-        const it = d.items.find(x => x.id === r.dataset.id);
+        const it = allItems().find(x => x.id === r.dataset.id);
         const f = r.querySelector(`.mt-in[data-side="${side}"]`);
-        const dup = it && hasFace(it, side) && d.items.some(o => o !== it && faceKey(o, side) === faceKey(it, side));
+        const dup = it && hasFace(it, side) && setOf(it).items.some(o => o !== it && faceKey(o, side) === faceKey(it, side));
         f.classList.toggle('dup', !!dup);
         f.title = dup ? 'Такая карточка уже есть в этом столбце' : '';
       });
@@ -135,7 +228,7 @@ const MatchingEditor = (() => {
     return ta;
   }
 
-  function row(it, i) {
+  function row(it, i, set) {
     const r = el('div', 'mt-row');
     r.dataset.id = it.id;
     const grip = el('span', 'mt-grip', '⠿');
@@ -154,12 +247,13 @@ const MatchingEditor = (() => {
       if (!drag) return;
       e.preventDefault();
       const b = r.getBoundingClientRect(), after = e.clientY > b.top + b.height / 2;
-      const from = d.items.findIndex(x => x.id === drag);
+      const from = set.items.findIndex(x => x.id === drag);
       let to = i + (after ? 1 : 0);
       if (from < 0) return;
-      const [m] = d.items.splice(from, 1);
+      if (from < 0) return; // перетаскивать можно только внутри набора
+      const [m] = set.items.splice(from, 1);
       if (from < to) to--;
-      d.items.splice(to, 0, m);
+      set.items.splice(to, 0, m);
       drag = null;
       save();
       drawList();
@@ -181,21 +275,21 @@ const MatchingEditor = (() => {
     more.setAttribute('aria-expanded', String(it.id === openId));
     tools.append(
       more,
-      btn('', svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', () => move(i, -1), i === 0),
-      btn('', svg('<path d="M6 9l6 6 6-6"/>'), 'Ниже', () => move(i, 1), i === d.items.length - 1),
-      btn('', svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать', () => duplicate(i), d.items.length >= MAX),
+      btn('', svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', () => move(set, i, -1), i === 0),
+      btn('', svg('<path d="M6 9l6 6 6-6"/>'), 'Ниже', () => move(set, i, 1), i === set.items.length - 1),
+      btn('', svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать', () => duplicate(set, i), set.items.length >= MAX),
     );
     if (delAsk === it.id) {
       const q = el('span', 'mt-ask');
       const yes = el('button', 'mt-yes', 'Удалить');
       yes.type = 'button';
-      yes.onclick = () => removeItem(i);
+      yes.onclick = () => removeItem(set, i);
       const no = el('button', '', 'Нет');
       no.type = 'button';
       no.onclick = () => { delAsk = null; drawList(); };
       q.append(yes, no);
       tools.append(q);
-    } else tools.append(btn('mt-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => askDelete(i)));
+    } else tools.append(btn('mt-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => askDelete(set, i)));
     r.append(grip, el('span', 'mt-n', `${i + 1}.`), fields, tools);
     if (it.id === openId) r.append(mediaPanel(it));
     return r;
@@ -264,115 +358,132 @@ const MatchingEditor = (() => {
 
   const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
 
-  function addItem(index) {
-    if (d.items.length >= MAX) return say(`Пар не больше ${MAX}. Разделите задание на два.`);
-    const id = nextId('p', d.items.map(i => i.id));
-    d.items.splice(index, 0, newItem(id));
+  function addItem(set, index) {
+    if (set.items.length >= MAX) return say(`В наборе пар не больше ${MAX}. Добавьте ещё один набор.`);
+    const id = newPairId();
+    set.items.splice(index, 0, newItem(id));
     save();
     drawList();
     const ta = listBox.querySelector(`.mt-row[data-id="${id}"] textarea`);
     if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
   }
 
-  function duplicate(i) {
-    if (d.items.length >= MAX) return say(`Пар не больше ${MAX}.`);
-    const copy = { ...JSON.parse(JSON.stringify(d.items[i])), id: nextId('p', d.items.map(x => x.id)) };
-    d.items.splice(i + 1, 0, copy);
+  function duplicate(set, i) {
+    if (set.items.length >= MAX) return say(`В наборе пар не больше ${MAX}.`);
+    const copy = { ...JSON.parse(JSON.stringify(set.items[i])), id: newPairId() };
+    set.items.splice(i + 1, 0, copy);
     save();
     drawList();
     markDupes();
     say('Копия пары создана. Повторы в одном столбце не дадут опубликовать упражнение, пока их не исправить.');
   }
 
-  function move(i, dir) {
+  function move(set, i, dir) {
     const j = i + dir;
-    if (j < 0 || j >= d.items.length) return;
-    [d.items[i], d.items[j]] = [d.items[j], d.items[i]];
+    if (j < 0 || j >= set.items.length) return;
+    [set.items[i], set.items[j]] = [set.items[j], set.items[i]];
     save();
     drawList();
     markDupes();
-    const b = listBox.querySelector(`.mt-row[data-id="${d.items[j].id}"] .mt-ib:not(:disabled)`);
+    const b = listBox.querySelector(`.mt-row[data-id="${set.items[j].id}"] .mt-ib:not(:disabled)`);
     if (b) b.focus();
   }
 
   // Заполненная пара удаляется после подтверждения прямо в строке, пустая — сразу
-  function askDelete(i) {
-    if (!filled(d.items[i])) return removeItem(i);
-    delAsk = d.items[i].id;
+  function askDelete(set, i) {
+    if (!filled(set.items[i])) return removeItem(set, i);
+    delAsk = set.items[i].id;
     drawList();
     markDupes();
   }
-  function removeItem(i) {
-    d.items.splice(i, 1);
+  function removeItem(set, i) {
+    set.items.splice(i, 1);
     delAsk = null;
-    while (d.items.length < 2) d.items.push(newItem(nextId('p', d.items.map(x => x.id))));
+    while (set.items.length < 2) set.items.push(newItem(newPairId()));
     save();
     drawList();
     markDupes();
   }
 
   // ---- Файл упражнения ----
+  // Черновик, сделанный до наборов, хранит пары плоским списком draft.items
+  const setsOf = draft => (Array.isArray(draft.sets) ? draft.sets : [{ id: 's1', instruction: '', items: draft.items || [] }]);
+  const itemOut = it => {
+    const out = { id: it.id, left: clean(it.left), right: clean(it.right) };
+    ['left', 'right'].forEach(s => {
+      const im = imageOut(it[s + 'Image']), au = audioOut(it[s + 'Audio']);
+      if (im) out[s + 'Image'] = im;
+      if (au) out[s + 'Audio'] = au;
+    });
+    return out;
+  };
   function exportData(draft) {
+    const sets = setsOf(draft);
+    const flat = sets.flatMap(s => s.items);
     return {
       module: 'matching', format: 1,
       mode: MODES[draft.mode] ? draft.mode : 'standard',
       ...(ALIGNS[draft.align] && draft.align !== 'auto' ? { align: draft.align } : {}),
       ...(draft.showCorrect ? { showCorrect: true } : {}),
-      ...(draft.items.some(hasMedia) ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm', imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain' } : {}),
-      items: draft.items.map(it => {
-        const out = { id: it.id, left: clean(it.left), right: clean(it.right) };
-        ['left', 'right'].forEach(s => {
-          const im = imageOut(it[s + 'Image']), au = audioOut(it[s + 'Audio']);
-          if (im) out[s + 'Image'] = im;
-          if (au) out[s + 'Audio'] = au;
-        });
-        return out;
-      }),
+      ...(flat.some(hasMedia) ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm', imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain' } : {}),
+      // Один набор — прежний плоский список пар (старые файлы остаются верными); несколько — sets с инструкцией у каждого
+      ...(sets.length === 1 ? { items: sets[0].items.map(itemOut) }
+        : { sets: sets.map(s => ({ id: s.id, ...(clean(s.instruction) ? { instruction: String(s.instruction).trim() } : {}), items: s.items.map(itemOut) })) }),
     };
   }
 
-  const unitCount = draft => draft.items.length;
+  const unitCount = draft => setsOf(draft).reduce((n, s) => n + s.items.length, 0);
 
   // errors не дают опубликовать, warnings — только предупреждают
   function validate(draft) {
     const errors = [], warnings = [];
-    const items = draft.items;
-    if (items.length < 2) errors.push('Нужно минимум две пары.');
-    if (items.length > MAX) errors.push(`Пар больше ${MAX}. Разделите задание на два.`);
-    items.forEach((it, n) => {
-      const who = `Пара ${n + 1}`;
-      [['left', 'левая'], ['right', 'правая']].forEach(([s, name]) => {
-        const im = it[s + 'Image'];
-        if (!hasFace(it, s)) errors.push(`${who}: пустая ${name} карточка (нужен текст или картинка).`);
-        if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) errors.push(`${who}, ${name} карточка: ссылка на картинку должна быть полным адресом с https://.`);
-        if (hasPic(im) && !clean(it[s]) && !clean(im.alt)) warnings.push(`${who}, ${name} карточка: картинка без текста и без описания, незрячий ученик её не поймёт.`);
-      });
-    });
-    [['left', 'левом'], ['right', 'правом']].forEach(([side, name]) => {
-      const seen = [];
+    const sets = setsOf(draft), many = sets.length > 1;
+    if (!sets.length) errors.push('Нет ни одного набора пар.');
+    if (sets.length > MAX_SETS) errors.push(`Наборов больше ${MAX_SETS}.`);
+    sets.forEach((set, k) => {
+      const items = set.items, pre = many ? `Набор ${k + 1}: ` : '';
+      if (items.length < 2) errors.push(`${pre}нужно минимум две пары.`);
+      if (items.length > MAX) errors.push(`${pre}пар больше ${MAX}. Разделите набор на два.`);
       items.forEach((it, n) => {
-        if (!hasFace(it, side)) return;
-        const k = faceKey(it, side);
-        const first = seen.find(s => s.k === k);
-        if (first) errors.push(`В ${name} столбце повтор: пары ${first.n + 1} и ${n + 1} (${clean(it[side]) || 'картинка'}).`);
-        else seen.push({ k, n });
+        const who = `${pre}пара ${n + 1}`;
+        [['left', 'левая'], ['right', 'правая']].forEach(([s, name]) => {
+          const im = it[s + 'Image'];
+          if (!hasFace(it, s)) errors.push(`${who}: пустая ${name} карточка (нужен текст или картинка).`);
+          if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) errors.push(`${who}, ${name} карточка: ссылка на картинку должна быть полным адресом с https://.`);
+          if (hasPic(im) && !clean(it[s]) && !clean(im.alt)) warnings.push(`${who}, ${name} карточка: картинка без текста и без описания, незрячий ученик её не поймёт.`);
+        });
+      });
+      [['left', 'левом'], ['right', 'правом']].forEach(([side, name]) => {
+        const seen = [];
+        items.forEach((it, n) => {
+          if (!hasFace(it, side)) return;
+          const key = faceKey(it, side);
+          const first = seen.find(x => x.key === key);
+          if (first) errors.push(`${pre}в ${name} столбце повтор: пары ${first.n + 1} и ${n + 1} (${clean(it[side]) || 'картинка'}).`);
+          else seen.push({ key, n });
+        });
       });
     });
     return { errors, warnings };
   }
 
-  // Файл упражнения → поля черновика
+  // Файл упражнения → поля черновика (и плоский список items, и sets)
   function load(file) {
-    if (!Array.isArray(file.items)) throw new Error('В файле нет пар.');
+    const raw = Array.isArray(file.sets) ? file.sets : Array.isArray(file.items) ? [{ id: 's1', items: file.items }] : null;
+    if (!raw) throw new Error('В файле нет пар.');
     const imageIn = im => ({ media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') });
     const audioIn = a => (a && safeMediaPath(a.media)) || '';
-    const items = file.items.map((i, k) => ({
-      id: String(i.id || 'p' + (k + 1)), left: String(i.left || ''), right: String(i.right || ''),
-      leftImage: imageIn(i.leftImage), rightImage: imageIn(i.rightImage), leftAudio: audioIn(i.leftAudio), rightAudio: audioIn(i.rightAudio),
+    let n = 0;
+    const sets = raw.slice(0, MAX_SETS).map((s, k) => ({
+      id: String((s && s.id) || 's' + (k + 1)),
+      instruction: String((s && s.instruction) || ''),
+      items: (Array.isArray(s && s.items) ? s.items : []).map(i => ({
+        id: String(i.id || 'p' + (++n)), left: String(i.left || ''), right: String(i.right || ''),
+        leftImage: imageIn(i.leftImage), rightImage: imageIn(i.rightImage), leftAudio: audioIn(i.leftAudio), rightAudio: audioIn(i.rightAudio),
+      })),
     }));
-    return { ...create(), imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain', mode: MODES[file.mode] ? file.mode : 'standard', align: ALIGNS[file.align] ? file.align : 'auto', showCorrect: file.showCorrect === true, items: items.length ? items : create().items };
+    return { ...create(), imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain', mode: MODES[file.mode] ? file.mode : 'standard', align: ALIGNS[file.align] ? file.align : 'auto', showCorrect: file.showCorrect === true, sets: sets.length ? sets : create().sets };
   }
-
   // Настройки во вкладке «Поведение»: показ верных пар в конце (рисует ядро, поле лежит в черновике)
   function behaviorOptions(draft) {
     return [

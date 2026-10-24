@@ -17,10 +17,16 @@ const MatchingPlayer = (() => {
   const lines = () => data.mode === 'lines_pair_colors';
   const maxChecks = () => (lines() ? 1 : 0);
   const live = g => lines() || !g.locked; // в Lines верные пары не уходят в зелёную зону, связи остаются
-  let ro = null; // следит за размером поля, чтобы линии шли за карточками
+  let ros = []; // наблюдатели за размером полей, чтобы линии шли за карточками
+  let sets = [], setOf = {}; // наборы пар упражнения и номер набора у каждой пары
 
   // Единицы общего хода: подсказок и звука пока нет
   function units() {
+    // Файл с одним набором хранит пары плоским списком items, с несколькими — sets; дальше работаем с обоими видами одинаково
+    sets = Array.isArray(data.sets) ? data.sets : [{ id: 's1', instruction: '', items: data.items || [] }];
+    data.items = sets.flatMap(s => s.items);
+    setOf = {};
+    sets.forEach((s, k) => s.items.forEach(i => { setOf[i.id] = k; }));
     return data.items.map(it => ({
       id: it.id, answer: it.id, alternatives: [], hint: '', audio: null, hintAudio: null,
       value: '', wrongRight: '', bankKey: null, locked: false, state: null,
@@ -29,10 +35,15 @@ const MatchingPlayer = (() => {
 
   // Столбцы перемешиваются независимо; если вышло так, что пары стоят «по строкам», тасуем ещё раз
   function reset() {
-    const ids = data.items.map(i => i.id);
-    leftOrder = shuffle(ids);
-    rightOrder = shuffle(ids);
-    for (let k = 0; k < 6 && ids.length > 1 && rightOrder.every((r, i) => r === leftOrder[i]); k++) rightOrder = shuffle(ids);
+    // Каждый набор перемешивается отдельно
+    leftOrder = []; rightOrder = [];
+    sets.forEach(s => {
+      const ids = s.items.map(i => i.id);
+      const l = shuffle(ids);
+      let r = shuffle(ids);
+      for (let k = 0; k < 6 && ids.length > 1 && r.every((x, i) => x === l[i]); k++) r = shuffle(ids);
+      leftOrder.push(...l); rightOrder.push(...r);
+    });
     active = null; refocus = null; showAnswers = false;
   }
 
@@ -57,6 +68,7 @@ const MatchingPlayer = (() => {
   }
   function pickRight(rid) {
     const occupant = gaps.find(g => live(g) && g.value === rid);
+    if (active && setOf[active] !== setOf[rid]) { active = null; render(); return; } // пару можно составить только внутри одного набора
     if (!active) {
       if (occupant && !finished) { active = occupant.id; refocus = `.mt-card[data-side="left"][data-id="${occupant.id}"]`; render(); } // нажатие на связанную карточку выбирает её пару для переназначения
       return;
@@ -87,8 +99,8 @@ const MatchingPlayer = (() => {
 
   // Номер связи — место левой карточки среди ещё не решённых (оно же определяет цвет)
   function numbers() {
-    const n = {};
-    leftOrder.filter(id => live(gapOf(id))).forEach((id, k) => { n[id] = k + 1; });
+    const n = {}, cnt = {}; // нумерация идёт заново в каждом наборе
+    leftOrder.filter(id => live(gapOf(id))).forEach(id => { const k = setOf[id]; cnt[k] = (cnt[k] || 0) + 1; n[id] = cnt[k]; });
     return n;
   }
 
@@ -192,7 +204,7 @@ const MatchingPlayer = (() => {
     const up = () => {
       const target = over && over.dataset.id;
       stop();
-      if (target) { active = id; pickRight(target); }
+      if (target && setOf[target] === setOf[id]) { active = id; pickRight(target); }
     };
     const cancel = () => stop();
     h.addEventListener('pointermove', move);
@@ -235,7 +247,6 @@ const MatchingPlayer = (() => {
 
   // Линии Lines: SVG поверх поля, концы — на внутренних краях связанных карточек. Пересчитываются при любом изменении размера
   function drawLines(board) {
-    if (ro) { ro.disconnect(); ro = null; }
     if (!board) return;
     const box = board.querySelector('.mt-svgbox');
     const paint = () => {
@@ -288,7 +299,7 @@ const MatchingPlayer = (() => {
       box.replaceChildren(svg);
     };
     paint();
-    if (window.ResizeObserver) { ro = new ResizeObserver(paint); ro.observe(board); board.querySelectorAll('.mt-card').forEach(c => ro.observe(c)); }
+    if (window.ResizeObserver) { const o = new ResizeObserver(paint); ros.push(o); o.observe(board); board.querySelectorAll('.mt-card').forEach(c => o.observe(c)); }
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (board.isConnected) paint(); });
   }
 
@@ -302,28 +313,42 @@ const MatchingPlayer = (() => {
     // Выравнивание текста: «авто» — по центру, а если в упражнении есть длинная карточка, то у всех по левому краю
     const long = data.items.some(i => String(i.left).length > 40 || String(i.right).length > 40);
     const wrapper = el('div', 'mt-wrap mt-al-' + (data.align === 'left' || (data.align !== 'center' && long) ? 'left' : 'center') + ' mt-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm') + (data.imageFit === 'cover' ? ' mt-fit-cover' : ''));
+    ros.forEach(r => r.disconnect()); ros = [];
+    const many = sets.length > 1;
     if (rest.length) {
       const hint = el('p', 'mt-hint', active ? 'Теперь нажмите карточку справа.' : 'Нажмите карточку слева, потом её пару справа.');
       hint.setAttribute('role', 'status');
-      const board = el('div', 'mt-board');
-      const colL = el('div', 'mt-col'), colR = el('div', 'mt-col');
-      colL.setAttribute('role', 'group'); colL.setAttribute('aria-label', 'Левый столбец');
-      colR.setAttribute('role', 'group'); colR.setAttribute('aria-label', 'Правый столбец');
-      rest.forEach(id => colL.append(cell('left', id, num)));
-      rightOrder.filter(id => live(gapOf(id))).forEach(id => colR.append(cell('right', id, num)));
-      board.append(colL, colR);
-      if (lines()) { board.classList.add('mt-lines'); board.prepend(el('div', 'mt-svgbox')); }
-      wrapper.append(finished ? el('p', 'mt-hint', lines() ? 'Проверка выполнена: верные пары зелёные, неверные красные.' : 'Упражнение закончено.') : hint, board);
+      wrapper.append(finished ? el('p', 'mt-hint', lines() ? 'Проверка выполнена: верные пары зелёные, неверные красные.' : 'Упражнение закончено.') : hint);
     }
-    const solved = lines() ? [] : leftOrder.filter(id => gapOf(id).locked);
-    if (solved.length) {
-      const sec = el('section', 'mt-solved');
-      sec.setAttribute('aria-label', 'Верные пары');
-      sec.append(el('h3', '', `Верные пары: ${solved.length}`));
-      solved.forEach(id => sec.append(pairRow(id, true)));
-      wrapper.append(sec);
-    }
-    // Верные пары для оставшихся — по желанию автора, только после конца
+    // Каждый набор — своя инструкция, своё поле из двух столбцов и своя зелёная зона; ход проверок и баллы общие
+    sets.forEach((set, k) => {
+      const box = el('section', 'mt-set');
+      if (many) {
+        box.setAttribute('aria-label', `Набор ${k + 1}`);
+        if (String(set.instruction || '').trim()) box.append(el('p', 'mt-setins', set.instruction));
+      }
+      const mine = rest.filter(id => setOf[id] === k);
+      if (mine.length) {
+        const board = el('div', 'mt-board');
+        const colL = el('div', 'mt-col'), colR = el('div', 'mt-col');
+        colL.setAttribute('role', 'group'); colL.setAttribute('aria-label', many ? `Набор ${k + 1}, левый столбец` : 'Левый столбец');
+        colR.setAttribute('role', 'group'); colR.setAttribute('aria-label', many ? `Набор ${k + 1}, правый столбец` : 'Правый столбец');
+        mine.forEach(id => colL.append(cell('left', id, num)));
+        rightOrder.filter(id => setOf[id] === k && live(gapOf(id))).forEach(id => colR.append(cell('right', id, num)));
+        board.append(colL, colR);
+        if (lines()) { board.classList.add('mt-lines'); board.prepend(el('div', 'mt-svgbox')); }
+        box.append(board);
+      }
+      const solved = lines() ? [] : leftOrder.filter(id => setOf[id] === k && gapOf(id).locked);
+      if (solved.length) {
+        const sec = el('section', 'mt-solved');
+        sec.setAttribute('aria-label', 'Верные пары');
+        sec.append(el('h3', '', `Верные пары: ${solved.length}`));
+        solved.forEach(id => sec.append(pairRow(id, true)));
+        box.append(sec);
+      }
+      if (box.childElementCount) wrapper.append(box);
+    });    // Верные пары для оставшихся — по желанию автора, только после конца
     if (finished && data.showCorrect === true && unsolved.length) {
       const btn = el('button', 'mt-reveal', showAnswers ? 'Скрыть верные пары' : 'Показать верные пары');
       btn.type = 'button';
@@ -338,7 +363,7 @@ const MatchingPlayer = (() => {
       }
     }
     root.append(wrapper);
-    drawLines(wrapper.querySelector('.mt-lines'));
+    wrapper.querySelectorAll('.mt-lines').forEach(drawLines);
     if (refocus) {
       const t = document.querySelector(refocus);
       refocus = null;

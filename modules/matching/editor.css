@@ -49,3 +49,11 @@
   .mt-link { display:none; }
   .mt-tools2 { flex-basis:100%; justify-content:flex-end; }
 }
+
+/* Наборы пар */
+.mt-set.multi { background:color-mix(in srgb, var(--accent) 5%, var(--card)); border:1px solid var(--line); border-radius:14px; padding:8px 10px 4px; margin-bottom:12px; }
+.mt-sethead { margin-bottom:8px; }
+.mt-settop { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+.mt-settop .mt-tools2 { margin-left:auto; }
+.mt-setins { width:100%; }
+.mt-addset { margin-top:4px; }

@@ -79,3 +79,7 @@
 .mt-dragline line { stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-dasharray:2 6; }
 .mt-card.dragging { border-color:var(--accent); }
 .mt-card.drop { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }@media (max-width:520px) { .mt-grab { display:none; } } /* на телефоне ручки нет: связь делается двумя нажатиями */
+
+/* Несколько наборов: инструкция набора над его полем, наборы друг под другом */
+.mt-set + .mt-set { margin-top:18px; padding-top:10px; border-top:1px dashed var(--line); }
+.mt-setins { margin:0 0 8px; font-weight:600; }
