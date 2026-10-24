@@ -213,6 +213,7 @@ const ICON = {
   true_false: '<path d="M4 8l3 3 5-6"/><path d="M14 14l6 6M20 14l-6 6"/>',
   multiple_choice: '<circle cx="6" cy="7" r="2"/><circle cx="6" cy="17" r="2"/><path d="M11 7h9M11 17h9"/>',
   matching: '<circle cx="6" cy="7" r="2"/><circle cx="18" cy="17" r="2"/><path d="M8 7l8 10"/>',
+  mistake_mode: '<path d="M4 6h16M4 18h16"/><path d="M8 10l8 4M16 10l-8 4"/>',
   ordering: '<path d="M8 6h12M8 12h12M8 18h12"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
   generic: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>'
 };
@@ -222,6 +223,7 @@ const MODS = [
   { id: 'true_false', name: 'True / False', desc: 'Верно или неверно: ученик оценивает утверждения.', ready: true },
   { id: 'multiple_choice', name: 'Multiple Choice', desc: 'Вопросы с выбором одного или нескольких вариантов.', ready: true },
   { id: 'matching', name: 'Matching', desc: 'Сопоставление: соединить пары из двух столбцов.', ready: true },
+  { id: 'mistake_mode', name: 'Mistake Mode', desc: 'Найти неверные слова в тексте нажатием.', ready: true },
   { id: 'ordering', name: 'Ordering', desc: 'Расставить элементы в правильном порядке.' },
   { id: 'categories', name: 'Categories / Sorting', desc: 'Разложить карточки по категориям.' },
   { id: 'timeline', name: 'Timeline', desc: 'Расставить события в хронологическом порядке.' },
@@ -230,7 +232,7 @@ const MODS = [
   { id: 'flashcards', name: 'Flashcards' }, { id: 'vocabulary', name: 'Vocabulary' }, { id: 'word_search', name: 'Word Search' },
   { id: 'hotspot', name: 'Hotspot' }, { id: 'label_the_diagram', name: 'Label the Diagram' }, { id: 'odd_one_out', name: 'Odd One Out' },
   { id: 'select_title', name: 'Select Title' }, { id: 'prepositions', name: 'Prepositions' }, { id: 'splice', name: 'Splice' },
-  { id: 'color_coding', name: 'Color Coding' }, { id: 'mistake_mode', name: 'Mistake Mode' }, { id: 'essay_writing', name: 'Essay Writing' }
+  { id: 'color_coding', name: 'Color Coding' },{ id: 'essay_writing', name: 'Essay Writing' }
 ];
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);

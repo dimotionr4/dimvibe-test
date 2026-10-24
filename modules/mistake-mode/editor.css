@@ -1,0 +1,43 @@
+/* Редактор модуля Mistake Mode. Цвета берутся из переменных ядра (editor.html) */
+.mm-wrap { position:relative; }
+.mm-muted { color:var(--muted); }
+.mm-limit { color:var(--bad); font-weight:600; }
+.mm-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.mm-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.mm-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.mm-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+
+.mm-text { margin-bottom:12px; }
+.mm-text.multi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.mm-texttop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.mm-texttop .mm-tools2 { margin-left:auto; }
+.mm-in { width:100%; box-sizing:border-box; min-width:0; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.mm-textins { margin-bottom:8px; min-height:38px; }
+.mm-body { line-height:1.5; min-height:96px; }
+.mm-count { font-size:.85rem; margin:2px 0 0; text-align:right; }
+.mm-hint { margin:6px 0; font-size:.9rem; }
+.mm-tools2 { display:flex; align-items:center; flex:none; }
+.mm-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.mm-ib:hover:not(:disabled) { color:var(--accent); }
+.mm-ib.mm-del:hover { color:var(--bad); }
+.mm-ib:disabled { opacity:.3; }
+.mm-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.mm-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.mm-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.mm-add { margin:4px 0 8px; }
+.mm-add:disabled { opacity:.5; }
+
+/* Текст со словами, на которые можно нажимать */
+.mm-pick { white-space:pre-wrap; overflow-wrap:anywhere; line-height:2; padding:10px 12px; border:1px dashed var(--line); border-radius:10px; background:var(--card); }
+.mm-w { cursor:pointer; border-radius:6px; padding:2px 1px; }
+.mm-w:hover { background:var(--accent-soft); }
+.mm-w:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.mm-w.on { background:color-mix(in srgb, var(--bad) 22%, var(--card)); box-shadow:inset 0 -2px 0 var(--bad); font-weight:600; }
+
+/* Список ошибок */
+.mm-errs { margin-top:8px; }
+.mm-err { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:4px 0; }
+.mm-errw { flex:none; max-width:100%; overflow-wrap:anywhere; }
+.mm-expl { flex:1 1 200px; width:auto; min-height:34px; }
+.mm-err.broken .mm-errw { color:var(--bad); }
+.mm-bad { color:var(--bad); flex:1 1 200px; }

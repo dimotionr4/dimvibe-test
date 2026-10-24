@@ -38,6 +38,7 @@
 - True / False (третий модуль, решение владельца 2026-10-23): skill `.claude/skills/true-false/`.
 - Multiple Choice (четвёртый модуль, в архиве ABCD, решение владельца 2026-10-23): skill `.claude/skills/multiple-choice/`.
 - Matching (пятый модуль, сопоставление, решение владельца 2026-10-24): skill `.claude/skills/matching/`.
+- Mistake Mode (шестой модуль, найти ошибки в тексте, решение владельца 2026-10-24): skill `.claude/skills/mistake-mode/`.
 - Медиатека (общая библиотека картинок, решение владельца 2026-10-23): skill `.claude/skills/media-library/`.
 - Остальные модули: `docs/MODULE_NOTES.md`; при начале работы над модулем его правила переносим в отдельный skill.
 

@@ -15,6 +15,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/true-false/player.css?v=2">
 <link rel="stylesheet" href="modules/multiple-choice/player.css?v=3">
 <link rel="stylesheet" href="modules/matching/player.css?v=10">
+<link rel="stylesheet" href="modules/mistake-mode/player.css?v=2">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -121,6 +122,8 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/true-false/player.js?v=3"></script>
 <script src="modules/multiple-choice/player.js?v=2"></script>
 <script src="modules/matching/player.js?v=8"></script>
+<script src="modules/mistake-mode/tokens.js?v=1"></script>
+<script src="modules/mistake-mode/player.js?v=1"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -130,7 +133,7 @@ const isImg = () => !!data && data.module === 'image_to_gaps';
 // True / False (modules/true-false/player.js): вместо пропусков — утверждения; каждое утверждение работает как «пропуск» общего хода
 const isTF = () => !!data && data.module === 'true_false';
 // Модули, где единицы ответа — вопросы, а не пропуски (True / False, Multiple Choice): плеер модуля даёт units, reset, goMissing, instant, render
-const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : data.module === 'matching' ? MatchingPlayer : null);
+const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : data.module === 'matching' ? MatchingPlayer : data.module === 'mistake_mode' ? MistakeModePlayer : null);
 // Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
 let maxChecks = 3, checksUsed = 0, finished = false, note = '', instrOpen = true;
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key
@@ -499,14 +502,17 @@ function renderBank() {
 // Строка внизу: до первой проверки — сколько заполнено, потом результат и остаток проверок, в конце — итог
 function updateStatus() {
   const total = gaps.length, ok = gaps.filter(g => g.locked).length;
-  const s = $('score'), t = $('scoreText'), pct = total ? Math.round(ok / total * 100) : 0;
+  const s = $('score'), t = $('scoreText'), pct0 = total ? Math.round(ok / total * 100) : 0;
+  const pct = unitPlayer() && unitPlayer().percent ? unitPlayer().percent(pct0) : pct0;
   const wrong = gaps.filter(g => g.state === 'bad').length;
   s.classList.toggle('warn', !!note);
   // До первой проверки результата нет (только сколько заполнено); после проверки появляется рамка; в конце — итог и полоса с процентом
   s.classList.toggle('result', checksUsed > 0 || !!note);
   s.classList.toggle('final', finished && !note);
   const once = !!unitPlayer() && unitPlayer().instant(); // «по одному»: без кнопки «Проверить», каждый ответ засчитывается сразу
+  const custom = unitPlayer() && unitPlayer().status ? unitPlayer().status() : null; // модуль сам пишет строку результата (Mistake Mode)
   if (note) t.textContent = note;
+  else if (custom) t.textContent = custom;
   else if (once && !finished) t.textContent = `Отвечено: ${gaps.filter(g => g.final).length} из ${total} · Верно: ${ok}`;
   else if (finished) t.textContent = `Результат: ${ok} из ${total} (${pct}%)`;
   else if (checksUsed === 0) t.textContent = `Заполнено: ${gaps.filter(isFilled).length} из ${total}`;
@@ -523,6 +529,16 @@ function updateStatus() {
 
 function check() {
   if (finished) return;
+  // Модуль со своей проверкой (Mistake Mode: проверка разрешена после первой отметки): check() даёт {note} — проверку не тратим, или {done}
+  if (unitPlayer() && unitPlayer().check) {
+    const r = unitPlayer().check();
+    if (r.note) { note = r.note; render(); return; }
+    checksUsed++;
+    note = '';
+    if (r.done || checksUsed >= maxChecks) finished = true;
+    render();
+    return;
+  }
   // Неполный ответ проверку не тратит: показываем, чего не хватает
   const missing = gaps.filter(g => !isFilled(g));
   if (missing.length) {
@@ -560,7 +576,7 @@ function restart() {
   $('main').scrollTop = 0;
 }
 
-const started = () => checksUsed > 0 || gaps.some(g => g.value);
+const started = () => checksUsed > 0 || gaps.some(g => g.value) || !!(unitPlayer() && unitPlayer().started && unitPlayer().started());
 function closeResetAsk() { $('resetAsk').hidden = true; $('resetTop').hidden = false; }
 
 $('resetTop').onclick = () => {

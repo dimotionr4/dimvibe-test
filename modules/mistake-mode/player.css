@@ -1,0 +1,17 @@
+/* Плеер модуля Mistake Mode: обычный текст со словами, на которые можно нажимать. Цвета и состояния — из переменных страницы (index.html) */
+.card.mm-card { line-height:1.5; }
+.mm-ins { margin:0 0 10px; color:var(--muted); }
+.mm-body { white-space:pre-wrap; overflow-wrap:anywhere; font-size:1.1rem; line-height:2; }
+.mm-w { cursor:pointer; border-radius:6px; padding:5px 2px; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.mm-w:hover { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+.mm-w:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.mm-w.on { background:color-mix(in srgb, var(--accent) 22%, var(--card)); box-shadow:inset 0 -2px 0 var(--accent); }
+.mm-w.ok { background:color-mix(in srgb, var(--ok) 22%, var(--card)); box-shadow:inset 0 -2px 0 var(--ok); cursor:default; }
+.mm-w.ok::after { content:"\00a0✓"; font-weight:700; }
+.mm-w.bad { background:color-mix(in srgb, var(--bad) 18%, var(--card)); box-shadow:inset 0 -2px 0 var(--bad); }
+.mm-w.bad::after { content:"\00a0✗"; font-weight:700; }
+.mm-w.miss { box-shadow:inset 0 -2px 0 var(--bad); text-decoration:underline dashed var(--bad); text-underline-offset:4px; cursor:default; }
+.mm-w[aria-disabled="true"] { cursor:default; }
+.mm-w[aria-disabled="true"]:hover:not(.ok):not(.bad):not(.on):not(.miss) { background:transparent; }
+.mm-expl { margin-top:12px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+.mm-expl p { margin:2px 0; }
