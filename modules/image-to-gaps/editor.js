@@ -243,7 +243,7 @@ const ImageToGapsEditor = (() => {
     draw();
   }
 
-  // Выбор картинки: заглушки, загрузка файла или ссылка. onPick получает {media | stub | url}
+  // Выбор картинки: заглушки, загрузка файла или медиатека (там же картинка по ссылке). onPick получает {media | stub | url}
   // multi — можно отметить несколько картинок из медиатеки сразу (onPick вызывается для каждой)
   function imagePicker(onPick, multi) {
     const box = el('div', 'ig-picker');
@@ -263,28 +263,11 @@ const ImageToGapsEditor = (() => {
     if (window.openMediaLibrary) {
       const lib = el('button', 'ig-lib', 'Из медиатеки');
       lib.type = 'button';
-      lib.onclick = () => openMediaLibrary({ pick: true, multi: !!multi, kind: 'image', onPick: items => items.forEach(it => onPick({ media: it.path, alt: it.name })) });
+      // Картинка по ссылке выбирается в самой медиатеке («По ссылке», решение владельца 2026-10-24)
+      lib.onclick = () => openMediaLibrary({ pick: true, multi: !!multi, kind: 'image', link: true, onPick: items => items.forEach(it => onPick(it.url ? { url: it.url } : { media: it.path, alt: it.name })) });
       box.append(lib);
     }
     if (window.mediaPicker) box.append(window.mediaPicker('image', () => '', path => onPick({ media: path }), 'Загрузить картинку', { library: false })); // медиатека — своя кнопка выше (с выбором нескольких картинок)
-    const row = el('div', 'ig-adder');
-    const inp = el('input');
-    inp.placeholder = 'Или ссылка на картинку (https://…)';
-    const btn = el('button', '', 'Добавить');
-    const err = el('div', 'ig-warn');
-    err.hidden = true;
-    const go = () => {
-      const url = typeof safeImageUrl === 'function' ? safeImageUrl(inp.value) : null;
-      if (!inp.value.trim()) return;
-      err.hidden = !!url;
-      err.textContent = url ? '' : 'Ссылка должна быть полным адресом с https://.';
-      if (url) onPick({ url });
-    };
-    btn.onclick = go;
-    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
-    inp.oninput = () => { err.hidden = true; };
-    row.append(inp, btn);
-    box.append(row, err);
     return box;
   }
 

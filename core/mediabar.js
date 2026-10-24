@@ -1,6 +1,6 @@
 // Общие компактные элементы загрузки картинок и звука для редакторов всех модулей (решение владельца 2026-10-24):
 // вместо длинных панелей с кнопками — значок со стрелкой и выпадающим списком действий
-// (загрузить файл, выбрать из медиатеки, ссылка на изображение, убрать). Новые модули берут отсюда, а не рисуют свои кнопки.
+// (загрузить файл, выбрать из медиатеки, убрать; картинку по ссылке выбирают в медиатеке). Новые модули берут отсюда, а не рисуют свои кнопки.
 // Использует общие функции редактора: mediaSignIn, MediaLib.upload, openMediaLibrary, checkMediaFile, mediaSrc, mediaUrl, mediaErrorText;
 // вошёл ли владелец в Google, берёт из переменной mediaUserNow (editor.html).
 const MediaUI = (() => {
@@ -98,7 +98,8 @@ const MediaUI = (() => {
     };
     f.click();
   }
-  const fromLibrary = (kind, done) => openMediaLibrary({ pick: true, multi: false, kind, onPick: items => done(items[0].path) });
+  // onLink(адрес) — если передан, в медиатеке можно взять картинку по ссылке («По ссылке» → «Использовать ссылку»)
+  const fromLibrary = (kind, done, onLink) => openMediaLibrary({ pick: true, multi: false, kind, link: !!onLink, onPick: items => (items[0].url ? onLink(items[0].url) : done(items[0].path)) });
 
   // Строка состояния рядом со значком: серая — ход загрузки, красная — ошибка
   function statusEl() {
@@ -157,14 +158,13 @@ const MediaUI = (() => {
     return box;
   }
 
-  // Картинка вида {media, url, alt}: значок со списком (загрузить, из медиатеки, ссылка, убрать), миниатюра с описанием, поле ссылки.
+  // Картинка вида {media, url, alt}: значок со списком (загрузить, из медиатеки, убрать) и миниатюра.
+  // Картинку по ссылке выбирают в самой медиатеке («По ссылке», решение владельца 2026-10-24); у такой миниатюры значок 🔗.
   // opts: save() — записать черновик, change() — картинка изменилась, after — элемент в конец строки значков (например, звук)
-  const linkOpen = new WeakSet();
   const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
   function imageControl(im, opts) {
     const o = opts || {};
     const box = el('div', 'mb-img');
-    if (im.url && !im.media) linkOpen.add(im);
     const draw = () => {
       box.textContent = '';
       const pic = hasPic(im);
@@ -173,9 +173,8 @@ const MediaUI = (() => {
       const bar = el('div', 'mb-bar');
       bar.append(iconMenu(ICON.image, 'Изображение', pic, [
         { label: signed() ? 'Загрузить изображение' : 'Войти для загрузки', fn: () => pickFile('image', status.say, done(p => { im.url = ''; im.media = p; })) },
-        { label: 'Выбрать из медиатеки', fn: () => fromLibrary('image', done(p => { im.url = ''; im.media = p; })) },
-        { label: 'Ссылка на изображение', fn: () => { linkOpen.add(im); draw(); } },
-        pic || im.url || im.media ? { label: 'Убрать изображение', danger: true, fn: () => { linkOpen.delete(im); done(() => { im.media = ''; im.url = ''; })(); } } : null,
+        { label: 'Выбрать из медиатеки', fn: () => fromLibrary('image', done(p => { im.url = ''; im.media = p; }), done(u => { im.media = ''; im.url = u; })) },
+        pic || im.url || im.media ? { label: 'Убрать изображение', danger: true, fn: () => done(() => { im.media = ''; im.url = ''; })() } : null,
       ]));
       if (o.after) bar.append(o.after);
       bar.append(status);
@@ -185,26 +184,15 @@ const MediaUI = (() => {
         const th = el('span', 'mb-thumb');
         const src = mediaSrc(safeMediaPath(im.media) ? { media: im.media } : { url: im.url });
         if (src) { const img = el('img'); img.src = src; img.alt = ''; img.onerror = () => { th.classList.add('broken'); img.remove(); }; th.append(img); }
-        const alt = el('input');
-        alt.placeholder = 'Описание для незрячих учеников';
-        alt.value = im.alt || '';
-        alt.setAttribute('aria-label', 'Описание картинки');
-        alt.oninput = () => { im.alt = alt.value; if (o.save) o.save(); };
-        line.append(th, alt);
+        if (!safeMediaPath(im.media)) { th.classList.add('is-link'); th.title = 'Картинка по ссылке из интернета: ' + im.url; th.append(el('span', 'mb-linkmark', '🔗')); }
+        line.append(th); // поля «описание для незрячих» нет (решение владельца 2026-10-24: все ученики зрячие)
         box.append(line);
-      }
-      if (linkOpen.has(im)) {
-        const link = el('input', 'mb-link');
-        link.placeholder = 'Ссылка на картинку (https://…)';
-        link.value = im.url || '';
-        link.setAttribute('aria-label', 'Ссылка на картинку');
-        const bad = el('div', 'mb-warn');
-        bad.hidden = true;
-        link.oninput = () => { im.url = link.value; if (link.value.trim()) im.media = ''; bad.hidden = !link.value.trim() || !!safeImageUrl(link.value); bad.textContent = 'Нужен полный адрес с https://.'; if (o.save) o.save(); };
-        link.onchange = () => { if (o.change) o.change(); draw(); };
-        box.append(link, bad);
+      } else if (String(im.url || '').trim() && !safeMediaPath(im.media)) {
+        // Старая неправильная ссылка (без https): поля для правки больше нет — выбрать картинку заново или убрать
+        box.append(el('div', 'mb-warn', 'Ссылка на картинку неправильная. Выберите картинку заново или уберите её.'));
       }
     };
+    box.refresh = draw; // редактор перерисовывает после входа через Google
     draw();
     return box;
   }

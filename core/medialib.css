@@ -92,3 +92,15 @@
 .ml-sub { font-size:.72rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ml-keep { font-size:.78rem; font-weight:600; }
 .ml-dupitem:not(.keep) .ml-keep { color:var(--muted); font-weight:400; }
+/* «По ссылке»: адрес картинки, предпросмотр и действия */
+.ml-linkbtn.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.ml-link { flex:none; border:1px solid var(--line); border-radius:10px; background:var(--card); padding:10px; display:flex; flex-direction:column; gap:8px; }
+.ml-linkrow { display:flex; gap:8px; align-items:center; }
+.ml-linkin { flex:1; min-width:0; }
+.ml-linkbody { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+.ml-linkbody:empty { display:none; }
+.ml-linkprev { flex:none; display:flex; align-items:center; justify-content:center; width:120px; height:90px; border-radius:8px; background:var(--bg); }
+.ml-linkprev img { max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; }
+.ml-linkacts { flex:1; min-width:200px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.ml-linkhint, .ml-linkmsg { flex-basis:100%; margin:0; font-size:.85rem; color:var(--muted); }
+.ml-linkhint.bad, .ml-linkmsg.bad { color:var(--bad); }

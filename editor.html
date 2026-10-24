@@ -305,8 +305,8 @@
 <link rel="stylesheet" href="modules/multiple-choice/editor.css?v=3">
 <link rel="stylesheet" href="modules/matching/editor.css?v=12">
 <link rel="stylesheet" href="modules/mistake-mode/editor.css?v=4">
-<link rel="stylesheet" href="core/medialib.css?v=4">
-<link rel="stylesheet" href="core/mediabar.css?v=3">
+<link rel="stylesheet" href="core/medialib.css?v=5">
+<link rel="stylesheet" href="core/mediabar.css?v=4">
 </head>
 <body>
 <header id="bar">
@@ -403,21 +403,21 @@
 <script src="core/design.js?v=5"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
-<script src="core/medialib-ui.js?v=5"></script>
-<script src="core/mediabar.js?v=2"></script>
+<script src="core/medialib-ui.js?v=6"></script>
+<script src="core/mediabar.js?v=4"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
 <script src="core/gap-engine.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=25"></script>
-<script src="modules/image-to-gaps/editor.js?v=5"></script>
+<script src="modules/image-to-gaps/editor.js?v=6"></script>
 <script src="modules/true-false/editor.js?v=2"></script>
-<script src="modules/multiple-choice/editor.js?v=7"></script>
-<script src="modules/matching/editor.js?v=9"></script>
+<script src="modules/multiple-choice/editor.js?v=8"></script>
+<script src="modules/matching/editor.js?v=10"></script>
 <script src="modules/mistake-mode/tokens.js?v=1"></script>
-<script src="modules/mistake-mode/editor.js?v=3"></script>
+<script src="modules/mistake-mode/editor.js?v=5"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
-const ASSET_V = 40;
+const ASSET_V = 43;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -775,16 +775,16 @@ function renderInstruction(box) {
           <button data-cmd="italic" data-tip="Курсив (Ctrl+I)" aria-label="Курсив"><i>К</i></button>
         </div>
        </div><div class="instr-side">
-        <div id="imgPick"></div>
-        <div class="row-help"><input id="imgUrl" type="url" placeholder="или ссылка на картинку: https://…/picture.jpg"><span id="imgHelp"></span></div>
-        <div class="warn-inline" id="imgUrlWarn" hidden></div>
-        <input id="imgAlt" placeholder="Описание картинки (для незрячих и если не загрузится)">
+        <div class="row-help"><div id="imgPick"></div><span id="imgHelp"></span></div>
         <div id="imMockBox"></div>
        </div></div>
       </div>
     </section>`;
-  $('imgHelp').append(helpIcon('Загрузите файл кнопкой выше (нужно один раз войти через Google) или вставьте ссылку: адрес должен начинаться с https:// и вести прямо на изображение. Размер и положение картинки выбираются на маленьком макете ниже.'));
-  $('imgPick').append(mediaPicker('image', () => im.media || '', p => { im.media = p; if (p) { im.url = ''; $('imgUrl').value = ''; checkUrl(); } summary(); paintMock(); touch(); }, 'Загрузить картинку'));
+  $('imgHelp').append(helpIcon('Загрузите файл (нужно один раз войти через Google) или выберите из медиатеки. Картинку из интернета — тоже в медиатеке, кнопка «По ссылке». Размер и положение картинки выбираются на маленьком макете ниже.'));
+  // Картинка: общий элемент core/mediabar.js (загрузить, из медиатеки — там же «По ссылке», убрать)
+  const imgCtl = MediaUI.imageControl(im, { save: touch, change: () => { summary(); paintMock(); } });
+  mediaPickers.add(imgCtl);
+  $('imgPick').append(imgCtl);
   $('audPick').append(mediaPicker('audio', () => (ins.audio && ins.audio.media) || '', p => { ins.audio = { media: p }; summary(); touch(); }, 'Загрузить звук к инструкции'));
   $('instrHelp').append(helpIcon('Инструкцию ученик видит над заданием и может свернуть. Выделите слово, чтобы сделать его жирным или курсивом. Новая строка — новый абзац. Показать или скрыть инструкцию можно на вкладке «Дизайн».'));
   const ed = $('instrText');
@@ -796,19 +796,6 @@ function renderInstruction(box) {
     const parts = [t ? (t.length > 46 ? t.slice(0, 46) + '…' : t) : '', im.url.trim() || im.media ? 'есть картинка' : '', ins.audio && ins.audio.media ? 'есть звук' : ''].filter(Boolean);
     $('instrSum').textContent = parts.length ? parts.join(' · ') : 'не заполнено (необязательно)';
   };
-  const checkUrl = () => {
-    const bad = im.url.trim() && !safeImageUrl(im.url);
-    $('imgUrlWarn').hidden = !bad;
-    $('imgUrlWarn').textContent = bad ? 'Нужен полный адрес с https://, например https://example.com/picture.jpg' : '';
-  };
-  $('imgUrl').value = im.url; $('imgAlt').value = im.alt;
-  $('imgUrl').oninput = () => {
-    im.url = $('imgUrl').value;
-    if (im.url.trim() && im.media) { im.media = ''; $('imgPick').firstChild.refresh(); } // ссылка заменяет загруженный файл
-    checkUrl(); summary(); touch();
-  };
-  $('imgAlt').oninput = () => { im.alt = $('imgAlt').value; touch(); };
-  checkUrl();
   summary();
   // Макет картинки: размер и положение выбираются нажатием на бледный контур
   const paintMock = () => {
@@ -1186,7 +1173,6 @@ function renderPublish() {
   const pic = current.instruction && current.instruction.image;
   if (pic && (pic.url.trim() || pic.media)) {
     if (!pic.media && !safeImageUrl(pic.url)) errors.push('Изображение инструкции: ссылка должна быть полным адресом с https://. Исправьте её на вкладке «Содержимое» или очистите поле.');
-    else if (!pic.alt.trim()) warnings.push('У изображения инструкции нет описания: его не увидят незрячие ученики, а при ошибке загрузки будет пустое место.');
   }
   const id = current.id;
   const url = new URL('./', location.href).href + '?id=' + id;

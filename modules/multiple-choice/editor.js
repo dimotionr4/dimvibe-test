@@ -430,8 +430,6 @@ const MultipleChoiceEditor = (() => {
       const badLink = (im, what) => { if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) errors.push(`${what}: ссылка на картинку должна быть полным адресом с https://.`); };
       badLink(it.image, `${who}, картинка вопроса`);
       it.options.forEach((o, k) => badLink(o.image, `${who}, вариант ${k + 1}`));
-      if (hasPic(it.image) && !clean(it.image.alt)) warnings.push(`${who}: у картинки вопроса нет описания.`);
-      it.options.forEach((o, k) => { if (hasPic(o.image) && !clean(o.text) && !clean(o.image.alt)) warnings.push(`${who}, вариант ${k + 1}: картинка без текста и без описания, незрячий ученик её не поймёт.`); });
       const have = it.correct.filter(id => it.options.some(o => o.id === id));
       if (!have.length) errors.push(`${who}: не отмечен верный вариант.`);
       else if (modeOf(it) === 'single' && have.length > 1) errors.push(`${who}: в Single Choice нужен один верный вариант, а отмечено ${have.length}. Выберите один или переключите вопрос на Multiple Select.`);

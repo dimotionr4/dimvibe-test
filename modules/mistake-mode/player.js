@@ -15,6 +15,7 @@ const MistakeModePlayer = (() => {
   let fresh = ''; // слово, у которого кружок только что поставлен: он рисуется с анимацией
   let freshStrike = ''; // слово, которое только что перешло в замену (✎): перечёркивание рисуется с анимацией
   const texts = () => data.texts || [];
+  const listView = () => data.view === 'list'; // «все тексты сразу»: карточки друг под другом, без переключателя
   // Замена слова (значок ✎ и поле) доступна во всём тексте, если хотя бы одна его ошибка требует исправления: так по значку не видно, какое слово настоящая ошибка
   const needsFixes = t => (t.errors || []).some(e => e.requiresCorrection === true);
 
@@ -78,7 +79,7 @@ const MistakeModePlayer = (() => {
     if (g) g.state = null; // отметка снята или поставлена заново: прежний результат исправления не показываем
     delete fixState[t.id][i];
     note = '';
-    refocus = `.mm-card .mm-w[data-i="${i}"]`;
+    refocus = `.mm-card .mm-w[data-t="${t.id}"][data-i="${i}"]`;
     render();
   }
 
@@ -90,7 +91,7 @@ const MistakeModePlayer = (() => {
     if (g) g.state = null;
     delete fixState[t.id][i];
     note = '';
-    refocus = on ? `.mm-card .mm-fixin[data-i="${i}"] input` : `.mm-card .mm-edit[data-i="${i}"]`;
+    refocus = on ? `.mm-card .mm-fixin[data-t="${t.id}"][data-i="${i}"] input` : `.mm-card .mm-edit[data-t="${t.id}"][data-i="${i}"]`;
     render();
   }
 
@@ -186,6 +187,7 @@ const MistakeModePlayer = (() => {
     const t = texts()[k];
     const c = el('div', 'card mm-card mm-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm') + (data.imageFit === 'cover' ? ' mm-fit-cover' : ''));
     const ins = String(t.instruction || '').trim();
+    if (texts().length > 1 && listView()) c.append(el('p', 'mm-tnum', `Текст ${k + 1}`)); // при показе всех текстов сразу каждый подписан номером
     if (ins) c.append(el('p', 'mm-ins', ins));
     const pic = picture(t.image), audio = mediaSrc(t.audio);
     if (pic) c.append(pic);
@@ -205,6 +207,7 @@ const MistakeModePlayer = (() => {
       const key = t.id + ':' + p.i;
       const w = el('span', 'mm-w' + (state ? ' ' + state : '') + (inRepl ? ' repl' : '') + (marked && fresh === key ? ' fresh-ring' : '') + (inRepl && freshStrike === key ? ' fresh-strike' : ''), p.s);
       w.dataset.i = p.i;
+      w.dataset.t = t.id;
       if (marked && comicNow() && state && state !== 'miss') w._ring = { ...lookOf(t.id, p.i), key: t.id + ':' + p.i, repl: inRepl };
       w.setAttribute('role', 'button');
       w.setAttribute('aria-pressed', String(marked));
@@ -252,6 +255,7 @@ const MistakeModePlayer = (() => {
   function editBtn(t, i, word) {
     const b = el('span', 'mm-edit', '✎');
     b.dataset.i = i;
+    b.dataset.t = t.id;
     b.tabIndex = 0;
     b.setAttribute('role', 'button');
     b.setAttribute('aria-label', `Заменить слово «${word}»`);
@@ -267,6 +271,7 @@ const MistakeModePlayer = (() => {
     const st = fixState[t.id][i] || '';
     const box = el('span', 'mm-fixin' + (st ? ' ' + st : ''));
     box.dataset.i = i;
+    box.dataset.t = t.id;
     const input = el('input');
     input.type = 'text';
     input.value = fixes[t.id][i] || '';
@@ -332,9 +337,11 @@ const MistakeModePlayer = (() => {
   function renderInto(root) {
     if (idx >= texts().length) idx = Math.max(0, texts().length - 1);
     if (ringObs) ringObs.disconnect();
-    if (texts().length > 1) nav(root);
-    if (texts().length) root.append(textCard(idx));
-    if (texts().length > 1) pager(root);
+    const one = texts().length > 1 && !listView(); // переключатель нужен только при показе «по одному»
+    if (one) nav(root);
+    if (one || texts().length < 2) { if (texts().length) root.append(textCard(idx)); }
+    else texts().forEach((_, k) => root.append(textCard(k)));
+    if (one) pager(root);
     // Comic: кружки рисуются, когда слова уже стоят на странице (нужны их размеры)
     root.querySelectorAll('.mm-w').forEach(w => {
       if (!w._ring) return;

@@ -395,7 +395,6 @@ const MatchingEditor = (() => {
           const im = it[s + 'Image'];
           if (!hasFace(it, s)) errors.push(`${who}: пустая ${name} карточка (нужен текст или картинка).`);
           if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) errors.push(`${who}, ${name} карточка: ссылка на картинку должна быть полным адресом с https://.`);
-          if (hasPic(im) && !clean(it[s]) && !clean(im.alt)) warnings.push(`${who}, ${name} карточка: картинка без текста и без описания, незрячий ученик её не поймёт.`);
         });
       });
       [['left', 'левом'], ['right', 'правом']].forEach(([side, name]) => {

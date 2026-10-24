@@ -20,6 +20,7 @@ const MistakeModeEditor = (() => {
 
   const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
   const FITS = { contain: 'Вписать целиком', cover: 'Заполнить рамку' };
+  const VIEWS = { one: 'По одному тексту', list: 'Все тексты сразу' };
   const emptyImage = () => ({ media: '', url: '', alt: '' });
   const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
   // Файл упражнения: картинка {media | url, alt} или нет; звук {media} или нет
@@ -34,13 +35,14 @@ const MistakeModeEditor = (() => {
 
   const newText = (id, text) => ({ id, instruction: '', text: text || '', image: emptyImage(), audio: '', errors: [] });
   function create() {
-    return { module: 'mistake_mode', format: 1, imageSize: 'm', imageFit: 'contain', texts: [newText('t1')] };
+    return { module: 'mistake_mode', format: 1, view: 'one', imageSize: 'm', imageFit: 'contain', texts: [newText('t1')] };
   }
 
   // Черновики, сделанные до картинок и звука, получают пустые поля
   function normalize() {
     if (!SIZES[d.imageSize]) d.imageSize = 'm';
     if (!FITS[d.imageFit]) d.imageFit = 'contain';
+    if (!VIEWS[d.view]) d.view = 'one';
     d.texts.forEach(t => {
       if (!t.image) t.image = emptyImage();
       if (typeof t.audio !== 'string') t.audio = '';
@@ -327,6 +329,7 @@ const MistakeModeEditor = (() => {
   function exportData(draft) {
     return {
       module: 'mistake_mode', format: 1,
+      ...(draft.view === 'list' ? { view: 'list' } : {}),
       ...(draft.texts.some(t => imageOut(t.image)) ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm', imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain' } : {}),
       texts: draft.texts.map(textOut),
     };
@@ -349,7 +352,6 @@ const MistakeModeEditor = (() => {
       if (!good) errors.push(`${pre}не помечено ни одной ошибки.`);
       const im = t.image;
       if (im && !safeMediaPath(im.media) && String(im.url || '').trim() && !safeImageUrl(im.url)) errors.push(`${pre}ссылка на картинку должна быть полным адресом с https://.`);
-      if (hasPic(im) && !String(im.alt || '').trim()) warnings.push(`${pre}у картинки нет описания, незрячий ученик её не поймёт.`);
       if (good > MAX_ERRORS) errors.push(`${pre}ошибок больше ${MAX_ERRORS}.`);
       t.errors.filter(e => !e.broken && e.requiresCorrection && !String(e.correction || '').trim()).forEach(e => errors.push(`${pre}у ошибки «${e.word}» включено исправление, но не указан правильный вариант.`));
     });
@@ -376,14 +378,16 @@ const MistakeModeEditor = (() => {
         }),
       };
     });
-    return { ...create(), imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain', texts };
+    return { ...create(), view: file.view === 'list' ? 'list' : 'one', imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain', texts };
   }
 
-  // Настройки во вкладке «Дизайн»: размер картинок и вписывание, только если в упражнении есть картинки (рисует ядро)
+  // Настройки во вкладке «Дизайн» (рисует ядро): показ текстов; размер картинок и вписывание — только если в упражнении есть картинки
   const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   function designOptions(draft) {
-    if (!draft.texts.some(t => hasPic(t.image))) return [];
-    return [
+    const view = { field: 'view', label: 'Показ текстов', value: VIEWS[draft.view] ? draft.view : 'one', names: VIEWS,
+      icons: { one: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'), list: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>') } };
+    if (!draft.texts.some(t => hasPic(t.image))) return [view];
+    return [view,
       { field: 'imageSize', label: 'Размер картинок', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } },
       { field: 'imageFit', label: 'Картинка в рамке', value: FITS[draft.imageFit] ? draft.imageFit : 'contain', names: FITS,
         icons: { contain: sq('<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>'), cover: sq('<rect x="3" y="5" width="18" height="14" rx="2" fill="currentColor" fill-opacity=".35"/>') } },

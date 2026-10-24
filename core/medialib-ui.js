@@ -1,6 +1,7 @@
 // Окно «Медиатека»: папки, сетка картинок и звуков, поиск, теги, загрузка, свойства файла. Данные — core/medialib.js.
 // openMediaLibrary({pick, multi, kind, onPick(items)}): pick=true — окно выбора (кнопка «Выбрать»), иначе просмотр и правка;
 // kind='image' или 'audio' — показывать только этот вид (без него есть переключатель «Все / Картинки / Звук»).
+// link=true — вызвавший принимает и картинку по ссылке: тогда onPick может получить [{kind:'image', url, link:true}] вместо файла.
 // Номер версии `?v=` у подключения этого файла (и medialib.css) поднимайте при любом изменении.
 const MediaLibUI = (() => {
   const h = (tag, cls, text) => {
@@ -90,11 +91,16 @@ const MediaLibUI = (() => {
     dupBtn.title = 'Найти одинаковые файлы (по содержимому)';
     dupBtn.onclick = () => { dupMode = !dupMode; draw(); };
     const up = h('button', 'ml-up primary');
-    bar.append(kindSel, orientSel, sortSel, hid, refresh, dupBtn, up, file);
+    const linkBtn = h('button', 'ml-linkbtn', 'По ссылке');
+    linkBtn.title = 'Картинка из интернета по адресу';
+    linkBtn.hidden = opts.kind === 'audio';
+    bar.append(kindSel, orientSel, sortSel, hid, refresh, dupBtn, linkBtn, up, file);
 
     const tagRow = h('div', 'ml-tags');
     const note = h('div', 'ml-note');
     note.hidden = true;
+    const linkBox = h('div', 'ml-link');
+    linkBox.hidden = true;
 
     // Середина: папки, сетка и свойства
     const mid = h('div', 'ml-mid');
@@ -110,7 +116,7 @@ const MediaLibUI = (() => {
     const okBtn = h('button', 'primary', 'Выбрать');
     const cancel = h('button', '', 'Отмена');
     if (pick) foot.append(picked, cancel, okBtn); else foot.hidden = true;
-    box.append(head, bar, tagRow, note, mid, foot);
+    box.append(head, bar, tagRow, note, linkBox, mid, foot);
 
     const say = (t, bad) => { msg = t; note.textContent = t; note.hidden = !t; note.classList.toggle('bad', !!bad); };
     const errText = e => e.userText || mediaErrorText(e);
@@ -549,6 +555,88 @@ const MediaLibUI = (() => {
       draw();
     }
 
+    // «По ссылке»: картинка из интернета. В окне выбора (если вызвавший принимает ссылки, opts.link) её можно взять как ссылку —
+    // в медиатеку она не попадает; или сохранить в медиатеку обычным файлом. Сохранить можно, только если сайт картинки
+    // разрешает её скачать (CORS); показать картинку браузер может и без этого разрешения.
+    function drawLink() {
+      linkBox.innerHTML = '';
+      const row = h('div', 'ml-linkrow');
+      const inp = h('input', 'ml-linkin');
+      inp.type = 'url';
+      inp.placeholder = 'Адрес картинки: https://…/picture.jpg';
+      inp.setAttribute('aria-label', 'Адрес картинки');
+      const close0 = h('button', 'ml-x', '×');
+      close0.setAttribute('aria-label', 'Закрыть «По ссылке»');
+      close0.onclick = () => toggleLink(false);
+      row.append(inp, close0);
+      const body = h('div', 'ml-linkbody');
+      linkBox.append(row, body);
+      const say0 = (t, bad) => { body.textContent = ''; if (t) body.append(h('p', 'ml-linkmsg' + (bad ? ' bad' : ''), t)); };
+      let seq = 0;
+      const show = () => {
+        const n = ++seq, raw = inp.value.trim(), url = safeImageUrl(raw);
+        if (!raw) return say0('');
+        if (!url) return say0('Нужен полный адрес, который начинается с https://', true);
+        say0('Загружаю картинку…');
+        const img = h('img');
+        img.alt = '';
+        img.onerror = () => { if (n === seq) say0('По этому адресу картинка не открылась. Нужна прямая ссылка на изображение (правой кнопкой по картинке → «Копировать адрес изображения»).', true); };
+        img.onload = () => {
+          if (n !== seq) return;
+          body.textContent = '';
+          const prev = h('span', 'ml-linkprev');
+          prev.append(img);
+          const acts = h('div', 'ml-linkacts');
+          if (pick && opts.link) {
+            const use = h('button', 'primary', 'Использовать ссылку');
+            use.title = 'Картинка останется на чужом сайте и в медиатеку не попадёт';
+            use.onclick = () => { close(); opts.onPick([{ kind: 'image', url, name: '', link: true }]); };
+            acts.append(use);
+          }
+          const keep = h('button', pick && opts.link ? '' : 'primary', user ? 'Сохранить в медиатеку' : 'Войти, чтобы сохранить');
+          keep.onclick = () => saveFromLink(url, keep);
+          acts.append(keep);
+          const hint = pick && opts.link ? 'Ссылка: картинка остаётся на чужом сайте; если её там уберут, она пропадёт и у ученика. Сохранить в медиатеку надёжнее.' : 'Картинка будет сохранена в медиатеку обычным файлом.';
+          acts.append(h('p', 'ml-linkhint', hint));
+          body.append(prev, acts);
+        };
+        img.src = url;
+      };
+      inp.oninput = show;
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); show(); } };
+      setTimeout(() => inp.focus(), 0);
+    }
+    function toggleLink(on) {
+      linkBox.hidden = !on;
+      linkBtn.classList.toggle('on', on);
+      linkBtn.setAttribute('aria-pressed', String(on));
+      if (on) drawLink();
+    }
+
+    async function saveFromLink(url, btn) {
+      if (!user) { uploadFiles([]); return; } // запускает вход через Google
+      const bad = t => { const m = linkBox.querySelector('.ml-linkhint'); if (m) { m.textContent = t; m.classList.add('bad'); } btn.disabled = false; btn.textContent = 'Сохранить в медиатеку'; };
+      btn.disabled = true;
+      btn.textContent = 'Скачиваю…';
+      let blob;
+      try {
+        const r = await fetch(url, { mode: 'cors', credentials: 'omit' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        blob = await r.blob();
+      } catch (e) {
+        return bad('Этот сайт не разрешает сохранять свою картинку. ' + (pick && opts.link ? 'Используйте её как ссылку или скачайте' : 'Скачайте') + ' файл на компьютер и загрузите его кнопкой «Загрузить».');
+      }
+      const type = (blob.type || '').split(';')[0];
+      const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[type];
+      if (!ext) return bad(`Сохранить можно только JPEG, PNG или WebP, а здесь ${type || 'неизвестный формат'}.` + (pick && opts.link ? ' Используйте картинку как ссылку.' : ''));
+      // Название — из имени файла в адресе, без расширения и лишних знаков
+      let base = '';
+      try { base = decodeURIComponent(new URL(url).pathname.split('/').pop() || ''); } catch (e) { /* странный адрес: без названия */ }
+      base = base.replace(/\.[^.]*$/, '').replace(/[^\p{L}\p{N}_-]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'picture';
+      toggleLink(false);
+      await uploadFiles([new File([blob], base + '.' + ext, { type })]);
+    }
+
     function choose() {
       const chosen = sel.map(p => items.find(x => x.path === p)).filter(Boolean);
       if (!chosen.length) return;
@@ -566,6 +654,7 @@ const MediaLibUI = (() => {
     up.onclick = () => { if (!user) uploadFiles([]); else file.click(); };
     file.onchange = () => { const f = [...file.files]; file.value = ''; if (f.length) uploadFiles(f); }; // копия: после сброса поля список файлов пустеет
     refresh.onclick = () => load(true);
+    linkBtn.onclick = () => toggleLink(linkBox.hidden);
     closeBtn.onclick = cancel.onclick = close;
     okBtn.onclick = choose;
     back.onmousedown = e => { if (e.target === back) close(); };
