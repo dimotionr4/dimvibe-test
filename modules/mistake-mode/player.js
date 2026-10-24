@@ -10,8 +10,9 @@ const MistakeModePlayer = (() => {
   let flagged = {}; // ID текста → ложные отметки, найденные последней проверкой (красные до снятия)
   let fixes = {}; // ID текста → номер слова → введённое исправление
   let fixState = {}; // ID текста → номер слова → 'ok' (исправление верно) или 'bad' (неверно), до следующей правки поля
+  let repl = {}; // ID текста → слова, которые ученик решил заменить (перечёркнуты, рядом поле); остальные отмеченные — просто в кружке
   const texts = () => data.texts || [];
-  // Поля исправлений есть у текста, если хотя бы одна его ошибка требует исправления
+  // Замена слова (значок ✎ и поле) доступна во всём тексте, если хотя бы одна его ошибка требует исправления: так по значку не видно, какое слово настоящая ошибка
   const needsFixes = t => (t.errors || []).some(e => e.requiresCorrection === true);
 
   function units() {
@@ -23,8 +24,8 @@ const MistakeModePlayer = (() => {
   }
 
   function reset() {
-    idx = 0; refocus = null; marks = {}; flagged = {}; fixes = {}; fixState = {};
-    texts().forEach(t => { marks[t.id] = new Set(); flagged[t.id] = new Set(); fixes[t.id] = {}; fixState[t.id] = {}; });
+    idx = 0; refocus = null; marks = {}; flagged = {}; fixes = {}; fixState = {}; repl = {};
+    texts().forEach(t => { marks[t.id] = new Set(); flagged[t.id] = new Set(); fixes[t.id] = {}; fixState[t.id] = {}; repl[t.id] = new Set(); });
   }
 
   const unitAt = (t, i) => gaps.find(g => g.textId === t.id && g.index === i);
@@ -38,8 +39,9 @@ const MistakeModePlayer = (() => {
     // Ошибка без исправления засчитывается за находку; с исправлением — только если введено допустимое (основное или альтернатива)
     gaps.forEach(g => {
       if (g.locked || !marks[g.textId].has(g.index)) return;
-      if (!g.requires) { g.locked = true; g.state = 'ok'; return; }
-      const v = fixes[g.textId][g.index] || '';
+      if (!g.requires) { g.locked = true; g.state = 'ok'; repl[g.textId].delete(g.index); return; }
+      // Исправление засчитывается, только если ученик выбрал замену слова (✎); просто кружок не считается исправлением
+      const v = repl[g.textId].has(g.index) ? fixes[g.textId][g.index] || '' : '';
       const right = [g.correction, ...g.fixes].some(a => norm(a) !== '' && norm(a) === norm(v));
       g.locked = right;
       g.state = right ? 'ok' : 'half';
@@ -68,11 +70,23 @@ const MistakeModePlayer = (() => {
     const g = unitAt(t, i);
     if (finished || (g && g.locked)) return;
     const s = marks[t.id];
-    if (s.has(i)) { s.delete(i); flagged[t.id].delete(i); } else s.add(i);
+    if (s.has(i)) { s.delete(i); flagged[t.id].delete(i); repl[t.id].delete(i); } else s.add(i);
     if (g) g.state = null; // отметка снята или поставлена заново: прежний результат исправления не показываем
     delete fixState[t.id][i];
     note = '';
     refocus = `.mm-card .mm-w[data-i="${i}"]`;
+    render();
+  }
+
+  // ✎ — слово из кружка переходит в замену (перечёркнуто, справа поле); × в поле возвращает кружок, введённое слово запоминается
+  function setRepl(t, i, on) {
+    const g = unitAt(t, i);
+    if (finished || (g && g.locked)) return;
+    if (on) repl[t.id].add(i); else repl[t.id].delete(i);
+    if (g) g.state = null;
+    delete fixState[t.id][i];
+    note = '';
+    refocus = on ? `.mm-card .mm-fixin[data-i="${i}"] input` : `.mm-card .mm-edit[data-i="${i}"]`;
     render();
   }
 
@@ -122,7 +136,8 @@ const MistakeModePlayer = (() => {
       if (!p.word) { body.append(document.createTextNode(p.s)); return; }
       const g = unitAt(t, p.i), marked = marks[t.id].has(p.i);
       const state = g && g.locked ? 'ok' : !marked ? (finished && g ? 'miss' : '') : g && g.state === 'half' ? 'half' : flagged[t.id].has(p.i) || (finished && !g) ? 'bad' : 'on';
-      const w = el('span', 'mm-w' + (state ? ' ' + state : ''), p.s);
+      const inRepl = marked && repl[t.id].has(p.i);
+      const w = el('span', 'mm-w' + (state ? ' ' + state : '') + (inRepl ? ' repl' : ''), p.s);
       w.dataset.i = p.i;
       w.setAttribute('role', 'button');
       w.setAttribute('aria-pressed', String(marked));
@@ -133,15 +148,17 @@ const MistakeModePlayer = (() => {
       if (state === 'ok') w.setAttribute('aria-label', p.s + ', ошибка найдена');
       if (state === 'bad') w.setAttribute('aria-label', p.s + ', отмечено ошибочно');
       if (state === 'miss') w.setAttribute('aria-label', p.s + ', пропущенная ошибка');
-      if (state === 'half') w.setAttribute('aria-label', p.s + ', слово найдено, исправление неверное');
+      if (state === 'half') w.setAttribute('aria-label', p.s + ', слово найдено, нужно верное исправление');
       if (!frozenWord) {
         w.onclick = () => toggle(t, p.i);
         w.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(t, p.i); } };
       }
       body.append(w);
-      // Текст с исправлениями: отмеченное слово перечёркнуто (CSS), а справа от него стоит поле для нового слова
-      // (у уже найденной ошибки, которой исправление не нужно, поля нет)
-      if (marked && needsFixes(t) && !(g && g.locked && !g.requires)) body.append(fixInput(t, p.i, g, p.s));
+      // Текст с исправлениями: у слова в кружке значок ✎; после его нажатия слово перечёркнуто (CSS), а справа стоит поле для нового слова
+      if (marked && needsFixes(t)) {
+        if (inRepl) body.append(fixInput(t, p.i, g, p.s));
+        else if (!frozenWord) body.append(editBtn(t, p.i, p.s));
+      }
     });
     body.classList.toggle('mm-fixmode', needsFixes(t));
     c.append(body);
@@ -162,11 +179,25 @@ const MistakeModePlayer = (() => {
     return c;
   }
 
-  // Поле исправления справа от отмеченного слова (и от ошибочно отмеченного тоже); верность до проверки не раскрывается.
+  // Значок ✎ справа от слова в кружке: перейти к замене слова
+  function editBtn(t, i, word) {
+    const b = el('span', 'mm-edit', '✎');
+    b.dataset.i = i;
+    b.tabIndex = 0;
+    b.setAttribute('role', 'button');
+    b.setAttribute('aria-label', `Заменить слово «${word}»`);
+    b.title = 'Заменить слово';
+    b.onclick = () => setRepl(t, i, true);
+    b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRepl(t, i, true); } };
+    return b;
+  }
+
+  // Поле исправления справа от перечёркнутого слова (и от ошибочно отмеченного тоже); верность до проверки не раскрывается.
   // На узком экране поле переносится на следующую строку вместе с текстом
   function fixInput(t, i, g, word) {
     const st = fixState[t.id][i] || '';
     const box = el('span', 'mm-fixin' + (st ? ' ' + st : ''));
+    box.dataset.i = i;
     const input = el('input');
     input.type = 'text';
     input.value = fixes[t.id][i] || '';
@@ -188,6 +219,16 @@ const MistakeModePlayer = (() => {
     input.onfocus = () => setTimeout(() => box.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
     box.append(input);
     if (st) box.append(el('span', 'mm-fixmark', st === 'ok' ? '✓' : '✗'));
+    if (!input.readOnly) {
+      const back = el('span', 'mm-back', '×');
+      back.tabIndex = 0;
+      back.setAttribute('role', 'button');
+      back.setAttribute('aria-label', `Не заменять слово «${word}», оставить кружок`);
+      back.title = 'Вернуть кружок';
+      back.onclick = () => setRepl(t, i, false);
+      back.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRepl(t, i, false); } };
+      box.append(back);
+    }
     return box;
   }
 
