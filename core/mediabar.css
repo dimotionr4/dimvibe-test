@@ -19,6 +19,7 @@
 .mb-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
 .mb-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 .mb-img { min-width:0; width:100%; }
+.mb-bar .media-pick.mb-pick { margin:0; } /* общий отступ .media-pick сдвигал звук ниже картинки */
 .mb-bar { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; }
 .mb-line { display:flex; align-items:center; gap:8px; margin-top:6px; }
 .mb-line .mb-thumb { width:44px; height:44px; }
