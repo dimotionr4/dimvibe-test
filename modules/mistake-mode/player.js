@@ -11,6 +11,9 @@ const MistakeModePlayer = (() => {
   let fixes = {}; // ID текста → номер слова → введённое исправление
   let fixState = {}; // ID текста → номер слова → 'ok' (исправление верно) или 'bad' (неверно), до следующей правки поля
   let repl = {}; // ID текста → слова, которые ученик решил заменить (перечёркнуты, рядом поле); остальные отмеченные — просто в кружке
+  let look = {}; // ID текста → номер слова → {v, seed}: как нарисован кружок в Comic (одна из трёх степеней кривизны); выбирается при отметке и потом не меняется
+  let fresh = ''; // слово, у которого кружок только что поставлен: он рисуется с анимацией
+  let freshStrike = ''; // слово, которое только что перешло в замену (✎): перечёркивание рисуется с анимацией
   const texts = () => data.texts || [];
   // Замена слова (значок ✎ и поле) доступна во всём тексте, если хотя бы одна его ошибка требует исправления: так по значку не видно, какое слово настоящая ошибка
   const needsFixes = t => (t.errors || []).some(e => e.requiresCorrection === true);
@@ -24,7 +27,7 @@ const MistakeModePlayer = (() => {
   }
 
   function reset() {
-    idx = 0; refocus = null; marks = {}; flagged = {}; fixes = {}; fixState = {}; repl = {};
+    idx = 0; refocus = null; marks = {}; flagged = {}; fixes = {}; fixState = {}; repl = {}; look = {}; fresh = ''; freshStrike = '';
     texts().forEach(t => { marks[t.id] = new Set(); flagged[t.id] = new Set(); fixes[t.id] = {}; fixState[t.id] = {}; repl[t.id] = new Set(); });
   }
 
@@ -70,7 +73,8 @@ const MistakeModePlayer = (() => {
     const g = unitAt(t, i);
     if (finished || (g && g.locked)) return;
     const s = marks[t.id];
-    if (s.has(i)) { s.delete(i); flagged[t.id].delete(i); repl[t.id].delete(i); } else s.add(i);
+    if (s.has(i)) { s.delete(i); flagged[t.id].delete(i); repl[t.id].delete(i); delete (look[t.id] || {})[i]; }
+    else { s.add(i); delete (look[t.id] || {})[i]; fresh = t.id + ':' + i; } // каждая новая отметка получает свой кружок
     if (g) g.state = null; // отметка снята или поставлена заново: прежний результат исправления не показываем
     delete fixState[t.id][i];
     note = '';
@@ -82,7 +86,7 @@ const MistakeModePlayer = (() => {
   function setRepl(t, i, on) {
     const g = unitAt(t, i);
     if (finished || (g && g.locked)) return;
-    if (on) repl[t.id].add(i); else repl[t.id].delete(i);
+    if (on) { repl[t.id].add(i); freshStrike = t.id + ':' + i; } else repl[t.id].delete(i);
     if (g) g.state = null;
     delete fixState[t.id][i];
     note = '';
@@ -118,6 +122,66 @@ const MistakeModePlayer = (() => {
     return wrap;
   }
 
+  // ---- Comic: кружок вокруг слова, нарисованный от руки ----
+  // Три степени кривизны (0 — почти ровный, 2 — самый неровный, с «хвостиком», уходящим за начало). Кривая зависит от seed отметки,
+  // поэтому у разных слов кружки разные, а при перерисовке страницы один и тот же.
+  const comicNow = () => document.documentElement.classList.contains('style-comic');
+  const NS = 'http://www.w3.org/2000/svg';
+  function lookOf(tid, i) {
+    look[tid] = look[tid] || {};
+    return look[tid][i] || (look[tid][i] = { v: Math.floor(Math.random() * 3), seed: Math.floor(Math.random() * 1e9) });
+  }
+  const rng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const f2 = n => Math.round(n * 100) / 100;
+  function ringPath(w, h, v, seed) {
+    const r = rng(seed), amp = [0.025, 0.06, 0.1][v], over = [0.2, 0.5, 0.95][v], drift = [0.01, 0.05, 0.11][v];
+    const a0 = -Math.PI * (0.6 + r() * 0.8), sweep = Math.PI * 2 + over + r() * 0.2, n = Math.max(14, Math.round(sweep / 0.32));
+    const ph = [r() * 6.28, r() * 6.28], tilt = (r() - 0.5) * 0.14 * (v + 1), cx = w / 2, cy = h / 2, rx = w / 2 - 2.5, ry = h / 2 - 2.5;
+    const pts = [];
+    for (let k = 0; k <= n; k++) {
+      const u = k / n, a = a0 + sweep * u, rad = 1 + amp * Math.sin(a * 2 + ph[0]) + amp * 0.6 * Math.sin(a * 3.3 + ph[1]) + drift * u;
+      const x = rx * rad * Math.cos(a), y = ry * rad * Math.sin(a);
+      pts.push([cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
+    }
+    let d = `M${f2(pts[0][0])} ${f2(pts[0][1])}`;
+    for (let k = 1; k < pts.length - 1; k++) d += `Q${f2(pts[k][0])} ${f2(pts[k][1])} ${f2((pts[k][0] + pts[k + 1][0]) / 2)} ${f2((pts[k][1] + pts[k + 1][1]) / 2)}`;
+    return d + `L${f2(pts[pts.length - 1][0])} ${f2(pts[pts.length - 1][1])}`;
+  }
+  // Перечёркивание от руки: слегка волнистая линия через середину слова
+  function strikePath(W, H, seed) {
+    const r = rng(seed ^ 0x5bd1e995), y = H * (0.5 + (r() - 0.5) * 0.1), a = (r() - 0.5) * H * 0.18, b = (r() - 0.5) * H * 0.18;
+    return `M${f2(3)} ${f2(y + a)}Q${f2(W * 0.3)} ${f2(y - a)} ${f2(W * 0.5)} ${f2(y + b * 0.4)}T${f2(W - 3)} ${f2(y + b)}`;
+  }
+  const ringObs = typeof ResizeObserver === 'function' ? new ResizeObserver(es => es.forEach(e => paintRing(e.target, false, false))) : null;
+  // anim: кружок рисуется по линии (только что поставленная отметка), animStrike — то же для перечёркивания (нажали ✎);
+  // при смене размера (шрифт Comic догрузился, перенос) всё перерисовывается без анимации
+  function paintRing(w, anim, animStrike) {
+    const info = w._ring;
+    if (!info || !w.isConnected) return;
+    const W = w.offsetWidth + 8, H = w.offsetHeight + 6;
+    if (!W || !H || (info.w && Math.abs(info.w - W) < 1 && Math.abs(info.h - H) < 1)) return;
+    info.w = W; info.h = H;
+    const old = w.querySelector('.mm-ring');
+    if (old) old.remove();
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'mm-ring');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    const add = (d, cls) => {
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('pathLength', '1');
+      path.setAttribute('class', cls);
+      svg.appendChild(path);
+    };
+    add(ringPath(W, H, info.v, info.seed), 'mm-circ' + (anim ? ' draw' : ''));
+    if (info.repl) add(strikePath(W, H, info.seed), 'mm-strike' + (animStrike ? ' draw' : ''));
+    w.appendChild(svg);
+  }
+
   function textCard(k) {
     const t = texts()[k];
     const c = el('div', 'card mm-card mm-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm') + (data.imageFit === 'cover' ? ' mm-fit-cover' : ''));
@@ -139,6 +203,7 @@ const MistakeModePlayer = (() => {
       const inRepl = marked && repl[t.id].has(p.i);
       const w = el('span', 'mm-w' + (state ? ' ' + state : '') + (inRepl ? ' repl' : ''), p.s);
       w.dataset.i = p.i;
+      if (marked && comicNow() && state && state !== 'miss') w._ring = { ...lookOf(t.id, p.i), key: t.id + ':' + p.i, repl: inRepl };
       w.setAttribute('role', 'button');
       w.setAttribute('aria-pressed', String(marked));
       const frozenWord = finished || (g && g.locked);
@@ -153,12 +218,14 @@ const MistakeModePlayer = (() => {
         w.onclick = () => toggle(t, p.i);
         w.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(t, p.i); } };
       }
-      body.append(w);
-      // Текст с исправлениями: у слова в кружке значок ✎; после его нажатия слово перечёркнуто (CSS), а справа стоит поле для нового слова
-      if (marked && needsFixes(t)) {
-        if (inRepl) body.append(fixInput(t, p.i, g, p.s));
-        else if (!frozenWord) body.append(editBtn(t, p.i, p.s));
-      }
+      // Текст с исправлениями: у слова в кружке в правом верхнем углу значок ✎ (слово и значок — в общей обёртке);
+      // после его нажатия слово перечёркнуто, а справа стоит поле для нового слова
+      if (marked && needsFixes(t) && !inRepl && !frozenWord) {
+        const wrap = el('span', 'mm-wwrap');
+        wrap.append(w, editBtn(t, p.i, p.s));
+        body.append(wrap);
+      } else body.append(w);
+      if (marked && needsFixes(t) && inRepl) body.append(fixInput(t, p.i, g, p.s));
     });
     body.classList.toggle('mm-fixmode', needsFixes(t));
     c.append(body);
@@ -262,9 +329,17 @@ const MistakeModePlayer = (() => {
 
   function renderInto(root) {
     if (idx >= texts().length) idx = Math.max(0, texts().length - 1);
+    if (ringObs) ringObs.disconnect();
     if (texts().length > 1) nav(root);
     if (texts().length) root.append(textCard(idx));
     if (texts().length > 1) pager(root);
+    // Comic: кружки рисуются, когда слова уже стоят на странице (нужны их размеры)
+    root.querySelectorAll('.mm-w').forEach(w => {
+      if (!w._ring) return;
+      paintRing(w, w._ring.key === fresh, w._ring.key === freshStrike);
+      if (ringObs) ringObs.observe(w);
+    });
+    fresh = ''; freshStrike = '';
     if (refocus) {
       const t = document.querySelector(refocus);
       refocus = null;

@@ -28,10 +28,28 @@
 .mm-w.half { box-shadow:inset 0 0 0 2px var(--accent); background:color-mix(in srgb, var(--ok) 12%, transparent); }
 .mm-w.ok { box-shadow:inset 0 0 0 2px var(--ok); }
 .mm-w.bad { box-shadow:inset 0 0 0 2px var(--bad); }
+/* Comic: кружок нарисован от руки (SVG внутри слова, см. player.js), обычная рамка отключена */
+.style-comic .mm-w { position:relative; }
+.style-comic .mm-w.on, .style-comic .mm-w.ok, .style-comic .mm-w.bad, .style-comic .mm-w.half { box-shadow:none; }
+.mm-ring { position:absolute; left:-4px; top:-3px; overflow:visible; pointer-events:none; }
+.mm-ring path { fill:none; stroke:var(--accent); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+.mm-w.ok .mm-ring path { stroke:var(--ok); }
+.mm-w.bad .mm-ring path { stroke:var(--bad); }
+.mm-ring path.mm-strike { stroke:var(--text); stroke-width:2.4; }
+.style-comic .mm-w.repl { text-decoration:none; } /* перечёркивание рисует SVG */
+.mm-ring path.draw { stroke-dasharray:1; stroke-dashoffset:1; animation:mm-draw .4s ease-out forwards; }
+.mm-ring path.mm-strike.draw { animation-duration:.3s; }
+@keyframes mm-draw { to { stroke-dashoffset:0; } }
+@media (prefers-reduced-motion:reduce) { .mm-ring path.draw { animation:none; stroke-dasharray:none; stroke-dashoffset:0; } }
 /* Слово, которое ученик решил заменить (значок ✎): перечёркнуто, справа от него поле для нового слова */
 .mm-w.repl { text-decoration:line-through; text-decoration-thickness:2px; }
-.mm-edit, .mm-back { display:inline-flex; align-items:center; justify-content:center; min-width:30px; min-height:30px; border-radius:50%; color:var(--muted); cursor:pointer; user-select:none; -webkit-user-select:none; font-size:1rem; vertical-align:middle; touch-action:manipulation; }
-.mm-edit:hover, .mm-back:hover { color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); }
+.mm-back { display:inline-flex; align-items:center; justify-content:center; min-width:30px; min-height:30px; border-radius:50%; color:var(--muted); cursor:pointer; user-select:none; -webkit-user-select:none; font-size:1rem; vertical-align:middle; touch-action:manipulation; }
+.mm-body.mm-fixmode { line-height:2.5; } /* запас под значок ✎ над словом и поле замены */
+/* Значок ✎ сидит в правом верхнем углу слова в кружке (слово и значок лежат в обёртке .mm-wwrap) */
+.mm-wwrap { position:relative; display:inline-block; }
+.mm-edit { position:absolute; top:-15px; right:-13px; z-index:1; display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--card); border:1px solid var(--line); color:var(--muted); cursor:pointer; user-select:none; -webkit-user-select:none; font-size:.8rem; line-height:1; touch-action:manipulation; }
+.mm-edit::before { content:""; position:absolute; inset:-8px; } /* зона нажатия шире значка */
+.mm-edit:hover, .mm-back:hover { color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
 .mm-edit:focus-visible, .mm-back:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
 .mm-fixin.ok .mm-fixmark { display:none; } /* ✓ уже стоит у перечёркнутого слова */
 .mm-fixin { display:inline-flex; align-items:center; gap:4px; margin:0 2px 0 4px; vertical-align:middle; white-space:nowrap; max-width:100%; }
