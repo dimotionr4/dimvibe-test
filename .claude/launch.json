@@ -13,6 +13,13 @@
       "runtimeArgs": ["-m", "http.server", "8791", "--bind", "127.0.0.1"],
       "port": 8791,
       "url": "http://127.0.0.1:8791"
+    },
+    {
+      "name": "site-cc",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8803", "--bind", "127.0.0.1"],
+      "port": 8803,
+      "url": "http://127.0.0.1:8803"
     }
   ]
 }

@@ -48,5 +48,8 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Multiple Choice — сделан, этап 1 без картинок и звука (2026-10-23)
 Правила перенесены в skill `.claude/skills/multiple-choice/`; здесь не дублируются.
 
-## Остальные модули (Odd One Out, Select Title, Color Coding, Mistake Mode, Flashcards, Hotspot, Label the Diagram, Vocabulary, Prepositions, Essay, Word Search и др.)
+## Color Coding — сделан, этап 1 без картинок и звука (2026-10-25)
+Правила перенесены в skill `.claude/skills/color-coding/`; здесь не дублируются.
+
+## Остальные модули (Odd One Out, Select Title, Flashcards, Hotspot, Label the Diagram, Vocabulary, Prepositions, Essay, Word Search и др.)
 Принципы для них ещё не перенесены. Переносим по одному, по мере работы с каждым модулем, после согласования.

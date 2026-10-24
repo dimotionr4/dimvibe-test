@@ -1,0 +1,61 @@
+/* Редактор модуля Color Coding. Цвета берутся из переменных ядра (editor.html); цвет категории — переменная --cc у элемента */
+.cc-wrap { position:relative; }
+.cc-muted { color:var(--muted); }
+.cc-limit { color:var(--bad); font-weight:600; }
+.cc-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.cc-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.cc-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.cc-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.cc-in { width:100%; box-sizing:border-box; min-width:0; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.cc-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.cc-ib:hover:not(:disabled) { color:var(--accent); }
+.cc-ib.cc-del:hover:not(:disabled) { color:var(--bad); }
+.cc-ib:disabled { opacity:.3; }
+.cc-ask { display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px 6px; margin-left:4px; }
+.cc-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.cc-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.cc-add { margin:4px 0 8px; }
+.cc-add:disabled { opacity:.5; }
+
+/* Категории: цвет (кружок, по нажатию — набор цветов), название, удаление */
+.cc-cats { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; }
+.cc-h { display:block; margin-bottom:6px; }
+.cc-cat { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.cc-name { flex:1 1 180px; width:auto; min-height:36px; }
+.cc-dot { flex:none; width:34px; height:34px; min-height:0; padding:0; border-radius:50%; border:2px solid var(--line); background:var(--cc); cursor:pointer; }
+.cc-dot[aria-expanded="true"] { border-color:var(--text); }
+.cc-swatches { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 10px 42px; }
+.cc-sw { width:30px; height:30px; min-height:0; padding:0; border-radius:50%; border:2px solid transparent; background:var(--cc); cursor:pointer; }
+.cc-sw.on { border-color:var(--text); box-shadow:0 0 0 2px var(--card) inset; }
+.cc-sw:disabled { opacity:.25; cursor:not-allowed; }
+
+/* Тексты */
+.cc-text { margin-bottom:12px; }
+.cc-text.multi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.cc-texttop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.cc-texttop .cc-tools2 { margin-left:auto; }
+.cc-tools2 { display:flex; align-items:center; flex:none; }
+.cc-textins { margin-bottom:8px; min-height:38px; }
+.cc-body { line-height:1.5; min-height:96px; }
+.cc-count { font-size:.85rem; margin:2px 0 0; text-align:right; }
+.cc-hint { margin:6px 0; font-size:.9rem; }
+
+/* Ряд категорий над текстом: выбранная — с рамкой и галочкой */
+.cc-palette { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px; }
+.cc-chip { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:2px 12px 2px 8px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:.9rem; cursor:pointer; }
+.cc-chipdot { flex:none; width:14px; height:14px; border-radius:50%; background:var(--cc); }
+.cc-chip.on { border:2px solid var(--text); font-weight:600; }
+.cc-chip.on::before { content:"✓"; font-weight:700; }
+
+/* Текст со словами, на которые можно нажимать */
+.cc-pick { white-space:pre-wrap; overflow-wrap:anywhere; line-height:2; padding:10px 12px; border:1px dashed var(--line); border-radius:10px; background:var(--card); }
+.cc-w { cursor:pointer; border-radius:5px; padding:2px 1px; }
+.cc-w:hover { background:var(--accent-soft); }
+.cc-w:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.cc-w.on, .cc-w.on:hover { background:color-mix(in srgb, var(--cc) 45%, var(--card)); box-shadow:inset 0 -2px 0 var(--cc); padding:2px 3px; }
+
+/* Потерянные отметки */
+.cc-lost { margin-top:6px; }
+.cc-lostrow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:2px 0; }
+.cc-lostrow b { color:var(--bad); overflow-wrap:anywhere; }
+.cc-bad { color:var(--bad); flex:1 1 200px; }
