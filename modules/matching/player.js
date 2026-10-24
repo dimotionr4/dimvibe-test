@@ -13,6 +13,11 @@ const MatchingPlayer = (() => {
   const item = id => data.items.find(i => i.id === id);
   const gapOf = id => gaps.find(g => g.id === id);
   const instant = () => false; // проверки общие, ответ не засчитывается сразу
+  // Режим Lines (lines_pair_colors): все карточки остаются на местах, пары соединены линиями, проверка одна, итоговая
+  const lines = () => data.mode === 'lines_pair_colors';
+  const maxChecks = () => (lines() ? 1 : 0);
+  const live = g => lines() || !g.locked; // в Lines верные пары не уходят в зелёную зону, связи остаются
+  let ro = null; // следит за размером поля, чтобы линии шли за карточками
 
   // Единицы общего хода: подсказок и звука пока нет
   function units() {
@@ -51,7 +56,7 @@ const MatchingPlayer = (() => {
     render();
   }
   function pickRight(rid) {
-    const occupant = gaps.find(g => !g.locked && g.value === rid);
+    const occupant = gaps.find(g => live(g) && g.value === rid);
     if (!active) {
       if (occupant && !finished) { active = occupant.id; refocus = `.mt-card[data-side="left"][data-id="${occupant.id}"]`; render(); } // нажатие на связанную карточку выбирает её пару для переназначения
       return;
@@ -83,7 +88,7 @@ const MatchingPlayer = (() => {
   // Номер связи — место левой карточки среди ещё не решённых (оно же определяет цвет)
   function numbers() {
     const n = {};
-    leftOrder.filter(id => !gapOf(id).locked).forEach((id, k) => { n[id] = k + 1; });
+    leftOrder.filter(id => live(gapOf(id))).forEach((id, k) => { n[id] = k + 1; });
     return n;
   }
 
@@ -91,8 +96,8 @@ const MatchingPlayer = (() => {
     const g = gapOf(id);
     const left = side === 'left';
     // У левой карточки своё состояние; у правой — состояние связанной с ней левой
-    const owner = left ? g : (gaps.find(x => !x.locked && x.value === id) || gaps.find(x => x.state === 'bad' && x.wrongRight === id) || null);
-    const linkedTo = left ? (g.value ? g : null) : gaps.find(x => !x.locked && x.value === id) || null;
+    const owner = left ? g : (gaps.find(x => live(x) && x.value === id) || gaps.find(x => x.state === 'bad' && x.wrongRight === id) || null);
+    const linkedTo = left ? (g.value ? g : null) : gaps.find(x => live(x) && x.value === id) || null;
     const n = linkedTo ? num[linkedTo.id] : 0;
     const state = owner && owner.state && (left || !linkedTo || owner === linkedTo) ? owner.state : null;
     const wrap = el('div', 'mt-cell');
@@ -104,8 +109,10 @@ const MatchingPlayer = (() => {
     if (n) b.append(el('span', 'mt-tag', String(n)));
     b.append(el('span', 'mt-text', item(id)[side]));
     if (state === 'bad') b.append(el('span', 'mt-mark', ' ✗'));
+    if (state === 'ok' && lines()) b.append(el('span', 'mt-mark', ' ✓'));
     const names = [];
     if (n) names.push(`связана, номер ${n}`);
+    if (state === 'ok') names.push('верно');
     if (left && active === id) names.push('выбрана, теперь нажмите карточку справа');
     if (state === 'bad') names.push('неверно');
     if (state === 'missing') names.push('не соединена');
@@ -135,10 +142,46 @@ const MatchingPlayer = (() => {
     return r;
   }
 
+  // Линии Lines: SVG поверх поля, концы — на внутренних краях связанных карточек. Пересчитываются при любом изменении размера
+  function drawLines(board) {
+    if (ro) { ro.disconnect(); ro = null; }
+    if (!board) return;
+    const box = board.querySelector('.mt-svgbox');
+    const paint = () => {
+      const b = board.getBoundingClientRect();
+      const NS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('class', 'mt-svg');
+      svg.setAttribute('width', b.width);
+      svg.setAttribute('height', b.height);
+      svg.setAttribute('aria-hidden', 'true');
+      const num = numbers();
+      gaps.forEach(g => {
+        if (!g.value) return;
+        const l = board.querySelector(`.mt-card[data-side="left"][data-id="${g.id}"]`), r = board.querySelector(`.mt-card[data-side="right"][data-id="${g.value}"]`);
+        if (!l || !r) return;
+        const lr = l.getBoundingClientRect(), rr = r.getBoundingClientRect();
+        const line = document.createElementNS(NS, 'line');
+        line.setAttribute('x1', lr.right - b.left); line.setAttribute('y1', lr.top + lr.height / 2 - b.top);
+        line.setAttribute('x2', rr.left - b.left); line.setAttribute('y2', rr.top + rr.height / 2 - b.top);
+        line.setAttribute('stroke', g.state === 'ok' ? 'var(--ok)' : g.state === 'bad' ? 'var(--bad)' : `hsl(${HUES[(num[g.id] - 1) % HUES.length]} 70% 52%)`);
+        line.setAttribute('stroke-width', '3');
+        line.setAttribute('stroke-linecap', 'round');
+        svg.append(line);
+      });
+      box.replaceChildren(svg);
+    };
+    paint();
+    if (window.ResizeObserver) { ro = new ResizeObserver(paint); ro.observe(board); board.querySelectorAll('.mt-card').forEach(c => ro.observe(c)); }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (board.isConnected) paint(); });
+  }
+
   function renderInto(root) {
-    const rest = leftOrder.filter(id => !gapOf(id).locked);
-    // Неверная пара отвязывается сразу после проверки: красный след остаётся на карточках, пока ученик не начнёт новое соединение
-    gaps.forEach(g => { if (g.state === 'bad' && g.value) { g.wrongRight = g.value; g.value = ''; } });
+    const rest = leftOrder.filter(id => live(gapOf(id)));
+    const unsolved = leftOrder.filter(id => !gapOf(id).locked);
+    // Неверная пара отвязывается сразу после проверки: красный след остаётся на карточках, пока ученик не начнёт новое соединение.
+    // В Lines связи остаются как есть: красные линии и карточки — итог единственной проверки
+    if (!lines()) gaps.forEach(g => { if (g.state === 'bad' && g.value) { g.wrongRight = g.value; g.value = ''; } });
     const num = numbers();
     const wrapper = el('div', 'mt-wrap');
     if (rest.length) {
@@ -149,11 +192,12 @@ const MatchingPlayer = (() => {
       colL.setAttribute('role', 'group'); colL.setAttribute('aria-label', 'Левый столбец');
       colR.setAttribute('role', 'group'); colR.setAttribute('aria-label', 'Правый столбец');
       rest.forEach(id => colL.append(cell('left', id, num)));
-      rightOrder.filter(id => !gapOf(id).locked).forEach(id => colR.append(cell('right', id, num)));
+      rightOrder.filter(id => live(gapOf(id))).forEach(id => colR.append(cell('right', id, num)));
       board.append(colL, colR);
-      wrapper.append(finished ? el('p', 'mt-hint', 'Упражнение закончено.') : hint, board);
+      if (lines()) { board.classList.add('mt-lines'); board.prepend(el('div', 'mt-svgbox')); }
+      wrapper.append(finished ? el('p', 'mt-hint', lines() ? 'Проверка выполнена: верные пары зелёные, неверные красные.' : 'Упражнение закончено.') : hint, board);
     }
-    const solved = leftOrder.filter(id => gapOf(id).locked);
+    const solved = lines() ? [] : leftOrder.filter(id => gapOf(id).locked);
     if (solved.length) {
       const sec = el('section', 'mt-solved');
       sec.setAttribute('aria-label', 'Верные пары');
@@ -162,7 +206,7 @@ const MatchingPlayer = (() => {
       wrapper.append(sec);
     }
     // Верные пары для оставшихся — по желанию автора, только после конца
-    if (finished && data.showCorrect === true && rest.length) {
+    if (finished && data.showCorrect === true && unsolved.length) {
       const btn = el('button', 'mt-reveal', showAnswers ? 'Скрыть верные пары' : 'Показать верные пары');
       btn.type = 'button';
       btn.setAttribute('aria-expanded', String(showAnswers));
@@ -171,11 +215,12 @@ const MatchingPlayer = (() => {
       if (showAnswers) {
         const sec = el('section', 'mt-answers');
         sec.append(el('h3', '', 'Правильные пары'));
-        rest.forEach(id => sec.append(pairRow(id, false)));
+        unsolved.forEach(id => sec.append(pairRow(id, false)));
         wrapper.append(sec);
       }
     }
     root.append(wrapper);
+    drawLines(wrapper.querySelector('.mt-lines'));
     if (refocus) {
       const t = document.querySelector(refocus);
       refocus = null;
@@ -183,5 +228,5 @@ const MatchingPlayer = (() => {
     }
   }
 
-  return { units, reset, goMissing, instant, missingNote, render: renderInto };
+  return { units, reset, goMissing, instant, maxChecks, missingNote, render: renderInto };
 })();

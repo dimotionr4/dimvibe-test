@@ -15,6 +15,17 @@
 .mt-x { position:absolute; top:50%; right:8px; transform:translateY(-50%); width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:var(--card); color:var(--text); border:1px solid var(--line); font-size:1rem; line-height:1; cursor:pointer; user-select:none; }
 .mt-x:hover, .mt-x:focus-visible { border-color:var(--bad); color:var(--bad); outline:none; }
 
+/* Lines: линии лежат под карточками и не ловят нажатия */
+.mt-board.mt-lines { position:relative; column-gap:56px; }
+@media (max-width:520px) { .mt-board.mt-lines { column-gap:30px; } }
+.mt-svgbox { position:absolute; inset:0; pointer-events:none; z-index:0; }
+.mt-svg { display:block; overflow:visible; }
+.mt-lines .mt-cell { z-index:1; }
+.mt-lines .mt-card.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 18%, var(--card)); }
+.mt-lines .mt-card.ok .mt-mark { color:var(--ok); }
+.mt-lines .mt-card.bad .mt-mark { color:var(--bad); }
+.style-comic .mt-lines .mt-card.ok:not(.hintbtn):not(.instr-head) { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 18%, var(--card)); background:transparent; border-color:transparent; }
+
 .mt-solved, .mt-answers { margin-top:6px; }
 .mt-solved h3, .mt-answers h3 { margin:0 0 6px; font-size:1rem; }
 .mt-solved h3 { color:var(--ok); }

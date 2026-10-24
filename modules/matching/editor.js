@@ -3,6 +3,7 @@
 // Всё, что видит автор, лежит в черновике (кроме удаляемой строки), поэтому отмена и повтор ядра работают сами.
 const MatchingEditor = (() => {
   const MAX = 10;
+  const MODES = { standard: 'Стандартный: верные пары уходят вниз', lines_pair_colors: 'Линии: все карточки на месте, одна проверка' };
   const { nextId } = GapEngine;
   let d, root, save, delAsk = null, msgTimer = null, drag = null;
   let msg, counter, listBox, addBtn;
@@ -215,7 +216,7 @@ const MatchingEditor = (() => {
   function exportData(draft) {
     return {
       module: 'matching', format: 1,
-      mode: 'standard',
+      mode: MODES[draft.mode] ? draft.mode : 'standard',
       ...(draft.showCorrect ? { showCorrect: true } : {}),
       items: draft.items.map(it => ({ id: it.id, left: clean(it.left), right: clean(it.right) })),
     };
@@ -251,7 +252,7 @@ const MatchingEditor = (() => {
   function load(file) {
     if (!Array.isArray(file.items)) throw new Error('В файле нет пар.');
     const items = file.items.map((i, k) => ({ id: String(i.id || 'p' + (k + 1)), left: String(i.left || ''), right: String(i.right || '') }));
-    return { ...create(), showCorrect: file.showCorrect === true, items: items.length ? items : create().items };
+    return { ...create(), mode: MODES[file.mode] ? file.mode : 'standard', showCorrect: file.showCorrect === true, items: items.length ? items : create().items };
   }
 
   // Настройки во вкладке «Поведение»: показ верных пар в конце (рисует ядро, поле лежит в черновике)
@@ -262,5 +263,17 @@ const MatchingEditor = (() => {
     ];
   }
 
-  return { create, render, load, exportData, validate, unitCount, behaviorOptions };
+  // Настройка во вкладке «Дизайн»: как показываются пары (рисует ядро, поле лежит в черновике)
+  const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  function designOptions(draft) {
+    return [
+      { field: 'mode', label: 'Показ пар', value: MODES[draft.mode] ? draft.mode : 'standard', names: MODES,
+        icons: { standard: sq('<rect x="4" y="5" width="6" height="5" rx="1"/><rect x="14" y="5" width="6" height="5" rx="1"/><path d="M4 16h16M4 20h16"/>'), lines_pair_colors: sq('<rect x="3" y="5" width="6" height="5" rx="1"/><rect x="15" y="14" width="6" height="5" rx="1"/><path d="M9 8l6 8"/>') } },
+    ];
+  }
+
+  // Сколько проверок задаёт сам режим (0 — выбирает автор во вкладке «Поведение»)
+  const fixedChecks = draft => (draft.mode === 'lines_pair_colors' ? 1 : 0);
+
+  return { create, render, load, exportData, validate, unitCount, behaviorOptions, designOptions, fixedChecks };
 })();

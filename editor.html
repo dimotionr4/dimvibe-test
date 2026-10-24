@@ -408,7 +408,7 @@
 <script src="modules/image-to-gaps/editor.js?v=4"></script>
 <script src="modules/true-false/editor.js?v=2"></script>
 <script src="modules/multiple-choice/editor.js?v=5"></script>
-<script src="modules/matching/editor.js?v=2"></script>
+<script src="modules/matching/editor.js?v=3"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
 const ASSET_V = 35;
@@ -1190,7 +1190,12 @@ function renderBehavior() {
   const auto = gaps <= 5 ? 3 : 5;
   const manual = current.behavior && current.behavior.checks >= 1 ? Number(current.behavior.checks) : null;
   const shown = manual || auto;
-  $('content').innerHTML = `
+  const fixed = MODULES[current.module].fixedChecks ? MODULES[current.module].fixedChecks(current) : 0; // режим модуля сам задаёт число проверок (Matching, «Линии»)
+  $('content').innerHTML = fixed ? `
+    <section class="beh">
+      <div class="po"><span class="po-l">Проверок на прохождение: ${fixed}</span></div>
+      <p class="muted">В выбранном режиме показа пар проверка всегда одна, итоговая. Число проверок меняется, если выбрать стандартный режим во вкладке «Дизайн».</p>
+    </section>` : `
     <section class="beh">
       <div class="po"><span class="po-l" id="chkLabel">Проверок на прохождение</span><span id="chkHelp"></span></div>
       <div class="scale-row">
@@ -1215,6 +1220,7 @@ function renderBehavior() {
     off.onclick = () => { current[o.field] = false; touch(); renderBehavior(); };
     on.onclick = () => { current[o.field] = true; touch(); renderBehavior(); };
   });
+  if (fixed) return;
   $('chkHelp').append(helpIcon(`Сколько раз ученик может нажать «Проверить». Двигайте ползунок от 1 до 5 или включите «авто»: 3 проверки при 1–5 пропусках и 5 при 6 и больше. Нажатие при неполном ответе проверку не тратит. Верные ответы после проверки закрепляются. Упражнение заканчивается, когда всё верно или проверки закончились.`));
   const set = v => { current.behavior = { checks: v }; touch(); renderBehavior(); };
   $('chkAuto').onclick = () => set('auto');
