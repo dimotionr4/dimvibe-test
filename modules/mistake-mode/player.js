@@ -139,9 +139,12 @@ const MistakeModePlayer = (() => {
         w.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(t, p.i); } };
       }
       body.append(w);
+      // Текст с исправлениями: отмеченное слово перечёркнуто (CSS), а справа от него стоит поле для нового слова
+      // (у уже найденной ошибки, которой исправление не нужно, поля нет)
+      if (marked && needsFixes(t) && !(g && g.locked && !g.requires)) body.append(fixInput(t, p.i, g, p.s));
     });
+    body.classList.toggle('mm-fixmode', needsFixes(t));
     c.append(body);
-    if (needsFixes(t)) c.append(fixList(t));
     // Пояснения: к найденным ошибкам — сразу, ко всем — в конце упражнения; в конце к ним добавляется правильное исправление
     const notes = gaps.filter(g => g.textId === t.id && (g.locked || finished) && (g.explanation || (finished && g.requires && !g.locked))).sort((a, b) => a.index - b.index);
     if (notes.length) {
@@ -159,29 +162,32 @@ const MistakeModePlayer = (() => {
     return c;
   }
 
-  // Поля исправлений: по одному на каждое отмеченное слово, в том числе ошибочно отмеченное; верность до проверки не раскрывается
-  function fixList(t) {
-    const box = el('div', 'mm-fixes');
-    const idxs = [...marks[t.id]].sort((a, b) => a - b);
-    if (!idxs.length) { box.append(el('p', 'mm-fixhint', 'Отметьте слово — под текстом появится поле для исправления.')); return box; }
-    const wordsOf = MistakeTokens.words(t.text);
-    idxs.forEach(i => {
-      const g = unitAt(t, i), st = fixState[t.id][i] || '';
-      const row = el('label', 'mm-fixrow' + (st ? ' ' + st : ''));
-      row.append(el('b', 'mm-fixw', wordsOf[i] + ' →'));
-      const input = el('input');
-      input.type = 'text';
-      input.value = fixes[t.id][i] || '';
-      input.placeholder = 'Исправление';
-      input.autocomplete = 'off';
-      input.setAttribute('aria-label', `Исправление для слова ${wordsOf[i]}`);
-      input.readOnly = finished || !!(g && g.locked);
-      input.oninput = () => { fixes[t.id][i] = input.value; delete fixState[t.id][i]; row.classList.remove('ok', 'bad'); const m = row.querySelector('.mm-fixmark'); if (m) m.remove(); if (g && g.state === 'half') { g.state = null; } note = ''; };
-      input.onfocus = () => setTimeout(() => row.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
-      row.append(input);
-      if (st) row.append(el('span', 'mm-fixmark', st === 'ok' ? '✓' : '✗'));
-      box.append(row);
-    });
+  // Поле исправления справа от отмеченного слова (и от ошибочно отмеченного тоже); верность до проверки не раскрывается.
+  // На узком экране поле переносится на следующую строку вместе с текстом
+  function fixInput(t, i, g, word) {
+    const st = fixState[t.id][i] || '';
+    const box = el('span', 'mm-fixin' + (st ? ' ' + st : ''));
+    const input = el('input');
+    input.type = 'text';
+    input.value = fixes[t.id][i] || '';
+    input.placeholder = '…';
+    input.autocomplete = 'off';
+    input.autocapitalize = 'off';
+    input.spellcheck = false;
+    input.setAttribute('aria-label', `Новое слово вместо «${word}»`);
+    input.readOnly = finished || !!(g && g.locked);
+    const fit = () => { input.size = Math.max(7, input.value.length + 2); };
+    fit();
+    input.oninput = () => {
+      fixes[t.id][i] = input.value; delete fixState[t.id][i]; fit();
+      box.classList.remove('ok', 'bad');
+      const m = box.querySelector('.mm-fixmark'); if (m) m.remove();
+      if (g && g.state === 'half') g.state = null;
+      note = '';
+    };
+    input.onfocus = () => setTimeout(() => box.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+    box.append(input);
+    if (st) box.append(el('span', 'mm-fixmark', st === 'ok' ? '✓' : '✗'));
     return box;
   }
 
