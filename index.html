@@ -36,6 +36,10 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   .width-wide { --content-w:100%; }
   .dens-compact { --card-pad:8px 10px; --card-gap:6px; --card-lh:3.1; --pad:8px; }
   .dens-loose { --card-pad:14px 16px; --card-gap:16px; --card-lh:3.9; --pad:16px; }
+  /* Размер текста: все размеры упражнения заданы в rem, поэтому меняется базовый размер страницы (обычный — 100%) */
+  html.fs-s { font-size:87.5%; }
+  html.fs-l { font-size:112.5%; }
+  html.fs-xl { font-size:125%; }
   #root, header > *, footer > * { max-width:var(--content-w); margin-left:auto; margin-right:auto; }
   .bg-backdrop main { background:color-mix(in srgb, var(--accent) 9%, var(--bg)); }
   /* «Карточка»: всё упражнение в одной рамке (класс panel ставится на #root) */
@@ -113,7 +117,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   </div>
 </footer>
 
-<script src="core/design.js?v=5"></script>
+<script src="core/design.js?v=6"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/mediaviewer.js?v=1"></script>
 <script src="core/richtext.js?v=5"></script>

@@ -400,7 +400,7 @@
   </div>
 </div>
 
-<script src="core/design.js?v=5"></script>
+<script src="core/design.js?v=6"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
@@ -417,7 +417,7 @@
 <script src="modules/mistake-mode/editor.js?v=5"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
-const ASSET_V = 44;
+const ASSET_V = 45;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -891,6 +891,11 @@ const OPT_ICONS = {
   density: {
     compact: O('<path d="M5 7h14M5 10h14M5 13h14M5 16h14"/>'), comfortable: O('<path d="M5 7h14M5 12h14M5 17h14"/>'), loose: O('<path d="M5 6h14M5 18h14"/>'),
   },
+  // Размер текста: буква «А» разной высоты
+  fontsize: Object.fromEntries([['s', 8], ['m', 11], ['l', 14], ['xl', 17]].map(([k, h]) => {
+    const w = +(h * .4).toFixed(1), y = +(19 - h * .38).toFixed(1);
+    return [k, O(`<path d="M${12 - w} 19L12 ${19 - h}L${12 + w} 19M${+(12 - w * .6).toFixed(1)} ${y}h${+(w * 1.2).toFixed(1)}"/>`)];
+  })),
   background: {
     plain: O('<path d="M6 9h12M6 13h8"/>'),
     backdrop: O(`<rect x="3" y="4" width="18" height="16" rx="3"${FILL} stroke="none"/><path d="M7 10h10M7 14h6"/>`),
@@ -1058,6 +1063,7 @@ function renderDesign() {
       ${grp('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew)}
       ${grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density)}
       ${grp('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background)}
+      ${grp('page', 'fontSize', 'Текст', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize)}
     </div>
     ${modOpts ? `<div class="dz-page" role="group" aria-label="Настройки модуля">${modOpts}</div>` : ''}
     <p class="muted dz-note">Нажимайте на элементы макета: блоки инструкции и картинки включаются и скрываются, значки рядом меняют вид. Результат виден в предпросмотре справа.</p>`;

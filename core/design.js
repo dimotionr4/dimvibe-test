@@ -34,11 +34,12 @@ function normalizeGapDesign(g) {
 // Классы пропуска по настройкам (стили — в core/gap.css)
 const gapClasses = g => `shape-${g.shape} w-${g.width}${g.dashed ? ' dashed' : ''}`;
 
-// Макет страницы упражнения: ширина колонки, плотность отступов, фон. Один набор для редактора и плеера.
-// Значения по умолчанию (стандартная, комфортно, обычный) = прежний вид.
+// Макет страницы упражнения: ширина колонки, плотность отступов, фон, размер текста. Один набор для редактора и плеера.
+// Значения по умолчанию (стандартная, комфортно, обычный, обычный текст) = прежний вид.
 const PAGE_WIDTHS = { compact: 'Компактная', standard: 'Стандартная', wide: 'Широкая' };
 const PAGE_DENSITIES = { compact: 'Компактно', comfortable: 'Комфортно', loose: 'Свободно' };
 const PAGE_BACKGROUNDS = { plain: 'Обычный', backdrop: 'Подложка', card: 'Карточка' };
+const PAGE_FONTSIZES = { s: 'Мелкий', m: 'Обычный', l: 'Крупный', xl: 'Очень крупный' };
 
 function normalizePage(p) {
   p = p || {};
@@ -46,15 +47,17 @@ function normalizePage(p) {
     width: PAGE_WIDTHS[p.width] ? p.width : 'standard',
     density: PAGE_DENSITIES[p.density] ? p.density : 'comfortable',
     background: PAGE_BACKGROUNDS[p.background] ? p.background : 'plain',
+    fontSize: PAGE_FONTSIZES[p.fontSize] ? p.fontSize : 'm',
   };
 }
 
 // Классы на <html> плеера или образца (стили — в index.html); для значений по умолчанию классов нет
-const PAGE_CLASSES = ['width-compact', 'width-wide', 'dens-compact', 'dens-loose', 'bg-backdrop', 'bg-card'];
+const PAGE_CLASSES = ['width-compact', 'width-wide', 'dens-compact', 'dens-loose', 'bg-backdrop', 'bg-card', 'fs-s', 'fs-l', 'fs-xl'];
 const pageClasses = p => [
   p.width !== 'standard' ? 'width-' + p.width : '',
   p.density !== 'comfortable' ? 'dens-' + p.density : '',
   p.background !== 'plain' ? 'bg-' + p.background : '',
+  p.fontSize !== 'm' ? 'fs-' + p.fontSize : '',
 ].filter(Boolean);
 
 // Кнопка «Проверить»: вид (залитая, контурная, мягкая) и расположение (справа, слева, по центру). По умолчанию — как раньше.
