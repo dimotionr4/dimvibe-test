@@ -14,6 +14,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/image-to-gaps/player.css?v=3">
 <link rel="stylesheet" href="modules/true-false/player.css?v=2">
 <link rel="stylesheet" href="modules/multiple-choice/player.css?v=3">
+<link rel="stylesheet" href="modules/matching/player.css?v=1">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -119,6 +120,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/image-to-gaps/player.js?v=3"></script>
 <script src="modules/true-false/player.js?v=3"></script>
 <script src="modules/multiple-choice/player.js?v=2"></script>
+<script src="modules/matching/player.js?v=1"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -128,7 +130,7 @@ const isImg = () => !!data && data.module === 'image_to_gaps';
 // True / False (modules/true-false/player.js): вместо пропусков — утверждения; каждое утверждение работает как «пропуск» общего хода
 const isTF = () => !!data && data.module === 'true_false';
 // Модули, где единицы ответа — вопросы, а не пропуски (True / False, Multiple Choice): плеер модуля даёт units, reset, goMissing, instant, render
-const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : null);
+const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : data.module === 'matching' ? MatchingPlayer : null);
 // Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
 let maxChecks = 3, checksUsed = 0, finished = false, note = '', instrOpen = true;
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key
@@ -529,7 +531,7 @@ function check() {
       unitPlayer().goMissing();
     } else note = missing.length === 1 ? 'Заполните пропуск, который остался пустым.' : `Заполните все пропуски: ещё ${missing.length}.`;
     render();
-    const first = document.querySelector('.gap.missing, .tf-card.missing, .mc-card.missing');
+    const first = document.querySelector('.gap.missing, .tf-card.missing, .mc-card.missing, .mt-card.missing');
     if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return;
   }

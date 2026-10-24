@@ -1,0 +1,41 @@
+/* Плеер модуля Matching: два столбца карточек и зелёная зона верных пар. Цвета и состояния — из переменных страницы (index.html) */
+.mt-hint { color:var(--muted); margin:0 0 8px; font-size:.95rem; }
+.mt-board { display:grid; grid-template-columns:1fr 1fr; gap:10px 28px; align-items:start; margin-bottom:var(--card-gap); }
+.mt-col { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.mt-cell { position:relative; }
+.mt-card { --mt-c:var(--line); display:flex; align-items:center; gap:8px; width:100%; min-height:52px; padding:8px 12px; border-radius:12px; text-align:left; line-height:1.4; }
+.mt-card:disabled { cursor:default; }
+.mt-text { flex:1; min-width:0; overflow-wrap:anywhere; }
+.mt-tag { flex:none; display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; border-radius:999px; background:var(--mt-c); color:#fff; font-size:.85rem; font-weight:700; }
+.mt-mark { flex:none; font-weight:700; }
+.mt-card.linked { border-color:var(--mt-c); background:color-mix(in srgb, var(--mt-c) 18%, var(--card)); padding-right:36px; }
+.mt-card.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+.mt-card.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.mt-card.missing { border-color:var(--bad); border-style:dashed; }
+.mt-x { position:absolute; top:50%; right:8px; transform:translateY(-50%); width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:var(--card); color:var(--text); border:1px solid var(--line); font-size:1rem; line-height:1; cursor:pointer; user-select:none; }
+.mt-x:hover, .mt-x:focus-visible { border-color:var(--bad); color:var(--bad); outline:none; }
+
+.mt-solved, .mt-answers { margin-top:6px; }
+.mt-solved h3, .mt-answers h3 { margin:0 0 6px; font-size:1rem; }
+.mt-solved h3 { color:var(--ok); }
+.card.mt-pair { display:flex; align-items:center; gap:10px; line-height:1.4; margin-bottom:6px; }
+.card.mt-pair.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 14%, var(--card)); }
+.card.mt-pair.ok .mt-mark { color:var(--ok); }
+.mt-eq { flex:none; color:var(--muted); }
+.mt-reveal { margin:6px 0 10px; }
+
+/* Узкий экран: два столбца остаются, но уже и с переносом слов; запас справа под значок × */
+@media (max-width:520px) {
+  .mt-board { gap:8px 10px; }
+  .mt-card { padding:8px 8px; gap:6px; font-size:.95rem; }
+  .mt-card.linked { padding-right:30px; }
+  .mt-x { right:5px; }
+}
+
+/* Comic: цвета связей и состояний сохраняются (рисованный контур берёт --rc, заливка --rb) */
+.style-comic .mt-card.linked:not(.hintbtn):not(.instr-head) { --rc:var(--mt-c); --rb:color-mix(in srgb, var(--mt-c) 18%, var(--card)); }
+.style-comic .mt-card.sel:not(.hintbtn):not(.instr-head) { --rc:var(--accent); box-shadow:none; }
+.style-comic .mt-card.bad:not(.hintbtn):not(.instr-head) { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.style-comic .mt-card.missing:not(.hintbtn):not(.instr-head) { --rc:var(--bad); }
+.style-comic .mt-card.linked, .style-comic .mt-card.bad { background:transparent; border-color:transparent; }
+.style-comic .card.mt-pair.ok { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 14%, var(--card)); background:transparent; border-color:transparent; }

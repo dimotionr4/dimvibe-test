@@ -1,0 +1,38 @@
+/* Редактор модуля Matching. Цвета берутся из переменных ядра (editor.html) */
+.mt-wrap { position:relative; }
+.mt-muted { color:var(--muted); }
+.mt-limit { color:var(--bad); font-weight:600; }
+.mt-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.mt-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.mt-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.mt-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+
+.mt-row { display:flex; align-items:flex-start; gap:6px; background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:8px; padding:8px 6px 8px 4px; position:relative; }
+.mt-row.dragging { opacity:.5; }
+.mt-row.drop-before::before, .mt-row.drop-after::after { content:""; position:absolute; left:8px; right:8px; height:3px; border-radius:3px; background:var(--accent); }
+.mt-row.drop-before::before { top:-6px; }
+.mt-row.drop-after::after { bottom:-6px; }
+.mt-grip { cursor:grab; color:var(--muted); padding:8px 4px 0; user-select:none; touch-action:none; }
+.mt-n { color:var(--muted); flex:none; padding-top:8px; min-width:1.6em; }
+.mt-fields { flex:1; min-width:0; display:flex; flex-wrap:wrap; align-items:flex-start; gap:6px; }
+.mt-link { flex:none; color:var(--muted); padding-top:6px; width:22px; text-align:center; }
+.mt-in { flex:1 1 130px; min-width:0; min-height:38px; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.mt-in.dup { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 10%, var(--bg)); }
+.mt-tools2 { display:flex; align-items:center; flex:none; }
+.mt-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.mt-ib:hover:not(:disabled) { color:var(--accent); }
+.mt-ib.mt-del:hover { color:var(--bad); }
+.mt-ib:disabled { opacity:.3; }
+.mt-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.mt-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.mt-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.mt-add { margin:4px 0 8px; }
+.mt-add:disabled { opacity:.5; }
+
+/* Узкое окно: подписи столбцов не нужны (поля стоят друг под другом), инструменты переносятся под строку */
+@media (max-width:640px) {
+  .mt-row { flex-wrap:wrap; }
+  .mt-fields { flex-basis:calc(100% - 60px); }
+  .mt-link { display:none; }
+  .mt-tools2 { flex-basis:100%; justify-content:flex-end; }
+}
