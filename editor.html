@@ -306,7 +306,7 @@
 <link rel="stylesheet" href="modules/matching/editor.css?v=12">
 <link rel="stylesheet" href="modules/mistake-mode/editor.css?v=4">
 <link rel="stylesheet" href="core/medialib.css?v=5">
-<link rel="stylesheet" href="core/mediabar.css?v=4">
+<link rel="stylesheet" href="core/mediabar.css?v=5">
 </head>
 <body>
 <header id="bar">
@@ -404,7 +404,7 @@
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
-<script src="core/mediabar.js?v=4"></script>
+<script src="core/mediabar.js?v=5"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
 <script src="core/gap-engine.js?v=1"></script>
@@ -417,7 +417,7 @@
 <script src="modules/mistake-mode/editor.js?v=5"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
-const ASSET_V = 43;
+const ASSET_V = 44;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -648,7 +648,7 @@ let mediaUserNow = null;
 const mediaPickers = new Set();
 mediaOnAuth(u => { mediaUserNow = u; mediaPickers.forEach(p => { if (p.isConnected) p.refresh(); else mediaPickers.delete(p); }); });
 function mediaPicker(kind, get, set, label, opts) {
-  // Компактный вид (значок со списком действий) — общий для всех модулей, см. core/mediabar.js
+  // Компактный вид (значки «загрузить» и «из медиатеки», крестик «убрать») — общий для всех модулей, см. core/mediabar.js
   const box = MediaUI.picker(kind, get, set, label, opts);
   mediaPickers.add(box);
   return box;

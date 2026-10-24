@@ -1,21 +1,22 @@
 /* Общие компактные элементы загрузки картинок и звука (core/mediabar.js). Цвета — из переменных редактора */
 .mb-pick { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; } /* значки стоят у правого края (решение владельца 2026-10-24) */
 .mb-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-.mb-mw { position:relative; display:inline-block; }
-.mb-btn { display:inline-flex; align-items:center; gap:2px; min-height:34px; padding:0 8px; border-radius:8px; color:var(--muted); }
-.mb-btn:hover, .mb-btn[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
-.mb-btn.has { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
-.mb-caret { font-size:.7rem; }
-.mb-menu { position:absolute; top:calc(100% + 4px); right:0; z-index:40; min-width:210px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:4px; box-shadow:0 6px 20px rgba(0,0,0,.3); }
-.mb-menu[hidden] { display:none; }
-.mb-mi { display:block; width:100%; text-align:left; border:none; background:transparent; border-radius:8px; padding:7px 10px; min-height:34px; color:var(--text); }
-.mb-mi:hover, .mb-mi:focus-visible { background:var(--accent-soft); }
-.mb-mi.danger { color:var(--bad); }
+/* Два значка: «загрузить файл» и «из медиатеки» (решение владельца 2026-10-24: без выпадающего списка) */
+.mb-btn { position:relative; display:inline-flex; align-items:center; justify-content:center; min-height:34px; min-width:34px; padding:0 8px; border-radius:8px; color:var(--muted); }
+.mb-btn:hover { border-color:var(--accent); color:var(--accent); }
+/* Знак действия в правом нижнем углу значка: стрелка — загрузить, стопка — медиатека */
+.mb-badge { position:absolute; right:3px; bottom:3px; width:11px; height:11px; fill:var(--card); stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; background:var(--card); border-radius:3px; }
 .mb-play { min-height:34px; min-width:34px; padding:0; border-radius:8px; }
+/* Крестик «убрать»: в углу миниатюры, у звука — рядом с ▶ */
+.mb-x { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; min-height:0; padding:0; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--muted); font-size:15px; line-height:1; cursor:pointer; }
+.mb-x:hover, .mb-x:focus-visible { color:var(--bad); border-color:var(--bad); }
+.mb-thumb .mb-x { position:absolute; top:-8px; right:-8px; z-index:1; }
+.mb-aud { display:inline-flex; align-items:center; gap:4px; }
+.mb-warn .mb-x { vertical-align:middle; }
 .mb-status { font-size:.85rem; color:var(--muted); }
 .mb-status:empty { display:none; }
 .mb-status.err { color:var(--bad); flex-basis:100%; }
-.mb-thumb { width:36px; height:36px; flex:none; border:1px solid var(--line); border-radius:8px; background:var(--bg); padding:2px; display:inline-flex; align-items:center; justify-content:center; }
+.mb-thumb { position:relative; width:36px; height:36px; flex:none; border:1px solid var(--line); border-radius:8px; background:var(--bg); padding:2px; display:inline-flex; align-items:center; justify-content:center; }
 .mb-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
 .mb-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 .mb-img { min-width:0; width:100%; }
@@ -24,6 +25,5 @@
 .mb-line { display:flex; align-items:center; gap:8px; margin-top:6px; }
 .mb-line .mb-thumb { width:44px; height:44px; }
 .mb-line input { flex:1; min-width:0; }
-.mb-thumb.is-link { position:relative; }
 .mb-linkmark { position:absolute; right:-6px; bottom:-6px; font-size:.7rem; line-height:1; background:var(--card); border:1px solid var(--line); border-radius:6px; padding:1px 2px; }
 .mb-warn { color:var(--bad); font-size:.85rem; margin:6px 0; }
