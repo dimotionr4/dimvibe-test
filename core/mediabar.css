@@ -1,0 +1,27 @@
+/* Общие компактные элементы загрузки картинок и звука (core/mediabar.js). Цвета — из переменных редактора */
+.mb-pick { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.mb-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.mb-mw { position:relative; display:inline-block; }
+.mb-btn { display:inline-flex; align-items:center; gap:2px; min-height:34px; padding:0 8px; border-radius:8px; color:var(--muted); }
+.mb-btn:hover, .mb-btn[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
+.mb-btn.has { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+.mb-caret { font-size:.7rem; }
+.mb-menu { position:absolute; top:calc(100% + 4px); left:0; z-index:40; min-width:210px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:4px; box-shadow:0 6px 20px rgba(0,0,0,.3); }
+.mb-menu[hidden] { display:none; }
+.mb-mi { display:block; width:100%; text-align:left; border:none; background:transparent; border-radius:8px; padding:7px 10px; min-height:34px; color:var(--text); }
+.mb-mi:hover, .mb-mi:focus-visible { background:var(--accent-soft); }
+.mb-mi.danger { color:var(--bad); }
+.mb-play { min-height:34px; min-width:34px; padding:0; border-radius:8px; }
+.mb-status { font-size:.85rem; color:var(--muted); }
+.mb-status:empty { display:none; }
+.mb-status.err { color:var(--bad); flex-basis:100%; }
+.mb-thumb { width:36px; height:36px; flex:none; border:1px solid var(--line); border-radius:8px; background:var(--bg); padding:2px; display:inline-flex; align-items:center; justify-content:center; }
+.mb-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+.mb-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.mb-img { min-width:0; }
+.mb-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.mb-line { display:flex; align-items:center; gap:8px; margin-top:6px; }
+.mb-line .mb-thumb { width:44px; height:44px; }
+.mb-line input { flex:1; min-width:0; }
+.mb-link { width:100%; margin-top:6px; }
+.mb-warn { color:var(--bad); font-size:.85rem; margin:6px 0; }

@@ -303,8 +303,9 @@
 <link rel="stylesheet" href="modules/image-to-gaps/editor.css?v=2">
 <link rel="stylesheet" href="modules/true-false/editor.css?v=2">
 <link rel="stylesheet" href="modules/multiple-choice/editor.css?v=3">
-<link rel="stylesheet" href="modules/matching/editor.css?v=7">
+<link rel="stylesheet" href="modules/matching/editor.css?v=8">
 <link rel="stylesheet" href="core/medialib.css?v=4">
+<link rel="stylesheet" href="core/mediabar.css?v=1">
 </head>
 <body>
 <header id="bar">
@@ -401,14 +402,15 @@
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=5"></script>
+<script src="core/mediabar.js?v=1"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=9"></script>
 <script src="core/gap-engine.js?v=1"></script>
 <script src="modules/fill-blanks/editor.js?v=25"></script>
-<script src="modules/image-to-gaps/editor.js?v=4"></script>
+<script src="modules/image-to-gaps/editor.js?v=5"></script>
 <script src="modules/true-false/editor.js?v=2"></script>
-<script src="modules/multiple-choice/editor.js?v=5"></script>
-<script src="modules/matching/editor.js?v=8"></script>
+<script src="modules/multiple-choice/editor.js?v=7"></script>
+<script src="modules/matching/editor.js?v=9"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
 const ASSET_V = 35;
@@ -641,95 +643,12 @@ function exerciseFor(draft, published) {
 let mediaUserNow = null;
 const mediaPickers = new Set();
 mediaOnAuth(u => { mediaUserNow = u; mediaPickers.forEach(p => { if (p.isConnected) p.refresh(); else mediaPickers.delete(p); }); });
-function mediaPicker(kind, get, set, label) {
-  const box = document.createElement('div');
-  box.className = 'media-pick';
-  const file = document.createElement('input');
-  file.type = 'file';
-  file.accept = MEDIA_ACCEPT[kind];
-  file.hidden = true;
-  let busy = null, err = '';
-  box.refresh = () => {
-    const path = get();
-    box.textContent = '';
-    const row = document.createElement('div');
-    row.className = 'mp-row';
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = busy !== null ? 'Загрузка…' : !mediaUserNow ? 'Войти для загрузки' : path ? 'Заменить файл' : (label || 'Загрузить файл');
-    btn.disabled = busy !== null;
-    btn.onclick = async () => {
-      err = '';
-      if (mediaUserNow) { file.value = ''; file.click(); return; }
-      try { await mediaSignIn(); } catch (e) { err = mediaErrorText(e); box.refresh(); }
-    };
-    row.append(btn);
-    // Картинку или звук можно выбрать из медиатеки (уже загруженные файлы)
-    if (busy === null) {
-      const lib = document.createElement('button');
-      lib.type = 'button';
-      lib.textContent = 'Из медиатеки';
-      lib.onclick = () => openMediaLibrary({ pick: true, multi: false, kind, onPick: items => { err = ''; set(items[0].path); box.refresh(); } });
-      row.append(lib);
-    }
-    if (busy !== null) {
-      const pr = document.createElement('progress');
-      pr.max = 1; pr.value = busy;
-      row.append(pr);
-    } else if (path) {
-      const st = document.createElement('span');
-      st.className = 'mp-state';
-      st.textContent = 'файл загружен';
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.textContent = 'Убрать';
-      del.setAttribute('aria-label', 'Убрать файл из упражнения (в хранилище он остаётся)');
-      del.onclick = () => { err = ''; set(''); box.refresh(); };
-      row.append(st, del);
-    } else {
-      const st = document.createElement('span');
-      st.className = 'mp-state';
-      st.textContent = MEDIA_NAMES[kind];
-      row.append(st);
-    }
-    box.append(row, file);
-    if (kind === 'audio' && path && busy === null) {
-      const a = document.createElement('audio');
-      a.controls = true; a.preload = 'none';
-      a.src = mediaUrl(path) || '';
-      box.append(a);
-    }
-    if (err) {
-      const e = document.createElement('div');
-      e.className = 'mp-err';
-      e.textContent = err;
-      box.append(e);
-    }
-  };
-  file.onchange = async () => {
-    const f = file.files[0];
-    if (!f) return;
-    err = '';
-    const bad = checkMediaFile(f, kind);
-    if (bad) { err = bad; box.refresh(); return; }
-    busy = 0; box.refresh();
-    try {
-      const onProg = p => { busy = p; const pr = box.querySelector('progress'); if (pr) pr.value = p; };
-      // Картинки и звук идут в общую медиатеку (картинки с миниатюрой, название по имени файла)
-      const path = (await MediaLib.upload(f, {}, onProg)).path;
-      busy = null;
-      set(path);
-    } catch (e) {
-      busy = null;
-      err = e.userText || mediaErrorText(e);
-    }
-    box.refresh();
-  };
+function mediaPicker(kind, get, set, label, opts) {
+  // Компактный вид (значок со списком действий) — общий для всех модулей, см. core/mediabar.js
+  const box = MediaUI.picker(kind, get, set, label, opts);
   mediaPickers.add(box);
-  box.refresh();
   return box;
 }
-
 // Пояснение по нажатию на «?»: короткий текст рядом со значком вместо абзацев на странице. Нужен и модулю (глобальная функция)
 let helpFor = null;
 function hideHelp() { helpFor = null; $('helpBubble').hidden = true; }

@@ -1,4 +1,4 @@
-﻿// Редактор модуля Multiple Choice: вопросы с вариантами; у каждого вопроса Single Choice (один верный) или Multiple Select (один и больше).
+// Редактор модуля Multiple Choice: вопросы с вариантами; у каждого вопроса Single Choice (один верный) или Multiple Select (один и больше).
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Правильные ответы хранятся по ID вариантов, поэтому перестановка и правка текста их не сбивают.
 const MultipleChoiceEditor = (() => {
@@ -198,61 +198,24 @@ const MultipleChoiceEditor = (() => {
 
   // Выбор картинки: загрузка и медиатека (mediaPicker из ядра), ссылка https, описание, «Убрать»; для картинки вопроса ещё положение.
   // im — объект {media, url, alt[, align]}, меняется на месте; redraw вызывается, когда картинка появилась или исчезла
-  function imageField(im, withAlign, redraw) {
+  function imageField(im, withAlign, redraw, after) {
     const box = el('div', 'mc-imgf');
-    const pic = hasPic(im);
-    if (pic) {
-      const th = el('span', 'mc-thumb');
-      const src = mediaSrc(safeMediaPath(im.media) ? { media: im.media } : { url: im.url });
-      if (src) { const img = el('img'); img.src = src; img.alt = ''; img.onerror = () => { th.classList.add('broken'); img.remove(); }; th.append(img); }
-      box.append(th);
-    }
-    const row = el('div', 'mc-imgrow');
-    if (window.mediaPicker) row.append(window.mediaPicker('image', () => im.media || '', v => { im.media = v; if (v) im.url = ''; save(); redraw(); }, 'Загрузить картинку'));
-    const linkBtn = el('button', '', 'Ссылка');
-    linkBtn.type = 'button';
-    row.append(linkBtn);
-    if (pic || im.url || im.media) {
-      const rm = el('button', '', 'Убрать');
-      rm.type = 'button';
-      rm.onclick = () => { im.media = ''; im.url = ''; save(); redraw(); };
-      row.append(rm);
-    }
-    box.append(row);
-    const link = el('input');
-    link.placeholder = 'Ссылка на картинку (https://…)';
-    link.value = im.url || '';
-    link.hidden = !im.url;
-    link.setAttribute('aria-label', 'Ссылка на картинку');
-    const bad = el('div', 'mc-warn');
-    bad.hidden = true;
-    link.oninput = () => { im.url = link.value; if (link.value.trim()) im.media = ''; bad.hidden = !link.value.trim() || !!safeImageUrl(link.value); bad.textContent = 'Нужен полный адрес с https://.'; save(); };
-    link.onchange = redraw;
-    linkBtn.onclick = () => { link.hidden = !link.hidden; if (!link.hidden) link.focus(); };
-    box.append(link, bad);
-    if (pic) {
-      const alt = el('input');
-      alt.placeholder = 'Описание картинки для незрячих учеников';
-      alt.value = im.alt || '';
-      alt.setAttribute('aria-label', 'Описание картинки');
-      alt.oninput = () => { im.alt = alt.value; save(); };
-      box.append(alt);
-      if (withAlign) {
-        const seg = el('span', 'mc-seg');
-        Object.entries(ALIGNS).forEach(([v, label]) => {
-          const bt = el('button', im.align === v ? 'active' : '', label);
-          bt.type = 'button';
-          bt.setAttribute('aria-pressed', String(im.align === v));
-          bt.onclick = () => { im.align = v; save(); redraw(); };
-          seg.append(bt);
-        });
-        const al = el('div', 'mc-label mc-labelrow', 'Положение картинки');
-        box.append(al, seg);
-      }
+    // Загрузка, медиатека, ссылка, описание и «Убрать» — общий компактный элемент (core/mediabar.js)
+    box.append(MediaUI.imageControl(im, { save, change: redraw, after }));
+    if (hasPic(im) && withAlign) {
+      const seg = el('span', 'mc-seg');
+      Object.entries(ALIGNS).forEach(([v, label]) => {
+        const bt = el('button', im.align === v ? 'active' : '', label);
+        bt.type = 'button';
+        bt.setAttribute('aria-pressed', String(im.align === v));
+        bt.onclick = () => { im.align = v; save(); redraw(); };
+        seg.append(bt);
+      });
+      const al = el('div', 'mc-label mc-labelrow', 'Положение картинки');
+      box.append(al, seg);
     }
     return box;
-  }
-  const audioField = (get, set, label) => (window.mediaPicker ? window.mediaPicker('audio', get, set, label) : el('span'));
+  }  const audioField = (get, set, label) => (window.mediaPicker ? window.mediaPicker('audio', get, set, label) : el('span'));
 
   // Раскрытый вопрос: текст, тип, варианты (слева отметка верного, справа поле текста)
   function body(it, headTxt) {
@@ -271,7 +234,7 @@ const MultipleChoiceEditor = (() => {
     const mq = el('div', 'mc-label mc-labelrow', 'Картинка и звук вопроса (необязательно)');
     mq.append(help('Картинка стоит сверху, снизу, слева или справа от текста вопроса. У ученика на ней значок увеличения. Размер и вписывание картинок — во вкладке «Дизайн». Звук ученик включает значком динамика у вопроса, он не влияет на выбор и баллы.'));
     const qbox = el('div', 'mc-media');
-    const drawQ = () => { qbox.innerHTML = ''; qbox.append(imageField(it.image, true, drawQ), el('div', 'mc-label', 'Звук вопроса'), audioField(() => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить звук вопроса')); };
+    const drawQ = () => { qbox.innerHTML = ''; qbox.append(imageField(it.image, true, drawQ, audioField(() => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить звук вопроса'))); };
     drawQ();
     b.append(mq, qbox);
 
@@ -346,7 +309,7 @@ const MultipleChoiceEditor = (() => {
       wrap.append(line);
       if (isOpen) {
         const panel = el('div', 'mc-optpanel');
-        const drawO = () => { panel.innerHTML = ''; panel.append(imageField(o.image, false, drawO), el('div', 'mc-label', 'Звук варианта'), audioField(() => o.audio || '', v => { o.audio = v; save(); }, 'Загрузить звук варианта')); };
+        const drawO = () => { panel.innerHTML = ''; panel.append(imageField(o.image, false, drawO, audioField(() => o.audio || '', v => { o.audio = v; save(); }, 'Загрузить звук варианта'))); };
         drawO();
         wrap.append(panel);
       }

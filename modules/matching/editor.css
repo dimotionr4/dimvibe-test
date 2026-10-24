@@ -28,16 +28,6 @@
 .mt-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
 /* Панель картинок и звука пары */
 .mt-more.on, .mt-more.has { color:var(--accent); }
-.mt-panel { flex:1 1 100%; display:flex; flex-wrap:wrap; gap:12px; padding:8px 4px 4px; border-top:1px solid var(--line); }
-.mt-pcol { flex:1 1 220px; min-width:0; }
-.mt-label { font-size:.9rem; color:var(--muted); margin:8px 0 4px; }
-.mt-warn { color:var(--bad); font-size:.85rem; margin:6px 0; }
-.mt-imgf { display:flex; flex-direction:column; gap:6px; align-items:flex-start; width:100%; }
-.mt-imgf input { width:100%; max-width:420px; }
-.mt-imgrow { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-.mt-thumb { width:72px; height:72px; border:1px solid var(--line); border-radius:8px; background:var(--bg); padding:2px; display:inline-flex; align-items:center; justify-content:center; }
-.mt-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
-.mt-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 .mt-row { flex-wrap:wrap; }
 .mt-add { margin:4px 0 8px; }
 .mt-add:disabled { opacity:.5; }
@@ -57,36 +47,8 @@
 .mt-settop .mt-tools2 { margin-left:auto; }
 .mt-setins { width:100%; }
 .mt-addset { margin-top:4px; }
-/* Компактная панель картинки и звука: значки со списком действий */
-.mt-pcol { flex:1 1 200px; }
-.mt-phead { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.mt-ptitle { font-size:.9rem; color:var(--muted); margin-right:auto; }
-.mt-mw { position:relative; display:inline-block; }
-.mt-mb { display:inline-flex; align-items:center; gap:2px; min-height:34px; padding:0 8px; border-radius:8px; color:var(--muted); }
-.mt-mb:hover, .mt-mb[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
-.mt-mb.has { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
-.mt-caret { font-size:.7rem; }
-.mt-menu { position:absolute; top:calc(100% + 4px); right:0; z-index:30; min-width:210px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:4px; box-shadow:0 6px 20px rgba(0,0,0,.3); }
-.mt-menu[hidden] { display:none; }
-.mt-mi { display:block; width:100%; text-align:left; border:none; background:transparent; border-radius:8px; padding:7px 10px; min-height:34px; color:var(--text); }
-.mt-mi:hover, .mt-mi:focus-visible { background:var(--accent-soft); }
-.mt-mi.danger { color:var(--bad); }
-.mt-play { min-height:34px; min-width:34px; padding:0; border-radius:8px; }
-.mt-status { flex-basis:100%; font-size:.85rem; color:var(--muted); }
-.mt-status:empty { display:none; }
-.mt-status.err { color:var(--bad); }
-.mt-pline { display:flex; align-items:center; gap:8px; margin-top:6px; }
-.mt-pline .mt-thumb { width:44px; height:44px; flex:none; }
-.mt-pline input { flex:1; min-width:0; }
-.mt-pcol > input { width:100%; margin-top:6px; }
-.mt-pcol:first-child .mt-menu { left:0; right:auto; }
-
 /* Полоса картинки и звука стоит прямо под своим полем: значки выровнены по левому краю поля */
 .mt-fcol { flex:1 1 130px; min-width:0; display:flex; flex-direction:column; gap:4px; }
 .mt-fcol .mt-in { width:100%; flex:none; }
 .mt-media { min-width:0; }
-.mt-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.mt-media > input { width:100%; margin-top:6px; }
-.mt-fcol:first-child .mt-menu { left:0; right:auto; }
-.mt-fcol .mt-menu { right:auto; left:0; }
-.mt-fcol:last-child .mt-menu { left:auto; right:0; }
+.mt-fcol:last-child .mb-menu { left:auto; right:0; }

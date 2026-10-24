@@ -266,7 +266,7 @@ const ImageToGapsEditor = (() => {
       lib.onclick = () => openMediaLibrary({ pick: true, multi: !!multi, kind: 'image', onPick: items => items.forEach(it => onPick({ media: it.path, alt: it.name })) });
       box.append(lib);
     }
-    if (window.mediaPicker) box.append(window.mediaPicker('image', () => '', path => onPick({ media: path }), 'Загрузить картинку'));
+    if (window.mediaPicker) box.append(window.mediaPicker('image', () => '', path => onPick({ media: path }), 'Загрузить картинку', { library: false })); // медиатека — своя кнопка выше (с выбором нескольких картинок)
     const row = el('div', 'ig-adder');
     const inp = el('input');
     inp.placeholder = 'Или ссылка на картинку (https://…)';
