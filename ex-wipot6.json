@@ -1,0 +1,139 @@
+{
+  "id": "ex-wipot6",
+  "module": "categories",
+  "format": 1,
+  "published": true,
+  "title": "Демо — Categories",
+  "showAnswers": true,
+  "imageSize": "m",
+  "categories": [
+    {
+      "id": "c1",
+      "name": "Fruits"
+    },
+    {
+      "id": "c2",
+      "name": "Vegetables"
+    },
+    {
+      "id": "c3",
+      "name": "Animals"
+    },
+    {
+      "id": "c4",
+      "name": "Numbers"
+    }
+  ],
+  "items": [
+    {
+      "id": "i1",
+      "categoryId": "c1",
+      "text": "apple"
+    },
+    {
+      "id": "i2",
+      "categoryId": "c1",
+      "text": "banana"
+    },
+    {
+      "id": "i3",
+      "categoryId": "c1",
+      "text": "orange"
+    },
+    {
+      "id": "i4",
+      "categoryId": "c2",
+      "text": "carrot"
+    },
+    {
+      "id": "i5",
+      "categoryId": "c2",
+      "text": "potato"
+    },
+    {
+      "id": "i6",
+      "categoryId": "c3",
+      "text": "cat",
+      "audio": {
+        "media": "media/ex-ugfvkv/aud-2c5eda3e.wav"
+      }
+    },
+    {
+      "id": "i7",
+      "categoryId": "c3",
+      "text": "dog",
+      "audio": {
+        "media": "media/ex-ugfvkv/aud-87321932.mp3"
+      }
+    },
+    {
+      "id": "i8",
+      "categoryId": "c4",
+      "image": {
+        "media": "media/ex-vh5bb9/img-8b138b5e.webp",
+        "alt": ""
+      }
+    },
+    {
+      "id": "i9",
+      "categoryId": "c4",
+      "image": {
+        "media": "media/ex-vh5bb9/img-2db88fd0.png",
+        "alt": ""
+      }
+    },
+    {
+      "id": "i10",
+      "categoryId": "c4",
+      "text": "four",
+      "image": {
+        "media": "media/ex-vh5bb9/img-bc5f3595.webp",
+        "alt": ""
+      }
+    }
+  ],
+  "instruction": {
+    "title": "",
+    "text": "Разложите карточки по категориям.",
+    "audio": {
+      "media": "media/library/aud-a50607d4.wav"
+    },
+    "image": {
+      "media": "media/ex-ugfvkv/img-0133b924.jpg",
+      "alt": "",
+      "size": "medium",
+      "align": "center"
+    }
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "brand",
+    "showInstruction": true,
+    "showImage": true,
+    "gap": {
+      "shape": "line",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "classic",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "classicFont": "system",
+    "comicFont": "blogger",
+    "comicOutline": "neat",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "plain",
+      "fontSize": "m",
+      "fontWeight": "normal"
+    },
+    "check": {
+      "variant": "filled",
+      "align": "right"
+    }
+  }
+}
