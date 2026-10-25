@@ -46,6 +46,17 @@ const TimelineEditor = (() => {
     return { module: 'timeline', format: 1, dateVisibility: 'after_check', showCorrect: true, imageSize: 'm', events };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): события в правильном порядке, даты, пояснения, картинка и звук
+  function demo() {
+    const ev = (id, date, text, explanation, extra) => ({ ...newEvent(id), date, text, explanation, ...(extra || {}) });
+    return { ...create(), instruction: DimDemo.instruction('Расставьте события по времени.'), events: [
+      ev('e1', '1903', 'Первый полёт самолёта братьев Райт', 'Полёт длился 12 секунд.', { image: { ...emptyImage(), media: DimDemo.IMG.one } }),
+      ev('e2', '1957', 'Запуск первого искусственного спутника', '', { audio: DimDemo.AUD.a }),
+      ev('e3', '1961', 'Первый полёт человека в космос', 'Юрий Гагарин.'),
+      ev('e4', '1969', 'Высадка человека на Луну', 'Нил Армстронг и Базз Олдрин.'),
+    ] };
+  }
+
   // Черновики, сделанные до картинок и звука, получают пустые поля
   function normalize() {
     if (!VIS[d.dateVisibility]) d.dateVisibility = 'after_check';
@@ -275,5 +286,5 @@ const TimelineEditor = (() => {
       help: 'После проверки под ответом ученика появляется раздел «Правильная хронология»: все события по порядку, с датами и пояснениями. Верные места ученика в любом случае зелёные, неверные — красные. По умолчанию включено.' }];
   }
 
-  return { create, render, load, exportData, validate, unitCount, fixedChecks, fixedChecksNote, designOptions, behaviorOptions };
+  return { create, demo, render, load, exportData, validate, unitCount, fixedChecks, fixedChecksNote, designOptions, behaviorOptions };
 })();

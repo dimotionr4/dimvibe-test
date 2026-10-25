@@ -30,6 +30,23 @@ const ColorCodingEditor = (() => {
       categories: [{ id: 'c1', name: '', color: 'yellow' }, { id: 'c2', name: '', color: 'blue' }], texts: [newText('t1')] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): три категории, два текста с отметками.
+  // Отметка привязана к номеру слова: номер ищется по тому же делению на слова, что у редактора и плеера
+  function demo() {
+    let n = 0;
+    const text = (id, body, instruction, marks) => {
+      const words = ColorTokens.words(body);
+      return { ...newText(id, body), instruction, marks: marks.map(([word, cat]) => ({ id: 'm' + (++n), index: words.indexOf(word), word, cat })) };
+    };
+    return { ...create(), instruction: DimDemo.instruction('Раскрасьте слова цветами категорий.'),
+      categories: [{ id: 'c1', name: 'Nouns', color: 'yellow' }, { id: 'c2', name: 'Verbs', color: 'blue' }, { id: 'c3', name: 'Adjectives', color: 'pink' }],
+      texts: [
+        text('t1', 'The small cat sleeps on the soft bed.', 'Найдите существительные, глаголы и прилагательные.',
+          [['cat', 'c1'], ['bed', 'c1'], ['sleeps', 'c2'], ['small', 'c3'], ['soft', 'c3']]),
+        text('t2', 'My brother reads funny books.', '', [['brother', 'c1'], ['books', 'c1'], ['reads', 'c2'], ['funny', 'c3']]),
+      ] };
+  }
+
   function normalize() {
     if (!VIEWS[d.view]) d.view = 'one';
     if (!Array.isArray(d.categories)) d.categories = [];
@@ -440,5 +457,5 @@ const ColorCodingEditor = (() => {
       icons: { one: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'), list: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>') } }];
   }
 
-  return { create, render, load, exportData, validate, unitCount, designOptions };
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions };
 })();

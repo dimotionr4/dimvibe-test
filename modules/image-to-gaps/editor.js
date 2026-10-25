@@ -44,6 +44,25 @@ const ImageToGapsEditor = (() => {
     return { module: 'image_to_gaps', format: 1, layout: layout === 'text' ? 'text' : 'sentences', items: [{ id: 's1', parts: [''] }], gaps: {}, distractors: [], imageSize: 'm', imageFit: 'contain', showCorrect: false };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): картинка из медиатеки и заглушки, подсказка и звук, ловушки
+  function demo(layout) {
+    const A = DimDemo.AUD, text = layout === 'text';
+    const pic = (media, stub) => ({ ...emptyImage(), media: media || '', stub: stub || '' });
+    const items = text
+      ? [{ id: 's1', parts: ['Near the ', { gap: 'g1' }, ' grows a big ', { gap: 'g2' }, '. In the evening the ', { gap: 'g3' }, ' goes down.'], audio: A.a }]
+      : [{ id: 's1', parts: ['This is my ', { gap: 'g1' }, '.'], audio: A.a },
+        { id: 's2', parts: ['There is a ', { gap: 'g2' }, ' in the garden.'], audio: '' },
+        { id: 's3', parts: ['The ', { gap: 'g3' }, ' is hot and bright.'], audio: '' }];
+    return { ...create(layout), items,
+      instruction: DimDemo.instruction('Перетащите картинки в пропуски.'),
+      gaps: {
+        g1: { word: 'house', image: pic(DimDemo.IMG.house), hint: 'Здесь живут люди', audio: A.b, hintAudio: A.c },
+        g2: { word: 'tree', image: pic('', 'tree'), hint: '', audio: '', hintAudio: '' },
+        g3: { word: 'sun', image: pic('', 'sun'), hint: '', audio: '', hintAudio: '' },
+      },
+      distractors: [{ id: 't1', image: pic('', 'fish') }, { id: 't2', image: pic('', 'star') }] };
+  }
+
   function render(container, draft, onSave) {
     root = container;
     d = draft;
@@ -548,5 +567,5 @@ const ImageToGapsEditor = (() => {
       help: 'После завершения у ученика появится переключатель: для неверных пропусков он увидит рядом верную картинку. Баллы и число проверок не меняются. По умолчанию выключено.' }];
   }
 
-  return { create, render, load, exportData, validate, designOptions, behaviorOptions };
+  return { create, demo, render, load, exportData, validate, designOptions, behaviorOptions };
 })();

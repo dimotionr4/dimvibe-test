@@ -55,6 +55,19 @@ const MultipleChoiceEditor = (() => {
     return { module: 'multiple_choice', format: 1, mode: 'single', labels: 'letters', shuffle: true, showCount: false, showCorrect: false, view: 'one', items: [newItem('q1')] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): вопрос с картинкой и звуком, варианты-картинки, Multiple Select
+  function demo() {
+    const I = DimDemo.IMG, A = DimDemo.AUD;
+    const opt = (id, text, media, audio) => ({ ...newOption(id), text, image: { ...emptyImage(), media: media || '' }, audio: audio || '' });
+    const q1 = { ...newItem('q1'), text: 'Which number is the biggest?', image: { ...emptyImage(), media: I.question, align: 'top' }, audio: A.a,
+      options: [opt('o1', 'One', I.one, A.b), opt('o2', 'Two', I.two), opt('o3', 'Four', I.four)], correct: ['o3'] };
+    const q2 = { ...newItem('q2'), text: 'Which of these are fruits?', mode: 'multiple',
+      options: [opt('o4', 'Apple'), opt('o5', 'Carrot'), opt('o6', 'Banana'), opt('o7', 'Potato')], correct: ['o4', 'o6'] };
+    const q3 = { ...newItem('q3'), text: 'What is the capital of France?',
+      options: [opt('o8', 'Paris'), opt('o9', 'Rome'), opt('o10', 'Madrid')], correct: ['o8'] };
+    return { ...create(), showCount: true, instruction: DimDemo.instruction('Выберите правильный ответ.'), items: [q1, q2, q3] };
+  }
+
   function render(container, draft, onSave) {
     root = container;
     d = draft;
@@ -489,5 +502,5 @@ const MultipleChoiceEditor = (() => {
     ];
   }
 
-  return { create, render, load, exportData, validate, unitCount, designOptions, behaviorOptions };
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions, behaviorOptions };
 })();

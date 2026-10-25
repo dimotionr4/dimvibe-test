@@ -45,6 +45,17 @@ const OrderingEditor = (() => {
     return { module: 'ordering', format: 1, showAnswers: false, imageSize: 'm', seqs: [newSeq('q1', 1)] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): последовательность картинок со звуком и последовательность слов.
+  // Элементы перечислены в правильном порядке
+  function demo() {
+    const I = DimDemo.IMG;
+    const it = (id, text, media) => ({ ...newItem(id), text, image: { ...emptyImage(), media: media || '' } });
+    return { ...create(), instruction: DimDemo.instruction('Расставьте элементы в правильном порядке.'), seqs: [
+      { id: 'q1', instruction: 'От меньшего к большему', audio: DimDemo.AUD.a, items: [it('i1', 'one', I.one), it('i2', 'two', I.two), it('i3', 'four', I.four)] },
+      { id: 'q2', instruction: 'Соберите предложение', audio: '', items: [it('i4', 'I'), it('i5', 'like'), it('i6', 'green'), it('i7', 'apples')] },
+    ] };
+  }
+
   // Черновики, сделанные до картинок и звука, получают пустые поля
   function normalize() {
     if (!SIZES[d.imageSize]) d.imageSize = 'm';
@@ -350,5 +361,5 @@ const OrderingEditor = (() => {
       help: 'После проверки верные места всегда зелёные, неверные — красные. Если включено, у каждого неверного места ещё подписано, какой элемент должен там стоять («Правильно: …»). По умолчанию выключено.' }];
   }
 
-  return { create, render, load, exportData, validate, unitCount, fixedChecks, fixedChecksNote, designOptions, behaviorOptions };
+  return { create, demo, render, load, exportData, validate, unitCount, fixedChecks, fixedChecksNote, designOptions, behaviorOptions };
 })();

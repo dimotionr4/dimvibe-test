@@ -65,6 +65,25 @@ const MatchingEditor = (() => {
     return { module: 'matching', format: 1, mode: 'standard', align: 'auto', imageSize: 'm', imageFit: 'contain', showCorrect: false, sets: [newSet('s1', ['p1', 'p2', 'p3'])] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): пары с картинками и звуком, два набора
+  function demo() {
+    const I = DimDemo.IMG, A = DimDemo.AUD;
+    const pair = (id, left, right, extra) => ({ ...newItem(id), left, right, ...(extra || {}) });
+    const pic = media => ({ ...emptyImage(), media });
+    return { ...create(), instruction: DimDemo.instruction('Соедините пары.'), sets: [
+      { id: 's1', instruction: 'Цифры', items: [
+        pair('p1', '', 'one', { leftImage: pic(I.one), rightAudio: A.a }),
+        pair('p2', '', 'two', { leftImage: pic(I.two) }),
+        pair('p3', '', 'four', { leftImage: pic(I.four) }),
+      ] },
+      { id: 's2', instruction: 'Слова', items: [
+        pair('p4', 'house', 'дом', { leftAudio: A.b }),
+        pair('p5', 'cat', 'кошка'),
+        pair('p6', 'dog', 'собака'),
+      ] },
+    ] };
+  }
+
   function render(container, draft, onSave) {
     root = container;
     d = draft;
@@ -453,5 +472,5 @@ const MatchingEditor = (() => {
   // Сколько проверок задаёт сам режим (0 — выбирает автор во вкладке «Поведение»)
   const fixedChecks = draft => (draft.mode === 'lines_pair_colors' ? 1 : 0);
 
-  return { create, render, load, exportData, validate, unitCount, behaviorOptions, designOptions, fixedChecks };
+  return { create, demo, render, load, exportData, validate, unitCount, behaviorOptions, designOptions, fixedChecks };
 })();

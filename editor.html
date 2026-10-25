@@ -298,6 +298,8 @@
   .modal[hidden] { display:none; }
   .modal-box { background:var(--bg); border-radius:12px; padding:12px; width:min(1000px, 100%); }  .modal-box.choose { width:min(460px, 100%); margin-top:15vh; }
   .kind { display:block; width:100%; text-align:left; margin-bottom:8px; padding:10px 12px; }
+  .demo-note { margin:0 0 10px; padding:6px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-size:.85rem; }
+  .demo-note[hidden] { display:none; }
   .kind[hidden] { display:none; }
   .kind b, .kind span { display:block; }
   .kind span { color:var(--muted); font-size:.9rem; }
@@ -410,6 +412,7 @@
 <div id="kindDialog" class="modal" hidden>
   <div class="modal-box choose">
     <h3 style="margin:0 0 8px">Какое упражнение создать?</h3>
+    <p class="demo-note" id="demoNote" hidden>Включён демо-режим: упражнение будет заполнено примером. Выключается в «Настройках».</p>
     <div class="modpick" id="modPick" role="group" aria-label="Модуль">
       <button class="active" data-mod="fill_blanks" aria-pressed="true"><b>Fill Blanks</b><span>В пропуски — слова</span></button>
       <button data-mod="image_to_gaps" aria-pressed="false"><b>Image to Gaps</b><span>В пропуски — картинки</span></button>
@@ -438,22 +441,23 @@
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=10"></script>
 <script src="core/gap-engine.js?v=1"></script>
-<script src="modules/fill-blanks/editor.js?v=25"></script>
-<script src="modules/image-to-gaps/editor.js?v=6"></script>
-<script src="modules/true-false/editor.js?v=2"></script>
-<script src="modules/multiple-choice/editor.js?v=8"></script>
-<script src="modules/matching/editor.js?v=10"></script>
+<script src="modules/fill-blanks/editor.js?v=26"></script>
+<script src="modules/image-to-gaps/editor.js?v=7"></script>
+<script src="modules/true-false/editor.js?v=3"></script>
+<script src="modules/multiple-choice/editor.js?v=9"></script>
+<script src="modules/matching/editor.js?v=11"></script>
 <script src="modules/mistake-mode/tokens.js?v=1"></script>
-<script src="modules/mistake-mode/editor.js?v=5"></script>
+<script src="modules/mistake-mode/editor.js?v=6"></script>
 <script src="modules/color-coding/tokens.js?v=2"></script>
-<script src="modules/color-coding/editor.js?v=1"></script>
-<script src="modules/select-title/editor.js?v=2"></script>
+<script src="modules/color-coding/editor.js?v=2"></script>
+<script src="modules/select-title/editor.js?v=3"></script>
 <script src="core/reorder.js?v=1"></script>
-<script src="modules/ordering/editor.js?v=4"></script>
-<script src="modules/timeline/editor.js?v=2"></script>
+<script src="modules/ordering/editor.js?v=5"></script>
+<script src="modules/timeline/editor.js?v=3"></script>
 <script src="core/shell.js?v=1"></script>
+<script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 59;
+const ASSET_V = 60;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -568,9 +572,15 @@ function newId() {
   return id;
 }
 
+// Демо-режим («Настройки», core/demo.js): новое упражнение заполняется примером модуля (demo в editor.js модуля);
+// у модуля без примера — пустое, как обычно. Инструкцию с картинкой и звуком добавляет ядро, если модуль не дал свою
 function createDraft(layout, module) {
-  const id = newId();
-  drafts[id] = { id, title: '', ...MODULES[MODULES[module] ? module : 'fill_blanks'].create(layout), updatedAt: new Date().toISOString() };
+  const id = newId(), key = MODULES[module] ? module : 'fill_blanks', M = MODULES[key];
+  const demo = typeof DimDemo !== 'undefined' && DimDemo.on() && M.demo;
+  const name = (document.querySelector(`#modPick [data-mod="${key}"] b`) || {}).textContent || '';
+  const body = demo ? M.demo(layout) : M.create(layout);
+  if (demo && !body.instruction) body.instruction = DimDemo.instruction();
+  drafts[id] = { id, title: demo ? 'Демо — ' + name : '', ...body, updatedAt: new Date().toISOString() };
   writeStore();
   tab = 'content';
   openDraft(id);
@@ -1547,7 +1557,7 @@ $('fileInput').onchange = () => {
 };
 
 // Вид текста выбирается при создании: сначала спрашиваем, потом создаём черновик
-const askKind = () => { $('kindDialog').hidden = false; };
+const askKind = () => { $('demoNote').hidden = !DimDemo.on(); $('kindDialog').hidden = false; };
 const closeKind = () => { $('kindDialog').hidden = true; };
 $('new').onclick = askKind;
 $('new2').onclick = askKind;

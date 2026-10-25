@@ -38,6 +38,25 @@ const MistakeModeEditor = (() => {
     return { module: 'mistake_mode', format: 1, view: 'one', imageSize: 'm', imageFit: 'contain', texts: [newText('t1')] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): два текста — только найти ошибки и с исправлением, картинка и звук.
+  // Ошибка привязана к номеру слова: номер ищется по тому же делению на слова, что у редактора и плеера
+  function demo() {
+    let n = 0;
+    const text = (id, body, wrong, extra) => {
+      const words = MistakeTokens.words(body);
+      const errors = wrong.map(([word, explanation, correction]) => ({ id: 'e' + (++n), index: words.indexOf(word), word, explanation,
+        requiresCorrection: !!correction, correction: correction || '', alts: '' }));
+      return { ...newText(id, body), errors, ...(extra || {}) };
+    };
+    return { ...create(), instruction: DimDemo.instruction('Найдите и отметьте ошибки в тексте.'), texts: [
+      text('t1', 'Yesterday I goed to the park with my freinds and we play football.',
+        [['goed', 'Неправильный глагол: went'], ['freinds', 'Правильно: friends'], ['play', 'Прошедшее время: played']],
+        { instruction: 'Найдите три ошибки.', image: { ...emptyImage(), media: DimDemo.IMG.house }, audio: DimDemo.AUD.a }),
+      text('t2', 'She have two cats and a dog.', [['have', 'После she — has', 'has']],
+        { instruction: 'Найдите ошибку и исправьте её.' }),
+    ] };
+  }
+
   // Черновики, сделанные до картинок и звука, получают пустые поля
   function normalize() {
     if (!SIZES[d.imageSize]) d.imageSize = 'm';
@@ -394,5 +413,5 @@ const MistakeModeEditor = (() => {
     ];
   }
 
-  return { create, render, load, exportData, validate, unitCount, designOptions };
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions };
 })();

@@ -24,6 +24,25 @@ const FillBlanksEditor = (() => {
     return { module: 'fill_blanks', format: 2, layout: layout === 'text' ? 'text' : 'sentences', mode: 'word_bank', items: [{ id: 's1', parts: [''] }], gaps: {}, distractors: [] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): пропуски с вариантами, подсказками и звуком, ловушки, озвучка
+  function demo(layout) {
+    const A = DimDemo.AUD, text = layout === 'text';
+    const items = text
+      ? [{ id: 's1', parts: ['Every morning I ', { gap: 'g1' }, ' to school. My sister ', { gap: 'g2' }, ' tea, and my brother ', { gap: 'g3' }, ' coffee.'], audio: A.a },
+        { id: 's2', parts: ['On Sundays we ', { gap: 'g4' }, ' football in the park.'], audio: '' }]
+      : [{ id: 's1', parts: ['I ', { gap: 'g1' }, ' to school every day.'], audio: A.a },
+        { id: 's2', parts: ['My sister ', { gap: 'g2' }, ' tea, and my brother ', { gap: 'g3' }, ' coffee.'], audio: '' },
+        { id: 's3', parts: ['On Sundays we ', { gap: 'g4' }, ' football.'], audio: '' }];
+    return { ...create(layout), items, distractors: ['goes', 'plays'],
+      instruction: DimDemo.instruction('Вставьте слова из банка в пропуски.'),
+      gaps: {
+        g1: { answer: 'go', alternatives: ['walk'], hint: 'Глагол движения', audio: A.b, hintAudio: A.c },
+        g2: { answer: 'drinks', alternatives: [], hint: 'Что делают с чаем?', audio: '', hintAudio: '' },
+        g3: { answer: 'prefers', alternatives: ['likes'], hint: '', audio: '', hintAudio: '' },
+        g4: { answer: 'play', alternatives: [], hint: 'Футбол — это игра', audio: '', hintAudio: '' },
+      } };
+  }
+
   const isText = () => d.layout === 'text';
   const LAYOUT_NAME = { sentences: 'Отдельные предложения', text: 'Связный текст' };
 
@@ -487,5 +506,5 @@ const FillBlanksEditor = (() => {
     };
   }
 
-  return { create, render, load, exportData, validate };
+  return { create, demo, render, load, exportData, validate };
 })();

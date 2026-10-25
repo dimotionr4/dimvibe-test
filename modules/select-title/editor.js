@@ -44,6 +44,19 @@ const SelectTitleEditor = (() => {
     return { module: 'select_title', format: 1, view: 'one', shuffle: true, imageSize: 'm', imageFit: 'contain', texts: [newText('t1', 1)] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): два текста, у первого картинка и звук, пояснения
+  function demo() {
+    const text = (id, body, titles, correct, explanation, extra) => ({ ...newText(id, 1), text: body, correct, explanation,
+      options: titles.map(([oid, t]) => ({ id: oid, text: t })), ...(extra || {}) });
+    return { ...create(), instruction: DimDemo.instruction('Прочитайте текст и выберите лучший заголовок.'), texts: [
+      text('t1', 'Tom lives in a small house near the river. Every morning he opens the window and listens to the birds. In the evening his family sits in the garden.',
+        [['o1', 'A house by the river'], ['o2', 'How to catch fish'], ['o3', 'A trip to the city'], ['o4', 'Birds of the world']], 'o1',
+        'Весь текст о доме Тома у реки.', { image: { ...emptyImage(), media: DimDemo.IMG.house }, audio: DimDemo.AUD.a }),
+      text('t2', 'Anna counts everything: one apple, two bananas, four oranges. Numbers help her at the market every day.',
+        [['o5', 'Anna and the numbers'], ['o6', 'A day at school'], ['o7', 'My favourite colour']], 'o5', ''),
+    ] };
+  }
+
   // Черновики, сделанные до картинок и звука, получают пустые поля
   function normalize() {
     if (!VIEWS[d.view]) d.view = 'one';
@@ -350,5 +363,5 @@ const SelectTitleEditor = (() => {
       help: 'Порядок заголовков выбирается один раз при открытии упражнения и не меняется до обновления страницы; «Начать заново» его не перемешивает. Правильный ответ привязан к самому заголовку, а не к месту. По умолчанию включено.' }];
   }
 
-  return { create, render, load, exportData, validate, unitCount, designOptions, behaviorOptions };
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions, behaviorOptions };
 })();

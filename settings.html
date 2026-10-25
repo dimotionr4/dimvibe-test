@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — настройки</title>
 <style>
-  /* Страница самостоятельная. Пишет только настройки вида: тема (dimvibe.theme), панель (dimvibe.settings.v1),
+  /* Страница самостоятельная. Пишет настройки вида: тема (dimvibe.theme), панель (dimvibe.settings.v1), демо-режим (dimvibe.demo, core/demo.js),
      вид табло (dimvibe.home.v1: view, cols, gap, sort, order) и списка упражнений (dimvibe.exercises.v1: view, sort).
      Черновики, корзина, папки, избранное и скрытые модули здесь не трогаются. */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --line:#c9c9d8; --bad:#d64545; }
@@ -88,6 +88,11 @@
       <div class="seg" id="eSort"><button data-v="changed">Изменённые</button><button data-v="opened">Открытые</button><button data-v="title">По названию</button><button data-v="module">По модулю</button></div></div>
   </section>
   <section>
+    <h2>Проверка модулей</h2>
+    <div class="row"><div class="l">Демо-режим<small>Новое упражнение любого модуля сразу заполнено примером: инструкция, задания, картинки и звук из медиатеки. Уже созданные упражнения не меняются. Выключите, когда закончите проверять: новые упражнения снова будут пустыми.</small></div>
+      <button class="sw" id="demo" role="switch" aria-checked="false" aria-label="Демо-режим"><i></i></button></div>
+  </section>
+  <section>
     <h2>Сброс</h2>
     <div class="row"><div class="l">Вернуть настройки вида<small>Тема, панель, вид и порядок на табло, вид списка упражнений. Черновики, папки, избранное и скрытые модули остаются.</small></div><button class="btn" id="resetAll">Сбросить</button></div>
   </section>
@@ -96,6 +101,7 @@
 <div id="toast" role="status" hidden></div>
 <script src="core/shell.js?v=1"></script>
 <script src="core/sidebar.js?v=2"></script>
+<script src="core/demo.js?v=1"></script>
 <script>
 const $ = id => document.getElementById(id);
 const rd = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
@@ -130,6 +136,11 @@ $('swReset').onclick = () => { const s = DimShell.read(); s.sideWidth = 260; Dim
 function drawAuto() { $('auto').setAttribute('aria-checked', String(DimShell.read().autoCollapse)); }
 $('auto').onclick = () => { const s = DimShell.read(); s.autoCollapse = !s.autoCollapse; DimShell.write(s); drawAuto(); };
 drawWidth(); drawAuto();
+
+// Демо-режим (core/demo.js): хранится отдельно и сбросом настроек вида не меняется
+function drawDemo() { $('demo').setAttribute('aria-checked', String(DimDemo.on())); }
+$('demo').onclick = () => { DimDemo.set(!DimDemo.on()); drawDemo(); toast(DimDemo.on() ? 'Демо-режим включён: новые упражнения будут с примером.' : 'Демо-режим выключен.'); };
+drawDemo();
 
 // Табло и список упражнений
 const drawHView = seg('hView', () => rd(HOME, {}).view || 'cards', v => patch(HOME, 'view', v));

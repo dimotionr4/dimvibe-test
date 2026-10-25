@@ -41,6 +41,18 @@ const TrueFalseEditor = (() => {
     return { module: 'true_false', format: 1, answers: newFmt(), view: 'one', items: [newItem('q1')] };
   }
 
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): верные и неверные утверждения, пояснения, озвучка
+  function demo() {
+    const it = (id, text, correct, explanation, audio) => ({ ...newItem(id), text, correct, explanation, audio: audio || '' });
+    return { ...create(), instruction: DimDemo.instruction('Прочитайте утверждения и выберите True или False.'),
+      items: [
+        it('q1', 'The sun rises in the east.', 'a', 'Солнце встаёт на востоке.', DimDemo.AUD.a),
+        it('q2', 'Cats can fly.', 'b', 'Кошки не летают.'),
+        it('q3', 'Water boils at 100 °C at sea level.', 'a', ''),
+        it('q4', 'A week has eight days.', 'b', 'В неделе семь дней.'),
+      ] };
+  }
+
   function render(container, draft, onSave) {
     root = container;
     d = draft;
@@ -442,5 +454,5 @@ const TrueFalseEditor = (() => {
     ];
   }
 
-  return { create, render, load, exportData, validate, unitCount, designOptions };
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions };
 })();
