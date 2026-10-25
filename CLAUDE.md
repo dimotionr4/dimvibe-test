@@ -45,6 +45,7 @@
 - Select Title (восьмой модуль, выбрать заголовок к тексту, решение владельца 2026-10-25): skill `.claude/skills/select-title/`.
 - Ordering (девятый модуль, расставить элементы по порядку, решение владельца 2026-10-25): skill `.claude/skills/ordering/`.
 - Timeline (десятый модуль, расставить события по времени, решение владельца 2026-10-25): skill `.claude/skills/timeline/`. Перетаскивание за ручку у Ordering и Timeline общее — `core/reorder.js`.
+- Word Scramble / Sentence Builder (одиннадцатый модуль, собрать слово, фразу или предложение из кусочков, решение владельца 2026-10-25): skill `.claude/skills/word-scramble/`.
 - Медиатека (общая библиотека картинок, решение владельца 2026-10-23): skill `.claude/skills/media-library/`.
 - Остальные модули: `docs/MODULE_NOTES.md`; при начале работы над модулем его правила переносим в отдельный skill.
 - Как делать новый модуль (согласование, файлы, подключение, проверка): skill `.claude/skills/new-module/` (2026-10-24).

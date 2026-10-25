@@ -1,0 +1,33 @@
+/* Плеер модуля Word Scramble: поле ответа (пунктирная рамка) и банк перемешанных кусочков под ним.
+   Номера заданий и «Предыдущее / Следующее» — классы tf-* из modules/true-false/player.css.
+   Результат не только цветом: ✓ у верного задания, ✗ и «Правильно: …» у неверного */
+.card.ws-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
+.ws-tnum { margin:0 0 6px; font-weight:600; color:var(--muted); }
+.ws-tinstr { margin:0 0 8px; }
+.ws-zone { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:56px; padding:8px; margin-bottom:10px; border:2px dashed var(--line); border-radius:10px; }
+.ws-empty { color:var(--muted); font-size:.92rem; }
+.ws-bank { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+/* Кусочек: «Плитки» — квадратные (для букв), «Чипсы» — округлые */
+.ws-tok { min-height:44px; min-width:44px; padding:4px 12px; font-weight:600; font-size:1.05rem; white-space:pre; user-select:none; -webkit-user-select:none; }
+.ws-tiles .ws-tok { border-radius:8px; box-shadow:0 2px 0 var(--line); }
+.ws-chips .ws-tok { border-radius:999px; }
+.ws-zone .ws-tok { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
+.ws-tok:disabled { cursor:default; color:var(--text); opacity:1; }
+.ws-hintbtn { min-height:36px; padding:2px 10px; font-size:.92rem; }
+.ws-hinttext { margin:8px 0 0; padding:6px 10px; border-radius:8px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+/* Итог */
+.ws-card.missing .ws-zone { border-color:var(--bad); }
+.ws-card.ok .ws-zone { border-style:solid; border-color:var(--ok); background:color-mix(in srgb, var(--ok) 12%, var(--card)); }
+.ws-card.bad .ws-zone { border-style:solid; border-color:var(--bad); background:color-mix(in srgb, var(--bad) 10%, var(--card)); }
+.ws-card.ok .ws-zone .ws-tok { border-color:var(--ok); }
+.ws-card.bad .ws-zone .ws-tok { border-color:var(--bad); }
+.ws-tick { margin-left:auto; color:var(--ok); font-weight:700; padding:0 4px; }
+.ws-cross { margin-left:auto; color:var(--bad); font-weight:700; padding:0 4px; }
+.ws-right { margin:0 0 6px; overflow-wrap:anywhere; }
+.ws-right-l { font-weight:600; color:var(--ok); }
+.ws-expl { margin:8px 0 0; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+
+/* Comic: контур берёт --rc */
+.style-comic .ws-zone .ws-tok { --rc:var(--accent); }
+.style-comic .ws-card.ok .ws-zone .ws-tok { --rc:var(--ok); }
+.style-comic .ws-card.bad .ws-zone .ws-tok { --rc:var(--bad); }
