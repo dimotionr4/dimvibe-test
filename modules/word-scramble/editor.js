@@ -22,25 +22,45 @@ const WordScrambleEditor = (() => {
   const STYLES = { tiles: 'Плитки', chips: 'Чипсы' };
   const PLACEHOLDER = { word: 'Слово, например: apple', phrase: 'Фраза, например: a cup of tea', sentence: 'Предложение, например: I have been to London.' };
 
-  const newTask = (id, mode) => ({ id, mode: mode || 'sentence', answer: '', instruction: '', hint: '', explanation: '' });
+  const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
+  const emptyImage = () => ({ media: '', url: '', alt: '' });
+  const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
+  // Файл упражнения: картинка {media | url, alt} или нет; звук {media} или нет
+  const imageOut = im => {
+    if (!im) return null;
+    const alt = clean(im.alt), media = safeMediaPath(im.media);
+    if (media) return { media, alt };
+    const url = safeImageUrl(im.url);
+    return url ? { url, alt } : null;
+  };
+  const audioOut = p => { const m = safeMediaPath(p); return m ? { media: m } : null; };
+
+  const newTask = (id, mode) => ({ id, mode: mode || 'sentence', answer: '', instruction: '', hint: '', explanation: '', image: emptyImage(), audio: '' });
   function create() {
-    return { module: 'word_scramble', format: 1, view: 'one', tokenStyle: 'tiles', showAnswers: true, tasks: [newTask('t1')] };
+    return { module: 'word_scramble', format: 1, view: 'one', tokenStyle: 'tiles', showAnswers: true, imageSize: 'm', tasks: [newTask('t1')] };
   }
 
-  // Демо-пример (демо-режим в «Настройках», core/demo.js): все три вида заданий, своя нарезка, повтор букв, подсказка, пояснения
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): все три вида заданий, своя нарезка, повтор букв, подсказка, пояснения,
+  // картинка и звук у второго задания
   function demo() {
     const t = (id, mode, answer, extra) => ({ ...newTask(id, mode), answer, ...(extra || {}) });
     return { ...create(), instruction: DimDemo.instruction('Соберите слово, фразу или предложение из кусочков.'), tasks: [
       t('t1', 'word', 'apple', { hint: 'A red or green fruit.', explanation: 'Две буквы P можно ставить в любом порядке.' }),
-      t('t2', 'phrase', 'a cup of tea', { instruction: 'Соберите фразу.' }),
+      t('t2', 'phrase', 'a big old house', { instruction: 'Посмотрите на картинку и соберите фразу.', image: DimDemo.img('house'), audio: DimDemo.AUD.a }),
       t('t3', 'sentence', 'I have / been to / London.', { hint: 'Present Perfect.', explanation: 'have been — Present Perfect от be.' }),
     ] };
   }
 
+  // Черновики, сделанные до картинок и звука, получают пустые поля
   function normalize() {
     if (!VIEWS[d.view]) d.view = 'one';
     if (!STYLES[d.tokenStyle]) d.tokenStyle = 'tiles';
     if (typeof d.showAnswers !== 'boolean') d.showAnswers = true;
+    if (!SIZES[d.imageSize]) d.imageSize = 'm';
+    d.tasks.forEach(t => {
+      if (!t.image) t.image = emptyImage();
+      if (typeof t.audio !== 'string') t.audio = '';
+    });
   }
 
   function render(container, draft, onSave) {
@@ -65,7 +85,7 @@ const WordScrambleEditor = (() => {
     const tools = el('div', 'ws-tools');
     counter = el('span', 'ws-muted');
     const right = el('span', 'ws-right');
-    right.append(help(`Выберите вид задания и напишите правильный ответ. Программа сама разрежет его на кусочки: слово — на буквы, фразу и предложение — на слова (знаки препинания остаются у слова). Свои кусочки задаются косой чертой: «I have / been to / London.» или «app / le». Под ответом видно, какие кусочки получит ученик (перемешанными). Проверка одна на всё упражнение, балл — за полностью верно собранное задание. Одинаковые кусочки взаимозаменяемы. Заданий до ${MAX_TASKS}, кусочков в задании от ${MIN_TOKENS} до ${MAX_TOKENS}.`));
+    right.append(help(`Выберите вид задания и напишите правильный ответ. Программа сама разрежет его на кусочки: слово — на буквы, фразу и предложение — на слова (знаки препинания остаются у слова). Свои кусочки задаются косой чертой: «I have / been to / London.» или «app / le». Под ответом видно, какие кусочки получит ученик (перемешанными). К заданию можно добавить картинку и звук (например, «послушайте и соберите предложение»). Проверка одна на всё упражнение, балл — за полностью верно собранное задание. Одинаковые кусочки взаимозаменяемы. Заданий до ${MAX_TASKS}, кусочков в задании от ${MIN_TOKENS} до ${MAX_TOKENS}.`));
     tools.append(counter, right);
     msg = el('div', 'ws-msg');
     msg.hidden = true;
@@ -134,7 +154,11 @@ const WordScrambleEditor = (() => {
       row.append(el('span', 'ws-flabel', label), i);
       return row;
     };
-    box.append(modes, ans, el('p', 'ws-muted ws-hint', 'Свои кусочки — через косую черту: I have / been to / London.'), prev,
+    // Картинка и звук задания: общие компактные значки (core/mediabar.js), миниатюра и значки одной строкой
+    const media = el('div', 'ws-media');
+    const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук задания');
+    media.append(el('span', 'ws-flabel', 'Картинка, звук'), MediaUI.imageControl(t.image, { save, after: audio }));
+    box.append(modes, ans, el('p', 'ws-muted ws-hint', 'Свои кусочки — через косую черту: I have / been to / London.'), prev, media,
       field('ws-instr', t.instruction, 'Своя инструкция к заданию (необязательно)', 'Инструкция', v => { t.instruction = v; }),
       field('ws-hintin', t.hint, 'Необязательно: ученик откроет её сам', 'Подсказка', v => { t.hint = v; }),
       field('ws-expl', t.explanation, 'Необязательно: ученик увидит его после проверки', 'Пояснение', v => { t.explanation = v; }));
@@ -161,7 +185,7 @@ const WordScrambleEditor = (() => {
       no.onclick = () => { delAsk = null; drawList(); };
       q.append(yes, no);
       tools.append(q);
-    } else tools.append(b(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить задание', () => { if ([t.answer, t.instruction, t.hint, t.explanation].some(clean)) { delAsk = t.id; drawList(); } else remove(k); }));
+    } else tools.append(b(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить задание', () => { if ([t.answer, t.instruction, t.hint, t.explanation].some(clean) || hasPic(t.image) || t.audio) { delAsk = t.id; drawList(); } else remove(k); }));
     top.append(tools);
     return top;
   }
@@ -185,7 +209,7 @@ const WordScrambleEditor = (() => {
   // Копия получает новый ID; правки копии не меняют оригинал
   function duplicate(k) {
     if (d.tasks.length >= MAX_TASKS) return say(`Заданий не больше ${MAX_TASKS}.`);
-    d.tasks.splice(k + 1, 0, { ...d.tasks[k], id: newTaskId() });
+    d.tasks.splice(k + 1, 0, { ...JSON.parse(JSON.stringify(d.tasks[k])), id: newTaskId() }); // глубокая копия: картинка копии — свой объект
     save();
     drawList();
   }
@@ -207,20 +231,26 @@ const WordScrambleEditor = (() => {
     if (p.length < MIN_TOKENS) return `Нужно хотя бы ${MIN_TOKENS} кусочка.`;
     if (p.length > MAX_TOKENS) return `Кусочков ${p.length}, а можно не больше ${MAX_TOKENS}.`;
     if (p.every(x => x === p[0])) return 'Все кусочки одинаковые: их нельзя перемешать.';
+    const im = t.image;
+    if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) return 'Ссылка на картинку должна быть полным адресом с https://.';
     return '';
   }
 
   // ---- Файл упражнения ----
   // Порядок заданий — порядок показа. view пишется только при «Все сразу», tokenStyle — только при «Чипсы», showAnswers — только при выключенном;
-  // instruction, hint, explanation — только если не пустые. Кусочки в файл не пишутся: их режет плеер из answer тем же правилом
+  // instruction, hint, explanation, image, audio — только если есть; imageSize — только если в упражнении есть картинка.
+  // Кусочки в файл не пишутся: их режет плеер из answer тем же правилом
   function exportData(draft) {
     return {
       module: 'word_scramble', format: 1,
       ...(draft.view === 'list' ? { view: 'list' } : {}),
       ...(draft.tokenStyle === 'chips' ? { tokenStyle: 'chips' } : {}),
       ...(draft.showAnswers === false ? { showAnswers: false } : {}),
+      ...(draft.tasks.some(t => imageOut(t.image)) ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm' } : {}),
       tasks: draft.tasks.map(t => ({
         id: t.id, mode: T.MODES[t.mode] ? t.mode : 'sentence', answer: clean(t.answer),
+        ...(imageOut(t.image) ? { image: imageOut(t.image) } : {}),
+        ...(audioOut(t.audio) ? { audio: audioOut(t.audio) } : {}),
         ...(clean(t.instruction) ? { instruction: clean(t.instruction) } : {}),
         ...(clean(t.hint) ? { hint: clean(t.hint) } : {}),
         ...(clean(t.explanation) ? { explanation: clean(t.explanation) } : {}),
@@ -255,16 +285,22 @@ const WordScrambleEditor = (() => {
       let id = String((t && t.id) || '');
       if (!id || ids.has(id)) id = nextId('t', [...ids]);
       ids.add(id);
+      const im = t && t.image;
       return { id, mode: T.MODES[t && t.mode] ? t.mode : 'sentence', answer: String((t && t.answer) || ''),
-        instruction: String((t && t.instruction) || ''), hint: String((t && t.hint) || ''), explanation: String((t && t.explanation) || '') };
+        instruction: String((t && t.instruction) || ''), hint: String((t && t.hint) || ''), explanation: String((t && t.explanation) || ''),
+        image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') },
+        audio: (t && t.audio && safeMediaPath(t.audio.media)) || '' };
     });
-    return { ...create(), view: file.view === 'list' ? 'list' : 'one', tokenStyle: file.tokenStyle === 'chips' ? 'chips' : 'tiles', showAnswers: file.showAnswers !== false, tasks };
+    return { ...create(), view: file.view === 'list' ? 'list' : 'one', tokenStyle: file.tokenStyle === 'chips' ? 'chips' : 'tiles', showAnswers: file.showAnswers !== false,
+      imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', tasks };
   }
 
-  // Настройки во вкладке «Дизайн» (рисует ядро): показ заданий и вид кусочков
+  // Настройки во вкладке «Дизайн» (рисует ядро): показ заданий и вид кусочков; размер картинок — только если в упражнении есть картинки
   const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   function designOptions(draft) {
-    return [
+    const size = draft.tasks.some(t => hasPic(t.image))
+      ? [{ field: 'imageSize', label: 'Размер картинок', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } }] : [];
+    return [...size,
       { field: 'view', label: 'Показ заданий', value: VIEWS[draft.view] ? draft.view : 'one', names: VIEWS,
         icons: { one: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'), list: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>') } },
       { field: 'tokenStyle', label: 'Вид кусочков', value: STYLES[draft.tokenStyle] ? draft.tokenStyle : 'tiles', names: STYLES,

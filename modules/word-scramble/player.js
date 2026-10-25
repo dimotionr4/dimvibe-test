@@ -114,14 +114,40 @@ const WordScramblePlayer = (() => {
     return b;
   }
 
+  // Картинка задания: высота по «Размеру картинок», лупа увеличения на углу (addZoom, core/mediaviewer.js).
+  // Просмотр картинки и прослушивание звука не тратят проверку и не трогают кусочки
+  function picture(im) {
+    const src = mediaSrc(im);
+    if (!src) return null;
+    const wrap = el('div', 'ws-pic');
+    const img = el('img');
+    img.alt = String(im.alt || '');
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    img.onerror = () => { wrap.classList.add('broken'); img.remove(); };
+    img.src = src;
+    wrap.append(img);
+    addZoom(wrap, wrap, src, img.alt);
+    return wrap;
+  }
+
   function taskCard(k) {
     const t = tasks[k], g = unitOf(t), p = pieces[t.id];
     const st = finished && g ? g.state : g && g.state === 'missing' ? 'missing' : '';
-    const c = el('div', 'card ws-card ws-' + (data.tokenStyle === 'chips' ? 'chips' : 'tiles') + (st ? ' ' + st : ''));
+    const size = ['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm';
+    const c = el('div', 'card ws-card ws-' + (data.tokenStyle === 'chips' ? 'chips' : 'tiles') + ' ws-size-' + size + (st ? ' ' + st : ''));
     c.dataset.t = t.id;
     if (tasks.length > 1 && listView()) c.append(el('p', 'ws-tnum', `Задание ${k + 1}`));
     const ins = String(t.instruction || '').trim();
     if (ins) c.append(el('p', 'ws-tinstr', ins));
+    const pic = picture(t.image), audio = mediaSrc(t.audio);
+    if (pic) c.append(pic);
+    if (audio) {
+      const row = el('p', 'ws-audio');
+      row.append(audioButton(audio, 'wsa' + t.id, 'audbtn', '🔊', 'Прослушать задание', 'Слушать'));
+      c.append(row);
+    }
     // Ответ ученика: кусочки в выбранном порядке; нажатие возвращает кусочек в банк
     const zone = el('div', 'ws-zone');
     zone.setAttribute('role', 'group');

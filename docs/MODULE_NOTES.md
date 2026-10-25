@@ -31,7 +31,7 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Timeline — сделан, с картинкой и звуком у события (2026-10-25)
 Правила перенесены в skill `.claude/skills/timeline/`; здесь не дублируются.
 
-## Word Scramble / Sentence Builder — сделан, этап 1 без картинок и звука (2026-10-25)
+## Word Scramble / Sentence Builder — сделан, с картинкой и звуком у задания (2026-10-25)
 Правила перенесены в skill `.claude/skills/word-scramble/`; здесь не дублируются.
 
 ## Splice (слова из слогов/частей)

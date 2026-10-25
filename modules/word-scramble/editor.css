@@ -35,3 +35,8 @@
 .ws-field { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .ws-field .ws-in { margin-bottom:0; flex:1; }
 .ws-flabel { flex:none; width:6.5em; font-size:.88rem; color:var(--muted); }
+/* Картинка и звук задания: подпись слева, миниатюра и значки одной строкой (в общем виде значки прижаты вправо, миниатюра ниже) */
+.ws-media { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.ws-media .mb-img { display:flex; align-items:center; gap:8px; width:auto; flex:1; }
+.ws-media .mb-bar { justify-content:flex-start; }
+.ws-media .mb-line { order:-1; margin-top:0; }
