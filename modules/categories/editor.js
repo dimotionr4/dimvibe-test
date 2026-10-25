@@ -331,7 +331,7 @@ const CategoriesEditor = (() => {
     }));
     where.forEach(w => {
       const cats = [...new Set(w.cats)];
-      if (cats.length > 1) errors.push(`Карточка «${w.text}» есть в категориях ${cats.join(' и ')}: ученик не поймёт, куда её класть. Оставьте её в одной категории или измените текст.`);
+      if (cats.length > 1) errors.push(`Карточка «${w.text}» есть в категориях ${cats.slice(0, -1).join(', ')} и ${cats[cats.length - 1]}: ученик не поймёт, куда её класть. Оставьте её в одной категории или измените текст.`);
       else if (w.cats.length > 1) warnings.push(`Карточка «${w.text}» повторяется в категории ${cats[0]}: ученик получит её ${w.cats.length} раза.`);
     });
     return { errors, warnings };
