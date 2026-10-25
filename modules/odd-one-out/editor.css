@@ -1,0 +1,36 @@
+/* Редактор модуля Odd One Out. Цвета берутся из переменных ядра (editor.html) */
+.oo-wrap { position:relative; }
+.oo-muted { color:var(--muted); }
+.oo-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.oo-msg[hidden] { display:none; }
+.oo-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.oo-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.oo-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.oo-in { width:100%; box-sizing:border-box; min-width:0; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.oo-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.oo-ib:hover:not(:disabled) { color:var(--accent); }
+.oo-ib.oo-del:hover:not(:disabled) { color:var(--bad); }
+.oo-ib:disabled { opacity:.3; }
+.oo-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.oo-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.oo-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.oo-add { margin:4px 0 8px; }
+.oo-add:disabled { opacity:.5; }
+
+.oo-group { margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.oo-grouptop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.oo-grouptop .oo-tools2 { margin-left:auto; }
+.oo-tools2 { display:flex; align-items:center; flex:none; }
+.oo-prompt { min-height:36px; margin-bottom:6px; }
+.oo-expl { min-height:38px; margin-top:4px; }
+
+/* Элементы: кружок «лишний», поле, выше / ниже / удалить */
+.oo-items { margin:4px 0 6px; }
+.oo-hint { margin:2px 0 6px; font-size:.9rem; }
+.oo-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.oo-item-in { flex:1 1 auto; width:auto; min-height:36px; }
+.oo-row.odd .oo-item-in { border-color:var(--ok); box-shadow:inset 0 0 0 1px var(--ok); }
+.oo-row.same .oo-item-in { border-color:#d9a400; background:color-mix(in srgb, #f5c400 12%, var(--bg)); }
+.oo-mark { flex:none; width:26px; height:26px; min-height:0; padding:0; border-radius:50%; border:2px solid var(--muted); background:transparent; cursor:pointer; position:relative; }
+.oo-mark[aria-checked="true"] { border-color:var(--ok); background:var(--ok); }
+.oo-mark[aria-checked="true"]::after { content:""; position:absolute; left:8px; top:3px; width:6px; height:11px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }

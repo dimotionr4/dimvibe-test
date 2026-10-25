@@ -49,5 +49,8 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Select Title — сделан, с картинкой и звуком у текста (2026-10-25)
 Правила перенесены в skill `.claude/skills/select-title/`; здесь не дублируются.
 
-## Остальные модули (Odd One Out, Flashcards, Hotspot, Label the Diagram, Vocabulary, Prepositions, Essay, Word Search и др.)
+## Odd One Out — сделан этап 1, только текст (2026-10-25)
+Правила перенесены в skill `.claude/skills/odd-one-out/`; здесь не дублируются.
+
+## Остальные модули (Flashcards, Hotspot, Label the Diagram, Vocabulary, Prepositions, Essay, Word Search и др.)
 Принципы для них ещё не перенесены. Переносим по одному, по мере работы с каждым модулем, после согласования.

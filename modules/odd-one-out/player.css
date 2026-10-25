@@ -1,0 +1,37 @@
+/* Плеер модуля Odd One Out: группа элементов-плашек (в строку с переносом) или карточек (сеткой).
+   Номера групп и «Предыдущая / Следующая» — классы tf-* из modules/true-false/player.css.
+   Результат не только цветом: ✓ у верного, ✗ у неверного */
+.card.oo-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
+.oo-gnum { margin:0 0 6px; font-weight:600; color:var(--muted); }
+.oo-ask { margin:0 0 10px; color:var(--muted); font-size:.95rem; }
+.oo-ask.oo-own { color:var(--text); font-size:1.05rem; font-weight:600; overflow-wrap:anywhere; }
+.oo-items { gap:8px; }
+.oo-chips { display:flex; flex-wrap:wrap; align-items:stretch; }
+.oo-cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); }
+
+/* Элемент: блок .chip или .card (Comic рисует контур: у .chip — овальный, у .card — скруглённый прямоугольник).
+   Общие .chip и .card из index.html заданы позже, поэтому здесь :is(.chip, .card).oo-item */
+:is(.chip, .card).oo-item { display:flex; align-items:center; gap:6px; max-width:100%; min-height:44px; margin:0; padding:8px 14px; border:1.5px solid var(--line); background:var(--card); color:var(--text); line-height:1.3; cursor:pointer; user-select:none; -webkit-user-select:none; box-sizing:border-box; }
+.chip.oo-item { border-radius:999px; }
+.card.oo-item { justify-content:center; text-align:center; min-height:64px; border-radius:12px; }
+.oo-text { min-width:0; overflow-wrap:anywhere; }
+:is(.chip, .card).oo-item:not(.fixed):hover { border-color:var(--accent); }
+:is(.chip, .card).oo-item.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:0 0 0 2px var(--accent); }
+:is(.chip, .card).oo-item.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+:is(.chip, .card).oo-item.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+:is(.chip, .card).oo-item.right { border:2px dashed var(--ok); }
+:is(.chip, .card).oo-item.fixed { cursor:default; }
+:is(.chip, .card).oo-item.fixed:not(.ok):not(.bad):not(.right) { opacity:.6; }
+.oo-tick { flex:none; color:var(--ok); font-weight:700; }
+.oo-cross { flex:none; color:var(--bad); font-weight:700; }
+.oo-card.missing { border-color:var(--bad); border-style:dashed; }
+.oo-expl { margin:12px 0 0; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+
+/* Comic: контур берёт --rc, заливка --rb; свою рамку и фон элемента прячем, как у общего .chip */
+.style-comic :is(.chip, .card).oo-item:is(*, .on, .ok, .bad, .right) { border-color:transparent; background:transparent; box-shadow:none; }
+.style-comic :is(.chip, .card).oo-item.on { --rc:var(--accent); --rb:color-mix(in srgb, var(--accent) 16%, var(--card)); }
+.style-comic :is(.chip, .card).oo-item.ok { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 18%, var(--card)); }
+.style-comic :is(.chip, .card).oo-item.bad { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 16%, var(--card)); }
+.style-comic :is(.chip, .card).oo-item.right { --rc:var(--ok); }
+.style-comic .oo-card.missing { --rc:var(--bad); border-color:transparent; } /* рамку рисует рисунок, пунктир Classic не нужен */
+.style-comic .oo-card.missing .oo-item:not(.on) { --rc:var(--comic-line); } /* красный контур — только у карточки группы */
