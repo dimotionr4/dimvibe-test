@@ -1,0 +1,59 @@
+/* Плеер модуля Timeline: вертикальная линия с точками; слева дата, справа карточка события с ручкой ⋮⋮ и стрелками.
+   На узком экране дата встаёт над карточкой. Результат не только цветом: ✓ у верного места, ✗ у неверного */
+.card.tl-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
+.tl-h { margin:0 0 10px; font-size:1rem; font-weight:700; }
+.tl-line { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; position:relative; }
+.tl-point { display:grid; grid-template-columns:6.5em 22px minmax(0, 1fr); grid-template-areas:"date rail ev"; align-items:center; column-gap:8px; position:relative; }
+.tl-date { grid-area:date; text-align:right; font-weight:700; color:var(--accent); overflow-wrap:anywhere; line-height:1.3; }
+.tl-point.nodate { grid-template-columns:22px minmax(0, 1fr); grid-template-areas:"rail ev"; }
+/* Линия и точка: линия идёт через всю строку и щель до соседней, у первой и последней точки обрезана */
+.tl-rail { grid-area:rail; align-self:stretch; position:relative; }
+.tl-rail::before { content:""; position:absolute; left:50%; width:2px; margin-left:-1px; top:-5px; bottom:-5px; background:var(--line); }
+.tl-point:first-child .tl-rail::before { top:50%; }
+.tl-point:last-child .tl-rail::before { bottom:50%; }
+.tl-rail::after { content:""; position:absolute; left:50%; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; background:var(--card); border:3px solid var(--accent); box-sizing:border-box; }
+.tl-point.ok .tl-rail::after { border-color:var(--ok); background:var(--ok); }
+.tl-point.bad .tl-rail::after { border-color:var(--bad); background:var(--bad); }
+.card.tl-ev { grid-area:ev; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0; padding:6px 8px; min-height:48px; line-height:1.4; border-radius:10px; user-select:none; -webkit-user-select:none; }
+/* Лицо события: картинка слева, текст (подпись) справа, кнопка звука; на узком экране текст переносится под картинку */
+.tl-face { flex:1 1 0; min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+.tl-text { flex:1 1 8em; min-width:0; overflow-wrap:anywhere; }
+.tl-aud { flex:none; }
+/* Картинка события: высота по «Размеру картинок» (S 56 / M 90 / L 140 px), вписана целиком */
+.tl-pic { position:relative; flex:none; display:block; height:90px; max-width:min(100%, 220px); border-radius:8px; overflow:hidden; }
+.tl-pic img { display:block; height:100%; width:auto; max-width:100%; object-fit:contain; }
+.tl-size-s .tl-pic { height:56px; }
+.tl-size-l .tl-pic { height:140px; max-width:min(100%, 300px); }
+.tl-pic.broken { width:60px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.tl-expl { flex:1 0 100%; font-size:.92rem; color:var(--muted); overflow-wrap:anywhere; }
+.tl-grip { flex:none; width:32px; min-height:40px; padding:0; border:none; background:transparent; color:var(--muted); cursor:grab; touch-action:none; }
+.tl-grip svg { width:22px; height:22px; fill:currentColor; }
+.tl-grip:hover { color:var(--accent); }
+.tl-arrows { flex:none; display:flex; }
+.tl-ib { border:none; background:transparent; color:var(--muted); padding:0; min-height:40px; min-width:36px; }
+.tl-ib:hover:not(:disabled) { color:var(--accent); }
+.tl-ib:disabled { opacity:.25; cursor:default; }
+.tl-ico { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vertical-align:middle; }
+.tl-point.tl-dragging { z-index:3; }
+.tl-point.tl-dragging .tl-ev { border-color:var(--accent); box-shadow:0 8px 20px rgba(0,0,0,.25); }
+.tl-dragging-list, .tl-dragging-list * { cursor:grabbing; }
+/* Итог */
+.tl-point.ok .tl-ev { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 14%, var(--card)); }
+.tl-point.bad .tl-ev { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 12%, var(--card)); }
+.tl-tick { flex:none; color:var(--ok); font-weight:700; padding:0 4px; }
+.tl-cross { flex:none; color:var(--bad); font-weight:700; padding:0 4px; }
+.tl-correct .tl-rail::after { background:var(--accent); }
+
+/* Узкий экран: дата над карточкой, линия слева */
+@media (max-width: 480px) {
+  .tl-point { grid-template-columns:22px minmax(0, 1fr); grid-template-areas:"rail date" "rail ev"; row-gap:2px; }
+  .tl-date { text-align:left; }
+  .tl-point:not(.nodate) .tl-rail::after { top:calc(50% + .65em); }
+  .tl-point.nodate { grid-template-areas:"rail ev"; }
+}
+
+/* Comic: контур берёт --rc, заливка --rb */
+.style-comic .tl-point.ok .tl-ev { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.style-comic .tl-point.bad .tl-ev { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.style-comic .tl-point.tl-dragging .tl-ev { --rc:var(--accent); }
+.tl-grip > svg.rough, .tl-ib > svg.rough { display:none; } /* ручке и стрелкам рамка не нужна */

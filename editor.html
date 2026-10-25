@@ -329,6 +329,7 @@
 <link rel="stylesheet" href="modules/color-coding/editor.css?v=1">
 <link rel="stylesheet" href="modules/select-title/editor.css?v=2">
 <link rel="stylesheet" href="modules/ordering/editor.css?v=3">
+<link rel="stylesheet" href="modules/timeline/editor.css?v=3">
 <link rel="stylesheet" href="core/medialib.css?v=5">
 <link rel="stylesheet" href="core/mediabar.css?v=5">
 </head>
@@ -419,6 +420,7 @@
       <button data-mod="color_coding" aria-pressed="false"><b>Color Coding</b><span>Раскрасить слова по категориям</span></button>
       <button data-mod="select_title" aria-pressed="false"><b>Select Title</b><span>Выбрать заголовок к тексту</span></button>
       <button data-mod="ordering" aria-pressed="false"><b>Ordering</b><span>Расставить по порядку</span></button>
+      <button data-mod="timeline" aria-pressed="false"><b>Timeline</b><span>Расставить события по времени</span></button>
     </div>
     <p class="muted" style="margin:0 0 12px" id="kindNote">Вид текста выбирается один раз и потом не меняется.</p>
     <button class="kind" data-kind="sentences"><b>Отдельные предложения</b><span>Каждое предложение — своё задание с пропусками.</span></button>
@@ -446,15 +448,16 @@
 <script src="modules/color-coding/tokens.js?v=2"></script>
 <script src="modules/color-coding/editor.js?v=1"></script>
 <script src="modules/select-title/editor.js?v=2"></script>
-<script src="modules/ordering/drag.js?v=1"></script>
-<script src="modules/ordering/editor.js?v=3"></script>
+<script src="core/reorder.js?v=1"></script>
+<script src="modules/ordering/editor.js?v=4"></script>
+<script src="modules/timeline/editor.js?v=2"></script>
 <script src="core/shell.js?v=1"></script>
 <script>
-const ASSET_V = 56;
+const ASSET_V = 59;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -1114,7 +1117,7 @@ function renderDesign() {
   const card = (title, body) => `<section class="dz-card" aria-label="${esc(title)}"><h4>${esc(title)}</h4>${body}</section>`;
   $('content').innerHTML = `
     <div class="dz-wrap">
-      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
+      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
       <div class="dz-side">
         ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize) + grp('page', 'fontWeight', 'Жирность', PAGE_WEIGHTS, pg.fontWeight, OPT_ICONS.weight))}
         ${st.style === 'comic' ? card('Линии Comic', grp('style', 'comicOutline', 'Очертания', COMIC_OUTLINES, st.comicOutline, OPT_ICONS.outline)) : ''}
@@ -1556,7 +1559,7 @@ const pickModule = mod => {
   newModule = mod;
   document.querySelectorAll('#modPick [data-mod]').forEach(x => { const on = x.dataset.mod === mod; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); });
   // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
-  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering';
+  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline';
   document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
   $('kindNote').hidden = st;
 };
@@ -1619,7 +1622,7 @@ setPreviewOpen(!narrow()); // на широком экране предпрос�
   history.replaceState(null, '', location.pathname);
   if (!MODULES[mod]) return;
   pickModule(mod);
-  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering') createDraft('statements', mod);
+  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline') createDraft('statements', mod);
   else askKind();
 })();
 </script>

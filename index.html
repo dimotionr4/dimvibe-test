@@ -20,6 +20,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/color-coding/player.css?v=3">
 <link rel="stylesheet" href="modules/select-title/player.css?v=3">
 <link rel="stylesheet" href="modules/ordering/player.css?v=2">
+<link rel="stylesheet" href="modules/timeline/player.css?v=3">
 <style>
   /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
@@ -137,8 +138,9 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/color-coding/tokens.js?v=2"></script>
 <script src="modules/color-coding/player.js?v=2"></script>
 <script src="modules/select-title/player.js?v=3"></script>
-<script src="modules/ordering/drag.js?v=1"></script>
-<script src="modules/ordering/player.js?v=3"></script>
+<script src="core/reorder.js?v=1"></script>
+<script src="modules/ordering/player.js?v=4"></script>
+<script src="modules/timeline/player.js?v=3"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -148,7 +150,7 @@ const isImg = () => !!data && data.module === 'image_to_gaps';
 // True / False (modules/true-false/player.js): вместо пропусков — утверждения; каждое утверждение работает как «пропуск» общего хода
 const isTF = () => !!data && data.module === 'true_false';
 // Модули, где единицы ответа — вопросы, а не пропуски (True / False, Multiple Choice): плеер модуля даёт units, reset, goMissing, instant, render
-const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : data.module === 'matching' ? MatchingPlayer : data.module === 'mistake_mode' ? MistakeModePlayer : data.module === 'color_coding' ? ColorCodingPlayer : data.module === 'select_title' ? SelectTitlePlayer : data.module === 'ordering' ? OrderingPlayer : null);
+const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : data.module === 'matching' ? MatchingPlayer : data.module === 'mistake_mode' ? MistakeModePlayer : data.module === 'color_coding' ? ColorCodingPlayer : data.module === 'select_title' ? SelectTitlePlayer : data.module === 'ordering' ? OrderingPlayer : data.module === 'timeline' ? TimelinePlayer : null);
 // Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
 let maxChecks = 3, checksUsed = 0, finished = false, note = '', instrOpen = true;
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key

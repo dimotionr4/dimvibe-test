@@ -21,15 +21,8 @@ const OrderingPlayer = (() => {
     })));
   }
 
-  // Перемешивание, которое никогда не совпадает с правильным порядком
-  function mix(ids) {
-    if (ids.length < 2) return ids.slice();
-    for (let k = 0; k < 20; k++) {
-      const r = shuffle(ids);
-      if (r.some((x, i) => x !== ids[i])) return r;
-    }
-    return ids.slice(1).concat(ids[0]);
-  }
+  // Перемешивание, которое никогда не совпадает с правильным порядком (core/reorder.js)
+  const mix = ids => Reorder.mix(ids, shuffle);
 
   // Новое прохождение — новое перемешивание. В предпросмотре редактора каждая правка пересобирает упражнение:
   // пока набор элементов тот же, порядок не меняем, чтобы карточки не прыгали
@@ -143,7 +136,7 @@ const OrderingPlayer = (() => {
       if (!finished) {
         const grip = el('button', 'or-grip');
         grip.type = 'button';
-        grip.innerHTML = OrderingDrag.GRIP;
+        grip.innerHTML = Reorder.GRIP;
         grip.title = 'Перетащить';
         grip.setAttribute('aria-label', `Перетащить: ${label(it)}`);
         const b = (html, tip, to, disabled) => { const x = el('button', 'or-ib'); x.type = 'button'; x.innerHTML = html; x.title = tip; x.setAttribute('aria-label', `${tip}: ${label(it)}`); x.disabled = disabled; x.onclick = () => { place(s, p, to); render(); }; return x; };
@@ -162,7 +155,7 @@ const OrderingPlayer = (() => {
       }
       list.append(li);
     });
-    if (!finished) OrderingDrag.attach(list, { itemSel: '.or-item', handleSel: '.or-grip', onDrop: (from, to) => { place(s, from, to); render(); } });
+    if (!finished) Reorder.attach(list, { itemSel: '.or-item', handleSel: '.or-grip', dragClass: 'or-dragging', listClass: 'or-dragging-list', onDrop: (from, to) => { place(s, from, to); render(); } });
     c.append(list);
     return c;
   }

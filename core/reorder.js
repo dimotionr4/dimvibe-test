@@ -1,8 +1,8 @@
-// Перетаскивание элементов списка за ручку — общее для редактора и плеера Ordering.
+// Перетаскивание элементов списка за ручку — общее для модулей «расставить по порядку» (Ordering, Timeline): редактор и плеер.
 // Работает на событиях указателя (мышь и палец): HTML5-перетаскивание пальцем не работает.
 // Страница прокручивается как обычно, если тянуть не за ручку: у ручки touch-action:none (в CSS модуля).
 // Во время переноса элемент едет за пальцем, соседи меняются с ним местами прямо в списке; у края окна список прокручивается сам.
-const OrderingDrag = (() => {
+const Reorder = (() => {
   const EDGE = 48, SPEED = 14; // зона у края окна, где включается прокрутка, и её скорость (px за кадр)
 
   // Ближайший прокручиваемый родитель (в плеере это <main>), иначе вся страница
@@ -15,8 +15,9 @@ const OrderingDrag = (() => {
   }
 
   // list — контейнер; itemSel — элементы списка (прямые дети); handleSel — ручка внутри элемента.
-  // onDrop(from, to) вызывается, если место элемента изменилось; onStart() — когда перенос начался
-  function attach(list, { itemSel, handleSel, onDrop, onStart }) {
+  // onDrop(from, to) вызывается, если место элемента изменилось; onStart() — когда перенос начался.
+  // dragClass / listClass — классы переносимого элемента и списка на время переноса (у каждого модуля свои)
+  function attach(list, { itemSel, handleSel, onDrop, onStart, dragClass = 'rd-dragging', listClass = 'rd-dragging-list' }) {
     list.addEventListener('pointerdown', e => {
       const handle = e.target.closest(handleSel);
       if (!handle || !list.contains(handle) || handle.disabled || e.button > 0) return;
@@ -29,8 +30,8 @@ const OrderingDrag = (() => {
       const st = () => (sc === document.scrollingElement || sc === document.documentElement ? window.scrollY : sc.scrollTop);
       let lastY = e.clientY, startY = e.clientY + st(), raf = 0;
       try { handle.setPointerCapture(e.pointerId); } catch (_) {}
-      item.classList.add('or-dragging');
-      list.classList.add('or-dragging-list');
+      item.classList.add(dragClass);
+      list.classList.add(listClass);
       if (onStart) onStart();
 
       // Сдвиг элемента за пальцем; если его середина прошла середину соседа — меняем их местами в списке
@@ -69,8 +70,8 @@ const OrderingDrag = (() => {
         handle.removeEventListener('pointerup', end);
         handle.removeEventListener('pointercancel', end);
         item.style.transform = '';
-        item.classList.remove('or-dragging');
-        list.classList.remove('or-dragging-list');
+        item.classList.remove(dragClass);
+        list.classList.remove(listClass);
         const to = items().indexOf(item);
         if (to !== from) onDrop(from, to);
       };
@@ -83,5 +84,16 @@ const OrderingDrag = (() => {
   // Ручка «⋮⋮» (шесть точек)
   const GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
 
-  return { attach, GRIP };
+  // Перемешивание, которое никогда не совпадает с исходным (правильным) порядком: иначе ученик сразу видит ответ.
+  // shuffleFn — общий shuffle плеера (index.html)
+  function mix(ids, shuffleFn) {
+    if (ids.length < 2) return ids.slice();
+    for (let k = 0; k < 20; k++) {
+      const r = shuffleFn(ids);
+      if (r.some((x, i) => x !== ids[i])) return r;
+    }
+    return ids.slice(1).concat(ids[0]);
+  }
+
+  return { attach, GRIP, mix };
 })();

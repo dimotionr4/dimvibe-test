@@ -129,7 +129,7 @@ const OrderingEditor = (() => {
       add.disabled = s.items.length >= MAX_ITEMS;
     };
     // Перетаскивание за ручку: новое место элемента сразу становится правильным ответом
-    OrderingDrag.attach(items, { itemSel: '.or-row', handleSel: '.or-grip', onDrop: (from, to) => {
+    Reorder.attach(items, { itemSel: '.or-row', handleSel: '.or-grip', dragClass: 'or-dragging', listClass: 'or-dragging-list', onDrop: (from, to) => {
       const [it] = s.items.splice(from, 1);
       s.items.splice(to, 0, it);
       save();
@@ -165,7 +165,7 @@ const OrderingEditor = (() => {
     const r = el('li', 'or-row');
     const grip = el('button', 'or-grip');
     grip.type = 'button';
-    grip.innerHTML = OrderingDrag.GRIP;
+    grip.innerHTML = Reorder.GRIP;
     grip.title = 'Перетащить';
     grip.setAttribute('aria-label', `Перетащить элемент ${j + 1}`);
     const num = el('span', 'or-num', String(j + 1));

@@ -1,0 +1,37 @@
+/* Редактор модуля Timeline. Цвета берутся из переменных ядра (editor.html) */
+.tl-wrap { position:relative; }
+.tl-muted { color:var(--muted); }
+.tl-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.tl-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.tl-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:6px; }
+.tl-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.tl-hint { margin:2px 0 8px; font-size:.9rem; }
+.tl-in { box-sizing:border-box; min-width:0; font:inherit; padding:6px 8px; min-height:36px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.tl-ib { border:none; background:transparent; color:var(--muted); padding:0 3px; min-height:32px; min-width:28px; }
+.tl-ib:hover:not(:disabled) { color:var(--accent); }
+.tl-ib.tl-del:hover:not(:disabled) { color:var(--bad); }
+.tl-ib:disabled { opacity:.3; }
+.tl-add { margin:4px 0 8px; }
+.tl-add:disabled { opacity:.5; }
+
+/* Событие: ручка, номер, дата, текст, выше / ниже / копия / удалить; пояснение строкой ниже */
+.tl-events { list-style:none; margin:0 0 4px; padding:0; position:relative; }
+.tl-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:8px; padding:4px 0; background:var(--card); border-radius:8px; }
+.tl-num { flex:none; min-width:22px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
+.tl-date-in { flex:0 1 6.5em; width:6.5em; font-weight:600; }
+.tl-text-in { flex:1 1 6em; width:auto; }
+.tl-tools2 { display:flex; align-items:center; flex:none; }
+.tl-extra { flex:1 0 100%; padding-left:62px; box-sizing:border-box; min-width:0; }
+.tl-expl-in { width:100%; font-size:.92rem; }
+/* Картинка и звук события: миниатюра и значки одной строкой слева (в общем виде значки прижаты вправо, миниатюра строкой ниже) */
+.tl-media { margin-bottom:6px; }
+.tl-media .mb-img { display:flex; align-items:center; gap:8px; }
+.tl-media .mb-bar { justify-content:flex-start; }
+.tl-media .mb-line { order:-1; margin-top:0; }
+.tl-row.dup .tl-text-in { border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
+.tl-row.samedate .tl-date-in { border-color:#d99a00; box-shadow:inset 0 0 0 1px #d99a00; }
+.tl-grip { flex:none; width:28px; min-height:36px; padding:0; border:none; background:transparent; color:var(--muted); cursor:grab; touch-action:none; }
+.tl-grip svg { width:20px; height:20px; fill:currentColor; }
+.tl-grip:hover { color:var(--accent); }
+.tl-row.tl-dragging { position:relative; z-index:2; box-shadow:0 6px 18px rgba(0,0,0,.22); }
+.tl-dragging-list, .tl-dragging-list * { cursor:grabbing; user-select:none; }
