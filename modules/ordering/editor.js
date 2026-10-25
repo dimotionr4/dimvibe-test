@@ -25,7 +25,7 @@ const OrderingEditor = (() => {
     return { id, instruction: '', items };
   }
   function create() {
-    return { module: 'ordering', format: 1, seqs: [newSeq('q1', 1)] };
+    return { module: 'ordering', format: 1, showAnswers: false, seqs: [newSeq('q1', 1)] };
   }
 
   function render(container, draft, onSave) {
@@ -225,6 +225,7 @@ const OrderingEditor = (() => {
     const many = draft.seqs.length > 1;
     return {
       module: 'ordering', format: 1,
+      ...(draft.showAnswers === true ? { showAnswers: true } : {}),
       sequences: draft.seqs.map(s => ({
         id: s.id,
         ...(many && s.instruction.trim() ? { instruction: s.instruction.trim() } : {}),
@@ -281,8 +282,14 @@ const OrderingEditor = (() => {
       seqIds.add(id);
       return { id, instruction: String((s && s.instruction) || ''), items };
     });
-    return { ...create(), seqs };
+    return { ...create(), showAnswers: file.showAnswers === true, seqs };
   }
 
-  return { create, render, load, exportData, validate, unitCount, fixedChecks, fixedChecksNote };
+  // Выключатель во вкладке «Поведение»
+  function behaviorOptions(draft) {
+    return [{ field: 'showAnswers', label: 'Показывать правильный ответ', value: draft.showAnswers === true,
+      help: 'После проверки верные места всегда зелёные, неверные — красные. Если включено, у каждого неверного места ещё подписано, какой элемент должен там стоять («Правильно: …»). По умолчанию выключено.' }];
+  }
+
+  return { create, render, load, exportData, validate, unitCount, fixedChecks, fixedChecksNote, behaviorOptions };
 })();

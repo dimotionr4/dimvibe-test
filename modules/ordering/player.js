@@ -107,8 +107,8 @@ const OrderingPlayer = (() => {
       } else {
         li.append(num, text, el('span', st === ' ok' ? 'or-tick' : 'or-cross', st === ' ok' ? '✓' : '✗'));
         li.setAttribute('aria-label', `${p + 1}. ${it.text}, ${st === ' ok' ? 'верно' : 'неверно'}`);
-        // У неверного места — какой элемент должен был здесь стоять
-        if (st === ' bad' && g && byId[g.answer]) {
+        // У неверного места — какой элемент должен был здесь стоять (если автор включил «Показывать правильный ответ»)
+        if (st === ' bad' && data.showAnswers === true && g && byId[g.answer]) {
           const right = el('span', 'or-right');
           right.append(el('span', 'or-right-l', 'Правильно: '), document.createTextNode(byId[g.answer].text));
           li.append(right);
