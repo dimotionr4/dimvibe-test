@@ -11,6 +11,10 @@
 .mv-host .mv-zoom svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; }
 .mv-host:has(.mv-target:hover) .mv-zoom, .mv-host .mv-zoom:hover, .mv-host .mv-zoom:focus-visible { opacity:1; }
 @media (hover:none) { .mv-host .mv-zoom { opacity:1; } }
+.mv-host .mv-zoom::before { inset:-4px; }
+.mv-host .mv-zoom.mv-zoom-sm { width:22px; height:22px; }
+.mv-host .mv-zoom.mv-zoom-sm svg { width:13px; height:13px; }
+.mv-host .mv-zoom.mv-zoom-sm::before { inset:0; }
 `;
   let box = null, back = null;
   const addStyle = () => {
@@ -63,7 +67,8 @@
   // Лупа в правом верхнем углу самой картинки (решение владельца 2026-10-25): видна при наведении на картинку,
   // на сенсорных экранах — всегда. host — блок, куда кладётся кнопка (не внутри другой кнопки: кнопку в кнопке
   // браузер не нажимает, когда вариант уже заблокирован); target — рамка с картинкой <img>.
-  // При «вписать целиком» угол считается по видимой части картинки, а не по рамке.
+  // При «вписать целиком» угол считается по видимой части картинки, а не по рамке. Невидимая область нажатия у лупы
+  // меньше, чем у других круглых кнопок (4 px, у маленькой — 0), чтобы не мешать перетаскиванию карточки за картинку.
   window.addZoom = function addZoom(host, target, src, alt) {
     if (!src || !host || !target) return null;
     addStyle();
@@ -81,14 +86,18 @@
       const img = target.querySelector('img');
       const f = (img || target).getBoundingClientRect(), h = host.getBoundingClientRect();
       if (!f.width || !h.width) return;
-      let right = f.right, top = f.top;
+      let right = f.right, top = f.top, w = f.width, ht = f.height;
       if (img && img.naturalWidth && getComputedStyle(img).objectFit === 'contain') {
         const k = Math.min(f.width / img.naturalWidth, f.height / img.naturalHeight);
-        right = f.right - (f.width - img.naturalWidth * k) / 2;
-        top = f.top + (f.height - img.naturalHeight * k) / 2;
+        w = img.naturalWidth * k; ht = img.naturalHeight * k;
+        right = f.right - (f.width - w) / 2;
+        top = f.top + (f.height - ht) / 2;
       }
-      z.style.left = Math.max(0, right - h.left - z.offsetWidth - 6) + 'px';
-      z.style.top = Math.max(0, top - h.top + 6) + 'px';
+      // Маленькая картинка (размер S, карточки для перетаскивания): лупа меньше и вплотную к углу, чтобы за картинку можно было взять
+      const small = Math.min(w, ht) < 100, pad = small ? 2 : 6;
+      z.classList.toggle('mv-zoom-sm', small);
+      z.style.left = Math.max(0, right - h.left - z.offsetWidth - pad) + 'px';
+      z.style.top = Math.max(0, top - h.top + pad) + 'px';
     };
     const img = target.querySelector('img');
     if (img) img.addEventListener('load', place);

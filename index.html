@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +24,8 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/word-scramble/player.css?v=2">
 <link rel="stylesheet" href="modules/categories/player.css?v=3">
 <style>
-  /* Тема: у ученика следует за устройством; в предпросмотре редактор может задать data-theme="light" или "dark" */
+  /* Тема: у ученика всегда светлая (data-theme="light" на <html>, решение владельца 2026-10-25); в предпросмотре редактор может задать "light" или "dark".
+     Правила тёмной темы по устройству оставлены: без data-theme (например, если атрибут уберут) тема снова будет следовать за устройством */
   /* Акцент упражнения: --accent-l и --accent-d выставляет applyAccent (core/design.js); на акценте в тёмной теме тёмный текст */
   :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:var(--accent-l, #6d4aff); --on-accent:#fff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
   @media (prefers-color-scheme: dark) {
@@ -66,6 +67,10 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   .preview .modes { display:flex; }
   .modes button { flex:none; }
   button { font:inherit; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; padding:6px 12px; min-height:40px; cursor:pointer; }
+  /* Одноцветные значки (playerIcon): цветом текста кнопки */
+  .pi-box { display:inline-flex; align-items:center; vertical-align:-0.2em; }
+  .pi { width:1.2em; height:1.2em; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .hintbtn .pi { width:14px; height:14px; }
   .modes button { font-size:.9rem; min-height:36px; padding:4px 10px; }
   button.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
@@ -128,7 +133,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 
 <script src="core/design.js?v=11"></script>
 <script src="core/media.js?v=4"></script>
-<script src="core/mediaviewer.js?v=2"></script>
+<script src="core/mediaviewer.js?v=3"></script>
 <script src="core/richtext.js?v=5"></script>
 <script src="core/rough.js?v=10"></script>
 <script src="modules/image-to-gaps/player.js?v=3"></script>
@@ -144,7 +149,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/ordering/player.js?v=4"></script>
 <script src="modules/timeline/player.js?v=3"></script>
 <script src="modules/word-scramble/tokens.js?v=1"></script>
-<script src="modules/word-scramble/player.js?v=2"></script>
+<script src="modules/word-scramble/player.js?v=3"></script>
 <script src="modules/categories/player.js?v=3"></script>
 <script>
 const params = new URLSearchParams(location.search);
@@ -252,12 +257,31 @@ function closePop() {
   pop = popOwner = null;
 }
 
+// Одноцветные значки вместо цветных эмодзи (решение владельца 2026-10-25): рисуются цветом текста, одинаково на всех устройствах.
+// Модули по-прежнему передают в audioButton символ '🔊'; playerIcon(символ) отдаёт разметку значка и модулям
+const PLAYER_ICONS = {
+  '🔊': '<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+  '⏹': '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+  '💡': '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  '🔒': '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+};
+const playerIcon = ch => (PLAYER_ICONS[ch] ? `<svg class="pi" viewBox="0 0 24 24" aria-hidden="true">${PLAYER_ICONS[ch]}</svg>` : ch);
+// Значок и подпись кнопки; нарисованный контур Comic (svg.rough) не трогаем, иначе он пропадёт до следующей перерисовки
+function setIcon(btn, ch, text) {
+  [...btn.childNodes].forEach(n => { if (!(n.classList && n.classList.contains('rough'))) n.remove(); });
+  const s = document.createElement('span');
+  s.className = 'pi-box';
+  s.innerHTML = playerIcon(ch);
+  btn.prepend(s);
+  if (text) s.after(' ' + text);
+}
+
 // Звук: один на всю страницу. Нажатие на играющую кнопку останавливает звук, на другую — переключает
 let audioEl = null, audioBtn = null, audioKey = '';
 function stopAudio() {
   if (audioEl) { audioEl.onended = audioEl.onerror = null; audioEl.pause(); }
   audioEl = null;
-  if (audioBtn) { audioBtn.classList.remove('playing'); audioBtn.textContent = audioBtn.dataset.icon + (audioBtn.dataset.text ? ' ' + audioBtn.dataset.text : ''); }
+  if (audioBtn) { audioBtn.classList.remove('playing'); setIcon(audioBtn, audioBtn.dataset.icon, audioBtn.dataset.text); }
   audioBtn = null; audioKey = '';
 }
 function playAudio(url, btn, key) {
@@ -266,7 +290,7 @@ function playAudio(url, btn, key) {
   audioEl = new Audio(url);
   audioBtn = btn; audioKey = key;
   btn.classList.add('playing');
-  btn.textContent = '⏹' + (btn.dataset.text ? ' ' + btn.dataset.text : '');
+  setIcon(btn, '⏹', btn.dataset.text);
   audioEl.onended = audioEl.onerror = stopAudio;
   audioEl.play().catch(stopAudio);
 }
@@ -276,9 +300,8 @@ function audioButton(url, key, cls, icon, label, text) {
   b.className = cls;
   b.dataset.icon = icon; b.dataset.akey = key;
   if (text) b.dataset.text = text; // подпись рядом со значком
-  const suffix = text ? ' ' + text : '';
   const on = audioKey === key && audioEl;
-  b.textContent = (on ? '⏹' : icon) + suffix;
+  setIcon(b, on ? '⏹' : icon, text);
   if (on) { b.classList.add('playing'); audioBtn = b; }
   b.setAttribute('aria-label', label);
   b.onclick = e => { e.stopPropagation(); playAudio(url, b, key); };
@@ -307,7 +330,7 @@ function hintButton(idx) {
   const open = checksUsed >= HINTS_AFTER;
   const btn = document.createElement('button');
   btn.className = 'hintbtn' + (open ? '' : ' locked');
-  btn.textContent = open ? '💡' : '🔒';
+  setIcon(btn, open ? '💡' : '🔒');
   const text = open ? g.hint : 'Подсказка откроется после второй проверки.';
   const audio = open && g.hintAudio ? { url: g.hintAudio, key: 'h' + idx } : null;
   btn.setAttribute('aria-label', open ? 'Показать подсказку' : text);

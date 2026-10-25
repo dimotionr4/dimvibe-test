@@ -169,7 +169,9 @@ const WordScramblePlayer = (() => {
     // Подсказка: ученик открывает сама, баллов и проверок она не трогает
     const hint = String(t.hint || '').trim();
     if (hint && !finished) {
-      const hb = el('button', 'ws-hintbtn', hints[t.id] ? 'Скрыть подсказку' : '💡 Подсказка');
+      const hb = el('button', 'ws-hintbtn');
+      if (hints[t.id]) hb.textContent = 'Скрыть подсказку';
+      else setIcon(hb, '💡', 'Подсказка'); // одноцветный значок плеера (index.html)
       hb.type = 'button';
       hb.setAttribute('aria-expanded', String(!!hints[t.id]));
       hb.onclick = () => { hints[t.id] = !hints[t.id]; refocus = `.ws-card[data-t="${t.id}"] .ws-hintbtn`; render(); };
