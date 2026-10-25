@@ -1,0 +1,37 @@
+/* Редактор модуля Ordering. Цвета берутся из переменных ядра (editor.html) */
+.or-wrap { position:relative; }
+.or-muted { color:var(--muted); }
+.or-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.or-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.or-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.or-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.or-in { width:100%; box-sizing:border-box; min-width:0; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.or-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.or-ib:hover:not(:disabled) { color:var(--accent); }
+.or-ib.or-del:hover:not(:disabled) { color:var(--bad); }
+.or-ib:disabled { opacity:.3; }
+.or-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.or-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.or-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.or-add { margin:4px 0 8px; }
+.or-add:disabled { opacity:.5; }
+
+.or-seq { margin-bottom:12px; }
+.or-seq.multi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.or-seqtop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.or-seqtop .or-tools2 { margin-left:auto; }
+.or-tools2 { display:flex; align-items:center; flex:none; }
+.or-instr { margin-bottom:6px; }
+.or-hint { margin:2px 0 6px; font-size:.9rem; }
+
+/* Элементы: ручка, номер места, поле, выше / ниже / удалить */
+.or-items { list-style:none; margin:0 0 4px; padding:0; position:relative; }
+.or-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; background:var(--card); border-radius:8px; }
+.or-num { flex:none; min-width:22px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
+.or-item-in { flex:1 1 auto; width:auto; min-height:36px; }
+.or-row.dup .or-item-in { border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
+.or-grip { flex:none; width:28px; min-height:36px; padding:0; border:none; background:transparent; color:var(--muted); cursor:grab; touch-action:none; }
+.or-grip svg { width:20px; height:20px; fill:currentColor; }
+.or-grip:hover { color:var(--accent); }
+.or-row.or-dragging { position:relative; z-index:2; box-shadow:0 6px 18px rgba(0,0,0,.22); }
+.or-dragging-list, .or-dragging-list * { cursor:grabbing; user-select:none; }

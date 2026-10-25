@@ -20,6 +20,13 @@
       "runtimeArgs": ["-m", "http.server", "8803", "--bind", "127.0.0.1"],
       "port": 8803,
       "url": "http://127.0.0.1:8803"
+    },
+    {
+      "name": "site-or",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8817", "--bind", "127.0.0.1"],
+      "port": 8817,
+      "url": "http://127.0.0.1:8817"
     }
   ]
 }

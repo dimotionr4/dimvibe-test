@@ -1,0 +1,34 @@
+/* Плеер модуля Ordering: список элементов столбиком, ручка ⋮⋮ слева, номер места, стрелки выше / ниже справа.
+   Результат не только цветом: ✓ у верного места, ✗ и «Правильно: …» у неверного */
+.card.or-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
+.or-snum { margin:0 0 4px; font-weight:600; color:var(--muted); }
+.or-sinstr { margin:0 0 8px; }
+.or-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; position:relative; }
+.card.or-item { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0; padding:6px 8px; min-height:48px; line-height:1.4; border-radius:10px; user-select:none; -webkit-user-select:none; }
+.or-num { flex:none; min-width:1.6em; height:1.6em; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:600; color:var(--muted); border:1px solid var(--line); font-variant-numeric:tabular-nums; }
+.or-text { flex:1 1 0; min-width:0; overflow-wrap:anywhere; }
+.or-grip { flex:none; width:32px; min-height:40px; padding:0; border:none; background:transparent; color:var(--muted); cursor:grab; touch-action:none; }
+.or-grip svg { width:22px; height:22px; fill:currentColor; }
+.or-grip:hover { color:var(--accent); }
+.or-arrows { flex:none; display:flex; }
+.or-ib { border:none; background:transparent; color:var(--muted); padding:0; min-height:40px; min-width:36px; }
+.or-ib:hover:not(:disabled) { color:var(--accent); }
+.or-ib:disabled { opacity:.25; cursor:default; }
+.or-ico { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vertical-align:middle; }
+.or-item.or-dragging { position:relative; z-index:3; border-color:var(--accent); box-shadow:0 8px 20px rgba(0,0,0,.25); }
+.or-dragging-list, .or-dragging-list * { cursor:grabbing; }
+/* Итог */
+.or-item.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 14%, var(--card)); }
+.or-item.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 12%, var(--card)); }
+.or-item.ok .or-num { border-color:var(--ok); color:var(--ok); }
+.or-item.bad .or-num { border-color:var(--bad); color:var(--bad); }
+.or-tick { flex:none; color:var(--ok); font-weight:700; padding:0 4px; }
+.or-cross { flex:none; color:var(--bad); font-weight:700; padding:0 4px; }
+.or-right { flex:1 0 100%; padding-left:calc(1.6em + 8px); font-size:.92rem; color:var(--muted); overflow-wrap:anywhere; }
+.or-right-l { font-weight:600; color:var(--ok); }
+
+/* Comic: контур берёт --rc, заливка --rb */
+.style-comic .or-item.ok { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.style-comic .or-item.bad { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.style-comic .or-item.or-dragging { --rc:var(--accent); }
+.or-grip > svg.rough, .or-ib > svg.rough { display:none; } /* ручке и стрелкам рамка не нужна */
