@@ -1,9 +1,9 @@
-﻿/* Плеер модуля True / False: карточки утверждений с крупными кнопками ответа. Цвета и состояния — из переменных страницы (index.html) */
+/* Плеер модуля True / False: карточки утверждений с крупными кнопками ответа. Цвета и состояния — из переменных страницы (index.html) */
 .card.tf-card { line-height:1.5; } /* общий .card рассчитан на значки пропусков и имеет увеличенный межстрочный интервал */
 .tf-q { display:flex; align-items:flex-start; gap:8px; font-size:1.05rem; margin-bottom:10px; }
 .tf-num { color:var(--muted); flex:none; }
 .tf-text { flex:1; min-width:0; overflow-wrap:anywhere; }
-.tf-voice { position:static; flex:none; }
+.tf-voice { position:relative; right:auto; bottom:auto; flex:none; } /* relative, а не static: иначе невидимая рамка нажатия (.hintbtn::before) растягивается на всю карточку и перехватывает нажатия */
 .tf-answers { display:flex; flex-wrap:wrap; gap:8px; }
 .tf-ans { flex:1 1 120px; min-height:48px; font-size:1rem; padding:6px 14px; }
 .tf-ans:disabled { cursor:default; }
