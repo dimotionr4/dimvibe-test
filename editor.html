@@ -437,7 +437,7 @@
   </div>
 </div>
 
-<script src="core/design.js?v=9"></script>
+<script src="core/design.js?v=11"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
@@ -464,7 +464,7 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 64;
+const ASSET_V = 66;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -587,6 +587,7 @@ function createDraft(layout, module) {
   const name = (document.querySelector(`#modPick [data-mod="${key}"] b`) || {}).textContent || '';
   const body = demo ? M.demo(layout) : M.create(layout);
   if (demo && !body.instruction) body.instruction = DimDemo.instruction();
+  body.design = { accent: NEW_ACCENT, ...body.design }; // новое упражнение — в цвете интерфейса; старые без цвета остаются фиолетовыми
   drafts[id] = { id, title: demo ? 'Демо — ' + name : '', ...body, updatedAt: new Date().toISOString() };
   writeStore();
   tab = 'content';
@@ -674,7 +675,7 @@ function renderList() {
 function exerciseFor(draft, published) {
   const body = MODULES[draft.module].exportData(draft);
   const checks = draft.behavior && draft.behavior.checks;
-  const accent = draft.design && ACCENTS[draft.design.accent] ? draft.design.accent : DEFAULT_ACCENT;
+  const accent = accentKey(draft.design && draft.design.accent);
   const showInstruction = !draft.design || draft.design.showInstruction !== false;
   const showImage = !draft.design || draft.design.showImage !== false;
   const ins = draft.instruction || {};
@@ -1096,7 +1097,7 @@ function designMock(c) {
 
   // Верхняя строка: цвет (слева, выпадающая панель), стиль (по центру), контур Comic (справа, только в Comic)
   const colBtn = `<g class="rg" data-colbtn="1" role="button" tabindex="0" aria-label="Цвет упражнения" aria-expanded="${dzColorOpen}"><title>Цвет упражнения</title><circle class="hit" cx="34" cy="24" r="16"/><circle cx="34" cy="24" r="11" fill="var(--card)" stroke="${dzColorOpen ? 'var(--accent)' : 'var(--line)'}" stroke-width="1.5"/><circle cx="34" cy="24" r="7" fill="${ac}"/></g>`;
-  const colDrop = dzColorOpen ? `<g><rect x="20" y="42" width="166" height="36" rx="11" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/>${Object.entries(ACCENTS).map(([k, a], i) => `<g class="rg" data-col="${k}" role="button" tabindex="0" aria-label="${esc(a.label)}"><title>${esc(a.label)}</title><circle cx="${38 + i * 26}" cy="60" r="10" fill="${shade(a)}" stroke="${k === chosen ? 'var(--text)' : 'none'}" stroke-width="2.5"/></g>`).join('')}</g>` : '';
+  const colDrop = dzColorOpen ? `<g><rect x="20" y="42" width="${36 + Object.keys(ACCENTS).length * 26}" height="36" rx="11" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/>${Object.entries(ACCENTS).map(([k, a], i) => `<g class="rg" data-col="${k}" role="button" tabindex="0" aria-label="${esc(a.label)}"><title>${esc(a.label)}</title><circle cx="${38 + i * 26}" cy="60" r="10" fill="${shade(a)}" stroke="${k === chosen ? 'var(--text)' : 'none'}" stroke-width="2.5"/></g>`).join('')}</g>` : '';
   const stBtn = (k, x, title) => `<g class="rg stbtn${st.style === k ? ' active' : ''}" data-st="${k}" role="button" tabindex="0" aria-pressed="${st.style === k}" aria-label="${title}"><title>${title}</title><rect class="stb" x="${x - 14}" y="11" width="28" height="26" rx="8"/>${nest(OPT_ICONS.style[k], x - 9, 15, 18)}</g>`;
   const styleBar = stBtn('classic', W / 2 - 17, 'Classic: строгий вид') + stBtn('comic', W / 2 + 17, 'Comic: нарисованный от руки');
   const o0 = W - 26 - (5 * PITCH + 12 - 4);
@@ -1109,7 +1110,7 @@ function designMock(c) {
 
 function renderDesign() {
   if (!current || tab !== 'design') return;
-  const chosen = current.design && ACCENTS[current.design.accent] ? current.design.accent : DEFAULT_ACCENT;
+  const chosen = accentKey(current.design && current.design.accent);
   const shade = a => (theme === 'dark' ? a.dark : a.light);
   const gdRaw = (current.design && current.design.gap) || {}, gd = normalizeGapDesign(gdRaw);
   const st = normalizeStyle(current.design);
@@ -1523,7 +1524,7 @@ async function openFile(f) {
       id: file.id, title: String(file.title || ''), ...MODULES[file.module].load(file),
       behavior: { checks: checks >= 1 && checks <= 5 ? Math.floor(checks) : 'auto' },
       design: {
-        accent: file.design && ACCENTS[file.design.accent] ? file.design.accent : DEFAULT_ACCENT,
+        accent: accentKey(file.design && file.design.accent),
         showInstruction: !file.design || file.design.showInstruction !== false,
         showImage: !file.design || file.design.showImage !== false,
         gap: normalizeGapDesign(file.design && file.design.gap),

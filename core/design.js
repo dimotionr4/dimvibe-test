@@ -2,17 +2,23 @@
 // У каждого цвета два оттенка: для светлой темы (белый текст на нём читается) и для тёмной (на нём тёмный текст).
 // Номер версии `?v=` у подключения этого файла в index.html и editor.html поднимайте при любом изменении набора.
 const ACCENTS = {
+  brand: { label: 'Фирменный', light: '#029c91', dark: '#3cc4b8' }, // цвет интерфейса DimVibe (решение владельца 2026-10-25)
   violet: { label: 'Фиолетовый', light: '#6d4aff', dark: '#9d86ff' },
   blue:   { label: 'Синий',      light: '#1d62d8', dark: '#6ea8ff' },
-  teal:   { label: 'Бирюзовый',  light: '#0a7c8c', dark: '#4cc9d9' },
   green:  { label: 'Зелёный',    light: '#12805c', dark: '#4cc99a' },
   orange: { label: 'Оранжевый',  light: '#b85400', dark: '#ff9a4d' },
   pink:   { label: 'Розовый',    light: '#c2307a', dark: '#ff7fb6' },
 };
+// Цвет файла без поля accent (старые упражнения остаются фиолетовыми, как были опубликованы).
+// Новому упражнению редактор сразу ставит NEW_ACCENT
 const DEFAULT_ACCENT = 'violet';
+const NEW_ACCENT = 'brand';
 
-// Неизвестное имя (например, цвет убрали из набора) превращается в цвет по умолчанию
-const accentOf = name => ACCENTS[name] || ACCENTS[DEFAULT_ACCENT];
+// Убранные из набора цвета и чем их заменить (2026-10-25: «Бирюзовый» убран, его упражнения — «Фирменный»)
+const ACCENT_ALIASES = { teal: 'brand' };
+// Имя цвета из файла → имя из набора; неизвестное имя превращается в цвет по умолчанию
+const accentKey = name => (ACCENTS[name] ? name : ACCENT_ALIASES[name] || DEFAULT_ACCENT);
+const accentOf = name => ACCENTS[accentKey(name)];
 
 // Оформление пропуска: форма, прерывистая линия, ширина, нумерация. Один набор для редактора и плеера.
 const GAP_SHAPES = { line: 'Линия', frame: 'Рамка', pill: 'Плашка', free: 'Свободная форма' };
