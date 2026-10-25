@@ -10,11 +10,11 @@
 <link rel="stylesheet" href="core/fonts.css?v=1">
 <style>
   /* Тема: «Авто» следует за устройством, «Светлая» и «Тёмная» задаются переключателем слева (data-theme на <html>) */
-  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --ok:#1f9d55; --bad:#d64545; --line:#c9c9d8; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
+    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
   }
-  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
+  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
   .seg { display:flex; gap:4px; }
   .seg button { flex:1; min-height:32px; padding:2px 6px; font-size:.85rem; }
   .seg button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -333,6 +333,7 @@
 <link rel="stylesheet" href="modules/ordering/editor.css?v=3">
 <link rel="stylesheet" href="modules/timeline/editor.css?v=3">
 <link rel="stylesheet" href="modules/word-scramble/editor.css?v=3">
+<link rel="stylesheet" href="modules/categories/editor.css?v=1">
 <link rel="stylesheet" href="core/medialib.css?v=5">
 <link rel="stylesheet" href="core/mediabar.css?v=5">
 </head>
@@ -426,6 +427,7 @@
       <button data-mod="ordering" aria-pressed="false"><b>Ordering</b><span>Расставить по порядку</span></button>
       <button data-mod="timeline" aria-pressed="false"><b>Timeline</b><span>Расставить события по времени</span></button>
       <button data-mod="word_scramble" aria-pressed="false"><b>Word Scramble</b><span>Собрать слово или фразу из кусочков</span></button>
+      <button data-mod="categories" aria-pressed="false"><b>Categories</b><span>Разложить карточки по категориям</span></button>
     </div>
     <p class="muted" style="margin:0 0 12px" id="kindNote">Вид текста выбирается один раз и потом не меняется.</p>
     <button class="kind" data-kind="sentences"><b>Отдельные предложения</b><span>Каждое предложение — своё задание с пропусками.</span></button>
@@ -458,14 +460,15 @@
 <script src="modules/timeline/editor.js?v=3"></script>
 <script src="modules/word-scramble/tokens.js?v=1"></script>
 <script src="modules/word-scramble/editor.js?v=3"></script>
-<script src="core/shell.js?v=1"></script>
+<script src="modules/categories/editor.js?v=1"></script>
+<script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 63;
+const ASSET_V = 64;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -1131,7 +1134,7 @@ function renderDesign() {
   const card = (title, body) => `<section class="dz-card" aria-label="${esc(title)}"><h4>${esc(title)}</h4>${body}</section>`;
   $('content').innerHTML = `
     <div class="dz-wrap">
-      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline' || current.module === 'word_scramble', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
+      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline' || current.module === 'word_scramble' || current.module === 'categories', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
       <div class="dz-side">
         ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize) + grp('page', 'fontWeight', 'Жирность', PAGE_WEIGHTS, pg.fontWeight, OPT_ICONS.weight))}
         ${st.style === 'comic' ? card('Линии Comic', grp('style', 'comicOutline', 'Очертания', COMIC_OUTLINES, st.comicOutline, OPT_ICONS.outline)) : ''}
@@ -1573,7 +1576,7 @@ const pickModule = mod => {
   newModule = mod;
   document.querySelectorAll('#modPick [data-mod]').forEach(x => { const on = x.dataset.mod === mod; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); });
   // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
-  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble';
+  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories';
   document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
   $('kindNote').hidden = st;
 };
@@ -1636,7 +1639,7 @@ setPreviewOpen(!narrow()); // на широком экране предпрос�
   history.replaceState(null, '', location.pathname);
   if (!MODULES[mod]) return;
   pickModule(mod);
-  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble') createDraft('statements', mod);
+  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories') createDraft('statements', mod);
   else askKind();
 })();
 </script>

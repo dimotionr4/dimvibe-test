@@ -6,11 +6,11 @@
 <title>DimVibe — главная</title>
 <style>
   /* Тема общая с редактором: ключ dimvibe.theme в браузере, «Авто» следует за устройством */
-  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --line:#c9c9d8; --gap:14px; }
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --gap:14px; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; }
+    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --line:#41415a; }
   }
-  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; }
+  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --line:#41415a; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.5; }
   button, a, input { font:inherit; color:inherit; }
@@ -82,7 +82,7 @@
   .grid.v-icons { grid-template-columns:repeat(auto-fill, 72px); }
   .mod { position:relative; border:1px solid var(--line); border-radius:14px; background:var(--card); }
   .mod .main { display:flex; flex-direction:column; gap:8px; padding:16px; height:100%; text-decoration:none; border-radius:14px; }
-  .mod a.main:hover, .mod a.main:focus-visible { box-shadow:0 0 0 1px var(--accent), 0 4px 16px rgba(109,74,255,.15); outline:none; }
+  .mod a.main:hover, .mod a.main:focus-visible { box-shadow:0 0 0 1px var(--accent), 0 4px 16px rgba(2,156,145,.18); outline:none; }
   .ic { width:48px; height:48px; flex:none; border-radius:12px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; }
   .ic svg { width:28px; height:28px; stroke-width:1.8; }
   .mod b { font-size:1.05rem; }
@@ -202,7 +202,7 @@
   <p class="empty" id="none" hidden>Ничего не найдено.</p>
 </main>
 </div>
-<script src="core/shell.js?v=1"></script>
+<script src="core/shell.js?v=2"></script>
 <script src="core/sidebar.js?v=2"></script>
 <script>
 // Реестр модулей: чтобы добавить модуль, достаточно строки здесь (ready: true — модуль подключён в editor.html).
@@ -219,6 +219,7 @@ const ICON = {
   ordering: '<path d="M8 6h12M8 12h12M8 18h12"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
   timeline: '<path d="M6 3v18"/><circle cx="6" cy="7" r="2"/><circle cx="6" cy="17" r="2"/><path d="M10 7h10M10 17h8"/>',
   word_scramble: '<rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="6" width="7" height="7" rx="1.5"/><rect x="7" y="14" width="7" height="7" rx="1.5"/>',
+  categories: '<path d="M3 12v8h7v-8M14 12v8h7v-8"/><rect x="4.5" y="4" width="4" height="4" rx="1"/><rect x="15.5" y="3" width="4" height="4" rx="1"/>',
   generic: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>'
 };
 const MODS = [
@@ -231,7 +232,7 @@ const MODS = [
   { id: 'color_coding', name: 'Color Coding', desc: 'Раскрасить слова текста цветами категорий.', ready: true },
   { id: 'select_title', name: 'Select Title', desc: 'Прочитать текст и выбрать подходящий заголовок.', ready: true },
   { id: 'ordering', name: 'Ordering', desc: 'Расставить элементы в правильном порядке.', ready: true },
-  { id: 'categories', name: 'Categories / Sorting', desc: 'Разложить карточки по категориям.' },
+  { id: 'categories', name: 'Categories / Sorting', desc: 'Разложить карточки по категориям.', ready: true },
   { id: 'timeline', name: 'Timeline', desc: 'Расставить события в хронологическом порядке.', ready: true },
   { id: 'mini_dialogues', name: 'Mini Dialogues', desc: 'Диалог-переписка с пропусками в репликах.' },
   { id: 'word_scramble', name: 'Word Scramble / Sentence Builder', desc: 'Собрать слово или фразу из рассыпанных частей.', ready: true },

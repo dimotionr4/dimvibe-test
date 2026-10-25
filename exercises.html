@@ -8,11 +8,11 @@
   /* Страница самостоятельная: свои стили и скрипт, редактор и модули не подключены.
      Общее с ними только данные в браузере: черновики (dimvibe.drafts.v1, здесь меняются лишь название и сама запись при дублировании или переносе в корзину),
      тема (dimvibe.theme), состояние панели (dimvibe.sideCollapsed). Корзина и «недавно открытые» живут в своих ключах. */
-  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#6d4aff; --accent-soft:#ece7ff; --line:#c9c9d8; --ok:#1f9d55; --bad:#d64545; --warn:#e5a50a; --gap:12px; }
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --ok:#1f9d55; --bad:#d64545; --warn:#e5a50a; --gap:12px; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; --ok:#4ccf82; --bad:#ff7070; }
+    :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --line:#41415a; --ok:#4ccf82; --bad:#ff7070; }
   }
-  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#9d86ff; --accent-soft:#2e2850; --line:#41415a; --ok:#4ccf82; --bad:#ff7070; }
+  :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --line:#41415a; --ok:#4ccf82; --bad:#ff7070; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif; line-height:1.5; }
   button, a, input, select { font:inherit; color:inherit; }
@@ -215,7 +215,7 @@
   <p class="lab" id="fdNote" style="margin:10px 0 0">Упражнения из удалённой папки не пропадают, а переходят в «Без папки».</p>
 </div></div>
 <div id="toast" role="status" hidden></div>
-<script src="core/shell.js?v=1"></script>
+<script src="core/shell.js?v=2"></script>
 <script src="core/sidebar.js?v=2"></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -234,7 +234,8 @@ const MODS = {
   select_title: { name: 'Select Title', icon: '<path d="M4 5h16"/><path d="M4 10h12M4 14h16M4 18h10" opacity=".5"/>' },
   ordering: { name: 'Ordering', icon: '<path d="M8 6h12M8 12h12M8 18h12"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>' },
   timeline: { name: 'Timeline', icon: '<path d="M6 3v18"/><circle cx="6" cy="7" r="2"/><circle cx="6" cy="17" r="2"/><path d="M10 7h10M10 17h8"/>' },
-  word_scramble: { name: 'Word Scramble', icon: '<rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="6" width="7" height="7" rx="1.5"/><rect x="7" y="14" width="7" height="7" rx="1.5"/>' }
+  word_scramble: { name: 'Word Scramble', icon: '<rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="6" width="7" height="7" rx="1.5"/><rect x="7" y="14" width="7" height="7" rx="1.5"/>' },
+  categories: { name: 'Categories', icon: '<path d="M3 12v8h7v-8M14 12v8h7v-8"/><rect x="4.5" y="4" width="4" height="4" rx="1"/><rect x="15.5" y="3" width="4" height="4" rx="1"/>' }
 };
 const modOf = d => MODS[d.module] || MODS.fill_blanks;
 const I = {

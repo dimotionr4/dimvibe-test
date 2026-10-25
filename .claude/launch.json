@@ -27,6 +27,13 @@
       "runtimeArgs": ["-m", "http.server", "8817", "--bind", "127.0.0.1"],
       "port": 8817,
       "url": "http://127.0.0.1:8817"
+    },
+    {
+      "name": "site-cs",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8829", "--bind", "127.0.0.1"],
+      "port": 8829,
+      "url": "http://127.0.0.1:8829"
     }
   ]
 }

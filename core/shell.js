@@ -12,7 +12,7 @@
   css.textContent = `
     .side-resizer { display:none; position:absolute; top:0; bottom:0; right:0; width:7px; cursor:col-resize; touch-action:none; z-index:2; }
     .side-resizer::after { content:""; position:absolute; top:0; bottom:0; right:0; width:1px; background:transparent; }
-    .side-resizer:hover::after, .side-resizer:focus-visible::after, body.side-dragging .side-resizer::after { width:3px; background:var(--accent, #6d4aff); }
+    .side-resizer:hover::after, .side-resizer:focus-visible::after, body.side-dragging .side-resizer::after { width:3px; background:var(--accent, #029c91); }
     body.side-dragging { cursor:col-resize; user-select:none; }
     body.side-dragging iframe { pointer-events:none; }
     @media (min-width:901px) { #side:not(.collapsed) .side-resizer { display:block; } }`;

@@ -1,0 +1,35 @@
+/* Редактор модуля Categories / Sorting. Цвета берутся из переменных ядра (editor.html) */
+.cs-wrap { position:relative; }
+.cs-muted { color:var(--muted); }
+.cs-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.cs-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.cs-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.cs-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.cs-in { width:100%; box-sizing:border-box; min-width:0; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.cs-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.cs-ib:hover:not(:disabled) { color:var(--accent); }
+.cs-ib.cs-del:hover:not(:disabled) { color:var(--bad); }
+.cs-ib:disabled { opacity:.3; }
+.cs-ask { display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px; margin-left:4px; font-size:.85rem; }
+.cs-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.cs-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.cs-add { margin:4px 0 8px; }
+.cs-add:disabled { opacity:.5; }
+.cs-adds { display:flex; flex-wrap:wrap; gap:8px; }
+.cs-adds .cs-add { margin:0; }
+
+/* Категория: название с кнопками, под ним карточки */
+.cs-cat { margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.cs-cattop { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.cs-name { flex:1 1 auto; font-weight:600; }
+.cs-tools2 { display:flex; flex-wrap:wrap; align-items:center; flex:none; }
+.cs-items { list-style:none; margin:0 0 8px; padding:0 0 0 12px; border-left:3px solid var(--accent-soft); }
+.cs-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+.cs-item-in { flex:1 1 auto; width:auto; min-height:36px; }
+.cs-move { flex:0 1 150px; min-width:0; max-width:150px; min-height:36px; font:inherit; font-size:.88rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); padding:0 4px; }
+/* Одинаковые: в разных категориях — ошибка (красная рамка), в одной — предупреждение (жёлтая) */
+.cs-name.dup, .cs-row.dup .cs-item-in { border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
+.cs-row.same .cs-item-in { border-color:#d9a400; box-shadow:inset 0 0 0 1px #d9a400; }
+.cs-bulk { margin-top:8px; }
+.cs-bulk textarea { resize:vertical; }
+.cs-bulkrow { display:flex; justify-content:flex-end; margin-top:6px; }
