@@ -14,7 +14,22 @@
 :is(.chip, .card).oo-item { display:flex; align-items:center; gap:6px; max-width:100%; min-height:44px; margin:0; padding:8px 14px; border:1.5px solid var(--line); background:var(--card); color:var(--text); line-height:1.3; cursor:pointer; user-select:none; -webkit-user-select:none; box-sizing:border-box; }
 .chip.oo-item { border-radius:999px; }
 .card.oo-item { justify-content:center; text-align:center; min-height:64px; border-radius:12px; }
+.oo-line { display:flex; flex-wrap:wrap; align-items:center; justify-content:inherit; gap:2px 6px; min-width:0; }
 .oo-text { min-width:0; overflow-wrap:anywhere; }
+.oo-revealed { font-style:italic; }
+.oo-aud { flex:none; min-height:28px; padding:0 8px; }
+/* Элемент «только звук»: крупная кнопка 🔊 и номер; подпись и поля элемента — место, за которое его выбирают */
+.oo-aud.oo-aud-big { min-height:40px; min-width:48px; font-size:1.25rem; padding:0 10px; }
+.oo-sno { font-weight:600; white-space:nowrap; }
+.oo-sound .oo-line { gap:4px 10px; }
+.chip.oo-item.oo-sound { padding:6px 14px 6px 8px; }
+/* Элемент с картинкой: картинка сверху, под ней подпись и звук. Высота по «Размеру картинок» (S 56 / M 90 / L 140 px), вписана целиком */
+.card.oo-item.oo-withpic { flex-direction:column; justify-content:flex-start; gap:4px; padding:8px; }
+.oo-pic { position:relative; display:block; height:90px; max-width:100%; border-radius:8px; overflow:hidden; }
+.oo-pic img { display:block; height:100%; width:auto; max-width:100%; object-fit:contain; pointer-events:none; }
+.oo-size-s .oo-pic { height:56px; }
+.oo-size-l .oo-pic { height:140px; }
+.oo-pic.broken { width:60px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 :is(.chip, .card).oo-item:not(.fixed):hover { border-color:var(--accent); }
 :is(.chip, .card).oo-item.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:0 0 0 2px var(--accent); }
 :is(.chip, .card).oo-item.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--card)); }

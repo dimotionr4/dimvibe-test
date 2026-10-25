@@ -2,6 +2,7 @@
 // Общая часть прохождения — шапка, инструкция, проверка, число проверок, результат, сброс — живёт в index.html.
 // Каждая группа — единица общего хода (unit): answer — ID лишнего элемента, value — ID выбранного.
 // Проверка общая (index.html): у всех групп должен быть выбор, верные закрепляются, неверные можно поменять.
+// Элемент — текст, картинка (с лупой), звук или их сочетание; спрятанный автором текст показывается после конца.
 const OddOneOutPlayer = (() => {
   let idx = 0; // какая группа показана
   let fresh = false; // упражнение только что собрано (units)
@@ -50,21 +51,60 @@ const OddOneOutPlayer = (() => {
     return e;
   }
 
-  // Элемент — блок, а не кнопка (на этапе картинок и звука внутри появятся кнопки лупы и звука).
-  // Класс .chip даёт в Comic овальный контур, .card — прямоугольный
+  const txt = it => String(it.text || '').trim();
+  // «Спрятать текст»: до конца упражнения ученик видит только картинку или кнопку звука
+  const hiddenNow = it => it.hideText === true && !finished && (!!mediaSrc(it.image) || !!mediaSrc(it.audio));
+  // Элемент «только звук» (без картинки и без видимого текста) получает номер «Звук N» по порядку в своей группе на это прохождение
+  const soundOnly = it => !mediaSrc(it.image) && !!mediaSrc(it.audio) && (!txt(it) || it.hideText === true);
+  const soundNo = (gr, id) => { const byId = Object.fromEntries((gr.items || []).map(i => [i.id, i])); return orderOf(gr).filter(x => byId[x] && soundOnly(byId[x])).indexOf(id) + 1; };
+  // Как называть элемент вслух, не выдавая спрятанный текст
+  const label = (gr, it) => (hiddenNow(it) || !txt(it) ? (mediaSrc(it.image) ? 'картинка' : `звук ${soundNo(gr, it.id)}`) : txt(it));
+
+  // Картинка элемента: высота по «Размеру картинок», лупа увеличения на углу (addZoom, core/mediaviewer.js).
+  // Лупа и звук — свои кнопки: не выбирают элемент и не тратят проверок
+  function picture(im) {
+    const src = mediaSrc(im);
+    if (!src) return null;
+    const wrap = el('span', 'oo-pic');
+    const img = el('img');
+    img.alt = String(im.alt || '');
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    img.onerror = () => { wrap.classList.add('broken'); img.remove(); };
+    img.src = src;
+    wrap.append(img);
+    addZoom(wrap, wrap, src, img.alt);
+    return wrap;
+  }
+
+  // Элемент — блок, а не кнопка: внутри кнопки лупы и звука (кнопку в кнопке браузер не нажимает).
+  // Класс .chip даёт в Comic овальный контур, .card — прямоугольный; элемент с картинкой всегда .card (иначе высокий овал станет кругом).
+  // Элемент «только звук»: крупная кнопка 🔊 и подпись «Звук N»; 🔊 играет звук, нажатие на подпись и поля выбирает элемент
   function item(gr, g, it) {
     const on = g.value === it.id, odd = it.id === g.answer;
     // on — выбран; ok — верный выбор (закреплён); bad — неверный выбор после проверки;
     // right — в конце показан лишний, если ученик ошибся и автор включил «Показывать правильный ответ»
     const st = on && g.locked ? 'ok' : on && g.state === 'bad' ? 'bad' : on ? 'on' : finished && odd && data.showAnswers === true ? 'right' : '';
     const fixed = finished || g.locked;
-    const b = el('div', (data.look === 'cards' ? 'card' : 'chip') + ' oo-item' + (st ? ' ' + st : '') + (fixed ? ' fixed' : ''));
+    const pic = picture(it.image), sound = soundOnly(it), audio = mediaSrc(it.audio);
+    const b = el('div', (pic || data.look === 'cards' ? 'card' : 'chip') + ' oo-item' + (pic ? ' oo-withpic' : '') + (sound ? ' oo-sound' : '') + (st ? ' ' + st : '') + (fixed ? ' fixed' : ''));
     b.setAttribute('role', 'radio');
     b.setAttribute('aria-checked', String(on));
-    b.append(el('span', 'oo-text', it.text));
-    if (st === 'ok' || st === 'right') b.append(el('span', 'oo-tick', '✓'));
-    if (st === 'bad') b.append(el('span', 'oo-cross', '✗'));
-    if (st) b.setAttribute('aria-label', it.text + { ok: ', верно', bad: ', неверно', on: ', выбран', right: ', лишний' }[st]);
+    if (pic) b.append(pic);
+    const line = el('span', 'oo-line');
+    if (sound) {
+      line.append(audioButton(audio, 'oo' + it.id, 'audbtn oo-aud oo-aud-big', '🔊', `Прослушать: звук ${soundNo(gr, it.id)}`));
+      line.append(el('span', 'oo-sno', `Звук ${soundNo(gr, it.id)}`));
+      if (txt(it) && !hiddenNow(it)) line.append(el('span', 'oo-text oo-revealed', '— ' + txt(it))); // после конца: что было в звуке
+    } else {
+      if (txt(it) && !hiddenNow(it)) line.append(el('span', 'oo-text' + (it.hideText === true ? ' oo-revealed' : ''), txt(it)));
+      if (audio) line.append(audioButton(audio, 'oo' + it.id, 'audbtn oo-aud', '🔊', 'Прослушать элемент'));
+    }
+    if (st === 'ok' || st === 'right') line.append(el('span', 'oo-tick', '✓'));
+    if (st === 'bad') line.append(el('span', 'oo-cross', '✗'));
+    if (line.childNodes.length) b.append(line);
+    b.setAttribute('aria-label', label(gr, it) + (st ? { ok: ', верно', bad: ', неверно', on: ', выбран', right: ', лишний' }[st] : ''));
     if (fixed) b.setAttribute('aria-disabled', 'true');
     else b.onclick = e => { if (!e.target.closest('button')) choose(gr, it.id); };
     return b;
@@ -77,7 +117,8 @@ const OddOneOutPlayer = (() => {
     if (groups().length > 1 && listView()) c.append(el('p', 'oo-gnum', `Группа ${k + 1}`)); // при показе всех групп сразу каждая подписана номером
     const prompt = String(gr.prompt || '').trim();
     c.append(el('p', 'oo-ask' + (prompt ? ' oo-own' : ''), prompt || 'Найдите лишнее.'));
-    const box = el('div', 'oo-items ' + (data.look === 'cards' ? 'oo-cards' : 'oo-chips'));
+    const size = 'oo-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm');
+    const box = el('div', 'oo-items ' + size + ' ' + (data.look === 'cards' ? 'oo-cards' : 'oo-chips'));
     box.setAttribute('role', 'radiogroup');
     box.setAttribute('aria-label', prompt || `Группа ${k + 1}`);
     const byId = Object.fromEntries((gr.items || []).map(i => [i.id, i]));
