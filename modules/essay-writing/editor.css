@@ -1,0 +1,41 @@
+/* Редактор модуля Essay Writing. Цвета берутся из переменных ядра (editor.html) */
+.ew-wrap { position:relative; }
+.ew-muted { color:var(--muted); }
+.ew-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.ew-msg[hidden] { display:none; }
+.ew-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.ew-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.ew-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.ew-in { width:100%; box-sizing:border-box; min-width:0; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.ew-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.ew-ib:hover:not(:disabled) { color:var(--accent); }
+.ew-ib.ew-del:hover:not(:disabled) { color:var(--bad); }
+.ew-ib:disabled { opacity:.3; }
+.ew-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.ew-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.ew-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.ew-add { margin:4px 0 8px; }
+.ew-add:disabled { opacity:.5; }
+
+.ew-task { margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.ew-tasktop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.ew-tasktop .ew-tools2 { margin-left:auto; }
+.ew-tools2 { display:flex; align-items:center; flex:none; }
+.ew-topic { min-height:36px; margin-bottom:6px; }
+.ew-prompt { min-height:64px; margin-bottom:8px; }
+
+.ew-sec { margin:6px 0; border-top:1px solid var(--line); padding-top:6px; }
+.ew-sec > summary { cursor:pointer; font-weight:600; padding:4px 0; }
+.ew-hint { margin:2px 0 6px; font-size:.9rem; }
+.ew-sub { margin:10px 0 4px; font-weight:600; font-size:.92rem; }
+.ew-rrow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin:6px 0; }
+.ew-rname { min-width:84px; }
+.ew-num { width:80px; flex:none; }
+.ew-lvl { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); min-height:36px; }
+.ew-trow { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-bottom:10px; }
+.ew-term { flex:1 1 140px; width:auto; min-height:36px; }
+.ew-forms { flex:2 1 200px; width:auto; min-height:36px; }
+.ew-tline { display:flex; align-items:center; gap:6px; flex:none; }
+.ew-crow { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+.ew-citem { flex:1; width:auto; min-height:36px; }
+.ew-sample { min-height:64px; }

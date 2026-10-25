@@ -335,6 +335,7 @@
 <link rel="stylesheet" href="modules/word-scramble/editor.css?v=3">
 <link rel="stylesheet" href="modules/categories/editor.css?v=3">
 <link rel="stylesheet" href="modules/odd-one-out/editor.css?v=2">
+<link rel="stylesheet" href="modules/essay-writing/editor.css?v=1">
 <link rel="stylesheet" href="core/medialib.css?v=5">
 <link rel="stylesheet" href="core/mediabar.css?v=5">
 </head>
@@ -430,6 +431,7 @@
       <button data-mod="word_scramble" aria-pressed="false"><b>Word Scramble</b><span>Собрать слово или фразу из кусочков</span></button>
       <button data-mod="categories" aria-pressed="false"><b>Categories</b><span>Разложить карточки по категориям</span></button>
       <button data-mod="odd_one_out" aria-pressed="false"><b>Odd One Out</b><span>Найти лишнее в группе</span></button>
+      <button data-mod="essay_writing" aria-pressed="false"><b>Essay Writing</b><span>Написать текст по заданию</span></button>
     </div>
     <p class="muted" style="margin:0 0 12px" id="kindNote">Вид текста выбирается один раз и потом не меняется.</p>
     <button class="kind" data-kind="sentences"><b>Отдельные предложения</b><span>Каждое предложение — своё задание с пропусками.</span></button>
@@ -464,14 +466,16 @@
 <script src="modules/word-scramble/editor.js?v=3"></script>
 <script src="modules/categories/editor.js?v=3"></script>
 <script src="modules/odd-one-out/editor.js?v=2"></script>
+<script src="modules/essay-writing/analysis.js?v=1"></script>
+<script src="modules/essay-writing/editor.js?v=1"></script>
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 71;
+const ASSET_V = 72;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor, essay_writing: EssayWritingEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -1138,7 +1142,7 @@ function renderDesign() {
   const card = (title, body) => `<section class="dz-card" aria-label="${esc(title)}"><h4>${esc(title)}</h4>${body}</section>`;
   $('content').innerHTML = `
     <div class="dz-wrap">
-      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline' || current.module === 'word_scramble' || current.module === 'categories' || current.module === 'odd_one_out', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
+      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline' || current.module === 'word_scramble' || current.module === 'categories' || current.module === 'odd_one_out' || current.module === 'essay_writing', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
       <div class="dz-side">
         ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize) + grp('page', 'fontWeight', 'Жирность', PAGE_WEIGHTS, pg.fontWeight, OPT_ICONS.weight))}
         ${st.style === 'comic' ? card('Линии Comic', grp('style', 'comicOutline', 'Очертания', COMIC_OUTLINES, st.comicOutline, OPT_ICONS.outline)) : ''}
@@ -1196,7 +1200,12 @@ function renderBehavior() {
   const manual = current.behavior && current.behavior.checks >= 1 ? Number(current.behavior.checks) : null;
   const shown = manual || auto;
   const fixed = MODULES[current.module].fixedChecks ? MODULES[current.module].fixedChecks(current) : 0; // режим модуля сам задаёт число проверок (Matching, «Линии»)
-  $('content').innerHTML = fixed ? `
+  const none = !!MODULES[current.module].noChecks; // у модуля нет проверок вообще (Essay Writing)
+  $('content').innerHTML = none ? `
+    <section class="beh">
+      <div class="po"><span class="po-l">Проверок нет</span></div>
+      <p class="muted">${esc(MODULES[current.module].noChecksNote || 'В этом модуле нет проверок и баллов.')}</p>
+    </section>` : fixed ? `
     <section class="beh">
       <div class="po"><span class="po-l">Проверок на прохождение: ${fixed}</span></div>
       <p class="muted">${esc(MODULES[current.module].fixedChecksNote || 'В выбранном режиме показа пар проверка всегда одна, итоговая. Число проверок меняется, если выбрать стандартный режим во вкладке «Дизайн».')}</p>
@@ -1225,7 +1234,7 @@ function renderBehavior() {
     off.onclick = () => { current[o.field] = false; touch(); renderBehavior(); };
     on.onclick = () => { current[o.field] = true; touch(); renderBehavior(); };
   });
-  if (fixed) return;
+  if (fixed || none) return;
   $('chkHelp').append(helpIcon(`Сколько раз ученик может нажать «Проверить». Двигайте ползунок от 1 до 5 или включите «авто»: 3 проверки при 1–5 пропусках и 5 при 6 и больше. Нажатие при неполном ответе проверку не тратит. Верные ответы после проверки закрепляются. Упражнение заканчивается, когда всё верно или проверки закончились.`));
   const set = v => { current.behavior = { checks: v }; touch(); renderBehavior(); };
   $('chkAuto').onclick = () => set('auto');
@@ -1580,7 +1589,7 @@ const pickModule = mod => {
   newModule = mod;
   document.querySelectorAll('#modPick [data-mod]').forEach(x => { const on = x.dataset.mod === mod; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); });
   // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
-  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories' || newModule === 'odd_one_out';
+  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories' || newModule === 'odd_one_out' || newModule === 'essay_writing';
   document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
   $('kindNote').hidden = st;
 };
@@ -1643,7 +1652,7 @@ setPreviewOpen(!narrow()); // на широком экране предпрос�
   history.replaceState(null, '', location.pathname);
   if (!MODULES[mod]) return;
   pickModule(mod);
-  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out') createDraft('statements', mod);
+  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'essay_writing') createDraft('statements', mod);
   else askKind();
 })();
 </script>
