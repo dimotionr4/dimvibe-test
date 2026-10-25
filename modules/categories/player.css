@@ -20,6 +20,12 @@
 .cs-cline { display:flex; flex-wrap:wrap; align-items:center; gap:2px 6px; min-height:28px; }
 .cs-ctext { min-width:0; overflow-wrap:anywhere; }
 .cs-aud { flex:none; min-height:28px; padding:0 8px; }
+/* Карточка «только звук»: крупная кнопка 🔊 и номер; подпись и поля карточки — место, за которое её выбирают и тянут */
+.cs-sound .cs-cline { gap:4px 10px; }
+.cs-aud.cs-aud-big { min-height:40px; min-width:48px; font-size:1.25rem; padding:0 10px; }
+.cs-sno { font-weight:600; white-space:nowrap; }
+.chip.cs-chip.cs-sound { padding:6px 14px 6px 8px; }
+.cs-revealed { font-style:italic; }
 :is(.chip, .card).cs-chip:not(.fixed):hover { border-color:var(--accent); }
 :is(.chip, .card).cs-chip.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); color:var(--text); box-shadow:0 0 0 2px var(--accent); }
 :is(.chip, .card).cs-chip.fixed { cursor:default; }

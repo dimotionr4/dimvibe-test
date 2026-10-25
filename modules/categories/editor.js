@@ -22,10 +22,16 @@ const CategoriesEditor = (() => {
   const emptyImage = () => ({ media: '', url: '', alt: '' });
   const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
   const picKey = im => (hasPic(im) ? (safeMediaPath(im.media) || safeImageUrl(im.url)) : '');
-  const filled = it => !!clean(it.text) || hasPic(it.image);
-  // Что ученик видит на карточке: текст и картинка. Звук для различения карточек не считается
-  const faceKey = it => key(it.text) + '|' + picKey(it.image);
-  const label = it => (clean(it.text) ? `«${clean(it.text)}»` : '(картинка)');
+  const hasAud = it => !!safeMediaPath(it.audio);
+  // Карточка заполнена, если есть текст, картинка или звук (карточка «только звук» — решение владельца 2026-10-25)
+  const filled = it => !!clean(it.text) || hasPic(it.image) || hasAud(it);
+  // «Спрятать текст» действует, только если ученику есть что показать вместо текста: картинка или звук
+  const hidden = it => it.hideText === true && (hasPic(it.image) || hasAud(it));
+  const shown = it => (hidden(it) ? '' : clean(it.text)); // текст, который видит ученик
+  // Что ученик различает: видимый текст и картинка; у карточки «только звук» — сам звуковой файл
+  // (разные файлы автор проверяет на слух сам: смысл звука система не сравнивает)
+  const faceKey = it => key(shown(it)) + '|' + picKey(it.image) + (!shown(it) && !hasPic(it.image) ? '|' + safeMediaPath(it.audio) : '');
+  const label = it => (clean(it.text) ? `«${clean(it.text)}»` : hasPic(it.image) ? '(картинка)' : '(звук)');
   // Файл упражнения: картинка {media | url, alt} или нет; звук {media} или нет
   const imageOut = im => {
     if (!im) return null;
@@ -41,22 +47,22 @@ const CategoriesEditor = (() => {
   const VIEWS = { columns: 'Колонками', stacked: 'Друг под другом' };
   const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
 
-  function newItem(id) { return { id, text: '', image: emptyImage(), audio: '' }; }
+  function newItem(id) { return { id, text: '', image: emptyImage(), audio: '', hideText: false }; }
   function create() {
     return { module: 'categories', format: 1, showAnswers: false, view: 'columns', imageSize: 'm',
       cats: [{ id: 'c1', name: '', items: [newItem('i1'), newItem('i2')] }, { id: 'c2', name: '', items: [newItem('i3'), newItem('i4')] }] };
   }
 
   // Демо-пример (демо-режим в «Настройках», core/demo.js): четыре категории, 10 карточек (значит, 5 проверок),
-  // карточки-картинки, картинка с подписью и карточки со звуком; правильный ответ показывается
+  // карточки-картинки, картинка со спрятанным текстом, карточка «только звук» (текст спрятан) и текст со звуком; правильный ответ показывается
   function demo() {
     const I = DimDemo.IMG, A = DimDemo.AUD;
-    const it = (id, text, media, audio) => ({ ...newItem(id), text, image: { ...emptyImage(), media: media || '' }, audio: audio || '' });
+    const it = (id, text, media, audio, hideText) => ({ ...newItem(id), text, image: { ...emptyImage(), media: media || '' }, audio: audio || '', hideText: !!hideText });
     return { ...create(), showAnswers: true, instruction: DimDemo.instruction('Разложите карточки по категориям.'), cats: [
       { id: 'c1', name: 'Fruits', items: [it('i1', 'apple'), it('i2', 'banana'), it('i3', 'orange')] },
       { id: 'c2', name: 'Vegetables', items: [it('i4', 'carrot'), it('i5', 'potato')] },
-      { id: 'c3', name: 'Animals', items: [it('i6', 'cat', '', A.b), it('i7', 'dog', '', A.c)] },
-      { id: 'c4', name: 'Numbers', items: [it('i8', '', I.one), it('i9', '', I.two), it('i10', 'four', I.four)] },
+      { id: 'c3', name: 'Animals', items: [it('i6', 'cat', '', A.b, true), it('i7', 'dog', '', A.c)] },
+      { id: 'c4', name: 'Numbers', items: [it('i8', '', I.one), it('i9', '', I.two), it('i10', 'four', I.four, '', true)] },
     ] };
   }
 
@@ -67,6 +73,7 @@ const CategoriesEditor = (() => {
     d.cats.forEach(c => c.items.forEach(i => {
       if (!i.image) i.image = emptyImage();
       if (typeof i.audio !== 'string') i.audio = '';
+      if (typeof i.hideText !== 'boolean' || !hasPic(i.image) && !hasAud(i)) i.hideText = false;
     }));
   }
 
@@ -92,7 +99,7 @@ const CategoriesEditor = (() => {
     const tools = el('div', 'cs-tools');
     counter = el('span', 'cs-muted');
     const right = el('span', 'cs-right');
-    right.append(help(`Создайте категории и напишите в каждой её карточки: категория, в которой лежит карточка, и есть правильный ответ. Чтобы перенести карточку в другую категорию, выберите её в списке справа от карточки. Карточка — текст, картинка или картинка с подписью; у карточки может быть звук. Ученик получит все карточки перемешанными и разложит их по категориям. Балл — за каждую верно разложенную карточку. Категорий от ${MIN_CATS} до ${MAX_CATS}, в каждой хотя бы одна карточка, всего карточек от ${MIN_ITEMS} до ${MAX_ITEMS}. Одинаковые карточки в разных категориях нельзя: ученик не поймёт, куда их класть.`));
+    right.append(help(`Создайте категории и напишите в каждой её карточки: категория, в которой лежит карточка, и есть правильный ответ. Чтобы перенести карточку в другую категорию, выберите её в списке справа от карточки. Карточка — текст, картинка, звук или их сочетание. Если у карточки есть картинка или звук, можно поставить «Спрятать текст»: ученик увидит только картинку или кнопку звука, а текст — после конца упражнения. Ученик получит все карточки перемешанными и разложит их по категориям. Балл — за каждую верно разложенную карточку. Категорий от ${MIN_CATS} до ${MAX_CATS}, в каждой хотя бы одна карточка, всего карточек от ${MIN_ITEMS} до ${MAX_ITEMS}. Одинаковые карточки в разных категориях нельзя: ученик не поймёт, куда их класть.`));
     tools.append(counter, right);
     msg = el('div', 'cs-msg');
     msg.hidden = true;
@@ -180,7 +187,7 @@ const CategoriesEditor = (() => {
       const lines = ta.value.split(/\r?\n/).map(clean).filter(Boolean).map(s => s.slice(0, MAX_LEN));
       if (!lines.length) return say('Вставьте хотя бы одну строку.');
       c.items = c.items.filter(filled);
-      const have = new Set(c.items.filter(i => !hasPic(i.image)).map(i => key(i.text)));
+      const have = new Set(c.items.filter(i => !hasPic(i.image) && !hasAud(i)).map(i => key(i.text)));
       let added = 0, dups = 0, over = 0;
       lines.forEach(s => {
         if (have.has(key(s))) { dups++; return; }
@@ -209,7 +216,7 @@ const CategoriesEditor = (() => {
     const inp = el('input', 'cs-in cs-item-in');
     inp.type = 'text';
     inp.maxLength = MAX_LEN;
-    const ph = () => (hasPic(it.image) ? 'Подпись к картинке (необязательно)' : `Карточка ${j + 1}`);
+    const ph = () => (hidden(it) ? 'Текст для себя (ученик увидит его после конца)' : hasPic(it.image) ? 'Подпись к картинке (необязательно)' : hasAud(it) ? 'Текст карточки (необязательно)' : `Карточка ${j + 1}`);
     inp.placeholder = ph();
     inp.value = it.text;
     inp.setAttribute('aria-label', `Карточка ${j + 1}`);
@@ -240,8 +247,21 @@ const CategoriesEditor = (() => {
     del.onclick = () => { c.items.splice(c.items.indexOf(it), 1); save(); drawList(); };
     // Картинка и звук карточки: общие значки «загрузить» и «из медиатеки», миниатюра и ▶ с крестиком (core/mediabar.js)
     const media = el('div', 'cs-media');
-    const audio = MediaUI.picker('audio', () => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить звук карточки');
-    media.append(MediaUI.imageControl(it.image, { save, after: audio, change: () => { inp.placeholder = ph(); updateCounter(); marks(); } }));
+    // «Спрятать текст» (решение владельца 2026-10-25): видна, только когда есть картинка или звук; текст тогда — подсказка автору,
+    // ученик увидит его только после конца упражнения
+    const hide = el('label', 'cs-hide');
+    const box = el('input');
+    box.type = 'checkbox';
+    box.checked = it.hideText === true;
+    box.onchange = () => { it.hideText = box.checked; inp.placeholder = ph(); touched(); };
+    hide.append(box, document.createTextNode(' Спрятать текст'));
+    hide.title = 'Ученик увидит только картинку или кнопку звука; текст появится после конца упражнения';
+    // Убрали и картинку, и звук — прятать текст больше не за чем: галочка снимается сама, в той же записи истории (одна отмена)
+    const fixHide = () => { if (!hasPic(it.image) && !hasAud(it) && it.hideText) { it.hideText = false; box.checked = false; } };
+    const sync = () => { hide.hidden = !hasPic(it.image) && !hasAud(it); inp.placeholder = ph(); updateCounter(); marks(); };
+    const audio = MediaUI.picker('audio', () => it.audio || '', v => { it.audio = v; fixHide(); save(); sync(); }, 'Загрузить звук карточки');
+    media.append(MediaUI.imageControl(it.image, { save: () => { fixHide(); save(); }, after: audio, change: sync }), hide);
+    hide.hidden = !hasPic(it.image) && !hasAud(it);
     r.append(inp, mv, del, media);
     return r;
   }
@@ -340,6 +360,7 @@ const CategoriesEditor = (() => {
       items: draft.cats.flatMap(c => c.items.filter(filled).map(i => ({
         id: i.id, categoryId: c.id,
         ...(clean(i.text) ? { text: clean(i.text) } : {}),
+        ...(clean(i.text) && hidden(i) ? { hideText: true } : {}),
         ...(imageOut(i.image) ? { image: imageOut(i.image) } : {}),
         ...(audioOut(i.audio) ? { audio: audioOut(i.audio) } : {}),
       }))),
@@ -369,9 +390,11 @@ const CategoriesEditor = (() => {
     draft.cats.forEach((c, k) => c.items.forEach((i, j) => {
       const im = i.image;
       if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) errors.push(`Категория ${nm(c, k)}, карточка ${j + 1}: ссылка на картинку должна быть полным адресом с https://.`);
+      // «Спрятать текст» без картинки и звука: ученику нечего показать (в редакторе галочка снимается сама, это — для старых файлов)
+      if (i.hideText === true && filled(i) && !hidden(i)) errors.push(`Категория ${nm(c, k)}, карточка ${j + 1}: текст спрятан, но нет ни картинки, ни звука — ученик ничего не увидит.`);
     }));
-    // Одинаковые карточки (тот же текст и та же картинка): в разных категориях ученик не сможет их различить (ошибка);
-    // в одной — только предупреждение. Та же картинка с разными подписями — разные карточки
+    // Одинаковые карточки (видимый текст и картинка, у карточки «только звук» — звуковой файл): в разных категориях
+    // ученик не сможет их различить (ошибка); в одной — только предупреждение. Та же картинка с разными подписями — разные карточки
     const where = new Map();
     draft.cats.forEach((c, k) => c.items.filter(filled).forEach(i => {
       const t = faceKey(i);
@@ -380,7 +403,7 @@ const CategoriesEditor = (() => {
     }));
     where.forEach(w => {
       const cats = [...new Set(w.cats)];
-      if (cats.length > 1) errors.push(`Карточка ${w.name} есть в категориях ${cats.slice(0, -1).join(', ')} и ${cats[cats.length - 1]}: ученик не поймёт, куда её класть. Оставьте её в одной категории или измените текст или картинку.`);
+      if (cats.length > 1) errors.push(`Карточка ${w.name} есть в категориях ${cats.slice(0, -1).join(', ')} и ${cats[cats.length - 1]}: ученик не поймёт, куда её класть. Оставьте её в одной категории или измените текст, картинку или звук.`);
       else if (w.cats.length > 1) warnings.push(`Карточка ${w.name} повторяется в категории ${cats[0]}: ученик получит её ${w.cats.length} раза.`);
     });
     return { errors, warnings };
@@ -405,7 +428,7 @@ const CategoriesEditor = (() => {
       const im = i && i.image;
       c.items.push({ id, text: String((i && i.text) || '').slice(0, MAX_LEN),
         image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') },
-        audio: (i && i.audio && safeMediaPath(i.audio.media)) || '' });
+        audio: (i && i.audio && safeMediaPath(i.audio.media)) || '', hideText: !!(i && i.hideText === true) });
     });
     while (cats.length < MIN_CATS) { const id = nextId('c', [...catIds]); catIds.add(id); cats.push({ id, name: '', items: [] }); }
     cats.forEach(c => { delete c.src; if (!c.items.length) { const id = nextId('i', [...used]); used.add(id); c.items.push(newItem(id)); } });

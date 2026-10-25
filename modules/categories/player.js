@@ -15,6 +15,12 @@ const CategoriesPlayer = (() => {
 
   const instant = () => false;
   const unitOf = id => gaps.find(g => g.id === id);
+  const txt = it => String(it.text || '').trim();
+  // «Спрятать текст» (решение владельца 2026-10-25): до конца упражнения ученик видит только картинку или кнопку звука
+  const hiddenNow = it => it.hideText === true && !finished && (!!mediaSrc(it.image) || !!mediaSrc(it.audio));
+  // Карточка «только звук» (без картинки и без видимого текста) получает номер «Звук N» по порядку этого прохождения
+  const soundOnly = it => !mediaSrc(it.image) && !!mediaSrc(it.audio) && (!txt(it) || it.hideText === true);
+  const soundNo = id => order.filter(x => byId[x] && soundOnly(byId[x])).indexOf(id) + 1;
   const catName = id => { const c = cats.find(x => x.id === id); return c ? String(c.name || '') : ''; };
 
   function units() {
@@ -104,23 +110,32 @@ const CategoriesPlayer = (() => {
     addZoom(wrap, wrap, src, img.alt);
     return wrap;
   }
-  const label = it => String(it.text || '').trim() || 'картинка';
+  // Что называть карточку вслух и в подписях, не выдавая спрятанный текст
+  const label = it => (hiddenNow(it) || !txt(it) ? (mediaSrc(it.image) ? 'картинка' : `звук ${soundNo(it.id)}`) : txt(it));
 
   // Карточка: нажатие выбирает её (повторное — снимает выбор); закреплённые и после конца не двигаются.
   // Карточка — блок, а не кнопка: внутри неё кнопки лупы и звука (кнопку в кнопке браузер не нажимает).
-  // Класс .chip даёт в Comic овальный контур, у карточки с картинкой — .card (прямоугольный, иначе высокая карточка станет кругом)
+  // Класс .chip даёт в Comic овальный контур, у карточки с картинкой — .card (прямоугольный, иначе высокая карточка станет кругом).
+  // Карточка «только звук»: крупная кнопка 🔊 и подпись «Звук N»; нажатие на 🔊 играет звук, на подпись и поля — выбирает карточку
   function chip(it) {
     const g = unitOf(it.id);
     const fixed = !g || g.locked || finished;
     const st = g && g.state === 'ok' ? ' ok' : g && g.state === 'bad' ? ' bad' : '';
     const pic = picture(it.image);
-    const b = el('div', (pic ? 'card' : 'chip') + ' cs-chip' + st + (sel === it.id ? ' selected' : '') + (fixed ? ' fixed' : ''));
+    const sound = soundOnly(it);
+    const b = el('div', (pic ? 'card' : 'chip') + ' cs-chip' + (sound ? ' cs-sound' : '') + st + (sel === it.id ? ' selected' : '') + (fixed ? ' fixed' : ''));
     b.dataset.id = it.id;
     if (pic) b.append(pic);
     const line = el('span', 'cs-cline');
-    if (String(it.text || '').trim()) line.append(el('span', 'cs-ctext', it.text));
     const audio = mediaSrc(it.audio);
-    if (audio) line.append(audioButton(audio, 'csa' + it.id, 'audbtn cs-aud', '🔊', 'Прослушать карточку'));
+    if (sound) {
+      line.append(audioButton(audio, 'csa' + it.id, 'audbtn cs-aud cs-aud-big', '🔊', `Прослушать: звук ${soundNo(it.id)}`));
+      line.append(el('span', 'cs-sno', `Звук ${soundNo(it.id)}`));
+      if (txt(it) && !hiddenNow(it)) line.append(el('span', 'cs-ctext cs-revealed', '— ' + txt(it))); // после конца: что было в звуке
+    } else {
+      if (txt(it) && !hiddenNow(it)) line.append(el('span', 'cs-ctext' + (it.hideText === true ? ' cs-revealed' : ''), txt(it)));
+      if (audio) line.append(audioButton(audio, 'csa' + it.id, 'audbtn cs-aud', '🔊', 'Прослушать карточку'));
+    }
     if (st) line.append(el('span', st === ' ok' ? 'cs-tick' : 'cs-cross', st === ' ok' ? '✓' : '✗'));
     if (line.childNodes.length) b.append(line);
     const where = g && g.value ? `, в категории «${catName(g.value)}»` : '';

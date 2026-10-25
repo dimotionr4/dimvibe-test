@@ -30,6 +30,9 @@
 .cs-media .mb-img { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .cs-media .mb-bar { justify-content:flex-start; }
 .cs-media .mb-line { order:-1; margin-top:0; }
+.cs-media { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; }
+.cs-hide { display:inline-flex; align-items:center; gap:4px; font-size:.88rem; color:var(--muted); cursor:pointer; white-space:nowrap; }
+.cs-hide[hidden] { display:none; }
 .cs-item-in { flex:1 1 0; width:auto; min-width:80px; min-height:36px; }
 .cs-move { flex:0 1 150px; min-width:70px; max-width:150px; min-height:36px; font:inherit; font-size:.88rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); padding:0 4px; }
 /* Одинаковые: в разных категориях — ошибка (красная рамка), в одной — предупреждение (жёлтая) */
