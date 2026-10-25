@@ -6,7 +6,17 @@
 .or-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; position:relative; }
 .card.or-item { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0; padding:6px 8px; min-height:48px; line-height:1.4; border-radius:10px; user-select:none; -webkit-user-select:none; }
 .or-num { flex:none; min-width:1.6em; height:1.6em; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:600; color:var(--muted); border:1px solid var(--line); font-variant-numeric:tabular-nums; }
-.or-text { flex:1 1 0; min-width:0; overflow-wrap:anywhere; }
+/* Лицо элемента: картинка слева, текст (подпись) справа; на узком экране текст переносится под картинку */
+.or-face { flex:1 1 0; min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+.or-text { flex:1 1 8em; min-width:0; overflow-wrap:anywhere; }
+.or-audio { margin:0 0 8px; }
+/* Картинка элемента: высота по «Размеру картинок» (S 56 / M 90 / L 140 px), вписана целиком */
+.or-pic { position:relative; flex:none; display:block; height:90px; max-width:min(100%, 220px); border-radius:8px; overflow:hidden; }
+.or-pic img { display:block; height:100%; width:auto; max-width:100%; object-fit:contain; }
+.or-size-s .or-pic { height:56px; }
+.or-size-l .or-pic { height:140px; max-width:min(100%, 300px); }
+.or-pic.broken { width:60px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.or-mini { height:32px; width:auto; max-width:80px; vertical-align:middle; border-radius:4px; object-fit:contain; }
 .or-grip { flex:none; width:32px; min-height:40px; padding:0; border:none; background:transparent; color:var(--muted); cursor:grab; touch-action:none; }
 .or-grip svg { width:22px; height:22px; fill:currentColor; }
 .or-grip:hover { color:var(--accent); }
