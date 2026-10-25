@@ -9,7 +9,6 @@
 .st-size-s .st-pic { height:110px; }
 .st-size-l .st-pic { height:260px; }
 .st-pic.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); min-height:40px; }
-.st-zoom { position:absolute; top:6px; right:6px; }
 .st-audio { margin:0 0 10px; }
 .st-body { font-size:1.05rem; overflow-wrap:anywhere; }
 .st-body p { margin:0 0 .7em; white-space:pre-line; }

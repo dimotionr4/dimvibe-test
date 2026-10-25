@@ -145,16 +145,10 @@ const MatchingPlayer = (() => {
     if (finished) b.disabled = true;
     else b.onclick = () => (left ? selectLeft(id) : pickRight(id));
     wrap.append(b);
-    // Значки поверх карточки (отдельные от неё элементы, карточку не выбирают): увеличение, звук, разрыв связи
+    // Значки поверх карточки (отдельные от неё элементы, карточку не выбирают): звук, разрыв связи;
+    // лупа увеличения — на углу самой картинки (addZoom, core/mediaviewer.js)
     const ctl = el('span', 'mt-ctl' + (pic ? ' top' : ''));
-    if (pic) {
-      const z = el('button', 'hintbtn mt-tool mt-zoom', '⤢');
-      z.type = 'button';
-      z.setAttribute('aria-label', 'Увеличить картинку');
-      z.title = 'Увеличить';
-      z.onclick = e => { e.stopPropagation(); openMediaViewer(pic.src, pic.alt); };
-      ctl.append(z);
-    }
+    if (pic) addZoom(wrap, pic.box, pic.src, pic.alt);
     if (audio) ctl.append(audioButton(audio, `m${side}${id}`, 'hintbtn mt-tool mt-voice', '🔊', 'Прослушать карточку'));
     // Ручка для перетаскивания связи на правую карточку (необязательная замена двум нажатиям; ручка не мешает прокрутке страницы)
     if (left && !finished) {

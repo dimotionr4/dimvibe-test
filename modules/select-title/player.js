@@ -44,7 +44,7 @@ const SelectTitlePlayer = (() => {
     return e;
   }
 
-  // Картинка текста: рамка по размеру и вписыванию из «Дизайна», значок увеличения — отдельная кнопка поверх.
+  // Картинка текста: рамка по размеру и вписыванию из «Дизайна», лупа увеличения — на углу картинки (addZoom, core/mediaviewer.js).
   // Просмотр картинки и прослушивание звука не тратят проверок и не меняют ответ
   function picture(im) {
     const src = mediaSrc(im);
@@ -57,12 +57,8 @@ const SelectTitlePlayer = (() => {
     img.draggable = false;
     img.onerror = () => { wrap.classList.add('broken'); img.remove(); };
     img.src = src;
-    const z = el('button', 'hintbtn st-zoom', '⤢');
-    z.type = 'button';
-    z.setAttribute('aria-label', 'Увеличить картинку');
-    z.title = 'Увеличить';
-    z.onclick = () => openMediaViewer(src, img.alt);
-    wrap.append(img, z);
+    wrap.append(img);
+    addZoom(wrap, wrap, src, img.alt);
     return wrap;
   }
 

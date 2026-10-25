@@ -41,7 +41,7 @@ const MultipleChoicePlayer = (() => {
   }
   const label = n => (data.labels === 'numbers' ? String(n + 1) : String.fromCharCode(65 + n));
 
-  // Картинка с увеличением: значок лежит отдельной кнопкой на углу и не выбирает вариант
+  // Картинка; лупа увеличения (addZoom, core/mediaviewer.js) — отдельная кнопка на углу картинки, вариант не выбирает
   function picture(im, cls) {
     const src = mediaSrc(im);
     if (!src) return null;
@@ -56,15 +56,6 @@ const MultipleChoicePlayer = (() => {
     box.append(img);
     return { box, src, alt: img.alt };
   }
-  function zoomButton(src, alt) {
-    const z = el('button', 'hintbtn mc-tool mc-zoom', '⤢');
-    z.type = 'button';
-    z.setAttribute('aria-label', 'Увеличить картинку');
-    z.title = 'Увеличить';
-    z.onclick = e => { e.stopPropagation(); openMediaViewer(src, alt); };
-    return z;
-  }
-
   function finalize(i) {
     const g = gaps[i];
     g.final = true;
@@ -99,7 +90,8 @@ const MultipleChoicePlayer = (() => {
     if (qa) head.append(audioButton(qa, 'mq' + i, 'hintbtn mc-tool mc-voice', '🔊', 'Прослушать вопрос'));
     if (!pic) { wrap.append(head); return wrap; }
     const figure = el('div', 'mc-qfig');
-    figure.append(pic.box, zoomButton(pic.src, pic.alt));
+    figure.append(pic.box);
+    addZoom(figure, pic.box, pic.src, pic.alt);
     if (align === 'top' || align === 'left') wrap.append(figure, head); else wrap.append(head, figure);
     return wrap;
   }
@@ -138,14 +130,14 @@ const MultipleChoicePlayer = (() => {
       if (showRight && right.has(oid)) b.append(el('span', 'mc-tick', ' ✓ верный'));
       if (frozen(g)) b.disabled = true;
       else b.onclick = () => pick(i, oid);
-      // Значки увеличения и звука — соседние кнопки поверх варианта: нажатие на них ответ не выбирает
+      // Значок звука — соседняя кнопка поверх варианта, лупа — на углу картинки: нажатие на них ответ не выбирает
       const tools = [];
-      if (pic) tools.push(zoomButton(pic.src, pic.alt));
       const oa = mediaSrc(o.audio);
       if (oa) tools.push(audioButton(oa, 'mo' + i + oid, 'hintbtn mc-tool mc-voice', '🔊', `Прослушать вариант ${label(n)}`));
       const wrap = el('div', 'mc-ow' + (tools.length ? ' has-tools' : ''));
       wrap.append(b);
       if (tools.length) { const tb = el('span', 'mc-ow-tools'); tb.append(...tools); wrap.append(tb); }
+      if (pic) addZoom(wrap, pic.box, pic.src, pic.alt);
       list.append(wrap);
     });
     c.append(list);

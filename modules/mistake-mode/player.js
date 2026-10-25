@@ -102,7 +102,7 @@ const MistakeModePlayer = (() => {
     return e;
   }
 
-  // Картинка текста: рамка по размеру и вписыванию из «Дизайна», значок увеличения — отдельная кнопка поверх
+  // Картинка текста: рамка по размеру и вписыванию из «Дизайна», лупа увеличения — на углу картинки (addZoom, core/mediaviewer.js)
   function picture(im) {
     const src = mediaSrc(im);
     if (!src) return null;
@@ -114,12 +114,8 @@ const MistakeModePlayer = (() => {
     img.draggable = false;
     img.onerror = () => { wrap.classList.add('broken'); img.remove(); };
     img.src = src;
-    const z = el('button', 'hintbtn mm-zoom', '⤢');
-    z.type = 'button';
-    z.setAttribute('aria-label', 'Увеличить картинку');
-    z.title = 'Увеличить';
-    z.onclick = () => openMediaViewer(src, img.alt);
-    wrap.append(img, z);
+    wrap.append(img);
+    addZoom(wrap, wrap, src, img.alt);
     return wrap;
   }
 
