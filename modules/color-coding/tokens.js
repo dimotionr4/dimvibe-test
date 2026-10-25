@@ -1,18 +1,21 @@
 // Общее для редактора и плеера Color Coding: набор цветов категорий, деление текста на слова и перепривязка отметок после правки текста.
 // Деление на слова скопировано из Mistake Mode (modules/mistake-mode/tokens.js), чтобы модули оставались независимыми (решение владельца 2026-10-25).
 const ColorTokens = (() => {
-  // Набор цветов категорий: ключ хранится в файле упражнения, цвет — здесь. Красного и зелёного нет: это цвета результата
+  // Набор цветов категорий: ключ хранится в файле упражнения, цвет — здесь. Красного и зелёного нет: это цвета результата.
+  // ink — цвет надписи на залитом цветом теге категории (в любой теме один и тот же, потому что фон тега не зависит от темы)
+  const DARK = '#1d1d2b', LIGHT = '#ffffff';
   const PALETTE = {
-    yellow: { label: 'Жёлтый', hex: '#f5c400' },
-    orange: { label: 'Оранжевый', hex: '#ff8a3d' },
-    pink: { label: 'Розовый', hex: '#ff5fa2' },
-    purple: { label: 'Фиолетовый', hex: '#9b6bff' },
-    blue: { label: 'Синий', hex: '#3d8bff' },
-    teal: { label: 'Бирюзовый', hex: '#14b8a6' },
-    lime: { label: 'Салатовый', hex: '#9acd32' },
-    brown: { label: 'Коричневый', hex: '#a0703c' },
+    yellow: { label: 'Жёлтый', hex: '#f5c400', ink: DARK },
+    orange: { label: 'Оранжевый', hex: '#ff8a3d', ink: DARK },
+    pink: { label: 'Розовый', hex: '#ff5fa2', ink: DARK },
+    purple: { label: 'Фиолетовый', hex: '#9b6bff', ink: DARK },
+    blue: { label: 'Синий', hex: '#3d8bff', ink: DARK },
+    teal: { label: 'Бирюзовый', hex: '#14b8a6', ink: DARK },
+    lime: { label: 'Салатовый', hex: '#9acd32', ink: DARK },
+    brown: { label: 'Коричневый', hex: '#a0703c', ink: LIGHT },
   };
   const colorOf = key => (PALETTE[key] ? PALETTE[key].hex : '#9a9aa8');
+  const inkOf = key => (PALETTE[key] ? PALETTE[key].ink : DARK);
 
   const WORD = /[\p{L}\p{N}\p{M}]+(?:['’‐-][\p{L}\p{N}\p{M}]+)*/gu;
 
@@ -49,5 +52,5 @@ const ColorTokens = (() => {
     });
   }
 
-  return { PALETTE, colorOf, split, words, reanchor };
+  return { PALETTE, colorOf, inkOf, split, words, reanchor };
 })();

@@ -1,0 +1,43 @@
+/* Плеер модуля Select Title: текст абзацами и крупные кнопки заголовков без букв. Номера текстов и «Предыдущий / Следующий» —
+   классы tf-* из modules/true-false/player.css. Результат не только цветом: ✓ у верного, ✗ у неверного */
+.card.st-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
+.st-tnum { margin:0 0 6px; font-weight:600; color:var(--muted); }
+/* Картинка над текстом: высота по «Размеру картинок», вписать целиком или заполнить рамку */
+.st-pic { position:relative; width:100%; height:180px; border-radius:10px; overflow:hidden; margin:0 0 10px; }
+.st-pic img { display:block; width:100%; height:100%; object-fit:contain; }
+.st-fit-cover .st-pic img { object-fit:cover; }
+.st-size-s .st-pic { height:110px; }
+.st-size-l .st-pic { height:260px; }
+.st-pic.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); min-height:40px; }
+.st-zoom { position:absolute; top:6px; right:6px; }
+.st-audio { margin:0 0 10px; }
+.st-body { font-size:1.05rem; overflow-wrap:anywhere; }
+.st-body p { margin:0 0 .7em; white-space:pre-line; }
+.st-ask { margin:4px 0 8px; color:var(--muted); font-size:.95rem; }
+.st-opts { display:flex; flex-direction:column; gap:8px; }
+.st-opt { display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:8px 12px; text-align:left; }
+.st-mark { flex:none; width:20px; height:20px; border:2px solid var(--muted); border-radius:50%; position:relative; }
+.st-opt.on .st-mark, .st-opt.ok .st-mark, .st-opt.bad .st-mark { border-color:currentColor; }
+.st-opt.on .st-mark::after, .st-opt.ok .st-mark::after, .st-opt.bad .st-mark::after { content:""; position:absolute; inset:3px; border-radius:50%; background:currentColor; }
+.st-opt.on .st-mark { color:var(--accent); }
+.st-opt.ok .st-mark { color:var(--ok); }
+.st-opt.bad .st-mark { color:var(--bad); }
+.st-text { flex:1; min-width:0; overflow-wrap:anywhere; }
+.st-opt.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
+.st-opt.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.st-opt.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.st-opt.right { border-color:var(--ok); border-width:2px; border-style:dashed; }
+.st-tick { flex:none; color:var(--ok); font-weight:700; }
+.st-cross { flex:none; color:var(--bad); font-weight:700; }
+.st-opt:disabled { cursor:default; color:var(--text); }
+.st-opt:disabled:not(.ok):not(.right):not(.bad) { opacity:.6; }
+.st-card.missing { border-color:var(--bad); border-style:dashed; }
+.st-expl { margin:12px 0 0; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+
+/* Comic: цвета состояний остаются своими, контур берёт --rc, заливка --rb */
+.style-comic .st-opt.on:not(.hintbtn) { --rc:var(--accent); --rb:color-mix(in srgb, var(--accent) 14%, var(--card)); }
+.style-comic .st-opt.ok:not(.hintbtn) { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 18%, var(--card)); }
+.style-comic .st-opt.bad:not(.hintbtn) { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 16%, var(--card)); }
+.style-comic .st-opt.right:not(.hintbtn) { --rc:var(--ok); }
+.style-comic .st-card.missing { --rc:var(--bad); border-color:transparent; } /* рамку рисует рисунок, пунктир Classic не нужен */
+.style-comic .st-card.missing .st-opt:not(.on):not(.ok):not(.bad):not(.right) { --rc:var(--comic-line); } /* красный контур — только у карточки, не у кнопок внутри */

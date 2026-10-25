@@ -7,11 +7,20 @@
 /* Ряд категорий остаётся наверху при прокрутке текста */
 .cc-palette { position:sticky; top:calc(-1 * var(--pad, 10px)); z-index:2; display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; padding:6px 0; background:var(--bg); }
 #root.panel .cc-palette { background:var(--card); }
-.cc-chip { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:2px 14px 2px 10px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--text); cursor:pointer; touch-action:manipulation; }
-.cc-chipdot { flex:none; width:16px; height:16px; border-radius:50%; background:var(--cc); }
-.cc-chip.on { border:2px solid var(--text); font-weight:700; background:color-mix(in srgb, var(--cc) 22%, var(--card)); }
-.cc-chip.on::before { content:"✓"; font-weight:700; }
-.cc-chip:disabled { cursor:default; opacity:.7; }
+/* Категория — тег, целиком залитый своим цветом, надпись цветом --cc-ink (тёмным или белым, по цвету тега).
+   Выбранная: жирная надпись, ✓ и двойная рамка (просвет цвета страницы и линия цвета текста) */
+.cc-chip { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:2px 14px; border-radius:999px; border:none; background:var(--cc); color:var(--cc-ink, #1d1d2b); font-weight:600; cursor:pointer; touch-action:manipulation; }
+.cc-chip:hover:not(:disabled) { filter:brightness(1.06); }
+.cc-chip:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.cc-chip.on { font-weight:800; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
+#root.panel .cc-chip.on { box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--text); }
+.cc-chip.on::before { content:"✓"; font-weight:800; }
+.cc-chip:disabled { cursor:default; opacity:.75; }
+.cc-palette { padding:8px 4px; gap:10px; } /* место под рамку выбранного тега */
+/* Comic: заливку и контур кнопки рисует рисунок (core/comic.css, --rb и --rc): заливка — цвет категории, контур того же цвета,
+   у выбранной — контур цвета текста вместо двойной рамки */
+.style-comic .cc-palette button.cc-chip { --rb:var(--cc); --rc:var(--cc); }
+.style-comic .cc-palette button.cc-chip.on { --rc:var(--text); box-shadow:none; }
 
 .cc-body { white-space:pre-wrap; overflow-wrap:anywhere; font-size:1.1rem; line-height:2; }
 .cc-w { cursor:pointer; border-radius:5px; padding:4px 1px; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }

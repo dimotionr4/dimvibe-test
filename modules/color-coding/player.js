@@ -79,7 +79,8 @@ const ColorCodingPlayer = (() => {
     return e;
   }
 
-  // Ряд категорий: общий для всех текстов; выбранная — с рамкой и галочкой, не только цветом
+  // Ряд категорий: общий для всех текстов; каждая — тег, целиком залитый своим цветом, с названием (решение владельца 2026-10-25);
+  // выбранная — с рамкой и галочкой, не только цветом
   function palette(root) {
     const row = el('div', 'cc-palette');
     row.setAttribute('role', 'group');
@@ -89,9 +90,10 @@ const ColorCodingPlayer = (() => {
       const b = el('button', 'cc-chip' + (on ? ' on' : ''));
       b.type = 'button';
       b.style.setProperty('--cc', colorOf(c.color));
+      b.style.setProperty('--cc-ink', ColorTokens.inkOf(c.color));
       b.setAttribute('aria-pressed', String(on));
       b.disabled = finished;
-      b.append(el('i', 'cc-chipdot'), el('span', '', c.name));
+      b.append(el('span', '', c.name));
       b.onclick = () => { active = c.id; refocus = `.cc-palette .cc-chip:nth-child(${k + 1})`; render(); };
       row.append(b);
     });
