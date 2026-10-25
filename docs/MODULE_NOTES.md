@@ -24,7 +24,7 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Ordering — сделан, этап 1 без картинок и звука (2026-10-25)
 Правила перенесены в skill `.claude/skills/ordering/`; здесь не дублируются.
 
-## Categories / Sorting — сделан, этап 1 без картинок и звука (2026-10-25)
+## Categories / Sorting — сделан, с картинкой и звуком у карточки (2026-10-25)
 Правила перенесены в skill `.claude/skills/categories/`; здесь не дублируются.
 
 ## Timeline — сделан, с картинкой и звуком у события (2026-10-25)

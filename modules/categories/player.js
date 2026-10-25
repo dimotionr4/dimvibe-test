@@ -87,23 +87,50 @@ const CategoriesPlayer = (() => {
     return e;
   }
 
-  // Карточка: нажатие выбирает её (повторное — снимает выбор); закреплённые и после конца не двигаются
+  // Картинка карточки: высота по «Размеру картинок», лупа увеличения на углу (addZoom, core/mediaviewer.js).
+  // Лупа и звук — свои кнопки: не выбирают и не переносят карточку, проверку не тратят
+  function picture(im) {
+    const src = mediaSrc(im);
+    if (!src) return null;
+    const wrap = el('span', 'cs-pic');
+    const img = el('img');
+    img.alt = String(im.alt || '');
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    img.onerror = () => { wrap.classList.add('broken'); img.remove(); };
+    img.src = src;
+    wrap.append(img);
+    addZoom(wrap, wrap, src, img.alt);
+    return wrap;
+  }
+  const label = it => String(it.text || '').trim() || 'картинка';
+
+  // Карточка: нажатие выбирает её (повторное — снимает выбор); закреплённые и после конца не двигаются.
+  // Карточка — блок, а не кнопка: внутри неё кнопки лупы и звука (кнопку в кнопке браузер не нажимает).
+  // Класс .chip даёт в Comic овальный контур, у карточки с картинкой — .card (прямоугольный, иначе высокая карточка станет кругом)
   function chip(it) {
     const g = unitOf(it.id);
     const fixed = !g || g.locked || finished;
     const st = g && g.state === 'ok' ? ' ok' : g && g.state === 'bad' ? ' bad' : '';
-    const b = el('button', 'cs-chip' + st + (sel === it.id ? ' selected' : '') + (fixed ? ' fixed' : ''));
-    b.type = 'button';
+    const pic = picture(it.image);
+    const b = el('div', (pic ? 'card' : 'chip') + ' cs-chip' + st + (sel === it.id ? ' selected' : '') + (fixed ? ' fixed' : ''));
     b.dataset.id = it.id;
-    b.append(el('span', 'cs-ctext', it.text));
-    if (st) b.append(el('span', st === ' ok' ? 'cs-tick' : 'cs-cross', st === ' ok' ? '✓' : '✗'));
+    if (pic) b.append(pic);
+    const line = el('span', 'cs-cline');
+    if (String(it.text || '').trim()) line.append(el('span', 'cs-ctext', it.text));
+    const audio = mediaSrc(it.audio);
+    if (audio) line.append(audioButton(audio, 'csa' + it.id, 'audbtn cs-aud', '🔊', 'Прослушать карточку'));
+    if (st) line.append(el('span', st === ' ok' ? 'cs-tick' : 'cs-cross', st === ' ok' ? '✓' : '✗'));
+    if (line.childNodes.length) b.append(line);
     const where = g && g.value ? `, в категории «${catName(g.value)}»` : '';
-    b.setAttribute('aria-label', it.text + where + (st === ' ok' ? ', верно' : st === ' bad' ? ', неверно' : ''));
-    if (fixed) b.disabled = true;
+    b.setAttribute('aria-label', label(it) + where + (st === ' ok' ? ', верно' : st === ' bad' ? ', неверно' : ''));
+    if (fixed) b.setAttribute('aria-disabled', 'true');
     else {
+      b.setAttribute('role', 'button');
       b.setAttribute('aria-pressed', String(sel === it.id));
-      b.onclick = e => { e.stopPropagation(); if (justDragged) return; sel = sel === it.id ? null : it.id; render(); };
-      b.addEventListener('pointerdown', e => press(e, it.id, b));
+      b.onclick = e => { e.stopPropagation(); if (justDragged || e.target.closest('button')) return; sel = sel === it.id ? null : it.id; render(); };
+      b.addEventListener('pointerdown', e => { if (!e.target.closest('button')) press(e, it.id, b); });
       b.oncontextmenu = e => e.preventDefault();
     }
     // После конца: у неверной карточки — нужная категория (если автор включил «Показывать правильный ответ»)
@@ -149,8 +176,9 @@ const CategoriesPlayer = (() => {
   }
 
   function renderInto(root) {
-    if (!finished) root.append(bankCard());
-    const grid = el('div', 'cs-grid ' + (data.view === 'stacked' ? 'cs-stacked' : 'cs-columns'));
+    const size = 'cs-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm');
+    if (!finished) { const bank = bankCard(); bank.classList.add(size); root.append(bank); }
+    const grid = el('div', 'cs-grid ' + size + ' ' + (data.view === 'stacked' ? 'cs-stacked' : 'cs-columns'));
     cats.forEach(cat => grid.append(catCard(cat)));
     root.append(grid);
   }

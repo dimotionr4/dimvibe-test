@@ -1,6 +1,7 @@
 // Редактор модуля Categories / Sorting: категории и карточки; карточка лежит в своей правильной категории.
 // У категории и карточки устойчивый ID (c1, i1…). Перенос карточки в другую категорию меняет её правильный ответ,
-// переименование и порядок категорий ответ не меняют. Этап 1 (решение владельца 2026-10-25) — только текст.
+// переименование и порядок категорий ответ не меняют. Этап 1 (решение владельца 2026-10-25) — текст;
+// этап 2 (тоже 2026-10-25) — карточка может быть картинкой или картинкой с подписью, у карточки необязательный звук.
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 const CategoriesEditor = (() => {
   const MIN_CATS = 2, MAX_CATS = 5, MAX_ITEMS = 20, MIN_ITEMS = 3, MAX_LEN = 100, NAME_LEN = 60; // категорий, карточек всего, символов
@@ -18,26 +19,55 @@ const CategoriesEditor = (() => {
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
   const key = s => clean(s).normalize('NFC').toLowerCase(); // одинаковые без учёта регистра и лишних пробелов
-  const filled = it => !!clean(it.text);
+  const emptyImage = () => ({ media: '', url: '', alt: '' });
+  const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
+  const picKey = im => (hasPic(im) ? (safeMediaPath(im.media) || safeImageUrl(im.url)) : '');
+  const filled = it => !!clean(it.text) || hasPic(it.image);
+  // Что ученик видит на карточке: текст и картинка. Звук для различения карточек не считается
+  const faceKey = it => key(it.text) + '|' + picKey(it.image);
+  const label = it => (clean(it.text) ? `«${clean(it.text)}»` : '(картинка)');
+  // Файл упражнения: картинка {media | url, alt} или нет; звук {media} или нет
+  const imageOut = im => {
+    if (!im) return null;
+    const alt = clean(im.alt), media = safeMediaPath(im.media);
+    if (media) return { media, alt };
+    const url = safeImageUrl(im.url);
+    return url ? { url, alt } : null;
+  };
+  const audioOut = p => { const m = safeMediaPath(p); return m ? { media: m } : null; };
   const allItemIds = () => d.cats.flatMap(c => c.items.map(i => i.id));
   const total = draft => draft.cats.reduce((n, c) => n + c.items.filter(filled).length, 0);
 
   const VIEWS = { columns: 'Колонками', stacked: 'Друг под другом' };
+  const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
 
-  function newItem(id) { return { id, text: '' }; }
+  function newItem(id) { return { id, text: '', image: emptyImage(), audio: '' }; }
   function create() {
-    return { module: 'categories', format: 1, showAnswers: false, view: 'columns',
+    return { module: 'categories', format: 1, showAnswers: false, view: 'columns', imageSize: 'm',
       cats: [{ id: 'c1', name: '', items: [newItem('i1'), newItem('i2')] }, { id: 'c2', name: '', items: [newItem('i3'), newItem('i4')] }] };
   }
 
-  // Демо-пример (демо-режим в «Настройках», core/demo.js): три категории, 7 карточек (значит, 5 проверок), правильный ответ показывается
+  // Демо-пример (демо-режим в «Настройках», core/demo.js): четыре категории, 10 карточек (значит, 5 проверок),
+  // карточки-картинки, картинка с подписью и карточки со звуком; правильный ответ показывается
   function demo() {
-    const it = (id, text) => ({ id, text });
-    return { ...create(), showAnswers: true, instruction: DimDemo.instruction('Разложите слова по категориям.'), cats: [
+    const I = DimDemo.IMG, A = DimDemo.AUD;
+    const it = (id, text, media, audio) => ({ ...newItem(id), text, image: { ...emptyImage(), media: media || '' }, audio: audio || '' });
+    return { ...create(), showAnswers: true, instruction: DimDemo.instruction('Разложите карточки по категориям.'), cats: [
       { id: 'c1', name: 'Fruits', items: [it('i1', 'apple'), it('i2', 'banana'), it('i3', 'orange')] },
       { id: 'c2', name: 'Vegetables', items: [it('i4', 'carrot'), it('i5', 'potato')] },
-      { id: 'c3', name: 'Animals', items: [it('i6', 'cat'), it('i7', 'dog')] },
+      { id: 'c3', name: 'Animals', items: [it('i6', 'cat', '', A.b), it('i7', 'dog', '', A.c)] },
+      { id: 'c4', name: 'Numbers', items: [it('i8', '', I.one), it('i9', '', I.two), it('i10', 'four', I.four)] },
     ] };
+  }
+
+  // Черновики, сделанные до картинок и звука, получают пустые поля
+  function normalize() {
+    if (!VIEWS[d.view]) d.view = 'columns';
+    if (!SIZES[d.imageSize]) d.imageSize = 'm';
+    d.cats.forEach(c => c.items.forEach(i => {
+      if (!i.image) i.image = emptyImage();
+      if (typeof i.audio !== 'string') i.audio = '';
+    }));
   }
 
   function render(container, draft, onSave) {
@@ -45,7 +75,7 @@ const CategoriesEditor = (() => {
     d = draft;
     save = onSave;
     delAsk = null;
-    if (!VIEWS[d.view]) d.view = 'columns';
+    normalize();
     draw();
   }
 
@@ -62,7 +92,7 @@ const CategoriesEditor = (() => {
     const tools = el('div', 'cs-tools');
     counter = el('span', 'cs-muted');
     const right = el('span', 'cs-right');
-    right.append(help(`Создайте категории и напишите в каждой её карточки: категория, в которой лежит карточка, и есть правильный ответ. Чтобы перенести карточку в другую категорию, выберите её в списке справа от карточки. Ученик получит все карточки перемешанными и разложит их по категориям. Балл — за каждую верно разложенную карточку. Категорий от ${MIN_CATS} до ${MAX_CATS}, в каждой хотя бы одна карточка, всего карточек от ${MIN_ITEMS} до ${MAX_ITEMS}. Одинаковые карточки в разных категориях нельзя: ученик не поймёт, куда их класть.`));
+    right.append(help(`Создайте категории и напишите в каждой её карточки: категория, в которой лежит карточка, и есть правильный ответ. Чтобы перенести карточку в другую категорию, выберите её в списке справа от карточки. Карточка — текст, картинка или картинка с подписью; у карточки может быть звук. Ученик получит все карточки перемешанными и разложит их по категориям. Балл — за каждую верно разложенную карточку. Категорий от ${MIN_CATS} до ${MAX_CATS}, в каждой хотя бы одна карточка, всего карточек от ${MIN_ITEMS} до ${MAX_ITEMS}. Одинаковые карточки в разных категориях нельзя: ученик не поймёт, куда их класть.`));
     tools.append(counter, right);
     msg = el('div', 'cs-msg');
     msg.hidden = true;
@@ -94,15 +124,15 @@ const CategoriesEditor = (() => {
   function marks() {
     const names = {};
     d.cats.forEach(c => { const k = key(c.name); if (k) names[k] = (names[k] || 0) + 1; });
-    const where = {}; // текст карточки → в каких категориях и сколько раз
-    d.cats.forEach(c => c.items.forEach(i => { if (filled(i)) { const k = key(i.text); (where[k] = where[k] || []).push(c.id); } }));
+    const where = {}; // лицо карточки (текст и картинка) → в каких категориях и сколько раз
+    d.cats.forEach(c => c.items.forEach(i => { if (filled(i)) { const k = faceKey(i); (where[k] = where[k] || []).push(c.id); } }));
     listBox.querySelectorAll('.cs-cat').forEach(box => {
       const c = d.cats.find(x => x.id === box.dataset.id);
       if (!c) return;
       box.querySelector('.cs-name').classList.toggle('dup', !!key(c.name) && names[key(c.name)] > 1);
       box.querySelectorAll('.cs-row').forEach(r => {
         const i = c.items.find(x => x.id === r.dataset.id);
-        const w = i && filled(i) ? where[key(i.text)] : null;
+        const w = i && filled(i) ? where[faceKey(i)] : null;
         r.classList.toggle('dup', !!w && new Set(w).size > 1);
         r.classList.toggle('same', !!w && new Set(w).size === 1 && w.length > 1);
       });
@@ -150,7 +180,7 @@ const CategoriesEditor = (() => {
       const lines = ta.value.split(/\r?\n/).map(clean).filter(Boolean).map(s => s.slice(0, MAX_LEN));
       if (!lines.length) return say('Вставьте хотя бы одну строку.');
       c.items = c.items.filter(filled);
-      const have = new Set(c.items.map(i => key(i.text)));
+      const have = new Set(c.items.filter(i => !hasPic(i.image)).map(i => key(i.text)));
       let added = 0, dups = 0, over = 0;
       lines.forEach(s => {
         if (have.has(key(s))) { dups++; return; }
@@ -179,7 +209,8 @@ const CategoriesEditor = (() => {
     const inp = el('input', 'cs-in cs-item-in');
     inp.type = 'text';
     inp.maxLength = MAX_LEN;
-    inp.placeholder = `Карточка ${j + 1}`;
+    const ph = () => (hasPic(it.image) ? 'Подпись к картинке (необязательно)' : `Карточка ${j + 1}`);
+    inp.placeholder = ph();
     inp.value = it.text;
     inp.setAttribute('aria-label', `Карточка ${j + 1}`);
     inp.oninput = () => { it.text = inp.value; touched(); };
@@ -207,7 +238,11 @@ const CategoriesEditor = (() => {
     del.setAttribute('aria-label', `Удалить карточку ${j + 1}`);
     del.disabled = c.items.length <= 1;
     del.onclick = () => { c.items.splice(c.items.indexOf(it), 1); save(); drawList(); };
-    r.append(inp, mv, del);
+    // Картинка и звук карточки: общие значки «загрузить» и «из медиатеки», миниатюра и ▶ с крестиком (core/mediabar.js)
+    const media = el('div', 'cs-media');
+    const audio = MediaUI.picker('audio', () => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить звук карточки');
+    media.append(MediaUI.imageControl(it.image, { save, after: audio, change: () => { inp.placeholder = ph(); updateCounter(); marks(); } }));
+    r.append(inp, mv, del, media);
     return r;
   }
 
@@ -292,14 +327,22 @@ const CategoriesEditor = (() => {
 
   // ---- Файл упражнения ----
   // categories — в порядке показа; items — с ID своей правильной категории, пустые в файл не попадают.
-  // showAnswers — только если включено, view — только если не «колонками»
+  // showAnswers — только если включено, view — только если не «колонками»; text, image, audio — только если есть;
+  // imageSize — только если в упражнении есть картинка
   function exportData(draft) {
+    const anyPic = draft.cats.some(c => c.items.some(i => filled(i) && imageOut(i.image)));
     return {
       module: 'categories', format: 1,
       ...(draft.showAnswers === true ? { showAnswers: true } : {}),
       ...(draft.view === 'stacked' ? { view: 'stacked' } : {}),
+      ...(anyPic ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm' } : {}),
       categories: draft.cats.map(c => ({ id: c.id, name: clean(c.name) })),
-      items: draft.cats.flatMap(c => c.items.filter(filled).map(i => ({ id: i.id, categoryId: c.id, text: clean(i.text) }))),
+      items: draft.cats.flatMap(c => c.items.filter(filled).map(i => ({
+        id: i.id, categoryId: c.id,
+        ...(clean(i.text) ? { text: clean(i.text) } : {}),
+        ...(imageOut(i.image) ? { image: imageOut(i.image) } : {}),
+        ...(audioOut(i.audio) ? { audio: audioOut(i.audio) } : {}),
+      }))),
     };
   }
 
@@ -322,17 +365,23 @@ const CategoriesEditor = (() => {
     const n = total(draft);
     if (n < MIN_ITEMS) errors.push(`Нужно хотя бы ${MIN_ITEMS} карточки на всё упражнение.`);
     if (n > MAX_ITEMS) errors.push(`Карточек больше ${MAX_ITEMS}.`);
-    // Одинаковые карточки: в разных категориях ученик не сможет их различить (ошибка); в одной — только предупреждение
+    // Ссылка на картинку — только полный адрес https://
+    draft.cats.forEach((c, k) => c.items.forEach((i, j) => {
+      const im = i.image;
+      if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) errors.push(`Категория ${nm(c, k)}, карточка ${j + 1}: ссылка на картинку должна быть полным адресом с https://.`);
+    }));
+    // Одинаковые карточки (тот же текст и та же картинка): в разных категориях ученик не сможет их различить (ошибка);
+    // в одной — только предупреждение. Та же картинка с разными подписями — разные карточки
     const where = new Map();
     draft.cats.forEach((c, k) => c.items.filter(filled).forEach(i => {
-      const t = key(i.text);
-      if (!where.has(t)) where.set(t, { text: clean(i.text), cats: [] });
+      const t = faceKey(i);
+      if (!where.has(t)) where.set(t, { name: label(i), cats: [] });
       where.get(t).cats.push(nm(c, k));
     }));
     where.forEach(w => {
       const cats = [...new Set(w.cats)];
-      if (cats.length > 1) errors.push(`Карточка «${w.text}» есть в категориях ${cats.slice(0, -1).join(', ')} и ${cats[cats.length - 1]}: ученик не поймёт, куда её класть. Оставьте её в одной категории или измените текст.`);
-      else if (w.cats.length > 1) warnings.push(`Карточка «${w.text}» повторяется в категории ${cats[0]}: ученик получит её ${w.cats.length} раза.`);
+      if (cats.length > 1) errors.push(`Карточка ${w.name} есть в категориях ${cats.slice(0, -1).join(', ')} и ${cats[cats.length - 1]}: ученик не поймёт, куда её класть. Оставьте её в одной категории или измените текст или картинку.`);
+      else if (w.cats.length > 1) warnings.push(`Карточка ${w.name} повторяется в категории ${cats[0]}: ученик получит её ${w.cats.length} раза.`);
     });
     return { errors, warnings };
   }
@@ -353,17 +402,22 @@ const CategoriesEditor = (() => {
       if (!id || used.has(id)) id = nextId('i', [...used]);
       used.add(id);
       const c = cats.find(x => x.src === (i && i.categoryId)) || cats[0];
-      c.items.push({ id, text: String((i && i.text) || '').slice(0, MAX_LEN) });
+      const im = i && i.image;
+      c.items.push({ id, text: String((i && i.text) || '').slice(0, MAX_LEN),
+        image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') },
+        audio: (i && i.audio && safeMediaPath(i.audio.media)) || '' });
     });
     while (cats.length < MIN_CATS) { const id = nextId('c', [...catIds]); catIds.add(id); cats.push({ id, name: '', items: [] }); }
     cats.forEach(c => { delete c.src; if (!c.items.length) { const id = nextId('i', [...used]); used.add(id); c.items.push(newItem(id)); } });
-    return { ...create(), showAnswers: file.showAnswers === true, view: VIEWS[file.view] ? file.view : 'columns', cats };
+    return { ...create(), showAnswers: file.showAnswers === true, view: VIEWS[file.view] ? file.view : 'columns', imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', cats };
   }
 
-  // Настройка во вкладке «Дизайн» (рисует ядро): вид категорий
+  // Настройки во вкладке «Дизайн» (рисует ядро): размер картинок — только если в упражнении есть картинки; вид категорий
   const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   function designOptions(draft) {
-    return [{ field: 'view', label: 'Категории', value: VIEWS[draft.view] ? draft.view : 'columns', names: VIEWS,
+    const size = draft.cats.some(c => c.items.some(i => hasPic(i.image)))
+      ? [{ field: 'imageSize', label: 'Размер картинок', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } }] : [];
+    return [...size, { field: 'view', label: 'Категории', value: VIEWS[draft.view] ? draft.view : 'columns', names: VIEWS,
       icons: { columns: sq('<rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/>'), stacked: sq('<rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/>') } }];
   }
 

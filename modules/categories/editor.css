@@ -24,9 +24,14 @@
 .cs-name { flex:1 1 auto; font-weight:600; }
 .cs-tools2 { display:flex; flex-wrap:wrap; align-items:center; flex:none; }
 .cs-items { list-style:none; margin:0 0 8px; padding:0 0 0 12px; border-left:3px solid var(--accent-soft); }
-.cs-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
-.cs-item-in { flex:1 1 auto; width:auto; min-height:36px; }
-.cs-move { flex:0 1 150px; min-width:0; max-width:150px; min-height:36px; font:inherit; font-size:.88rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); padding:0 4px; }
+.cs-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:8px; }
+/* Картинка и звук карточки — строкой под полем: миниатюра и значки одной строкой слева */
+.cs-media { flex:1 0 100%; min-width:0; }
+.cs-media .mb-img { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.cs-media .mb-bar { justify-content:flex-start; }
+.cs-media .mb-line { order:-1; margin-top:0; }
+.cs-item-in { flex:1 1 0; width:auto; min-width:80px; min-height:36px; }
+.cs-move { flex:0 1 150px; min-width:70px; max-width:150px; min-height:36px; font:inherit; font-size:.88rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); padding:0 4px; }
 /* Одинаковые: в разных категориях — ошибка (красная рамка), в одной — предупреждение (жёлтая) */
 .cs-name.dup, .cs-row.dup .cs-item-in { border-color:var(--bad); box-shadow:inset 0 0 0 1px var(--bad); }
 .cs-row.same .cs-item-in { border-color:#d9a400; box-shadow:inset 0 0 0 1px #d9a400; }

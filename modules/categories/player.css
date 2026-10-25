@@ -14,24 +14,34 @@
 .cs-target { cursor:pointer; outline:2px dashed var(--accent); outline-offset:-4px; }
 .cs-over { outline:3px solid var(--accent); outline-offset:-4px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
 
-/* Карточка */
-.cs-chip { display:inline-flex; flex-wrap:wrap; align-items:center; gap:2px 6px; max-width:100%; min-height:40px; padding:6px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--card); color:var(--text); font:inherit; line-height:1.3; text-align:left; cursor:grab; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+/* Карточка: блок .chip, с картинкой — .card (Comic рисует контур: у .chip — овальный, у .card — скруглённый прямоугольник).
+   Общие .chip и .card из index.html заданы позже, поэтому здесь :is(.chip, .card).cs-chip */
+:is(.chip, .card).cs-chip { display:inline-flex; flex-direction:column; align-items:flex-start; gap:4px; max-width:100%; min-height:40px; margin:0; padding:6px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--card); color:var(--text); line-height:1.3; text-align:left; cursor:grab; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; box-sizing:border-box; }
+.cs-cline { display:flex; flex-wrap:wrap; align-items:center; gap:2px 6px; min-height:28px; }
 .cs-ctext { min-width:0; overflow-wrap:anywhere; }
-.cs-chip:hover:not(:disabled) { border-color:var(--accent); }
-.cs-chip.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:0 0 0 2px var(--accent); }
-.cs-chip.fixed { cursor:default; opacity:1; }
-.cs-chip.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 14%, var(--card)); }
-.cs-chip.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 12%, var(--card)); }
+.cs-aud { flex:none; min-height:28px; padding:0 8px; }
+:is(.chip, .card).cs-chip:not(.fixed):hover { border-color:var(--accent); }
+:is(.chip, .card).cs-chip.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); color:var(--text); box-shadow:0 0 0 2px var(--accent); }
+:is(.chip, .card).cs-chip.fixed { cursor:default; }
+:is(.chip, .card).cs-chip.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 14%, var(--card)); }
+:is(.chip, .card).cs-chip.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 12%, var(--card)); }
+/* Картинка карточки: высота по «Размеру картинок» (S 56 / M 90 / L 140 px), вписана целиком, не шире карточки */
+.cs-pic { position:relative; display:block; height:90px; max-width:100%; border-radius:8px; overflow:hidden; }
+.cs-pic img { display:block; height:100%; width:auto; max-width:100%; object-fit:contain; pointer-events:none; }
+.cs-size-s .cs-pic { height:56px; }
+.cs-size-l .cs-pic { height:140px; }
+.cs-pic.broken { width:60px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 .cs-tick { color:var(--ok); font-weight:700; }
 .cs-cross { color:var(--bad); font-weight:700; }
 .cs-right { flex:1 0 100%; font-size:.85rem; color:var(--muted); }
 .cs-right-l { font-weight:600; color:var(--ok); }
 /* Перетаскивание: на месте карточки остаётся бледный след, копия едет за пальцем */
 .cs-chip.cs-lifted { opacity:.35; }
-.cs-ghost { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; box-shadow:0 8px 20px rgba(0,0,0,.25); border-color:var(--accent); }
+.cs-ghost.cs-chip { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; box-shadow:0 8px 20px rgba(0,0,0,.25); border-color:var(--accent); }
 .cs-dragging, .cs-dragging * { cursor:grabbing !important; user-select:none; }
 
-/* Comic: контур берёт --rc, заливка --rb */
-.style-comic .cs-chip.ok { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 16%, var(--card)); }
-.style-comic .cs-chip.bad { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 14%, var(--card)); }
-.style-comic .cs-chip.selected { --rc:var(--accent); --rb:color-mix(in srgb, var(--accent) 16%, var(--card)); }
+/* Comic: контур берёт --rc, заливка --rb; свою рамку и фон карточки прячем, как у общего .chip */
+.style-comic :is(.chip, .card).cs-chip:is(*, .ok, .bad, .selected) { border-color:transparent; background:transparent; }
+.style-comic :is(.chip, .card).cs-chip.ok { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.style-comic :is(.chip, .card).cs-chip.bad { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.style-comic :is(.chip, .card).cs-chip.selected { --rc:var(--accent); --rb:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:none; }
