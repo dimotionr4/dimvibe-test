@@ -41,7 +41,7 @@ description: Правила модуля Splice (собрать слова из 
 `modules/splice/`: `tokens.js` (`SpliceTokens`: `split`, `join`, `text`, `show`, `same`, `auto`), `editor.js` (`SpliceEditor`), `editor.css`, `player.js` (`SplicePlayer`), `player.css`. Классы с приставкой `sp-`; номера и «Предыдущее / Следующее» — `tf-dots`, `tf-pager` (CSS True / False). «Дизайн»: `tokenStyle`, `view` (только у одного слова). Копия — на основе Word Scramble.
 
 ## Проверено
-Владелец 2026-10-26: работает в LearnWorlds и в мобильной версии. В браузере Claude: Easy / Medium / Hard, одно слово, файл туда-обратно, перенос мышкой.
+Владелец 2026-10-26: работает в LearnWorlds и в мобильной версии; этап 2 (картинка и звук, выключатель mediaAlways) принят, замечаний нет. В браузере Claude: Easy / Medium / Hard, одно слово, файл туда-обратно, перенос мышкой.
 
 ## Не проверено
 Safari/Firefox (перенос мышкой в Firefox), Comic и «Бумажные кусочки» глазами. Предпросмотр редактора в свёрнутом окне обновлялся только вручную.
