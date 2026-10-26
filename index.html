@@ -26,6 +26,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/odd-one-out/player.css?v=2">
 <link rel="stylesheet" href="modules/splice/player.css?v=3">
 <link rel="stylesheet" href="modules/essay-writing/player.css?v=1">
+<link rel="stylesheet" href="modules/prepositions/player.css?v=1">
 <style>
   /* Тема: у ученика всегда светлая (data-theme="light" на <html>, решение владельца 2026-10-25); в предпросмотре редактор может задать "light" или "dark".
      Правила тёмной темы по устройству оставлены: без data-theme (например, если атрибут уберут) тема снова будет следовать за устройством */
@@ -226,6 +227,8 @@ function build() {
   mode = data.mode || 'word_bank';
   // Image to Gaps: свой способ ответа (банк картинок), кнопок режимов нет
   document.body.classList.toggle('no-modes', isImg() || !!unitPlayer());
+  document.body.classList.toggle('no-typing', data.module === 'prepositions'); // Prepositions: только банк слов и список
+  if (data.module === 'prepositions' && mode === 'typing') mode = 'dropdown';
   if (unitPlayer()) unitPlayer().reset();
   applyLook();
   // Цвет упражнения; если файл с набором цветов не загрузился, остаётся стандартный фиолетовый

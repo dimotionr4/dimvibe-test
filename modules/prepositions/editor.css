@@ -1,0 +1,11 @@
+/* Редактор модуля Prepositions: список предлогов по категориям. Остальное — стили Fill Blanks (fb-*) */
+.pp-lib { margin-top:16px; }
+.pp-lib h3 { font-size:1rem; margin:0; }
+.pp-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+.pp-tab { min-height:32px; padding:2px 14px; border-radius:999px; }
+.pp-tab.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.pp-chips { margin-bottom:8px; }
+.pp-chip { min-height:32px; padding:2px 14px; border-radius:999px; background:var(--card); }
+.pp-chip.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600; }
+.pp-chip.used { border-style:dashed; cursor:default; }
+.pp-all { min-height:28px; font-size:.85rem; color:var(--muted); background:transparent; }

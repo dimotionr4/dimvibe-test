@@ -1,0 +1,2 @@
+/* Prepositions играет плеер Fill Blanks; ввод вручную здесь не нужен, кнопка режима в предпросмотре скрыта */
+.no-typing .modes button[data-mode="typing"] { display:none; }

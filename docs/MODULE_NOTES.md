@@ -54,5 +54,8 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Essay Writing — сделан этап 1, только текст (2026-10-25)
 Правила перенесены в skill `.claude/skills/essay-writing/`; здесь не дублируются.
 
-## Остальные модули (Flashcards, Hotspot, Label the Diagram, Vocabulary, Prepositions, Word Search и др.)
+## Prepositions — сделан этап 1 (2026-10-26)
+Правила перенесены в skill `.claude/skills/prepositions/`; здесь не дублируются.
+
+## Остальные модули (Flashcards, Hotspot, Label the Diagram, Vocabulary, Word Search и др.)
 Принципы для них ещё не перенесены. Переносим по одному, по мере работы с каждым модулем, после согласования.

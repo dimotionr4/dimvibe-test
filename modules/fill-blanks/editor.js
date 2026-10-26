@@ -2,7 +2,7 @@
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 const FillBlanksEditor = (() => {
   const MAX_GAPS = 10;
-  let d, root, save, openGap = null, msgTimer = null;
+  let d, root, save, openGap = null, msgTimer = null, onBank = null;
   let counter, msg, panelBox, altsBox, bankChips, gapBar;
 
   const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
@@ -46,10 +46,12 @@ const FillBlanksEditor = (() => {
   const isText = () => d.layout === 'text';
   const LAYOUT_NAME = { sentences: 'Отдельные предложения', text: 'Связный текст' };
 
-  function render(container, draft, onSave) {
+  // bankChange — необязательная функция: модуль на базе Fill Blanks (Prepositions) узнаёт, что банк слов поменялся
+  function render(container, draft, onSave, bankChange) {
     root = container;
     d = draft;
     save = onSave;
+    onBank = bankChange || null;
     openGap = null;
     // Кнопка «Пропуск» над выделением: ядро (editor.html) следит за выделением и вызывает эту функцию
     if (typeof selBarHooks !== 'undefined') selBarHooks.add(updateGapBar);
@@ -436,6 +438,7 @@ const FillBlanksEditor = (() => {
       bankChips.append(t);
     });
     d.distractors.forEach((w, i) => bankChips.append(tag(w, () => { d.distractors.splice(i, 1); save(); drawBank(); }, 'fb-trap')));
+    if (onBank) onBank();
   }
 
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
