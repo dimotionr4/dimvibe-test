@@ -32,7 +32,7 @@ const HotspotEditor = (() => {
   };
   const zoneName = (z, k) => `${k + 1}${clean(z.label) ? ' · ' + clean(z.label) : ''}`;
   const zoneById = id => d.zones.find(z => z.id === id);
-  const newTask = id => ({ id, prompt: '', targets: [], explanation: '' });
+  const newTask = id => ({ id, prompt: '', targets: [], ordered: false, explanation: '' });
   const validTargets = (draft, t) => t.targets.filter(id => draft.zones.some(z => z.id === id && G.valid(z)));
 
   function create() {
@@ -49,6 +49,7 @@ const HotspotEditor = (() => {
         { id: 't1', prompt: 'Где спальня?', targets: ['z2'], explanation: 'Bedroom — спальня.' },
         { id: 't2', prompt: 'Найдите гостиную и кухню.', targets: ['z1', 'z3'], explanation: 'Living room — гостиная, kitchen — кухня.' },
         { id: 't3', prompt: '', targets: ['z2', 'z4'], explanation: '' },
+        { id: 't4', prompt: 'Найдите комнаты по очереди.', targets: ['z3', 'z1', 'z4'], ordered: true, explanation: 'Kitchen, living room, round room.' },
       ] };
   }
 
@@ -84,7 +85,7 @@ const HotspotEditor = (() => {
     const tools = el('div', 'hs-tools');
     counter = el('span', 'hs-muted');
     const right = el('span', 'hs-right');
-    right.append(help(`Загрузите картинку и нарисуйте на ней области — места, которые должен найти ученик. Потом создайте задания и отметьте у каждого верные области: одна область — «найти одно», несколько — «найти несколько». «Зона»: ученик нажимает на готовую область (все области видны). «Точка»: ученик ставит маркер, он верный, если попал в область. За каждую найденную область — 1 балл. В «найти несколько» каждая оставшаяся неверная отметка в конце отнимает 1 балл (не ниже нуля). Областей до ${MAX_ZONES}, заданий до ${MAX_TASKS}.`));
+    right.append(help(`Загрузите картинку и нарисуйте на ней области — места, которые должен найти ученик. Потом создайте задания и отметьте у каждого верные области: одна область — «найти одно», несколько — «найти несколько». «Зона»: ученик нажимает на готовую область (все области видны). «Точка»: ученик ставит маркер, он верный, если попал в область. За каждую найденную область — 1 балл. В «найти несколько» каждая оставшаяся неверная отметка в конце отнимает 1 балл (не ниже нуля). «Искать по порядку» (переключатель у задания): ученик ищет области по одной в том порядке, в котором вы их отметили; у каждого шага свои проверки (по умолчанию 3), штрафа нет, названия областей ученик видит как задание шага. Областей до ${MAX_ZONES}, заданий до ${MAX_TASKS}.`));
     tools.append(counter, right);
     msg = el('div', 'hs-msg');
     msg.hidden = true;
@@ -313,7 +314,7 @@ const HotspotEditor = (() => {
       const inp = el('input', 'hs-in hs-zlabel');
       inp.type = 'text';
       inp.maxLength = LABEL_LEN;
-      inp.placeholder = 'Название (для себя), например «Дверь»';
+      inp.placeholder = 'Название, например «Дверь» (в «по порядку» его видит ученик)';
       inp.value = z.label;
       inp.setAttribute('aria-label', `Название области ${k + 1}`);
       inp.oninput = () => { z.label = inp.value; save(); drawTasks(); };
@@ -369,7 +370,7 @@ const HotspotEditor = (() => {
     const top = el('div', 'hs-tasktop');
     top.append(el('b', '', `Задание ${k + 1}`));
     const ok = validTargets(d, t).length;
-    top.append(el('span', 'hs-kind hs-muted', ok > 1 ? 'найти несколько' : ok === 1 ? 'найти одно' : ''));
+    top.append(el('span', 'hs-kind hs-muted', ok > 1 && t.ordered ? 'по порядку' : ok > 1 ? 'найти несколько' : ok === 1 ? 'найти одно' : ''));
     const tools = el('span', 'hs-tools2');
     const b = (html, tip, fn, disabled) => { const x = el('button', 'hs-ib'); x.type = 'button'; x.innerHTML = html; x.title = tip; x.setAttribute('aria-label', `${tip}, задание ${k + 1}`); x.disabled = !!disabled; x.onclick = fn; return x; };
     tools.append(
@@ -404,12 +405,21 @@ const HotspotEditor = (() => {
     prompt.setAttribute('aria-label', `Текст задания ${k + 1}`);
     prompt.oninput = () => { t.prompt = prompt.value; save(); };
 
+    const ord = el('label', 'hs-ord');
+    const chk = el('input');
+    chk.type = 'checkbox';
+    chk.checked = t.ordered === true;
+    chk.onchange = () => { t.ordered = chk.checked; save(); drawTasks(); };
+    ord.append(chk, document.createTextNode(' Искать по порядку'));
+    ord.title = 'Ученик ищет области по одной, в том порядке, в котором вы их отметите; у каждого шага свои проверки';
+
     const tg = el('div', 'hs-targets');
-    tg.append(el('p', 'hs-muted hs-hint', d.zones.length ? 'Верные области (нажмите, чтобы отметить):' : 'Сначала нарисуйте области на картинке (шаг 3).'));
+    tg.append(el('p', 'hs-muted hs-hint', !d.zones.length ? 'Сначала нарисуйте области на картинке (шаг 3).'
+      : t.ordered ? 'Верные области: нажимайте в нужном порядке, цифра — номер шага (названия увидит ученик). Чтобы поменять порядок, снимите отметку и поставьте заново.' : 'Верные области (нажмите, чтобы отметить):'));
     const chips = el('div', 'hs-chips');
     d.zones.forEach((z, j) => {
       const on = t.targets.includes(z.id);
-      const c = el('button', 'hs-chip' + (on ? ' on' : ''), zoneName(z, j));
+      const c = el('button', 'hs-chip' + (on ? ' on' : ''), (t.ordered && on ? `${t.targets.indexOf(z.id) + 1}. ` : '') + zoneName(z, j));
       c.type = 'button';
       c.setAttribute('aria-pressed', String(on));
       c.onclick = () => {
@@ -432,7 +442,7 @@ const HotspotEditor = (() => {
     ex.oninput = () => { t.explanation = ex.value; fit(); save(); };
     setTimeout(fit, 0);
 
-    box.append(top, prompt, tg, ex);
+    box.append(top, prompt, ord, tg, ex);
     return box;
   }
 
@@ -485,6 +495,7 @@ const HotspotEditor = (() => {
         id: t.id,
         ...(clean(t.prompt) ? { prompt: clean(t.prompt) } : {}),
         targets: validTargets(draft, t),
+        ...(t.ordered === true ? { ordered: true } : {}),
         ...(t.explanation.trim() ? { explanation: t.explanation.trim() } : {}),
       })),
     };
@@ -526,6 +537,11 @@ const HotspotEditor = (() => {
       if (!t.targets.length) errors.push(`${pre}не отмечена верная область.`);
       else if (!good.length) errors.push(`${pre}верные области неверны или удалены.`);
       if (t.targets.length > MAX_TARGETS) errors.push(`${pre}верных областей больше ${MAX_TARGETS}.`);
+      // «По порядку»: нужны хотя бы два шага, и у каждой области есть название — ученик видит его как задание шага
+      if (t.ordered === true) {
+        if (good.length < 2) errors.push(`${pre}«по порядку» нужно хотя бы две верные области.`);
+        good.forEach(id => { const k2 = draft.zones.findIndex(z => z.id === id); if (!clean(draft.zones[k2].label)) errors.push(`${pre}у области ${k2 + 1} нет названия — ученик не поймёт, что искать на этом шаге.`); });
+      }
       if (draft.interaction === 'point') {
         const zs = good.map(id => draft.zones.find(z => z.id === id));
         for (let a = 0; a < zs.length; a++) for (let b = a + 1; b < zs.length; b++) {
@@ -554,7 +570,7 @@ const HotspotEditor = (() => {
       if (!id || tIds.has(id)) id = nextId('t', [...tIds]);
       tIds.add(id);
       const targets = [...new Set((Array.isArray(s && s.targets) ? s.targets : []).map(String))].filter(x => zIds.has(x)).slice(0, MAX_TARGETS);
-      return { id, prompt: String((s && s.prompt) || '').slice(0, PROMPT_LEN), targets, explanation: String((s && s.explanation) || '') };
+      return { id, prompt: String((s && s.prompt) || '').slice(0, PROMPT_LEN), targets, ordered: !!(s && s.ordered === true), explanation: String((s && s.explanation) || '') };
     });
     const im = file.image;
     return { ...create(), interaction: file.interaction === 'point' ? 'point' : 'zone',

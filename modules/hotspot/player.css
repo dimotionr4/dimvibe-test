@@ -5,6 +5,11 @@
 .hs-ask { margin:0 0 6px; color:var(--muted); font-size:.95rem; }
 .hs-ask.hs-own { color:var(--text); font-size:1.05rem; font-weight:600; overflow-wrap:anywhere; }
 .hs-count { margin:0 0 8px; font-size:.9rem; color:var(--muted); }
+.hs-stepbox { margin:0 0 8px; }
+.hs-step { margin:0 0 4px; font-size:1.02rem; }
+.hs-banner { margin:0; padding:4px 10px; border-radius:8px; font-size:.92rem; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+.hs-banner.ok { background:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.hs-banner.retry, .hs-banner.miss { background:color-mix(in srgb, var(--bad) 12%, var(--card)); }
 .hs-card.missing { border-color:var(--bad); border-style:dashed; }
 .hs-stagewrap { text-align:center; }
 .hs-stage { position:relative; display:inline-block; max-width:100%; line-height:0; border-radius:10px; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; }

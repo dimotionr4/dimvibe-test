@@ -65,6 +65,7 @@
 .hs-kind { font-size:.88rem; }
 .hs-prompt { min-height:36px; margin-bottom:6px; }
 .hs-expl { min-height:38px; margin-top:4px; }
+.hs-ord { display:inline-flex; align-items:center; gap:4px; margin:2px 0 6px; font-size:.92rem; cursor:pointer; }
 .hs-chips { display:flex; flex-wrap:wrap; gap:6px; }
 .hs-chip { min-height:34px; padding:0 12px; border:1.5px solid var(--line); border-radius:999px; background:var(--bg); color:var(--text); cursor:pointer; }
 .hs-chip.on { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--bg)); font-weight:600; }
