@@ -1,0 +1,32 @@
+/* Редактор модуля Text to Image. Цвета берутся из переменных ядра (editor.html) */
+.ti-wrap { position:relative; }
+.ti-muted { color:var(--muted); }
+.ti-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.ti-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.ti-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.ti-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.ti-modes { display:inline-flex; gap:6px; }
+.ti-modes button { width:64px; min-height:36px; height:36px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:9px; }
+.ti-modes button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.ti-in { width:100%; box-sizing:border-box; min-width:0; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.ti-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.ti-ib:hover:not(:disabled) { color:var(--accent); }
+.ti-ib.ti-del:hover:not(:disabled) { color:var(--bad); }
+.ti-ib:disabled { opacity:.3; }
+.ti-add { margin:4px 0 12px; }
+.ti-add:disabled { opacity:.5; }
+
+/* Карточка: номер, картинка (значки и миниатюра), два поля, кнопки. На узкой колонке поля уходят под картинку */
+.ti-list { list-style:none; margin:0; padding:0; }
+.ti-row { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px 10px; margin-bottom:8px; padding:10px 12px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+.ti-row.same { border-color:#d9a400; box-shadow:inset 0 0 0 1px #d9a400; }
+.ti-no { flex:none; min-width:22px; height:22px; margin-top:7px; border-radius:11px; background:var(--accent-soft); color:var(--accent); font-size:.8rem; font-weight:700; line-height:22px; text-align:center; }
+.ti-pic { flex:none; min-width:0; }
+.ti-fields { flex:1 1 200px; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.ti-answer { font-weight:600; }
+.ti-alts { font-size:.9rem; }
+.ti-tools2 { display:flex; align-items:center; flex:none; }
+
+.ti-sec { margin-top:6px; }
+.ti-h { margin:0 0 6px; font-size:.95rem; }
+.ti-dist { resize:vertical; }

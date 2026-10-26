@@ -1,0 +1,36 @@
+/* Плеер модуля Text to Image: сетка картинок с окошками для слов, сверху (при банке слов) банк.
+   Результат не только цветом: ✓ у верного окошка, ✗ у неверного (общий вид пропуска — core/gap.css) */
+.card.ti-bank { line-height:1.5; position:sticky; top:0; z-index:5; max-height:30vh; overflow-y:auto; }
+.ti-zone { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-height:44px; }
+.ti-label { margin:0 0 8px; font-size:.9rem; color:var(--muted); }
+.ti-help { flex:none; width:28px; height:28px; box-sizing:border-box; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--muted); font-weight:700; font-size:.9rem; line-height:25px; text-align:center; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.ti-help:hover, .ti-help.on { border-color:var(--accent); color:var(--accent); }
+.ti-bank.ti-over { outline:3px solid var(--accent); outline-offset:-4px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+
+/* Слова банка. Общий .chip из index.html задан позже, поэтому .chip.ti-chip; использованное слово приглушено (.used) */
+.chip.ti-chip { display:inline-flex; align-items:center; max-width:100%; min-height:40px; margin:0; padding:6px 14px; border:1.5px solid var(--line); border-radius:999px; background:var(--card); color:var(--text); line-height:1.3; text-align:left; cursor:grab; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; box-sizing:border-box; overflow-wrap:anywhere; touch-action:manipulation; }
+.chip.ti-chip:not(.used):hover { border-color:var(--accent); }
+.chip.ti-chip.used { cursor:default; }
+.chip.ti-chip.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:0 0 0 2px var(--accent); }
+.ti-chip.ti-lifted { opacity:.35; }
+.ti-ghost.chip.ti-chip { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; box-shadow:0 8px 20px rgba(0,0,0,.25); border-color:var(--accent); }
+.ti-dragging, .ti-dragging * { cursor:grabbing !important; user-select:none; }
+
+/* Сетка: размер картинки задаёт «Дизайн» (S / M / L), вписывание — contain или cover */
+.ti-grid { --w:150px; --h:120px; display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--w), 1fr)); gap:22px 16px; padding:6px 2px 10px; }
+.ti-size-s { --w:110px; --h:88px; }
+.ti-size-l { --w:210px; --h:170px; }
+.ti-cell { min-width:0; display:flex; flex-direction:column; gap:10px; }
+.ti-pic { height:var(--h); display:flex; align-items:center; justify-content:center; border-radius:10px; overflow:hidden; user-select:none; -webkit-user-select:none; }
+.ti-pic img { width:100%; height:100%; display:block; pointer-events:none; }
+.ti-fit-contain .ti-pic img { object-fit:contain; }
+.ti-fit-cover .ti-pic img { object-fit:cover; }
+.ti-pic.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+
+/* Окошко: по ширине картинки, ширина из «Дизайна» не действует. Нажатие — положить выбранное слово */
+.ti-cell .gap.t2i-slot { display:flex; width:100%; min-width:0; margin:0; font-weight:600; overflow-wrap:anywhere; touch-action:manipulation; }
+.ti-cell .gap.t2i-slot.t2i-target { box-shadow:0 0 0 2px var(--accent); }
+.ti-cell .gap.t2i-slot.ti-over { box-shadow:0 0 0 3px var(--accent); background:color-mix(in srgb, var(--accent) 16%, transparent); }
+.ti-cell .gap.t2i-slot select, .ti-cell .gap.t2i-slot.w-auto select { width:100%; min-width:0; text-overflow:ellipsis; }
+.ti-cell .gap.t2i-slot input { min-width:0; }
+.ti-right { font-size:.85rem; color:var(--muted); text-align:center; }

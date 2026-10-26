@@ -338,6 +338,7 @@
 <link rel="stylesheet" href="modules/odd-one-out/editor.css?v=2">
 <link rel="stylesheet" href="modules/hotspot/editor.css?v=6">
 <link rel="stylesheet" href="modules/label-diagram/editor.css?v=6">
+<link rel="stylesheet" href="modules/text-to-image/editor.css?v=1">
 <link rel="stylesheet" href="modules/vocabulary/editor.css?v=1">
 <link rel="stylesheet" href="modules/splice/editor.css?v=2">
 <link rel="stylesheet" href="modules/essay-writing/editor.css?v=1">
@@ -438,6 +439,7 @@
       <button data-mod="odd_one_out" aria-pressed="false"><b>Odd One Out</b><span>Найти лишнее в группе</span></button>
       <button data-mod="hotspot" aria-pressed="false"><b>Hotspot</b><span>Найти место на картинке</span></button>
       <button data-mod="label_diagram" aria-pressed="false"><b>Label the Diagram</b><span>Подписать схему</span></button>
+      <button data-mod="text_to_image" aria-pressed="false"><b>Text to Image</b><span>Подписать картинки словами</span></button>
       <button data-mod="vocabulary" aria-pressed="false"><b>Vocabulary</b><span>Словарь слов с переводами</span></button>
       <button data-mod="splice" aria-pressed="false"><b>Splice</b><span>Собрать слова из частей</span></button>
       <button data-mod="prepositions" aria-pressed="false"><b>Prepositions</b><span>В пропуски — предлоги</span></button>
@@ -480,6 +482,7 @@
 <script src="modules/hotspot/geometry.js?v=2"></script>
 <script src="modules/hotspot/editor.js?v=10"></script>
 <script src="modules/label-diagram/editor.js?v=6"></script>
+<script src="modules/text-to-image/editor.js?v=1"></script>
 <script src="modules/vocabulary/editor.js?v=2"></script>
 <script src="modules/splice/tokens.js?v=1"></script>
 <script src="modules/splice/editor.js?v=3"></script>
@@ -488,11 +491,11 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 97;
+const ASSET_V = 98;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor, splice: SpliceEditor, essay_writing: EssayWritingEditor, prepositions: PrepositionsEditor, hotspot: HotspotEditor, label_diagram: LabelDiagramEditor, vocabulary: VocabularyEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor, splice: SpliceEditor, essay_writing: EssayWritingEditor, prepositions: PrepositionsEditor, hotspot: HotspotEditor, label_diagram: LabelDiagramEditor, vocabulary: VocabularyEditor, text_to_image: TextToImageEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -1606,7 +1609,7 @@ const pickModule = mod => {
   newModule = mod;
   document.querySelectorAll('#modPick [data-mod]').forEach(x => { const on = x.dataset.mod === mod; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); });
   // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
-  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories' || newModule === 'odd_one_out' || newModule === 'splice' || newModule === 'essay_writing' || newModule === 'hotspot' || newModule === 'label_diagram' || newModule === 'vocabulary';
+  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories' || newModule === 'odd_one_out' || newModule === 'splice' || newModule === 'essay_writing' || newModule === 'hotspot' || newModule === 'label_diagram' || newModule === 'vocabulary' || newModule === 'text_to_image';
   document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
   $('kindNote').hidden = st;
 };
@@ -1669,7 +1672,7 @@ setPreviewOpen(!narrow()); // на широком экране предпрос�
   history.replaceState(null, '', location.pathname);
   if (!MODULES[mod]) return;
   pickModule(mod);
-  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'splice' || mod === 'essay_writing' || mod === 'hotspot' || mod === 'label_diagram' || mod === 'vocabulary') createDraft('statements', mod);
+  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'splice' || mod === 'essay_writing' || mod === 'hotspot' || mod === 'label_diagram' || mod === 'vocabulary' || mod === 'text_to_image') createDraft('statements', mod);
   else askKind();
 })();
 </script>
