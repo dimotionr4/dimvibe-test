@@ -32,5 +32,5 @@
 .ti-cell .gap.t2i-slot.t2i-target { box-shadow:0 0 0 2px var(--accent); }
 .ti-cell .gap.t2i-slot.ti-over { box-shadow:0 0 0 3px var(--accent); background:color-mix(in srgb, var(--accent) 16%, transparent); }
 .ti-cell .gap.t2i-slot select, .ti-cell .gap.t2i-slot.w-auto select { width:100%; min-width:0; text-overflow:ellipsis; }
-.ti-cell .gap.t2i-slot input { min-width:0; }
+.ti-cell .gap.t2i-slot input { flex:1 1 auto; width:100%; min-width:0; }
 .ti-right { font-size:.85rem; color:var(--muted); text-align:center; }
