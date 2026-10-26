@@ -183,10 +183,12 @@ const HotspotPlayer = (() => {
     });
     if (pointMode()) {
       mine.forEach((m, i) => {
-        const b = el('button', 'hs-mark' + (m.locked ? ' ok' : m.state === 'bad' ? ' bad' : ''), m.locked ? '✓' : m.state === 'bad' ? '✗' : String(i + 1));
-        b.type = 'button';
-        b.setAttribute('aria-label', `Маркер ${i + 1}` + (m.locked ? ', верно' : m.state === 'bad' ? ', неверно' : '') + (m.locked || finished ? '' : ', нажмите, чтобы убрать'));
-        if (m.locked || finished) b.disabled = true;
+        // Маркер — span, а не button: Comic рисует рамку и сбивает положение у любой кнопки (rough.js, comic.css)
+        const fixed = m.locked || finished;
+        const b = el('span', 'hs-mark' + (m.locked ? ' ok' : m.state === 'bad' ? ' bad' : '') + (fixed ? ' fixed' : ''), m.locked ? '✓' : m.state === 'bad' ? '✗' : String(i + 1));
+        b.setAttribute('role', 'button');
+        b.setAttribute('aria-label', `Маркер ${i + 1}` + (m.locked ? ', верно' : m.state === 'bad' ? ', неверно' : '') + (fixed ? '' : ', нажмите, чтобы убрать'));
+        if (fixed) b.setAttribute('aria-disabled', 'true');
         else b.onclick = () => removeMark(t, m);
         st.append(at(b, m.x, m.y));
       });

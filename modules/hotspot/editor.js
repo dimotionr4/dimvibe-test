@@ -182,7 +182,7 @@ const HotspotEditor = (() => {
   function paint() {
     if (!ov) return;
     ov.innerHTML = '';
-    cv.querySelectorAll('.hs-num, .hs-hd').forEach(n => n.remove());
+    cv.querySelectorAll('.hs-num, .hs-hd, .hs-x').forEach(n => n.remove());
     d.zones.forEach((z, k) => {
       if (!G.valid(z) && !(drag && drag.zone === z)) return;
       const s = document.createElementNS(NS, z.shape === 'ellipse' ? 'ellipse' : 'rect');
@@ -198,6 +198,12 @@ const HotspotEditor = (() => {
     const sel = selId && zoneById(selId);
     if (sel && G.valid(sel)) {
       const pts = { nw: [0, 0], n: [.5, 0], ne: [1, 0], e: [1, .5], se: [1, 1], s: [.5, 1], sw: [0, 1], w: [0, .5] };
+      const x = el('span', 'hs-x', '×'); // крестик «удалить область» в правом верхнем углу выбранной области
+      x.dataset.del = '1';
+      x.title = 'Удалить область';
+      x.style.left = (sel.x + sel.w) * 100 + '%';
+      x.style.top = sel.y * 100 + '%';
+      cv.append(x);
       Object.keys(pts).forEach(h => {
         const e = el('span', 'hs-hd hs-hd-' + h);
         e.dataset.h = h;
@@ -226,6 +232,7 @@ const HotspotEditor = (() => {
     const p = pt(e);
     const h = e.target.dataset && e.target.dataset.h;
     const sel = selId && zoneById(selId);
+    if (e.target.dataset && e.target.dataset.del && sel) { e.preventDefault(); removeZone(sel); return; }
     if (h && sel) drag = { kind: 'resize', h, start: p, z0: { ...sel }, zone: sel };
     else if (tool !== 'move') {
       if (d.zones.length >= MAX_ZONES) { say(`Областей не больше ${MAX_ZONES}.`); return; }
@@ -311,7 +318,21 @@ const HotspotEditor = (() => {
       inp.setAttribute('aria-label', `Название области ${k + 1}`);
       inp.oninput = () => { z.label = inp.value; save(); drawTasks(); };
       inp.onfocus = () => { if (selId !== z.id) { selId = z.id; paint(); r.parentElement.querySelectorAll('.hs-zrow').forEach(x => x.classList.toggle('sel', x === r)); } };
-      const shape = el('span', 'hs-muted hs-shape-name', G.SHAPES[z.shape] || '');
+      // Форма области меняется здесь же: прямоугольник / эллипс (размеры и положение остаются)
+      const shape = el('span', 'hs-shapes');
+      shape.setAttribute('role', 'radiogroup');
+      shape.setAttribute('aria-label', `Форма области ${k + 1}`);
+      [['rect', 'Прямоугольник', '<rect x="4" y="6" width="16" height="12" rx="1"/>'], ['ellipse', 'Эллипс', '<ellipse cx="12" cy="12" rx="9" ry="6"/>']].forEach(([id, name, ico]) => {
+        const sb = el('button', 'hs-shbtn' + (z.shape === id ? ' on' : ''));
+        sb.type = 'button';
+        sb.innerHTML = svg(ico);
+        sb.title = name;
+        sb.setAttribute('role', 'radio');
+        sb.setAttribute('aria-checked', String(z.shape === id));
+        sb.setAttribute('aria-label', name);
+        sb.onclick = () => { if (z.shape === id) return; z.shape = id; selId = z.id; save(); paint(); drawZones(); };
+        shape.append(sb);
+      });
       const del = el('button', 'hs-ib hs-del');
       del.type = 'button';
       del.innerHTML = svg('<path d="M6 6l12 12M18 6L6 18"/>');

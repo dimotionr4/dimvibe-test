@@ -51,7 +51,11 @@
 .hs-zrow.sel { background:var(--accent-soft); }
 .hs-zn { flex:none; width:28px; height:28px; min-height:0; padding:0; border-radius:50%; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
 .hs-zlabel { flex:1 1 0; min-height:34px; }
-.hs-shape-name { flex:none; font-size:.85rem; white-space:nowrap; }
+.hs-shapes { flex:none; display:inline-flex; gap:2px; }
+.hs-shbtn { width:32px; min-height:30px; padding:0; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+.hs-shbtn.on { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+/* Крестик «удалить» — внутри правого верхнего угла выбранной области, чуть ниже ручки */
+.hs-x { position:absolute; transform:translate(-100%, 0); margin:10px 10px 0 0; width:22px; height:22px; border-radius:50%; background:var(--bad); color:#fff; font-size:16px; line-height:20px; text-align:center; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.4); }
 
 /* Задания */
 .hs-task { margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
