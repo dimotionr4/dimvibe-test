@@ -33,9 +33,8 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Word Scramble / Sentence Builder — сделан, с картинкой и звуком у задания (2026-10-25)
 Правила перенесены в skill `.claude/skills/word-scramble/`; здесь не дублируются.
 
-## Splice (слова из слогов/частей)
-- Режимы: одно слово или «мозаика» из нескольких слов. Сложность Easy / Medium / Hard (Medium по умолчанию).
-- Одна общая проверка, 1 балл за правильное слово.
+## Splice — сделан, этап 1 без картинок и звука (2026-10-26)
+Правила перенесены в skill `.claude/skills/splice/`; здесь не дублируются.
 
 ## True / False — сделан (2026-10-23)
 Правила перенесены в skill `.claude/skills/true-false/`; здесь не дублируются.

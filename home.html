@@ -221,6 +221,7 @@ const ICON = {
   word_scramble: '<rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="6" width="7" height="7" rx="1.5"/><rect x="7" y="14" width="7" height="7" rx="1.5"/>',
   categories: '<path d="M3 12v8h7v-8M14 12v8h7v-8"/><rect x="4.5" y="4" width="4" height="4" rx="1"/><rect x="15.5" y="3" width="4" height="4" rx="1"/>',
   odd_one_out: '<circle cx="6.5" cy="7" r="2.5"/><circle cx="17.5" cy="7" r="2.5"/><circle cx="6.5" cy="17" r="2.5"/><rect x="15" y="14.5" width="5" height="5" rx="1"/>',
+  splice: '<path d="M3 8h6v8H3zM15 8h6v8h-6z"/><path d="M9 12h6"/>',
   essay_writing: '<path d="M4 6h14M4 11h8M4 16h5"/><path d="M12 19l1-3.5 6-6 2.5 2.5-6 6z"/>',
   generic: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>'
 };
@@ -241,7 +242,8 @@ const MODS = [
   { id: 'word_scramble', name: 'Word Scramble / Sentence Builder', desc: 'Собрать слово или фразу из рассыпанных частей.', ready: true },
   { id: 'flashcards', name: 'Flashcards' }, { id: 'vocabulary', name: 'Vocabulary' }, { id: 'word_search', name: 'Word Search' },
   { id: 'hotspot', name: 'Hotspot' }, { id: 'label_the_diagram', name: 'Label the Diagram' },
-{ id: 'prepositions', name: 'Prepositions' }, { id: 'splice', name: 'Splice' },
+{ id: 'prepositions', name: 'Prepositions' },
+  { id: 'splice', name: 'Splice', desc: 'Собрать слова из частей: одно слово или мозаика.', ready: true },
   { id: 'essay_writing', name: 'Essay Writing', desc: 'Написать текст по заданию: счётчики и условия без оценки.', ready: true }
 ];
 const $ = id => document.getElementById(id);

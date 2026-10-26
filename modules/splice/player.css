@@ -1,0 +1,48 @@
+/* Плеер модуля Splice: слово (пунктирная рамка) и банк перемешанных частей под ним; в мозаике — несколько окошек и общий банк.
+   Номера слов и «Предыдущее / Следующее» — классы tf-* из modules/true-false/player.css.
+   Результат не только цветом: ✓ у верного слова, ✗ и «Правильно: …» у неверного */
+.card.sp-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
+.sp-tnum { margin:0 0 6px; font-weight:600; color:var(--muted); }
+.sp-zone { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:56px; padding:8px; margin-bottom:10px; border:2px dashed var(--line); border-radius:10px; }
+.sp-empty { color:var(--muted); font-size:.92rem; }
+.sp-bank { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+/* Часть слова: «Плитки» — квадратные, «Бумажные кусочки» — как вырезанные из бумаги, с лёгким наклоном и тенью */
+.sp-tok { min-height:44px; min-width:44px; padding:4px 12px; font-weight:600; font-size:1.05rem; white-space:pre; user-select:none; -webkit-user-select:none; }
+.sp-tiles .sp-tok { border-radius:8px; box-shadow:0 2px 0 var(--line); }
+.sp-paper .sp-tok { position:relative; border:1px solid rgba(0,0,0,.2); border-radius:3px 6px 4px 7px; background:#fffbea; color:#2b2b2b; box-shadow:0 2px 4px rgba(0,0,0,.22); transform:rotate(-1.4deg); }
+.sp-paper .sp-tok:nth-child(even) { transform:rotate(1.1deg); border-radius:6px 3px 7px 4px; }
+.sp-paper .sp-tok:nth-child(3n) { transform:rotate(-.4deg); }
+.sp-zone .sp-tok { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
+.sp-paper .sp-zone .sp-tok { background:#fffbea; border-color:var(--accent); }
+.sp-tok:disabled { cursor:default; color:var(--text); opacity:1; }
+.sp-paper .sp-tok:disabled { color:#2b2b2b; }
+.sp-hintbtn { min-height:36px; padding:2px 10px; font-size:.92rem; }
+.sp-hinttext { margin:8px 0 0; padding:6px 10px; border-radius:8px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+/* Мозаика: окошки одно под другим, активное с акцентной рамкой */
+.sp-areas { display:grid; gap:8px; margin-bottom:10px; }
+.sp-area { border-radius:12px; cursor:pointer; }
+.sp-area .sp-zone { margin-bottom:0; }
+.sp-area.active .sp-zone { border-color:var(--accent); border-style:solid; }
+.sp-area:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.sp-atitle { margin:0 0 4px; font-weight:600; }
+.sp-acount { font-weight:400; color:var(--muted); font-size:.9rem; }
+.sp-slot { display:inline-block; min-width:44px; min-height:44px; border:2px dashed var(--line); border-radius:8px; box-sizing:border-box; }
+.sp-answers { margin-top:6px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+.sp-arow { margin:2px 0; overflow-wrap:anywhere; }
+.sp-aexpl { color:var(--muted); }
+/* Итог */
+.sp-card.missing .sp-zone, .sp-area.missing .sp-zone { border-color:var(--bad); }
+.sp-card.ok .sp-zone, .sp-area.ok .sp-zone { border-style:solid; border-color:var(--ok); background:color-mix(in srgb, var(--ok) 12%, var(--card)); }
+.sp-card.bad .sp-zone, .sp-area.bad .sp-zone { border-style:solid; border-color:var(--bad); background:color-mix(in srgb, var(--bad) 10%, var(--card)); }
+.sp-card.ok .sp-zone .sp-tok, .sp-area.ok .sp-zone .sp-tok { border-color:var(--ok); }
+.sp-card.bad .sp-zone .sp-tok, .sp-area.bad .sp-zone .sp-tok { border-color:var(--bad); }
+.sp-tick { margin-left:auto; color:var(--ok); font-weight:700; padding:0 4px; }
+.sp-cross { margin-left:auto; color:var(--bad); font-weight:700; padding:0 4px; }
+.sp-right { margin:0 0 6px; overflow-wrap:anywhere; }
+.sp-right-l { font-weight:600; color:var(--ok); }
+.sp-expl { margin:8px 0 0; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+
+/* Comic: контур берёт --rc */
+.style-comic .sp-zone .sp-tok { --rc:var(--accent); }
+.style-comic .sp-card.ok .sp-zone .sp-tok, .style-comic .sp-area.ok .sp-zone .sp-tok { --rc:var(--ok); }
+.style-comic .sp-card.bad .sp-zone .sp-tok, .style-comic .sp-area.bad .sp-zone .sp-tok { --rc:var(--bad); }
