@@ -190,13 +190,82 @@ const SplicePlayer = (() => {
     return e;
   }
 
-  function token(text, label, fn) {
+  // src — откуда часть берётся при перетаскивании мышью: { w: слово/окошко, piece: номер части, pos: место в нём (нет — из банка) }.
+  // Перетаскивание работает мышью; пальцем — нажатие (HTML5-перенос на телефоне не срабатывает)
+  let drag = null;
+  function token(text, label, fn, src) {
     const b = el('button', 'sp-tok', text);
     b.type = 'button';
     b.setAttribute('aria-label', label);
     b.disabled = finished;
     b.onclick = e => { e.stopPropagation(); fn(); };
+    if (src && !finished) {
+      b.draggable = true;
+      b.ondragstart = e => { drag = src; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', text); b.classList.add('sp-drag'); };
+      b.ondragend = () => { drag = null; b.classList.remove('sp-drag'); document.querySelectorAll('.sp-over').forEach(x => x.classList.remove('sp-over')); };
+    }
     return b;
+  }
+
+  // Место вставки в зоне: перед первой частью, которая правее курсора в его строке (или ниже него)
+  function slotAt(zone, e) {
+    const toks = [...zone.querySelectorAll('.sp-tok')];
+    for (let i = 0; i < toks.length; i++) {
+      const r = toks[i].getBoundingClientRect();
+      if (e.clientY < r.top || (e.clientY <= r.bottom && e.clientX < r.left + r.width / 2)) return i;
+    }
+    return toks.length;
+  }
+  // Принимающий элемент: ok(drag) — годится ли перетаскиваемое, onDrop(drag, event) — что делать
+  function target(box, ok, onDrop) {
+    if (finished) return;
+    box.ondragover = e => {
+      if (!drag || !ok(drag)) return;
+      e.preventDefault(); e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      box.classList.add('sp-over');
+    };
+    box.ondragleave = e => { if (!box.contains(e.relatedTarget)) box.classList.remove('sp-over'); };
+    box.ondrop = e => {
+      e.preventDefault(); e.stopPropagation();
+      box.classList.remove('sp-over');
+      const d = drag;
+      drag = null;
+      if (d && ok(d)) onDrop(d, e);
+    };
+  }
+
+  // Одно слово: часть из банка или из слова — в выбранное место слова; бросить вне слова — вернуть в банк
+  function dropWord(t, d, pos) {
+    const list = picked[t.id];
+    if (d.pos != null) { list.splice(d.pos, 1); if (d.pos < pos) pos--; }
+    list.splice(pos, 0, d.piece);
+    sync(t);
+    refocus = null;
+    render();
+  }
+  function dropWordBack(t, d) {
+    if (d.pos == null) return;
+    picked[t.id].splice(d.pos, 1);
+    sync(t);
+    render();
+  }
+  // Мозаика: часть — в выбранное окошко и место (в Easy и Medium только если там есть свободное место); бросить вне окошек — вернуть в банк
+  function dropArea(k, d, pos) {
+    const src = d.pos != null ? areas[d.w] : null;
+    if (src) { src.splice(d.pos, 1); if (d.w === k && d.pos < pos) pos--; }
+    if (areas[k].length >= cap(k)) { if (src) src.splice(d.pos, 0, d.piece); return; }
+    areas[k].splice(pos, 0, d.piece);
+    active = k;
+    tasks.forEach(sync);
+    refocus = null;
+    render();
+  }
+  function dropAreaBack(d) {
+    if (d.pos == null) return;
+    areas[d.w].splice(d.pos, 1);
+    tasks.forEach(sync);
+    render();
   }
 
   const styleCls = () => 'sp-' + (data.tokenStyle === 'paper' ? 'paper' : 'tiles');
@@ -213,7 +282,9 @@ const SplicePlayer = (() => {
     const zone = el('div', 'sp-zone');
     zone.setAttribute('role', 'group');
     zone.setAttribute('aria-label', 'Ваше слово');
-    picked[t.id].forEach((i, pos) => zone.append(token(p[i], `${p[i]}: убрать из слова`, () => give(t, pos))));
+    picked[t.id].forEach((i, pos) => zone.append(token(p[i], `${p[i]}: убрать из слова`, () => give(t, pos), { w: t.id, piece: i, pos })));
+    target(zone, d => d.w === t.id, (d, e) => dropWord(t, d, slotAt(zone, e)));
+    target(c, d => d.w === t.id && d.pos != null, d => dropWordBack(t, d));
     if (!picked[t.id].length) zone.append(el('span', 'sp-empty', 'Нажимайте на части ниже, чтобы собрать слово.'));
     if (finished) zone.append(mark(st));
     c.append(zone);
@@ -224,7 +295,7 @@ const SplicePlayer = (() => {
       const bank = el('div', 'sp-bank');
       bank.setAttribute('role', 'group');
       bank.setAttribute('aria-label', 'Части');
-      left.forEach(i => bank.append(token(p[i], `${p[i]}: добавить в слово`, () => take(t, i))));
+      left.forEach(i => bank.append(token(p[i], `${p[i]}: добавить в слово`, () => take(t, i), { w: t.id, piece: i })));
       c.append(bank);
     }
     // Подсказка: ученик открывает сам, баллов и проверок она не трогает
@@ -300,7 +371,8 @@ const SplicePlayer = (() => {
     const zone = el('div', 'sp-zone');
     zone.setAttribute('role', 'group');
     zone.setAttribute('aria-label', title);
-    areas[k].forEach((i, pos) => zone.append(token(all[i].text, `${all[i].text}: вернуть в банк`, () => giveM(k, pos))));
+    areas[k].forEach((i, pos) => zone.append(token(all[i].text, `${all[i].text}: вернуть в банк`, () => giveM(k, pos), { w: k, piece: i, pos })));
+    target(box, () => true, (d, e) => dropArea(k, d, slotAt(zone, e)));
     if (lv !== 'hard') for (let n = areas[k].length; n < cap(k); n++) zone.append(el('span', 'sp-slot'));
     else if (!areas[k].length) zone.append(el('span', 'sp-empty', 'Нажмите сюда, потом на части ниже.'));
     if (finished) zone.append(mark(st));
@@ -319,9 +391,10 @@ const SplicePlayer = (() => {
       const bank = el('div', 'sp-bank');
       bank.setAttribute('role', 'group');
       bank.setAttribute('aria-label', 'Части');
-      left.forEach(i => bank.append(token(all[i].text, `${all[i].text}: добавить в окошко`, () => takeM(i))));
+      left.forEach(i => bank.append(token(all[i].text, `${all[i].text}: добавить в окошко`, () => takeM(i), { w: -1, piece: i })));
       c.append(bank);
     }
+    target(c, d => d.pos != null, d => dropAreaBack(d));
     // После проверки: правильные слова по частям (если включено) с пояснениями
     if (finished && data.showAnswers !== false) {
       const r = el('div', 'sp-answers');

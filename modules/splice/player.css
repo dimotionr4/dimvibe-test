@@ -14,6 +14,9 @@
 .sp-paper .sp-tok:nth-child(3n) { transform:rotate(-.4deg); }
 .sp-zone .sp-tok { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
 .sp-paper .sp-zone .sp-tok { background:#fffbea; border-color:var(--accent); }
+.sp-tok[draggable="true"] { cursor:grab; }
+.sp-tok.sp-drag { opacity:.4; }
+.sp-over > .sp-zone, .sp-zone.sp-over { border-color:var(--accent); border-style:solid; background:color-mix(in srgb, var(--accent) 8%, var(--card)); }
 .sp-tok:disabled { cursor:default; color:var(--text); opacity:1; }
 .sp-paper .sp-tok:disabled { color:#2b2b2b; }
 .sp-hintbtn { min-height:36px; padding:2px 10px; font-size:.92rem; }
