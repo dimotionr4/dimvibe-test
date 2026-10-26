@@ -271,13 +271,45 @@ const SplicePlayer = (() => {
   const styleCls = () => 'sp-' + (data.tokenStyle === 'paper' ? 'paper' : 'tiles');
   const mark = st => el('span', st === 'ok' ? 'sp-tick' : 'sp-cross', st === 'ok' ? '✓' : '✗');
 
+  // Картинка слова: высота по «Размеру картинок», лупа увеличения на углу (addZoom, core/mediaviewer.js).
+  // Просмотр картинки и прослушивание звука не тратят проверку и не трогают части
+  function picture(im) {
+    const src = mediaSrc(im);
+    if (!src) return null;
+    const wrap = el('div', 'sp-pic');
+    const img = el('img');
+    img.alt = String(im.alt || '');
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+    img.onerror = () => { wrap.classList.add('broken'); img.remove(); };
+    img.src = src;
+    wrap.append(img);
+    addZoom(wrap, wrap, src, img.alt);
+    return wrap;
+  }
+  // Картинка и кнопка «Слушать» слова (если есть)
+  function mediaOf(t, parent) {
+    const pic = picture(t.image), audio = mediaSrc(t.audio);
+    const stop = e => e.stopPropagation(); // нажатие на картинку и звук не должно выбирать окошко мозаики
+    if (pic) { pic.addEventListener('click', stop); parent.append(pic); }
+    if (audio) {
+      const row = el('p', 'sp-audio');
+      row.addEventListener('click', stop);
+      row.append(audioButton(audio, 'spa' + t.id, 'audbtn', '🔊', 'Прослушать задание', 'Слушать'));
+      parent.append(row);
+    }
+  }
+  const sizeCls = () => ' sp-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm');
+
   // ---- Одно слово ----
   function wordCard(k) {
     const t = tasks[k], g = unitOf(t), p = pieces[t.id];
     const st = finished && g ? g.state : g && g.state === 'missing' ? 'missing' : '';
-    const c = el('div', 'card sp-card ' + styleCls() + (st ? ' ' + st : ''));
+    const c = el('div', 'card sp-card ' + styleCls() + sizeCls() + (st ? ' ' + st : ''));
     c.dataset.t = t.id;
     if (tasks.length > 1 && listView()) c.append(el('p', 'sp-tnum', wordName(k)));
+    mediaOf(t, c);
     // Слово ученика: части в выбранном порядке; нажатие возвращает часть в банк
     const zone = el('div', 'sp-zone');
     zone.setAttribute('role', 'group');
@@ -361,6 +393,7 @@ const SplicePlayer = (() => {
     head.append(document.createTextNode(title));
     if (lv !== 'hard') head.append(el('span', 'sp-acount', ` · частей: ${pieces[t.id].length}`));
     box.append(head);
+    if (lv === 'easy' || data.mediaAlways === true) mediaOf(t, box); // на Medium и Hard — только если автор включил: иначе выдали бы, какое слово где собирать
     if (!finished) {
       box.tabIndex = 0;
       box.setAttribute('role', 'button');
@@ -381,7 +414,7 @@ const SplicePlayer = (() => {
   }
 
   function mosaicCard() {
-    const c = el('div', 'card sp-card sp-mosaic ' + styleCls());
+    const c = el('div', 'card sp-card sp-mosaic ' + styleCls() + sizeCls());
     const list = el('div', 'sp-areas');
     tasks.forEach((_, k) => list.append(areaBox(k)));
     c.append(list);

@@ -29,9 +29,22 @@ const SpliceEditor = (() => {
   const VIEWS = { one: 'По одному слову', list: 'Все слова сразу' };
   const STYLES = { tiles: 'Плитки', paper: 'Бумажные кусочки' };
 
-  const newTask = id => ({ id, answer: '', label: '', hint: '', explanation: '' });
+  const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
+  const emptyImage = () => ({ media: '', url: '', alt: '' });
+  const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
+  // Файл упражнения: картинка {media | url, alt} или нет; звук {media} или нет
+  const imageOut = im => {
+    if (!im) return null;
+    const alt = clean(im.alt), media = safeMediaPath(im.media);
+    if (media) return { media, alt };
+    const url = safeImageUrl(im.url);
+    return url ? { url, alt } : null;
+  };
+  const audioOut = p => { const m = safeMediaPath(p); return m ? { media: m } : null; };
+
+  const newTask = id => ({ id, answer: '', label: '', hint: '', explanation: '', image: emptyImage(), audio: '' });
   function create() {
-    return { module: 'splice', format: 1, mode: 'single', level: 'medium', view: 'one', tokenStyle: 'tiles', showAnswers: true, tasks: [newTask('t1')] };
+    return { module: 'splice', format: 1, mode: 'single', level: 'medium', view: 'one', tokenStyle: 'tiles', showAnswers: true, imageSize: 'm', tasks: [newTask('t1')] };
   }
 
   // Демо-пример (демо-режим в «Настройках», core/demo.js): мозаика Medium с названиями для Easy, подсказками и пояснениями
@@ -40,7 +53,7 @@ const SpliceEditor = (() => {
     return { ...create(), mode: 'mosaic', level: 'medium', instruction: DimDemo.instruction('Соберите слова из частей: части всех слов лежат вместе.'), tasks: [
       t('t1', 'mo/dern/ize', { label: 'сделать современным', explanation: 'modern + -ize: суффикс -ize делает глагол.' }),
       t('t2', 'un/happi/ness', { label: 'грусть', explanation: 'un- (приставка) + happy + -ness (суффикс).' }),
-      t('t3', 'tele/phone', { label: 'аппарат для разговора на расстоянии' }),
+      t('t3', 'tele/phone', { label: 'аппарат для разговора на расстоянии', image: DimDemo.img('house'), audio: DimDemo.AUD.a }),
     ] };
   }
 
@@ -50,6 +63,12 @@ const SpliceEditor = (() => {
     if (!VIEWS[d.view]) d.view = 'one';
     if (!STYLES[d.tokenStyle]) d.tokenStyle = 'tiles';
     if (typeof d.showAnswers !== 'boolean') d.showAnswers = true;
+    if (typeof d.mediaAlways !== 'boolean') d.mediaAlways = false;
+    if (!SIZES[d.imageSize]) d.imageSize = 'm';
+    d.tasks.forEach(t => {
+      if (!t.image) t.image = emptyImage();
+      if (typeof t.audio !== 'string') t.audio = '';
+    });
   }
 
   function render(container, draft, onSave) {
@@ -174,7 +193,14 @@ const SpliceEditor = (() => {
       row.append(el('span', 'sp-flabel', label), i);
       return row;
     };
-    box.append(ans, auto, prev);
+    // Картинка и звук слова: общие компактные значки (core/mediabar.js), миниатюра и значки одной строкой
+    const media = el('div', 'sp-media');
+    const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук задания');
+    media.append(el('span', 'sp-flabel', 'Картинка, звук'), MediaUI.imageControl(t.image, { save, after: audio }));
+    box.append(ans, auto, prev, media);
+    if (mosaic && d.level !== 'easy') box.append(el('p', 'sp-muted sp-hint', d.mediaAlways
+      ? 'Картинка и звук показываются у окошек и на Medium / Hard (включено во вкладке «Поведение»): они подсказывают, какое слово где собирать.'
+      : 'В мозаике Medium и Hard картинка и звук по умолчанию скрыты: они выдали бы, какое слово где собирать. Показать их можно во вкладке «Поведение».'));
     if (mosaic) box.append(field('sp-labelin', t.label, 'Видно на уровне Easy, например: сделать современным', 'Название', v => { t.label = v; }));
     else box.append(field('sp-hintin', t.hint, 'Необязательно: ученик откроет её сам', 'Подсказка', v => { t.hint = v; }));
     box.append(field('sp-expl', t.explanation, 'Необязательно: ученик увидит его после проверки', 'Пояснение', v => { t.explanation = v; }));
@@ -201,7 +227,7 @@ const SpliceEditor = (() => {
       no.onclick = () => { delAsk = null; drawList(); };
       q.append(yes, no);
       tools.append(q);
-    } else tools.append(b(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить слово', () => { if ([t.answer, t.label, t.hint, t.explanation].some(clean)) { delAsk = t.id; drawList(); } else remove(k); }));
+    } else tools.append(b(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить слово', () => { if ([t.answer, t.label, t.hint, t.explanation].some(clean) || hasPic(t.image) || t.audio) { delAsk = t.id; drawList(); } else remove(k); }));
     top.append(tools);
     return top;
   }
@@ -224,7 +250,7 @@ const SpliceEditor = (() => {
   // Копия получает новый ID; правки копии не меняют оригинал
   function duplicate(k) {
     if (d.tasks.length >= MAX_TASKS) return say(`Слов не больше ${MAX_TASKS}.`);
-    d.tasks.splice(k + 1, 0, { ...d.tasks[k], id: newTaskId() });
+    d.tasks.splice(k + 1, 0, { ...JSON.parse(JSON.stringify(d.tasks[k])), id: newTaskId() }); // глубокая копия: картинка копии — свой объект
     save();
     drawList();
   }
@@ -246,6 +272,8 @@ const SpliceEditor = (() => {
     if (p.length < MIN_PIECES) return 'Поделите слово на части: поставьте «/» или нажмите «Авто».';
     if (p.length > MAX_PIECES) return `Частей ${p.length}, а можно не больше ${MAX_PIECES}.`;
     if (p.every(x => T.same(x, p[0]))) return 'Все части одинаковые: их нельзя перемешать.';
+    const im = t.image;
+    if (im && !safeMediaPath(im.media) && clean(im.url) && !safeImageUrl(im.url)) return 'Ссылка на картинку должна быть полным адресом с https://.';
     return '';
   }
 
@@ -260,8 +288,12 @@ const SpliceEditor = (() => {
       ...(mosaic ? { mode: 'mosaic', ...(draft.level !== 'medium' ? { level: draft.level } : {}) } : (draft.view === 'list' ? { view: 'list' } : {})),
       ...(draft.tokenStyle === 'paper' ? { tokenStyle: 'paper' } : {}),
       ...(draft.showAnswers === false ? { showAnswers: false } : {}),
+      ...(mosaic && draft.level !== 'easy' && draft.mediaAlways ? { mediaAlways: true } : {}),
+      ...(draft.tasks.some(t => imageOut(t.image)) ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm' } : {}),
       tasks: draft.tasks.map(t => ({
         id: t.id, answer: T.split(t.answer).join('/'),
+        ...(imageOut(t.image) ? { image: imageOut(t.image) } : {}),
+        ...(audioOut(t.audio) ? { audio: audioOut(t.audio) } : {}),
         ...(mosaic && clean(t.label) ? { label: clean(t.label) } : {}),
         ...(!mosaic && clean(t.hint) ? { hint: clean(t.hint) } : {}),
         ...(clean(t.explanation) ? { explanation: clean(t.explanation) } : {}),
@@ -302,10 +334,13 @@ const SpliceEditor = (() => {
       let id = String((t && t.id) || '');
       if (!id || ids.has(id)) id = nextId('t', [...ids]);
       ids.add(id);
-      return { id, answer: String((t && t.answer) || ''), label: String((t && t.label) || ''), hint: String((t && t.hint) || ''), explanation: String((t && t.explanation) || '') };
+      const im = t && t.image;
+      return { id, answer: String((t && t.answer) || ''), label: String((t && t.label) || ''), hint: String((t && t.hint) || ''), explanation: String((t && t.explanation) || ''),
+        image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') },
+        audio: (t && t.audio && safeMediaPath(t.audio.media)) || '' };
     });
     return { ...create(), mode: file.mode === 'mosaic' ? 'mosaic' : 'single', level: LEVELS[file.level] ? file.level : 'medium', view: file.view === 'list' ? 'list' : 'one',
-      tokenStyle: file.tokenStyle === 'paper' ? 'paper' : 'tiles', showAnswers: file.showAnswers !== false, tasks };
+      tokenStyle: file.tokenStyle === 'paper' ? 'paper' : 'tiles', showAnswers: file.showAnswers !== false, mediaAlways: file.mediaAlways === true, imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', tasks };
   }
 
   // Настройки во вкладке «Дизайн» (рисует ядро): вид частей; показ слов — только у «Одного слова»
@@ -313,15 +348,20 @@ const SpliceEditor = (() => {
   function designOptions(draft) {
     const view = draft.mode === 'mosaic' ? [] : [{ field: 'view', label: 'Показ слов', value: VIEWS[draft.view] ? draft.view : 'one', names: VIEWS,
       icons: { one: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'), list: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>') } }];
-    return [...view,
+    const size = draft.tasks.some(t => hasPic(t.image))
+      ? [{ field: 'imageSize', label: 'Размер картинок', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } }] : [];
+    return [...size, ...view,
       { field: 'tokenStyle', label: 'Вид частей', value: STYLES[draft.tokenStyle] ? draft.tokenStyle : 'tiles', names: STYLES,
         icons: { tiles: sq('<rect x="3" y="8" width="8" height="8" rx="1.5"/><rect x="13" y="8" width="8" height="8" rx="1.5"/>'), paper: sq('<path d="M3 8l2-1 3 1 3-1 2 1v8l-2 1-3-1-3 1-2-1z"/><path d="M14 7l3 1 3-1v9l-3 1-3-1z"/>') } },
     ];
   }
   // Выключатель во вкладке «Поведение»
   function behaviorOptions(draft) {
+    const media = draft.mode === 'mosaic' && draft.level !== 'easy'
+      ? [{ field: 'mediaAlways', label: 'Картинка и звук в мозаике Medium / Hard', value: draft.mediaAlways === true,
+        help: 'По умолчанию на Medium и Hard картинка и звук слов скрыты: окошки равноправны, и картинка у окошка выдала бы, какое слово там собирать. Если включить, они показываются у окошек по порядку слов — как подсказка.' }] : [];
     return [{ field: 'showAnswers', label: 'Показывать правильный ответ', value: draft.showAnswers !== false,
-      help: 'После проверки показываются правильные слова, разделённые на части. Верные слова зелёные, неверные — красные в любом случае; пояснение показывается всегда. По умолчанию включено.' }];
+      help: 'После проверки показываются правильные слова, разделённые на части. Верные слова зелёные, неверные — красные в любом случае; пояснение показывается всегда. По умолчанию включено.' }, ...media];
   }
 
   return { create, demo, render, load, exportData, validate, unitCount, fixedChecks, fixedChecksNote, designOptions, behaviorOptions };
