@@ -1,0 +1,119 @@
+{
+  "id": "ex-ddrjsl",
+  "module": "hotspot",
+  "format": 1,
+  "published": true,
+  "title": "Демо — Hotspot",
+  "interaction": "point",
+  "image": {
+    "media": "media/ex-ugfvkv/img-0133b924.jpg"
+  },
+  "zones": [
+    {
+      "id": "z1",
+      "label": "Гостиная",
+      "shape": "rect",
+      "x": 0.0976,
+      "y": 0.3835,
+      "w": 0.38,
+      "h": 0.3
+    },
+    {
+      "id": "z2",
+      "label": "Спальня",
+      "shape": "rect",
+      "x": 0.22,
+      "y": 0.2,
+      "w": 0.16,
+      "h": 0.17
+    },
+    {
+      "id": "z3",
+      "label": "Кухня",
+      "shape": "rect",
+      "x": 0.52,
+      "y": 0.3,
+      "w": 0.17,
+      "h": 0.17
+    },
+    {
+      "id": "z4",
+      "label": "Круглая комната",
+      "shape": "ellipse",
+      "x": 0.72,
+      "y": 0.12,
+      "w": 0.2,
+      "h": 0.25
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "prompt": "Где спальня?",
+      "targets": [
+        "z2"
+      ],
+      "explanation": "Bedroom — спальня."
+    },
+    {
+      "id": "t2",
+      "prompt": "Найдите гостиную и кухню.",
+      "targets": [
+        "z1",
+        "z3"
+      ],
+      "explanation": "Living room — гостиная, kitchen — кухня."
+    },
+    {
+      "id": "t3",
+      "targets": [
+        "z2",
+        "z4"
+      ]
+    }
+  ],
+  "instruction": {
+    "title": "",
+    "text": "Найдите на картинке нужные места.",
+    "audio": {
+      "media": "media/library/aud-a50607d4.wav"
+    },
+    "image": {
+      "media": "media/ex-ugfvkv/img-0133b924.jpg",
+      "alt": "",
+      "size": "medium",
+      "align": "center"
+    }
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "brand",
+    "showInstruction": true,
+    "showImage": true,
+    "gap": {
+      "shape": "line",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "comic",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "classicFont": "system",
+    "comicFont": "blogger",
+    "comicOutline": "neat",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "plain",
+      "fontSize": "m",
+      "fontWeight": "normal"
+    },
+    "check": {
+      "variant": "filled",
+      "align": "right"
+    }
+  }
+}
