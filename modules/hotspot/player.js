@@ -7,11 +7,15 @@
 //  • «по порядку» (task.ordered): области ищутся по одной в порядке автора, у каждого шага свои проверки (по умолчанию 3, не из общих);
 //    верно — шаг закреплён, проверки кончились — верное место показано, за шаг 0, дальше. Штрафа нет.
 // Счёт проверок общего хода (checksUsed, maxChecks) модуль не использует: maxChecks() отдаёт большое число, конец прохождения решает check().
+// Ответ «Контур» (этап 3): ученик обводит объект по точкам и замыкает контур; верно, если совпадение контура с областью
+// (площадь пересечения / площадь объединения, HotspotGeo.iou) не меньше порога data.threshold (30–90%, по умолчанию 65%).
+// Незамкнутый, пересекающий сам себя или слишком маленький контур проверку не тратит: его сначала исправляют.
 const HotspotPlayer = (() => {
   const G = HotspotGeo;
   const NS = 'http://www.w3.org/2000/svg';
   let idx = 0; // какое задание показано
   let marks = {}; // ID задания → отметки ученика: {zone | x, y, locked, state}
+  let open = {}; // «Контур»: ID задания → вершины незамкнутого контура [[x, y], …]
   let steps = {}; // ID задания «по порядку» → {used, missed: Set, banner}
   let missing = new Set(); // обычные задания, где не хватает отметок (после попытки проверки)
   let freeUsed = 0; // потрачено общих проверок (обычные задания)
@@ -26,6 +30,10 @@ const HotspotPlayer = (() => {
   const unitId = (t, zid) => t.id + ':' + zid;
   const unitOf = (t, zid) => gaps.find(g => g.id === unitId(t, zid));
   const pointMode = () => data.interaction === 'point';
+  const outlineMode = () => data.interaction === 'outline';
+  const thr = () => { const n = Number(data.threshold); return (n >= 30 && n <= 90 ? n : 65) / 100; }; // порог совпадения контура, доля
+  const MAX_VERTS = 60;
+  const contourZone = m => G.fit({ shape: 'polygon', pts: m.pts });
   const marksOf = t => marks[t.id] || (marks[t.id] = []);
   const free = t => marksOf(t).filter(m => !m.locked); // ещё не закреплённые отметки
   const left = t => targetsOf(t).filter(zid => !unitOf(t, zid).locked); // ещё не найденные области
@@ -55,6 +63,7 @@ const HotspotPlayer = (() => {
 
   function reset() {
     marks = {};
+    open = {};
     steps = {};
     missing = new Set();
     freeUsed = 0;
@@ -62,7 +71,7 @@ const HotspotPlayer = (() => {
     imgFailed = false;
   }
 
-  const started = () => Object.values(marks).some(a => a.length);
+  const started = () => Object.values(marks).some(a => a.length) || Object.values(open).some(a => a.length);
   const maxChecks = () => 999;
 
   // Правка отметок снимает «не хватает», сообщение и подсказку шага
@@ -98,6 +107,61 @@ const HotspotPlayer = (() => {
     marksOf(t).push({ x, y, locked: false, state: null });
     edit(t);
   }
+  // «Контур»: нажатие на картинку ставит вершину. «Найти несколько» — контуров не больше, чем верных областей;
+  // «найти одно» и шаг «по порядку» — новый контур заменяет прежний незакреплённый
+  function addVertex(t, x, y) {
+    if (frozen(t)) return;
+    let pts = open[t.id];
+    if (!pts) {
+      const mine = marksOf(t);
+      if (cap(t) === 1) marks[t.id] = mine.filter(m => m.locked);
+      else if (mine.length >= cap(t)) { note = 'Все контуры нарисованы. Нажмите «Очистить», чтобы начать заново.'; render(); return; }
+      pts = open[t.id] = [];
+    }
+    if (pts.length >= MAX_VERTS) { note = 'Слишком много точек: замкните контур.'; render(); return; }
+    const l = pts[pts.length - 1];
+    if (l && Math.hypot(x - l[0], y - l[1]) < 0.005) return; // почти в том же месте (случайное двойное нажатие) — точку не добавляем
+    pts.push([x, y]);
+    edit(t);
+  }
+  // Замкнуть контур: нужно 3 точки, без самопересечений и не слишком маленький
+  function closeOpen(t) {
+    const pts = open[t.id];
+    if (!pts) return;
+    if (pts.length < 3) { note = 'Нужно хотя бы 3 точки.'; render(); return; }
+    if (G.selfIntersects(pts)) { note = 'Контур пересекает сам себя. Передвиньте точки или уберите лишние.'; render(); return; }
+    if (!G.polyValid(pts)) { note = 'Контур слишком маленький. Обведите объект крупнее.'; render(); return; }
+    marksOf(t).push({ pts, locked: false, state: null });
+    delete open[t.id];
+    edit(t);
+  }
+  // «Отменить»: убирает последнюю точку; если открытого контура нет — снова открывает последний незакреплённый
+  function undoVertex(t) {
+    if (frozen(t)) return;
+    const pts = open[t.id];
+    if (pts && pts.length) { pts.pop(); if (!pts.length) delete open[t.id]; } else {
+      const m = free(t).pop();
+      if (!m) return;
+      marks[t.id] = marksOf(t).filter(x => x !== m);
+      open[t.id] = m.pts;
+    }
+    edit(t);
+  }
+  function clearContours(t) {
+    if (frozen(t)) return;
+    delete open[t.id];
+    marks[t.id] = marksOf(t).filter(m => m.locked);
+    edit(t);
+  }
+  // Что мешает проверке «Контур»: незамкнутый контур или контур, пересекающий сам себя (после передвижения точки)
+  function drawnProblem(list) {
+    for (const t of list) {
+      if (open[t.id] && open[t.id].length) return { t, text: 'Замкните контур (нажмите на первую точку или «Замкнуть») или очистите его.' };
+      if (free(t).some(m => !G.polyValid(m.pts))) return { t, text: 'Контур пересекает сам себя или слишком мал. Исправьте точки или очистите контур.' };
+    }
+    return null;
+  }
+
   function removeMark(t, m) {
     if (frozen(t) || m.locked) return;
     const mine = marksOf(t);
@@ -118,10 +182,12 @@ const HotspotPlayer = (() => {
   function checkStep(t) {
     const zid = curTarget(t);
     if (!zid) return { note: 'Все шаги этого задания пройдены. Перейдите к другому заданию.' };
+    if (outlineMode()) { const p = drawnProblem([t]); if (p) return { note: p.text }; }
     const cand = free(t);
-    if (!cand.length) return { note: pointMode() ? 'Поставьте маркер, потом нажмите «Проверить».' : 'Выберите область, потом нажмите «Проверить».' };
+    if (!cand.length) return { note: outlineMode() ? 'Обведите объект и замкните контур, потом нажмите «Проверить».' : pointMode() ? 'Поставьте маркер, потом нажмите «Проверить».' : 'Выберите область, потом нажмите «Проверить».' };
     const s = stOf(t), m = cand[0], z = zoneOf(zid), i = targetsOf(t).indexOf(zid) + 1;
-    const ok = pointMode() ? G.hit(z, m.x, m.y) : m.zone === zid;
+    if (outlineMode()) m.iou = G.iou(contourZone(m), z);
+    const ok = outlineMode() ? m.iou >= thr() : pointMode() ? G.hit(z, m.x, m.y) : m.zone === zid;
     s.used++;
     if (ok) {
       m.locked = true; m.state = null; m.zone = zid;
@@ -142,13 +208,19 @@ const HotspotPlayer = (() => {
 
   // Обычные задания: все должны иметь нужное число отметок, потом оценка всех сразу
   function checkFree() {
+    if (outlineMode()) {
+      const p = drawnProblem(freeTasks().filter(t => left(t).length));
+      if (p) { idx = Math.max(0, tasks().indexOf(p.t)); return { note: p.text }; }
+    }
     const need = [];
     freeTasks().forEach(t => { const n = left(t).length; if (n && free(t).length < n) need.push({ t, n: n - free(t).length }); });
     if (need.length) {
       missing = new Set(need.map(x => x.t.id));
       idx = Math.max(0, tasks().indexOf(need[0].t));
       const sum = need.reduce((s, x) => s + x.n, 0);
-      return { note: pointMode()
+      return { note: outlineMode()
+        ? (sum === 1 ? 'Обведите ещё один объект и замкните контур, потом нажмите «Проверить».' : `Обведите объекты: ещё ${sum}.`)
+        : pointMode()
         ? (sum === 1 ? 'Поставьте ещё один маркер, потом нажмите «Проверить».' : `Поставьте маркеры: ещё ${sum}.`)
         : (sum === 1 ? 'Выберите ещё одну область, потом нажмите «Проверить».' : `Выберите области: ещё ${sum}.`) };
     }
@@ -156,7 +228,13 @@ const HotspotPlayer = (() => {
     freeTasks().forEach(t => {
       const rest = left(t).map(zoneOf), cand = free(t);
       if (!rest.length) return;
-      if (pointMode()) {
+      if (outlineMode()) {
+        const res = G.assignOutline(cand.map(contourZone), rest, thr());
+        cand.forEach((m, i) => {
+          m.iou = res[i].iou;
+          if (res[i].j >= 0) { m.locked = true; m.state = null; m.zone = rest[res[i].j].id; unitOf(t, m.zone).locked = true; } else m.state = 'bad';
+        });
+      } else if (pointMode()) {
         const at = G.assign(cand, rest);
         cand.forEach((m, i) => {
           if (at[i] >= 0) { m.locked = true; m.state = null; m.zone = rest[at[i]].id; unitOf(t, m.zone).locked = true; } else m.state = 'bad';
@@ -200,8 +278,9 @@ const HotspotPlayer = (() => {
 
   // ---- Рисование ----
   function shape(z, cls) {
-    const s = document.createElementNS(NS, z.shape === 'ellipse' ? 'ellipse' : 'rect');
+    const s = document.createElementNS(NS, z.shape === 'ellipse' ? 'ellipse' : z.shape === 'polygon' ? 'polygon' : 'rect');
     if (z.shape === 'ellipse') { s.setAttribute('cx', z.x + z.w / 2); s.setAttribute('cy', z.y + z.h / 2); s.setAttribute('rx', z.w / 2); s.setAttribute('ry', z.h / 2); }
+    else if (z.shape === 'polygon') s.setAttribute('points', z.pts.map(p => p.join(',')).join(' '));
     else { s.setAttribute('x', z.x); s.setAttribute('y', z.y); s.setAttribute('width', z.w); s.setAttribute('height', z.h); }
     s.setAttribute('class', 'hs-zone ' + cls);
     return s;
@@ -219,7 +298,7 @@ const HotspotPlayer = (() => {
   function stage(t) {
     const wrap = el('div', 'hs-stagewrap');
     const fixed = frozen(t);
-    const st = el('div', 'hs-stage' + (pointMode() ? ' point' : ' zone') + (fixed ? ' fixed' : ''));
+    const st = el('div', 'hs-stage' + (outlineMode() ? ' outline' : pointMode() ? ' point' : ' zone') + (fixed ? ' fixed' : ''));
     const img = el('img');
     img.alt = '';
     img.draggable = false;
@@ -234,7 +313,65 @@ const HotspotPlayer = (() => {
     st.append(img, ov);
     const mine = marksOf(t), tg = targetsOf(t);
     const badges = [];
-    if (!pointMode()) {
+    if (outlineMode()) {
+      // «Контур»: области скрыты (показываются только ненайденные, когда пора раскрыть); контуры ученика рисуются поверх,
+      // у незакреплённых вершины можно двигать; у закреплённых (и в конце) подписано совпадение
+      tg.forEach(zid => { if (revealed(t, zid)) { const z = zoneOf(zid); ov.append(shape(z, 'right')); badges.push([z, '✓', 'right']); } });
+      let dragged = false; // после перетаскивания вершины нажатие на картинку не должно ставить новую
+      const vertex = (pts, i, sync, onTap, cls) => {
+        const v = el('span', 'hs-vtx' + (cls ? ' ' + cls : ''));
+        v.setAttribute('role', 'button');
+        v.setAttribute('aria-label', `Точка ${i + 1}`);
+        at(v, pts[i][0], pts[i][1]);
+        v.onpointerdown = e => {
+          if (fixed) return;
+          e.preventDefault();
+          e.stopPropagation();
+          v.setPointerCapture(e.pointerId);
+          const r = st.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
+          let moved = false;
+          v.onpointermove = ev => {
+            if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 4) return;
+            moved = true;
+            const x = G.round(G.clamp((ev.clientX - r.left) / r.width, 0, 1)), y = G.round(G.clamp((ev.clientY - r.top) / r.height, 0, 1));
+            pts[i] = [x, y];
+            at(v, x, y);
+            sync();
+          };
+          v.onpointerup = () => {
+            v.onpointermove = v.onpointerup = null;
+            dragged = true;
+            setTimeout(() => { dragged = false; }, 0);
+            if (moved) { missing.clear(); note = ''; const m = marksOf(t).find(x => x.pts === pts); if (m) m.state = null; if (isOrdered(t)) stOf(t).banner = null; render(); } else if (onTap) onTap();
+          };
+        };
+        return v;
+      };
+      mine.forEach(m => {
+        const poly = shape(contourZone(m), m.locked ? 'ok' : m.state === 'bad' ? 'bad' : 'on');
+        ov.append(poly);
+        const c = G.bbox(m.pts);
+        badges.push([{ ...c, shape: 'polygon', pts: m.pts, label: '' }, m.locked ? '✓' : m.state === 'bad' ? '✗' : '', m.locked ? 'ok' : m.state === 'bad' ? 'bad' : 'on']);
+        if (Number.isFinite(m.iou) && (m.locked || finished)) {
+          st.append(at(el('span', 'hs-lbl hs-iou', `Совпадение ${Math.round(m.iou * 100)}% (нужно ${Math.round(thr() * 100)}%)`), c.x, c.y + c.h));
+        }
+        if (!m.locked && !fixed) m.pts.forEach((_, i) => st.append(vertex(m.pts, i, () => poly.setAttribute('points', m.pts.map(p => p.join(',')).join(' ')))));
+      });
+      const op = open[t.id];
+      if (op && op.length) {
+        const line = document.createElementNS(NS, 'polyline');
+        const sync = () => line.setAttribute('points', op.map(p => p.join(',')).join(' '));
+        line.setAttribute('class', 'hs-zone hs-open');
+        sync();
+        ov.append(line);
+        op.forEach((_, i) => st.append(vertex(op, i, sync, i === 0 && op.length >= 3 ? () => closeOpen(t) : null, i === 0 ? 'first' : '')));
+      }
+      st.onclick = e => {
+        if (fixed || dragged || e.target.closest('.hs-vtx')) return;
+        const r = st.getBoundingClientRect();
+        addVertex(t, G.round(G.clamp((e.clientX - r.left) / r.width, 0, 1)), G.round(G.clamp((e.clientY - r.top) / r.height, 0, 1)));
+      };
+    } else if (!pointMode()) {
       // «Зона»: видны все области (выбирают нажатием); выбранная, верная и неверная окрашены и помечены ✓ / ✗ — не только цветом
       zones().forEach(z => {
         const m = mine.find(x => x.zone === z.id);
@@ -273,6 +410,13 @@ const HotspotPlayer = (() => {
       });
     }
     wrap.append(st);
+    if (outlineMode() && !fixed) {
+      // Кнопки контура: замкнуть, отменить последнюю точку, очистить
+      const bar = el('div', 'hs-tools');
+      const op = open[t.id], b = (label, fn, dis) => { const x = el('button', '', label); x.type = 'button'; x.disabled = !!dis; x.onclick = fn; return x; };
+      bar.append(b('Замкнуть', () => closeOpen(t), !(op && op.length >= 3)), b('↶ Отменить', () => undoVertex(t), !(op && op.length) && !free(t).length), b('Очистить', () => clearContours(t), !(op && op.length) && !free(t).length));
+      wrap.append(bar, el('p', 'hs-help', 'Нажимайте на картинку по краю объекта. Замкните контур: нажмите на первую точку или «Замкнуть». Точки можно перетаскивать.'));
+    }
     return wrap;
   }
 
@@ -297,12 +441,13 @@ const HotspotPlayer = (() => {
     const c = el('div', 'card hs-card' + (missing.has(t.id) ? ' missing' : ''));
     c.dataset.t = t.id;
     const prompt = clean(t.prompt);
-    const dflt = ord ? 'Найдите места по порядку.' : pointMode()
+    const dflt = ord ? 'Найдите места по порядку.' : outlineMode()
+      ? (n === 1 ? 'Обведите нужный объект.' : `Обведите нужные объекты: ${n}.`) : pointMode()
       ? (n === 1 ? 'Поставьте маркер на нужное место.' : `Поставьте маркеры на нужные места: ${n}.`)
       : (n === 1 ? 'Нажмите на нужную область картинки.' : `Нажмите на нужные области картинки: ${n}.`);
     c.append(el('p', 'hs-ask' + (prompt ? ' hs-own' : ''), prompt || dflt));
     if (ord) c.append(stepInfo(t));
-    else if (n > 1) c.append(el('p', 'hs-count', `Отмечено: ${marksOf(t).length} из ${n}`));
+    else if (n > 1) c.append(el('p', 'hs-count', `${outlineMode() ? 'Контуров' : 'Отмечено'}: ${marksOf(t).length} из ${n}`));
     c.append(stage(t));
     const ex = String(t.explanation || '').trim();
     if (ex && (done(t) || finished)) c.append(el('p', 'hs-expl', ex));
@@ -317,7 +462,7 @@ const HotspotPlayer = (() => {
       const bad = free(t).some(m => m.state === 'bad');
       const ok = isOrdered(t) ? done(t) && targetsOf(t).every(z => unitOf(t, z).locked) : !left(t).length;
       const st = ok ? ' ok' : bad ? ' bad' : missing.has(t.id) ? ' missing' : '';
-      const b = el('button', 'tf-dot' + (i === idx ? ' active' : '') + (marksOf(t).length ? ' answered' : '') + st, String(i + 1));
+      const b = el('button', 'tf-dot' + (i === idx ? ' active' : '') + (marksOf(t).length || (open[t.id] && open[t.id].length) ? ' answered' : '') + st, String(i + 1));
       b.type = 'button';
       b.setAttribute('aria-label', `Задание ${i + 1}` + (i === idx ? ', текущее' : '') + (ok ? ', верно' : bad ? ', есть неверные отметки' : ''));
       if (i === idx) b.setAttribute('aria-current', 'step');

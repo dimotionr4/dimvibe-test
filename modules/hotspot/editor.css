@@ -65,6 +65,15 @@
 .hs-kind { font-size:.88rem; }
 .hs-prompt { min-height:36px; margin-bottom:6px; }
 .hs-expl { min-height:38px; margin-top:4px; }
+.hs-thr { display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin-top:8px; font-size:.92rem; }
+.hs-thr[hidden] { display:none; }
+.hs-thrin { width:72px; min-height:34px; }
+.hs-polybar { margin-top:-2px; }
+.hs-tool:disabled { opacity:.45; cursor:default; }
+.hs-poly { fill:var(--accent); fill-opacity:.12; stroke:var(--accent); stroke-width:2; stroke-dasharray:6 4; vector-effect:non-scaling-stroke; }
+.hs-pv { position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--accent); border:2px solid #fff; box-sizing:border-box; pointer-events:none; }
+.hs-pv.first { width:18px; height:18px; margin:-9px 0 0 -9px; background:#fff; border:3px solid var(--accent); }
+.hs-vh { position:absolute; width:14px; height:14px; margin:-7px 0 0 -7px; border:2px solid var(--accent); border-radius:50%; background:#fff; box-sizing:border-box; touch-action:none; cursor:move; }
 .hs-ord { display:inline-flex; align-items:center; gap:4px; margin:2px 0 6px; font-size:.92rem; cursor:pointer; }
 .hs-chips { display:flex; flex-wrap:wrap; gap:6px; }
 .hs-chip { min-height:34px; padding:0 12px; border:1.5px solid var(--line); border-radius:999px; background:var(--bg); color:var(--text); cursor:pointer; }

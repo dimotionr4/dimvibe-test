@@ -26,7 +26,17 @@
 .hs-zone.ok { fill:var(--ok); fill-opacity:.3; stroke:var(--ok); stroke-opacity:1; stroke-width:3; }
 .hs-zone.bad { fill:var(--bad); fill-opacity:.3; stroke:var(--bad); stroke-opacity:1; stroke-width:3; }
 .hs-zone.right { fill:var(--ok); fill-opacity:.1; stroke:var(--ok); stroke-opacity:1; stroke-width:3; stroke-dasharray:6 4; pointer-events:none; }
-.hs-point .hs-zone { pointer-events:none; }
+.hs-stage.outline:not(.fixed) { cursor:crosshair; }
+.hs-stage.outline .hs-zone { cursor:crosshair; }
+.hs-stage.outline .hs-zone.right { fill-opacity:.1; }
+.hs-zone.hs-open { fill:none; stroke:var(--accent); stroke-opacity:1; stroke-width:3; stroke-dasharray:6 4; pointer-events:none; }
+/* Вершины контура: пальцем попасть легко (невидимая область вокруг), двигаются перетаскиванием */
+.hs-vtx { position:absolute; transform:translate(-50%, -50%); width:16px; height:16px; border-radius:50%; box-sizing:border-box; background:var(--accent); border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.45); touch-action:none; cursor:grab; }
+.hs-vtx::after { content:""; position:absolute; inset:-9px; }
+.hs-vtx.first { width:22px; height:22px; background:#fff; border:3px solid var(--accent); }
+.hs-iou { max-width:90%; font-weight:600; }
+.hs-tools { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:8px; }
+.hs-help { margin:6px 0 0; font-size:.88rem; color:var(--muted); }
 .hs-badge, .hs-mark { position:absolute; transform:translate(-50%, -50%); width:24px; height:24px; border-radius:50%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; line-height:1; color:#fff; background:var(--accent); border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); pointer-events:none; }
 .hs-badge.ok, .hs-mark.ok { background:var(--ok); }
 .hs-badge.bad, .hs-mark.bad { background:var(--bad); }
