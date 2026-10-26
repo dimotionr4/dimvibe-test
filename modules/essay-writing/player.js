@@ -205,8 +205,8 @@ const EssayWritingPlayer = (() => {
       const dot = document.querySelectorAll('.tf-dot')[k];
       if (dot) dot.classList.toggle('answered', !T.isEmpty(ta.value));
       saveSoon();
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => { updateStatus(); });
+      clearTimeout(raf);
+      raf = setTimeout(updateStatus, 80);
     };
     refresh(card, t);
     setTimeout(() => { fit(ta); storeNotes(); }, 0);
