@@ -21,7 +21,8 @@ const HotspotPlayer = (() => {
   let freeUsed = 0; // потрачено общих проверок (обычные задания)
   let imgFailed = false; // картинка не загрузилась: без неё не проверяем
 
-  const zones = () => (data.zones || []).filter(G.valid);
+  // В файле у многоугольника только вершины pts: описывающий прямоугольник считается здесь (HotspotGeo.fit), иначе область не годится
+  const zones = () => (data.zones || []).map(z => (z && z.shape === 'polygon' && Array.isArray(z.pts) ? G.fit({ ...z }) : z)).filter(G.valid);
   const zoneOf = id => zones().find(z => z.id === id);
   const targetsOf = t => (t.targets || []).filter(id => zoneOf(id));
   const tasks = () => (data.tasks || []).filter(t => targetsOf(t).length);
