@@ -17,7 +17,7 @@
 .ld-dot { position:absolute; transform:translate(-50%, -50%); width:16px; height:16px; border-radius:50%; box-sizing:border-box; background:var(--accent); border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.5); cursor:grab; }
 .ld-dot::after { content:""; position:absolute; inset:-8px; }
 .ld-dot.sel { width:20px; height:20px; box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent), 0 1px 3px rgba(0,0,0,.5); }
-.ld-slot { position:absolute; transform:translate(-50%, -50%); max-width:40%; padding:3px 8px; border-radius:6px; background:rgba(255,255,255,.92); color:#111; border:2px dashed var(--accent); font-size:.8rem; line-height:1.2; text-align:center; cursor:grab; overflow-wrap:anywhere; }
+.ld-slot { position:absolute; transform:translate(-50%, -50%); width:max-content; max-width:40%; padding:3px 8px; border-radius:6px; background:rgba(255,255,255,.92); color:#111; border:2px dashed var(--accent); font-size:.8rem; line-height:1.2; text-align:center; cursor:grab; overflow-wrap:anywhere; }
 .ld-slot.sel { border-style:solid; box-shadow:0 0 0 2px var(--accent); }
 .ld-list { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
 .ld-row { display:flex; align-items:center; gap:8px; padding:4px; border-radius:8px; }

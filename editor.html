@@ -337,6 +337,7 @@
 <link rel="stylesheet" href="modules/categories/editor.css?v=3">
 <link rel="stylesheet" href="modules/odd-one-out/editor.css?v=2">
 <link rel="stylesheet" href="modules/hotspot/editor.css?v=4">
+<link rel="stylesheet" href="modules/label-diagram/editor.css?v=2">
 <link rel="stylesheet" href="modules/splice/editor.css?v=2">
 <link rel="stylesheet" href="modules/essay-writing/editor.css?v=1">
 <link rel="stylesheet" href="core/medialib.css?v=5">
@@ -435,6 +436,7 @@
       <button data-mod="categories" aria-pressed="false"><b>Categories</b><span>Разложить карточки по категориям</span></button>
       <button data-mod="odd_one_out" aria-pressed="false"><b>Odd One Out</b><span>Найти лишнее в группе</span></button>
       <button data-mod="hotspot" aria-pressed="false"><b>Hotspot</b><span>Найти место на картинке</span></button>
+      <button data-mod="label_diagram" aria-pressed="false"><b>Label the Diagram</b><span>Подписать схему</span></button>
       <button data-mod="splice" aria-pressed="false"><b>Splice</b><span>Собрать слова из частей</span></button>
       <button data-mod="prepositions" aria-pressed="false"><b>Prepositions</b><span>В пропуски — предлоги</span></button>
       <button data-mod="essay_writing" aria-pressed="false"><b>Essay Writing</b><span>Написать текст по заданию</span></button>
@@ -475,6 +477,7 @@
 <script src="modules/odd-one-out/editor.js?v=2"></script>
 <script src="modules/hotspot/geometry.js?v=2"></script>
 <script src="modules/hotspot/editor.js?v=7"></script>
+<script src="modules/label-diagram/editor.js?v=2"></script>
 <script src="modules/splice/tokens.js?v=1"></script>
 <script src="modules/splice/editor.js?v=3"></script>
 <script src="modules/essay-writing/analysis.js?v=1"></script>
@@ -482,11 +485,11 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 88;
+const ASSET_V = 89;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor, splice: SpliceEditor, essay_writing: EssayWritingEditor, prepositions: PrepositionsEditor, hotspot: HotspotEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor, splice: SpliceEditor, essay_writing: EssayWritingEditor, prepositions: PrepositionsEditor, hotspot: HotspotEditor, label_diagram: LabelDiagramEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -1153,7 +1156,7 @@ function renderDesign() {
   const card = (title, body) => `<section class="dz-card" aria-label="${esc(title)}"><h4>${esc(title)}</h4>${body}</section>`;
   $('content').innerHTML = `
     <div class="dz-wrap">
-      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline' || current.module === 'word_scramble' || current.module === 'categories' || current.module === 'odd_one_out' || current.module === 'splice' || current.module === 'essay_writing' || current.module === 'hotspot', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
+      <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline' || current.module === 'word_scramble' || current.module === 'categories' || current.module === 'odd_one_out' || current.module === 'splice' || current.module === 'essay_writing' || current.module === 'hotspot' || current.module === 'label_diagram', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
       <div class="dz-side">
         ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize) + grp('page', 'fontWeight', 'Жирность', PAGE_WEIGHTS, pg.fontWeight, OPT_ICONS.weight))}
         ${st.style === 'comic' ? card('Линии Comic', grp('style', 'comicOutline', 'Очертания', COMIC_OUTLINES, st.comicOutline, OPT_ICONS.outline)) : ''}
@@ -1600,7 +1603,7 @@ const pickModule = mod => {
   newModule = mod;
   document.querySelectorAll('#modPick [data-mod]').forEach(x => { const on = x.dataset.mod === mod; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); });
   // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
-  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories' || newModule === 'odd_one_out' || newModule === 'splice' || newModule === 'essay_writing' || newModule === 'hotspot';
+  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories' || newModule === 'odd_one_out' || newModule === 'splice' || newModule === 'essay_writing' || newModule === 'hotspot' || newModule === 'label_diagram';
   document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
   $('kindNote').hidden = st;
 };
@@ -1663,7 +1666,7 @@ setPreviewOpen(!narrow()); // на широком экране предпрос�
   history.replaceState(null, '', location.pathname);
   if (!MODULES[mod]) return;
   pickModule(mod);
-  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'splice' || mod === 'essay_writing' || mod === 'hotspot') createDraft('statements', mod);
+  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'splice' || mod === 'essay_writing' || mod === 'hotspot' || mod === 'label_diagram') createDraft('statements', mod);
   else askKind();
 })();
 </script>

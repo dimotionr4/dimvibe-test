@@ -1,0 +1,51 @@
+/* Плеер модуля Label the Diagram: картинка с точками и ячейками, под ней банк подписей.
+   Результат не только цветом: ✓ у верной подписи, ✗ у неверной */
+.card.ld-card, .card.ld-bank { line-height:1.5; }
+.ld-stagewrap { text-align:center; }
+.ld-stage { position:relative; display:inline-block; max-width:100%; line-height:0; border-radius:10px; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; }
+.ld-stage img { display:block; max-width:100%; max-height:70vh; width:auto; height:auto; border-radius:10px; pointer-events:none; }
+.ld-stage.broken { min-width:200px; min-height:120px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.ld-fail { margin:6px 0 0; color:var(--bad); }
+.ld-ov { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.ld-line { stroke:var(--accent); stroke-width:2; stroke-opacity:.85; vector-effect:non-scaling-stroke; }
+.ld-line.ok { stroke:var(--ok); stroke-width:3; }
+.ld-line.bad { stroke:var(--bad); stroke-width:3; }
+.ld-dot { position:absolute; transform:translate(-50%, -50%); width:14px; height:14px; border-radius:50%; box-sizing:border-box; background:var(--accent); border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.5); pointer-events:none; }
+.ld-dot.ok { background:var(--ok); }
+.ld-dot.bad { background:var(--bad); }
+
+/* Ячейка у точки: пустая — пунктир с номером; с подписью — её текст. Размер под палец. Общий .chip из index.html задан позже, поэтому .chip.ld-slot */
+.chip.ld-slot { position:absolute; transform:translate(-50%, -50%); display:inline-flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:2px 5px; width:max-content; min-width:44px; min-height:32px; max-width:42%; margin:0; padding:3px 8px; box-sizing:border-box; border:2px dashed var(--accent); border-radius:8px; background:color-mix(in srgb, var(--card) 92%, transparent); color:var(--text); font-size:.85rem; line-height:1.2; text-align:center; overflow-wrap:anywhere; cursor:pointer; touch-action:manipulation; }
+.chip.ld-slot.has { border-style:solid; border-color:var(--line); background:var(--card); cursor:grab; }
+.chip.ld-slot.ld-target { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+.chip.ld-slot.ok { border-style:solid; border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--card)); cursor:default; }
+.chip.ld-slot.bad { border-style:solid; border-color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, var(--card)); }
+.chip.ld-slot.fixed { cursor:default; }
+.ld-slot.ld-over { box-shadow:0 0 0 3px var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); }
+.ld-no { flex:none; min-width:18px; height:18px; padding:0 4px; box-sizing:border-box; border-radius:9px; background:var(--accent); color:#fff; font-size:.72rem; font-weight:700; line-height:18px; text-align:center; }
+.ld-slot.ok .ld-no { background:var(--ok); }
+.ld-slot.bad .ld-no { background:var(--bad); }
+.ld-text { min-width:0; }
+.ld-tick { color:var(--ok); font-weight:700; }
+.ld-cross { color:var(--bad); font-weight:700; }
+.ld-right { flex:1 0 100%; font-size:.78rem; color:var(--muted); }
+
+/* Банк подписей */
+.ld-label { margin:0 0 8px; font-size:.9rem; color:var(--muted); }
+.ld-zone { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px; min-height:44px; }
+.ld-empty { align-self:center; color:var(--muted); font-size:.9rem; }
+.ld-bank.ld-target { cursor:pointer; outline:2px dashed var(--accent); outline-offset:-4px; }
+.ld-bank.ld-over { outline:3px solid var(--accent); outline-offset:-4px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+.chip.ld-chip:not(.ld-slot) { display:inline-flex; align-items:center; max-width:100%; min-height:40px; margin:0; padding:6px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--card); color:var(--text); line-height:1.3; text-align:left; cursor:grab; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; box-sizing:border-box; overflow-wrap:anywhere; }
+.chip.ld-chip:not(.ld-slot):hover { border-color:var(--accent); }
+.chip.ld-chip.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:0 0 0 2px var(--accent); }
+.ld-chip.ld-lifted { opacity:.35; }
+.ld-ghost.chip.ld-chip { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; box-shadow:0 8px 20px rgba(0,0,0,.25); border-color:var(--accent); }
+.ld-dragging, .ld-dragging * { cursor:grabbing !important; user-select:none; }
+
+/* Comic: контур берёт --rc, заливка --rb; свою рамку и фон прячем, как у общего .chip */
+.style-comic .chip.ld-chip:is(*, .selected), .style-comic .chip.ld-slot:is(*, .has, .ok, .bad, .ld-target) { border-color:transparent; background:transparent; }
+.style-comic .chip.ld-chip.selected, .style-comic .chip.ld-slot.ld-target { --rc:var(--accent); --rb:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:none; }
+.style-comic .chip.ld-slot.has { --rb:var(--card); }
+.style-comic .chip.ld-slot.ok { --rc:var(--ok); --rb:color-mix(in srgb, var(--ok) 16%, var(--card)); }
+.style-comic .chip.ld-slot.bad { --rc:var(--bad); --rb:color-mix(in srgb, var(--bad) 14%, var(--card)); }

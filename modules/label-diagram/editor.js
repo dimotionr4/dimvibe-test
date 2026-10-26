@@ -44,7 +44,7 @@ const LabelDiagramEditor = (() => {
   function demo() {
     const pt = (id, label, x, y, sx, sy) => ({ id, label, x, y, sx, sy });
     return { ...create(), image: DimDemo.img('house'), instruction: DimDemo.instruction('Подпишите комнаты дома.'),
-      points: [pt('p1', 'Bedroom', 0.3, 0.285, 0.1, 0.12), pt('p2', 'Kitchen', 0.605, 0.385, 0.9, 0.62), pt('p3', 'Living room', 0.31, 0.53, 0.12, 0.8), pt('p4', 'Round room', 0.82, 0.245, 0.9, 0.1), pt('p5', 'Hall', 0.6, 0.19, 0.55, 0.05)],
+      points: [pt('p1', 'Bedroom', 0.3, 0.285, 0.1, 0.12), pt('p2', 'Kitchen', 0.605, 0.385, 0.86, 0.62), pt('p3', 'Living room', 0.31, 0.53, 0.12, 0.8), pt('p4', 'Round room', 0.82, 0.245, 0.86, 0.1), pt('p5', 'Hall', 0.6, 0.19, 0.55, 0.05)],
       distractors: ['Garage', 'Bathroom'] };
   }
 
