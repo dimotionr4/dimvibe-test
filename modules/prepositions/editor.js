@@ -38,7 +38,7 @@ const PrepositionsEditor = (() => {
       instruction: DimDemo.instruction('Выберите подходящий предлог.'),
       gaps: {
         g1: { answer: 'under', alternatives: ['near'], hint: 'Где находится кошка?', audio: A.b, hintAudio: A.c },
-        g2: { answer: 'at', alternatives: [], hint: '', audio: '', hintAudio: '' },
+        g2: { answer: 'at', alternatives: [], hint: '', audio: '', hintAudio: '', options: ['on', 'for'] },
         g3: { answer: 'through', alternatives: [], hint: 'Движение сквозь', audio: '', hintAudio: '' },
         g4: { answer: 'with', alternatives: [], hint: '', audio: '', hintAudio: '' },
       } };
@@ -52,7 +52,7 @@ const PrepositionsEditor = (() => {
     if (i >= 0) d.distractors.splice(i, 1);
     else if (!answers().has(norm(w))) d.distractors.push(w);
     save();
-    FB.render(root, d, save, sync);
+    FB.render(root, d, save, sync, gapExtra);
     mount();
   }
 
@@ -65,7 +65,7 @@ const PrepositionsEditor = (() => {
       if (!all && i < 0 && !ans.has(norm(w))) d.distractors.push(w);
     });
     save();
-    FB.render(root, d, save, sync);
+    FB.render(root, d, save, sync, gapExtra);
     mount();
   }
 
@@ -122,6 +122,52 @@ const PrepositionsEditor = (() => {
     return box;
   }
 
+  // Свой набор вариантов у пропуска (только выпадающий список): g.options; пусто — общий набор упражнения.
+  // Верные ответы самого пропуска в списке остаются всегда.
+  function candidates() {
+    const seen = new Set(), out = [];
+    [...GapEngine.gapOrder(d.items).map(id => d.gaps[id].answer), ...d.distractors].forEach(w => {
+      const k = norm(w);
+      if (k && !seen.has(k)) { seen.add(k); out.push(String(w).trim()); }
+    });
+    return out;
+  }
+
+  function gapExtra(g) {
+    const wrap = el('div', 'pp-own');
+    const head = el('div', 'fb-label fb-labelrow', 'Варианты в списке этого пропуска');
+    head.append(window.helpIcon ? window.helpIcon('Если ничего не менять, в списке пропуска все предлоги упражнения. Нажмите на предлог, чтобы убрать его из списка именно этого пропуска. Верные ответы пропуска остаются в списке всегда. В банке слов набор общий.') : document.createTextNode(''));
+    const chips = el('div', 'fb-chips');
+    const reset = el('button', 'pp-all', 'Как у всех');
+    const mine = () => new Set((g.options || []).map(norm));
+    const draw = () => {
+      chips.innerHTML = '';
+      const own = g.options && g.options.length ? mine() : null;
+      const right = new Set([g.answer, ...(g.alternatives || [])].map(norm));
+      candidates().forEach(w => {
+        const used = right.has(norm(w)), on = used || !own || own.has(norm(w));
+        const b = el('button', 'pp-chip' + (on ? ' on' : '') + (used ? ' used' : ''), w);
+        b.setAttribute('aria-pressed', String(on));
+        if (used) b.title = 'Верный ответ этого пропуска: всегда в списке';
+        else b.onclick = () => {
+          const all = candidates().filter(x => !right.has(norm(x)));
+          let cur = own ? all.filter(x => own.has(norm(x))) : all;
+          cur = on ? cur.filter(x => norm(x) !== norm(w)) : [...cur, w];
+          if (!cur.length) return; // в списке должен остаться хотя бы один неверный вариант
+          // набор из всех предлогов = «как у всех»
+          g.options = cur.length === all.length ? [] : cur;
+          save();
+          draw();
+        };
+        chips.append(b);
+      });
+      reset.hidden = !own;
+    };
+    reset.onclick = () => { g.options = []; save(); draw(); };
+    draw();
+    wrap.append(head, chips, reset);
+    return wrap;
+  }
   function mount() {
     const bank = root.querySelector('.fb-bank');
     if (bank) bank.before(library());
@@ -136,23 +182,41 @@ const PrepositionsEditor = (() => {
     d = draft;
     save = onSave;
     if (!MODES.includes(d.mode)) d.mode = 'dropdown';
-    FB.render(container, draft, onSave, sync);
+    FB.render(container, draft, onSave, sync, gapExtra);
     mount();
   }
 
-  const exportData = draft => ({ ...FB.exportData(draft), module: 'prepositions' });
+  // Свой набор пропуска идёт в файл только если он есть (options: список написаний)
+  function exportData(draft) {
+    const ex = { ...FB.exportData(draft), module: 'prepositions' };
+    Object.keys(ex.gaps).forEach(id => {
+      const o = ((draft.gaps[id] || {}).options || []).map(s => String(s).trim()).filter(Boolean);
+      if (o.length) ex.gaps[id].options = o;
+    });
+    return ex;
+  }
 
   function validate(draft) {
     const r = FB.validate(draft);
     const ex = exportData(draft);
     const order = ex.items.flatMap(i => i.parts.filter(p => p && p.gap).map(p => p.gap));
     const pool = new Set([...order.map(id => norm(ex.gaps[id].answer)), ...ex.distractors.map(norm)]);
+    if (ex.mode === 'dropdown') order.forEach((id, n) => {
+      const own = ex.gaps[id].options;
+      if (!own) return;
+      const right = new Set([ex.gaps[id].answer, ...ex.gaps[id].alternatives].map(norm));
+      if (!own.some(w => !right.has(norm(w)) && pool.has(norm(w)))) r.errors.push(`Пропуск ${n + 1}: в его списке нет неверного варианта.`);
+    });
     if (order.length && pool.size === 1) r.warnings.push('Предложен всего один предлог: выбор невозможен. Отметьте предлоги в списке.');
     return r;
   }
 
   function load(file) {
     const b = FB.load(file);
+    Object.keys(b.gaps).forEach(id => {
+      const o = (file.gaps[id] || {}).options;
+      b.gaps[id].options = Array.isArray(o) ? o.map(String) : [];
+    });
     return { ...b, module: 'prepositions', mode: MODES.includes(b.mode) ? b.mode : 'dropdown' };
   }
 

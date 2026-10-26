@@ -221,7 +221,7 @@ function build() {
     item.parts.forEach(p => {
       if (typeof p === 'string') return;
       const g = data.gaps[p.gap];
-      gaps.push(isImg() ? ImageToGapsPlayer.gap(p.gap, g) : { id: p.gap, answer: g.answer, alternatives: g.alternatives || [], hint: String(g.hint || '').trim(), audio: mediaSrc(g.audio), hintAudio: mediaSrc(g.hintAudio), value: '', bankKey: null, locked: false, state: null });
+      gaps.push(isImg() ? ImageToGapsPlayer.gap(p.gap, g) : { id: p.gap, answer: g.answer, alternatives: g.alternatives || [], hint: String(g.hint || '').trim(), options: Array.isArray(g.options) ? g.options.map(norm) : null, audio: mediaSrc(g.audio), hintAudio: mediaSrc(g.hintAudio), value: '', bankKey: null, locked: false, state: null });
     });
   });
   mode = data.mode || 'word_bank';
@@ -506,7 +506,9 @@ function makeGap(idx) {
     const sel = document.createElement('select');
     sel.disabled = frozen(g);
     sel.appendChild(document.createElement('option'));
-    poolOrder.forEach(w => {
+    // Prepositions: у пропуска может быть свой набор вариантов (g.options); верные ответы в нём остаются всегда
+    const own = g.options && g.options.length ? new Set([...g.options, norm(g.answer), ...g.alternatives.map(norm)]) : null;
+    poolOrder.filter(w => !own || own.has(norm(w))).forEach(w => {
       const opt = document.createElement('option');
       opt.textContent = w;
       sel.appendChild(opt);

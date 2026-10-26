@@ -2,7 +2,7 @@
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 const FillBlanksEditor = (() => {
   const MAX_GAPS = 10;
-  let d, root, save, openGap = null, msgTimer = null, onBank = null;
+  let d, root, save, openGap = null, msgTimer = null, onBank = null, panelExtra = null;
   let counter, msg, panelBox, altsBox, bankChips, gapBar;
 
   const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
@@ -47,11 +47,12 @@ const FillBlanksEditor = (() => {
   const LAYOUT_NAME = { sentences: 'Отдельные предложения', text: 'Связный текст' };
 
   // bankChange — необязательная функция: модуль на базе Fill Blanks (Prepositions) узнаёт, что банк слов поменялся
-  function render(container, draft, onSave, bankChange) {
+  function render(container, draft, onSave, bankChange, extra) {
     root = container;
     d = draft;
     save = onSave;
     onBank = bankChange || null;
+    panelExtra = extra || null;
     openGap = null;
     // Кнопка «Пропуск» над выделением: ядро (editor.html) следит за выделением и вызывает эту функцию
     if (typeof selBarHooks !== 'undefined') selBarHooks.add(updateGapBar);
@@ -389,6 +390,7 @@ const FillBlanksEditor = (() => {
     hintAudioHead.append(help('Звучит в окне подсказки (после второй проверки), вместе с текстом подсказки или вместо него. Баллы и проверки не тратит.'));
 
     p.append(head, ans, noAnswer, altHead, altsBox, altAdder.wrap, hintHead, hint, hintAudioHead, pick('audio', 'hintAudio', 'Загрузить звук подсказки'), voiceHead, pick('audio', 'audio', 'Загрузить озвучку'));
+    if (panelExtra) { const x = panelExtra(g, id, placePanel); if (x) p.append(x); }
     panelBox.append(p);
     placePanel();
   }
