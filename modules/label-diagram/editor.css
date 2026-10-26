@@ -1,0 +1,30 @@
+/* Редактор модуля Label the Diagram: картинка с точками и ячейками, список точек */
+.ld-wrap { display:flex; flex-direction:column; gap:14px; }
+.ld-tools { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.ld-right { display:inline-flex; }
+.ld-muted { color:var(--muted); font-size:.9rem; }
+.ld-hint { margin:0 0 8px; }
+.ld-msg { padding:8px 12px; border-radius:8px; background:color-mix(in srgb, var(--bad) 12%, var(--card)); font-size:.92rem; }
+.ld-sec { margin:0; }
+.ld-h { margin:0 0 8px; font-size:1rem; }
+.ld-empty { padding:24px 12px; border:2px dashed var(--line); border-radius:10px; text-align:center; color:var(--muted); }
+.ld-cv { position:relative; display:inline-block; max-width:100%; line-height:0; user-select:none; -webkit-user-select:none; touch-action:none; cursor:crosshair; border-radius:8px; }
+.ld-cv img { display:block; max-width:100%; max-height:70vh; width:auto; height:auto; border-radius:8px; pointer-events:none; }
+.ld-cv.broken { min-width:200px; min-height:120px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.ld-ov { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.ld-line { stroke:var(--accent); stroke-width:2; stroke-opacity:.8; vector-effect:non-scaling-stroke; }
+.ld-line.sel { stroke-width:3; stroke-opacity:1; }
+.ld-dot { position:absolute; transform:translate(-50%, -50%); width:16px; height:16px; border-radius:50%; box-sizing:border-box; background:var(--accent); border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.5); cursor:grab; }
+.ld-dot::after { content:""; position:absolute; inset:-8px; }
+.ld-dot.sel { width:20px; height:20px; box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent), 0 1px 3px rgba(0,0,0,.5); }
+.ld-slot { position:absolute; transform:translate(-50%, -50%); max-width:40%; padding:3px 8px; border-radius:6px; background:rgba(255,255,255,.92); color:#111; border:2px dashed var(--accent); font-size:.8rem; line-height:1.2; text-align:center; cursor:grab; overflow-wrap:anywhere; }
+.ld-slot.sel { border-style:solid; box-shadow:0 0 0 2px var(--accent); }
+.ld-list { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.ld-row { display:flex; align-items:center; gap:8px; padding:4px; border-radius:8px; }
+.ld-row.sel { background:color-mix(in srgb, var(--accent) 10%, transparent); }
+.ld-n { flex:none; width:30px; height:30px; padding:0; border-radius:50%; font-weight:700; }
+.ld-in { font:inherit; box-sizing:border-box; }
+.ld-label { flex:1; min-width:0; }
+.ld-dist { width:100%; resize:vertical; }
+.ld-ib { flex:none; width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+.ld-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
