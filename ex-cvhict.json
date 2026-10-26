@@ -1,0 +1,72 @@
+{
+  "id": "ex-cvhict",
+  "module": "splice",
+  "format": 1,
+  "published": true,
+  "title": "Демо — Splice",
+  "mode": "mosaic",
+  "level": "hard",
+  "tasks": [
+    {
+      "id": "t1",
+      "answer": "mod/ern/ize",
+      "label": "сделать современным",
+      "explanation": "modern + -ize: суффикс -ize делает глагол."
+    },
+    {
+      "id": "t2",
+      "answer": "un/happi/ness",
+      "label": "грусть",
+      "explanation": "un- (приставка) + happy + -ness (суффикс)."
+    },
+    {
+      "id": "t3",
+      "answer": "tele/phone",
+      "label": "аппарат для разговора на расстоянии"
+    }
+  ],
+  "instruction": {
+    "title": "",
+    "text": "Соберите слова из частей: части всех слов лежат вместе.",
+    "audio": {
+      "media": "media/library/aud-a50607d4.wav"
+    },
+    "image": {
+      "media": "media/ex-ugfvkv/img-0133b924.jpg",
+      "alt": "",
+      "size": "medium",
+      "align": "center"
+    }
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "brand",
+    "showInstruction": true,
+    "showImage": true,
+    "gap": {
+      "shape": "line",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "comic",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "classicFont": "system",
+    "comicFont": "blogger",
+    "comicOutline": "neat",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "plain",
+      "fontSize": "m",
+      "fontWeight": "normal"
+    },
+    "check": {
+      "variant": "filled",
+      "align": "right"
+    }
+  }
+}
