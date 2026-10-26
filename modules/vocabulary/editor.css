@@ -1,0 +1,35 @@
+/* Редактор модуля Vocabulary. Цвета берутся из переменных ядра (editor.html) */
+.vc-wrap { position:relative; }
+.vc-muted { color:var(--muted); }
+.vc-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.vc-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.vc-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.vc-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.vc-in { width:100%; box-sizing:border-box; min-width:0; min-height:36px; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.vc-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; flex:none; }
+.vc-ib:hover:not(:disabled) { color:var(--accent); }
+.vc-ib.vc-del:hover:not(:disabled) { color:var(--bad); }
+.vc-ib:disabled { opacity:.3; }
+.vc-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.vc-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.vc-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.vc-add { margin:4px 0 8px; }
+.vc-add:disabled { opacity:.5; }
+
+.vc-word { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; }
+.vc-wtop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.vc-wtop .vc-tools2 { margin-left:auto; }
+.vc-tools2 { display:flex; align-items:center; flex:none; }
+.vc-head { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.vc-text { flex:2 1 200px; font-weight:600; }
+.vc-ipa { flex:1 1 140px; }
+.vc-media { margin-bottom:8px; }
+
+.vc-mean { margin-bottom:8px; }
+.vc-mean.multi { border-left:3px solid var(--line); padding-left:10px; }
+.vc-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:6px; }
+.vc-pos { flex:0 1 180px; width:auto; }
+.vc-tr { flex:1 1 160px; width:auto; }
+.vc-note { margin-bottom:6px; }
+.vc-ex { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:6px; }
+.vc-ex .vc-in { flex:1 1 180px; width:auto; }

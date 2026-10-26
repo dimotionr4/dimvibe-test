@@ -19,6 +19,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/mistake-mode/player.css?v=15">
 <link rel="stylesheet" href="modules/hotspot/player.css?v=5">
 <link rel="stylesheet" href="modules/label-diagram/player.css?v=5">
+<link rel="stylesheet" href="modules/vocabulary/player.css?v=1">
 <link rel="stylesheet" href="modules/color-coding/player.css?v=3">
 <link rel="stylesheet" href="modules/select-title/player.css?v=3">
 <link rel="stylesheet" href="modules/ordering/player.css?v=2">
@@ -165,6 +166,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/hotspot/geometry.js?v=2"></script>
 <script src="modules/hotspot/player.js?v=7"></script>
 <script src="modules/label-diagram/player.js?v=4"></script>
+<script src="modules/vocabulary/player.js?v=1"></script>
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get('id') || 'ex-001';
@@ -174,7 +176,7 @@ const isImg = () => !!data && data.module === 'image_to_gaps';
 // True / False (modules/true-false/player.js): вместо пропусков — утверждения; каждое утверждение работает как «пропуск» общего хода
 const isTF = () => !!data && data.module === 'true_false';
 // Модули, где единицы ответа — вопросы, а не пропуски (True / False, Multiple Choice): плеер модуля даёт units, reset, goMissing, instant, render
-const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : data.module === 'matching' ? MatchingPlayer : data.module === 'mistake_mode' ? MistakeModePlayer : data.module === 'color_coding' ? ColorCodingPlayer : data.module === 'select_title' ? SelectTitlePlayer : data.module === 'ordering' ? OrderingPlayer : data.module === 'timeline' ? TimelinePlayer : data.module === 'word_scramble' ? WordScramblePlayer : data.module === 'categories' ? CategoriesPlayer : data.module === 'odd_one_out' ? OddOneOutPlayer : data.module === 'splice' ? SplicePlayer : data.module === 'essay_writing' ? EssayWritingPlayer : data.module === 'hotspot' ? HotspotPlayer : data.module === 'label_diagram' ? LabelDiagramPlayer : null);
+const unitPlayer = () => (!data ? null : data.module === 'true_false' ? TrueFalsePlayer : data.module === 'multiple_choice' ? MultipleChoicePlayer : data.module === 'matching' ? MatchingPlayer : data.module === 'mistake_mode' ? MistakeModePlayer : data.module === 'color_coding' ? ColorCodingPlayer : data.module === 'select_title' ? SelectTitlePlayer : data.module === 'ordering' ? OrderingPlayer : data.module === 'timeline' ? TimelinePlayer : data.module === 'word_scramble' ? WordScramblePlayer : data.module === 'categories' ? CategoriesPlayer : data.module === 'odd_one_out' ? OddOneOutPlayer : data.module === 'splice' ? SplicePlayer : data.module === 'essay_writing' ? EssayWritingPlayer : data.module === 'hotspot' ? HotspotPlayer : data.module === 'label_diagram' ? LabelDiagramPlayer : data.module === 'vocabulary' ? VocabularyPlayer : null);
 // Прохождение: сколько проверок разрешено и потрачено, закончено ли, сообщение под кнопкой
 let maxChecks = 3, checksUsed = 0, finished = false, note = '', instrOpen = true;
 // Порядок слов перемешивается один раз на прохождение. В банке — экземпляры {key, text}, selected хранит key
@@ -232,6 +234,7 @@ function build() {
   mode = data.mode || 'word_bank';
   // Image to Gaps: свой способ ответа (банк картинок), кнопок режимов нет
   document.body.classList.toggle('no-modes', isImg() || !!unitPlayer());
+  document.body.classList.toggle('no-footer', !!(unitPlayer() && unitPlayer().noFooter && unitPlayer().noFooter())); // Vocabulary: справочник, нижней панели нет
   document.body.classList.toggle('no-typing', data.module === 'prepositions'); // Prepositions: только банк слов и список
   if (data.module === 'prepositions' && mode === 'typing') mode = 'dropdown';
   if (unitPlayer()) unitPlayer().reset();

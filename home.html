@@ -225,6 +225,7 @@ const ICON = {
   prepositions: '<path d="M4 12h4"/><path d="M16 12h4"/><rect x="9" y="9" width="6" height="6" rx="2"/><path d="M4 18h16"/>',
   essay_writing: '<path d="M4 6h14M4 11h8M4 16h5"/><path d="M12 19l1-3.5 6-6 2.5 2.5-6 6z"/>',
   hotspot: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 8V6M12 18v-2M8 12H6M18 12h-2"/>',
+  vocabulary: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/>',
   label_diagram: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="15" r="1.5"/><path d="M9 14l5-6"/><rect x="13" y="5.5" width="6" height="3" rx="1"/>',
   generic: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>'
 };
@@ -243,7 +244,7 @@ const MODS = [
   { id: 'timeline', name: 'Timeline', desc: 'Расставить события в хронологическом порядке.', ready: true },
   { id: 'mini_dialogues', name: 'Mini Dialogues', desc: 'Диалог-переписка с пропусками в репликах.' },
   { id: 'word_scramble', name: 'Word Scramble / Sentence Builder', desc: 'Собрать слово или фразу из рассыпанных частей.', ready: true },
-  { id: 'flashcards', name: 'Flashcards' }, { id: 'vocabulary', name: 'Vocabulary' }, { id: 'word_search', name: 'Word Search' },
+  { id: 'flashcards', name: 'Flashcards' }, { id: 'vocabulary', name: 'Vocabulary', desc: 'Словарь слов с переводами и примерами: поиск и карточки, без проверок.', ready: true }, { id: 'word_search', name: 'Word Search' },
   { id: 'hotspot', name: 'Hotspot', desc: 'Найти места на картинке: нажать на область или поставить маркер.', ready: true }, { id: 'label_diagram', name: 'Label the Diagram', desc: 'Подписать схему: поставить подписи к точкам на картинке.', ready: true },
 { id: 'prepositions', name: 'Prepositions', desc: 'В пропуски текста нужно поставить подходящие предлоги.', ready: true },
   { id: 'splice', name: 'Splice', desc: 'Собрать слова из частей: одно слово или мозаика.', ready: true },

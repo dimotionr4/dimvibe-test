@@ -63,5 +63,8 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Label the Diagram — сделан этап 1 (2026-10-26)
 Правила перенесены в skill `.claude/skills/label-diagram/`; здесь не дублируются.
 
-## Остальные модули (Flashcards, Vocabulary, Word Search и др.)
+## Vocabulary — сделан этап 1 (2026-10-26)
+Правила перенесены в skill `.claude/skills/vocabulary/`; здесь не дублируются.
+
+## Остальные модули (Flashcards, Word Search и др.)
 Принципы для них ещё не перенесены. Переносим по одному, по мере работы с каждым модулем, после согласования.
