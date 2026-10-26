@@ -10,6 +10,10 @@ const HotspotEditor = (() => {
   const G = HotspotGeo;
   const MODES = { zone: 'Зона', point: 'Точка', outline: 'Контур' };
   const THR_MIN = 30, THR_MAX = 90, THR_DEF = 65, MAX_VERTS = 40;
+  // Настройки «Дизайна»: границы областей до проверки (пусто = как принято для способа: в «Зоне» видны, в «Точке» и «Контуре» скрыты),
+  // прозрачность заливки областей, номера на областях
+  const BOUNDS = { show: 'Видны', hide: 'Скрыты' }, FILLS = { low: 'Слабая', mid: 'Средняя', high: 'Сильная' }, NUMBERS = { off: 'Нет', on: 'Да' };
+  const boundsOf = draft => (BOUNDS[draft.bounds] ? draft.bounds : draft.interaction === 'zone' ? 'show' : 'hide');
   const thrOf = v => { const n = Math.round(Number(v)); return n >= THR_MIN && n <= THR_MAX ? n : THR_DEF; };
   let d, root, save, delAsk = null, msgTimer = null;
   let msg, counter, canvasBox, zoneBox, taskBox, addTaskBtn;
@@ -40,7 +44,7 @@ const HotspotEditor = (() => {
   const validTargets = (draft, t) => t.targets.filter(id => draft.zones.some(z => z.id === id && G.valid(z)));
 
   function create() {
-    return { module: 'hotspot', format: 1, interaction: 'zone', threshold: THR_DEF, image: emptyImage(), zones: [], tasks: [newTask('t1')] };
+    return { module: 'hotspot', format: 1, interaction: 'zone', threshold: THR_DEF, bounds: '', fill: 'low', numbers: 'off', image: emptyImage(), zones: [], tasks: [newTask('t1')] };
   }
 
   // Демо-пример (демо-режим в «Настройках», core/demo.js): дом на фото; три области, три задания — одно «найти одно»
@@ -61,6 +65,9 @@ const HotspotEditor = (() => {
   function normalize() {
     if (!MODES[d.interaction]) d.interaction = 'zone';
     d.threshold = thrOf(d.threshold);
+    if (d.bounds !== '' && !BOUNDS[d.bounds]) d.bounds = '';
+    if (!FILLS[d.fill]) d.fill = 'low';
+    if (!NUMBERS[d.numbers]) d.numbers = 'off';
     if (!d.image) d.image = emptyImage();
     if (!Array.isArray(d.zones)) d.zones = [];
     if (!Array.isArray(d.tasks) || !d.tasks.length) d.tasks = [newTask('t1')];
@@ -601,6 +608,9 @@ const HotspotEditor = (() => {
       module: 'hotspot', format: 1,
       ...(draft.interaction === 'point' || draft.interaction === 'outline' ? { interaction: draft.interaction } : {}),
       ...(draft.interaction === 'outline' && thrOf(draft.threshold) !== THR_DEF ? { threshold: thrOf(draft.threshold) } : {}),
+      ...(BOUNDS[draft.bounds] ? { bounds: draft.bounds } : {}),
+      ...(FILLS[draft.fill] && draft.fill !== 'low' ? { fill: draft.fill } : {}),
+      ...(draft.numbers === 'on' ? { numbers: true } : {}),
       ...(imageOut(draft.image) ? { image: imageOut(draft.image) } : {}),
       zones: draft.zones.filter(G.valid).map(z => ({
         id: z.id,
@@ -707,9 +717,24 @@ const HotspotEditor = (() => {
     });
     const im = file.image;
     return { ...create(), interaction: file.interaction === 'point' || file.interaction === 'outline' ? file.interaction : 'zone', threshold: thrOf(file.threshold),
+      bounds: BOUNDS[file.bounds] ? file.bounds : '', fill: FILLS[file.fill] ? file.fill : 'low', numbers: file.numbers === true ? 'on' : 'off',
       image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: '' },
       zones, tasks };
   }
 
-  return { create, demo, render, load, exportData, validate, unitCount };
+  // Настройки во вкладке «Дизайн» (рисует ядро)
+  const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  function designOptions(draft) {
+    const shape = 'M5 6h14v12H5z';
+    return [
+      { field: 'bounds', label: 'Границы областей до проверки', value: boundsOf(draft), names: BOUNDS,
+        icons: { show: sq(`<path d="${shape}" stroke-dasharray="0"/>`), hide: sq(`<path d="${shape}" stroke-dasharray="2 3" opacity=".5"/>`) } },
+      { field: 'fill', label: 'Прозрачность областей', value: FILLS[draft.fill] ? draft.fill : 'low', names: FILLS,
+        icons: { low: sq(`<path d="${shape}" fill="currentColor" fill-opacity=".12"/>`), mid: sq(`<path d="${shape}" fill="currentColor" fill-opacity=".3"/>`), high: sq(`<path d="${shape}" fill="currentColor" fill-opacity=".55"/>`) } },
+      { field: 'numbers', label: 'Номера на областях', value: NUMBERS[draft.numbers] ? draft.numbers : 'off', names: NUMBERS,
+        icons: { off: sq(`<path d="${shape}"/>`), on: sq(`<path d="${shape}"/><path d="M10 10l2-1v6"/>`) } },
+    ];
+  }
+
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions };
 })();

@@ -26,6 +26,18 @@
 .hs-zone.ok { fill:var(--ok); fill-opacity:.3; stroke:var(--ok); stroke-opacity:1; stroke-width:3; }
 .hs-zone.bad { fill:var(--bad); fill-opacity:.3; stroke:var(--bad); stroke-opacity:1; stroke-width:3; }
 .hs-zone.right { fill:var(--ok); fill-opacity:.1; stroke:var(--ok); stroke-opacity:1; stroke-width:3; stroke-dasharray:6 4; pointer-events:none; }
+/* Настройки «Дизайна»: прозрачность заливки (--hs-a), скрытые границы, видимые подсказки-области, номера */
+.hs-stage { --hs-a:.1; }
+.hs-stage.hs-fill-mid { --hs-a:.22; }
+.hs-stage.hs-fill-high { --hs-a:.38; }
+.hs-zone { fill-opacity:var(--hs-a); }
+.hs-zone.on { fill-opacity:calc(var(--hs-a) + .25); }
+.hs-zone.ok, .hs-zone.bad { fill-opacity:calc(var(--hs-a) + .2); }
+.hs-zone:not(.ok):not(.right):not(.hid):hover { fill-opacity:calc(var(--hs-a) + .12); }
+.hs-zone.right { fill-opacity:var(--hs-a); }
+.hs-zone.hid, .hs-zone.hid:hover { fill-opacity:0; stroke-opacity:0; }
+.hs-zone.plain { pointer-events:none; }
+.hs-znum { position:absolute; transform:translate(2px, 2px); min-width:20px; height:20px; padding:0 4px; box-sizing:border-box; border-radius:10px; background:var(--accent); color:#fff; font-size:.75rem; font-weight:700; line-height:20px; text-align:center; pointer-events:none; }
 .hs-stage.outline:not(.fixed) { cursor:crosshair; }
 .hs-stage.outline .hs-zone { cursor:crosshair; }
 .hs-stage.outline .hs-zone.right { fill-opacity:.1; }

@@ -299,7 +299,9 @@ const HotspotPlayer = (() => {
   function stage(t) {
     const wrap = el('div', 'hs-stagewrap');
     const fixed = frozen(t);
-    const st = el('div', 'hs-stage' + (outlineMode() ? ' outline' : pointMode() ? ' point' : ' zone') + (fixed ? ' fixed' : ''));
+    // Настройки «Дизайна»: границы областей до проверки (по умолчанию в «Зоне» видны, в «Точке» и «Контуре» скрыты), прозрачность заливки
+    const showZ = data.bounds === 'show' || data.bounds === 'hide' ? data.bounds === 'show' : !pointMode() && !outlineMode();
+    const st = el('div', 'hs-stage' + (outlineMode() ? ' outline' : pointMode() ? ' point' : ' zone') + (fixed ? ' fixed' : '') + (data.fill === 'mid' || data.fill === 'high' ? ' hs-fill-' + data.fill : ''));
     const img = el('img');
     img.alt = '';
     img.draggable = false;
@@ -317,6 +319,7 @@ const HotspotPlayer = (() => {
     if (outlineMode()) {
       // «Контур»: области скрыты (показываются только ненайденные, когда пора раскрыть); контуры ученика рисуются поверх,
       // у незакреплённых вершины можно двигать; у закреплённых (и в конце) подписано совпадение
+      if (showZ) zones().forEach(z => ov.append(shape(z, 'plain'))); // настройка «Границы областей до проверки: видны»
       tg.forEach(zid => { if (revealed(t, zid)) { const z = zoneOf(zid); ov.append(shape(z, 'right')); badges.push([z, '✓', 'right']); } });
       let dragged = false; // после перетаскивания вершины нажатие на картинку не должно ставить новую
       const vertex = (pts, i, sync, onTap, cls) => {
@@ -377,7 +380,7 @@ const HotspotPlayer = (() => {
       zones().forEach(z => {
         const m = mine.find(x => x.zone === z.id);
         const rev = tg.includes(z.id) && revealed(t, z.id);
-        const cls = m ? (m.locked ? 'ok' : m.state === 'bad' ? 'bad' : 'on') : rev ? 'right' : '';
+        const cls = m ? (m.locked ? 'ok' : m.state === 'bad' ? 'bad' : 'on') : rev ? 'right' : showZ ? '' : 'hid'; // 'hid' — границы скрыты, область остаётся нажимаемой
         const s = shape(z, cls);
         if (!fixed && !(m && m.locked)) s.onclick = () => pickZone(t, z.id);
         ov.append(s);
@@ -385,7 +388,8 @@ const HotspotPlayer = (() => {
         else if (rev) badges.push([z, '✓', 'right']);
       });
     } else {
-      // «Точка»: области скрыты; показываются только ненайденные, когда их пора раскрыть
+      // «Точка»: области скрыты (или видны по настройке); ненайденные раскрываются, когда пора
+      if (showZ) zones().forEach(z => ov.append(shape(z, 'plain')));
       tg.forEach(zid => { if (revealed(t, zid)) { const z = zoneOf(zid); ov.append(shape(z, 'right')); badges.push([z, '✓', 'right']); } });
       st.onclick = e => {
         if (fixed || e.target.closest('.hs-mark')) return;
@@ -393,6 +397,8 @@ const HotspotPlayer = (() => {
         placePoint(t, G.round(G.clamp((e.clientX - r.left) / r.width, 0, 1)), G.round(G.clamp((e.clientY - r.top) / r.height, 0, 1)));
       };
     }
+    // Номера областей (настройка): как в редакторе, по порядку в списке областей; только когда границы видны
+    if (data.numbers === true && showZ) zones().forEach(z => st.append(at(el('span', 'hs-znum', String((data.zones || []).findIndex(x => x.id === z.id) + 1)), z.x, z.y)));
     badges.forEach(([z, sign, cls]) => {
       const [cx, cy] = center(z);
       if (sign) st.append(at(el('span', 'hs-badge ' + cls, sign), cx, cy));
