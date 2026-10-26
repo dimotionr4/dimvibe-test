@@ -16,7 +16,7 @@ const HotspotEditor = (() => {
   const boundsOf = draft => (BOUNDS[draft.bounds] ? draft.bounds : draft.interaction === 'zone' ? 'show' : 'hide');
   const thrOf = v => { const n = Math.round(Number(v)); return n >= THR_MIN && n <= THR_MAX ? n : THR_DEF; };
   let d, root, save, delAsk = null, msgTimer = null;
-  let msg, counter, canvasBox, zoneBox, taskBox, addTaskBtn;
+  let msg, counter, canvasBox, zoneBox, taskBox, addTaskBtn, barBox, statusLine;
   let tool = 'move', selId = null; // инструмент холста: move / rect / ellipse / polygon; выбранная область
   let poly = null; // многоугольник в процессе рисования: вершины [[x, y], …]
 
@@ -103,12 +103,10 @@ const HotspotEditor = (() => {
     tools.append(counter, right);
     msg = el('div', 'hs-msg');
     msg.hidden = true;
-    const pic = el('section', 'hs-sec');
-    pic.append(el('h3', 'hs-h', '1. Картинка'), MediaUI.imageControl(d.image, { save: () => { selId = null; save(); }, change: () => { drawCanvas(); } }));
-    const mode = el('section', 'hs-sec');
-    mode.append(el('h3', 'hs-h', '2. Как отвечает ученик'), modeButtons());
+    // Одна панель инструментов над картинкой (решение владельца 2026-10-26): картинка и рисование слева, способ ответа ученика справа;
+    // без заголовков блоков, названия кнопок — в подсказках, под панелью одна строка про выбранный инструмент
     const areas = el('section', 'hs-sec');
-    areas.append(el('h3', 'hs-h', '3. Области на картинке'));
+    areas.append(toolbar(), statusLine = el('p', 'hs-muted hs-status'));
     canvasBox = el('div', 'hs-canvasbox');
     zoneBox = el('div', 'hs-zones');
     // Картинка слева, названия областей — в панели справа (на узкой колонке панель уходит под картинку)
@@ -116,13 +114,14 @@ const HotspotEditor = (() => {
     split.append(canvasBox, zoneBox);
     areas.append(split);
     const tasks = el('section', 'hs-sec');
-    tasks.append(el('h3', 'hs-h', '4. Задания'));
+    tasks.append(el('h3', 'hs-h', 'Задания'));
     taskBox = el('div', 'hs-tasks');
     addTaskBtn = el('button', 'hs-add', '+ Задание');
     addTaskBtn.type = 'button';
     addTaskBtn.onclick = addTask;
     tasks.append(taskBox, addTaskBtn);
-    root.append(tools, msg, pic, mode, areas, tasks);
+    root.append(tools, msg, areas, tasks);
+    refreshBar();
     drawCanvas();
     drawZones();
     drawTasks();
@@ -133,14 +132,60 @@ const HotspotEditor = (() => {
     addTaskBtn.disabled = d.tasks.length >= MAX_TASKS;
   }
 
-  function modeButtons() {
-    const box = el('div', 'hs-modebox');
-    const row = el('div', 'hs-seg');
+  // Панель инструментов: слева картинка (два значка и маленькая миниатюра с ×) и инструменты рисования, справа значок ученика,
+  // три способа ответа («Зона», «Точка», «Контур») и, только при «Контуре», порог совпадения
+  const TOOLS = [
+    ['move', 'Выбрать и двигать', '<path d="M5 3l14 8-6 2-2 6z"/>', 'Выбрать и двигать: нажмите на область; середина — двигать, края — менять размер.', 'Выбрать и двигать: нажмите на область, тяните за середину — двигать, за точки на краях — менять размер. У многоугольника двойное нажатие на край добавляет вершину, на вершину — убирает её.'],
+    ['rect', 'Прямоугольник', '<rect x="4" y="6" width="16" height="12" rx="1"/>', 'Прямоугольник: зажмите кнопку мыши на картинке и потяните.', 'Прямоугольник: зажмите кнопку мыши на картинке и потяните.'],
+    ['ellipse', 'Эллипс', '<ellipse cx="12" cy="12" rx="9" ry="6"/>', 'Эллипс: зажмите кнопку мыши на картинке и потяните.', 'Эллипс: зажмите кнопку мыши на картинке и потяните.'],
+    ['polygon', 'Многоугольник', '<path d="M5 9l7-5 7 6-3 9H7z"/>', 'Многоугольник: нажимайте вершины, замкните — нажатием на первую.', 'Многоугольник: нажимайте на картинку, расставляя вершины; замкните — нажатием на первую вершину, двойным нажатием или кнопкой «Замкнуть».'],
+  ];
+  const MODE_ICONS = {
+    zone: '<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/>',
+    point: '<circle cx="12" cy="12" r="6"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>',
+    outline: '<path d="M5 14c0-4 3-8 8-8s6 4 5 7-5 5-9 5-4-2-4-4z"/>',
+  };
+  const MODE_TIPS = { zone: 'Зона: ученик нажимает на готовую область картинки.', point: 'Точка: ученик ставит маркер на нужное место.', outline: 'Контур: ученик обводит объект по точкам; верно, если контур совпал с областью не меньше порога.' };
+
+  function toolbar() {
+    barBox = el('div', 'hs-top');
+    const left = el('div', 'hs-grp');
+    const pic = el('div', 'hs-picbox');
+    pic.append(MediaUI.imageControl(d.image, { save: () => { selId = null; save(); }, change: () => { drawCanvas(); refreshBar(); } }));
+    left.append(pic, el('span', 'hs-sep'));
+    TOOLS.forEach(([id, name, ico, , tip]) => {
+      const b = el('button', 'hs-tbtn');
+      b.type = 'button';
+      b.innerHTML = svg(ico);
+      b.title = tip;
+      b.dataset.tool = id;
+      b.setAttribute('aria-label', name);
+      b.onclick = () => { tool = id; poly = null; if (id !== 'move') selId = null; refreshBar(); drawCanvas(); drawZones(); };
+      left.append(b);
+    });
+    const right = el('div', 'hs-grp hs-grp-r');
+    const who = el('span', 'hs-who');
+    who.innerHTML = svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>');
+    who.title = 'Как отвечает ученик';
+    right.append(who);
+    const row = el('span', 'hs-modes');
     row.setAttribute('role', 'radiogroup');
     row.setAttribute('aria-label', 'Как отвечает ученик');
-    const tips = { zone: 'Ученик нажимает на готовую область картинки.', point: 'Ученик ставит маркер на нужное место.', outline: 'Ученик обводит объект по точкам; верно, если контур совпал с областью не меньше порога.' };
-    // Порог совпадения контура — только при ответе «Контур»
+    Object.keys(MODES).forEach(k => {
+      const b = el('button', 'hs-tbtn');
+      b.type = 'button';
+      b.innerHTML = svg(MODE_ICONS[k]);
+      b.title = MODE_TIPS[k];
+      b.dataset.mode = k;
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-label', MODES[k]);
+      b.onclick = () => { d.interaction = k; save(); refreshBar(); };
+      row.append(b);
+    });
+    right.append(row);
+    // Порог совпадения контура — маленькое число рядом со значком «Контур», только при этом способе ответа
     const thr = el('label', 'hs-thr');
+    thr.title = `Порог совпадения контура, % (от ${THR_MIN} до ${THR_MAX}, по умолчанию ${THR_DEF}): какая часть контура ученика должна совпасть с областью — площадь пересечения, делённая на площадь объединения`;
     const num = el('input', 'hs-in hs-thrin');
     num.type = 'number';
     num.min = THR_MIN;
@@ -149,42 +194,29 @@ const HotspotEditor = (() => {
     num.value = d.threshold;
     num.setAttribute('aria-label', 'Порог совпадения контура, %');
     num.onchange = () => { d.threshold = thrOf(num.value); num.value = d.threshold; save(); };
-    thr.append(document.createTextNode('Порог совпадения: '), num, document.createTextNode(` % (от ${THR_MIN} до ${THR_MAX}, по умолчанию ${THR_DEF})`));
-    thr.title = 'Какая часть контура ученика должна совпасть с областью: площадь пересечения, делённая на площадь объединения';
-    thr.hidden = d.interaction !== 'outline';
-    Object.keys(MODES).forEach(k => {
-      const b = el('button', 'hs-segbtn' + (d.interaction === k ? ' on' : ''), MODES[k]);
-      b.type = 'button';
-      b.setAttribute('role', 'radio');
-      b.setAttribute('aria-checked', String(d.interaction === k));
-      b.title = tips[k];
-      b.onclick = () => { d.interaction = k; thr.hidden = k !== 'outline'; save(); row.querySelectorAll('.hs-segbtn').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', String(on)); }); };
-      row.append(b);
-    });
-    box.append(row, thr);
-    return box;
+    thr.append(num, document.createTextNode('%'));
+    right.append(thr);
+    barBox.append(left, right);
+    return barBox;
+  }
+
+  // Подсветка выбранных инструмента и способа ответа, порог, строка под панелью про выбранный инструмент
+  function refreshBar() {
+    if (!barBox) return;
+    barBox.querySelectorAll('[data-tool]').forEach(b => { const on = b.dataset.tool === tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    barBox.querySelectorAll('[data-mode]').forEach(b => { const on = b.dataset.mode === d.interaction; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+    barBox.querySelector('.hs-thr').hidden = d.interaction !== 'outline';
+    if (statusLine) {
+      const t = TOOLS.find(x => x[0] === tool);
+      statusLine.textContent = hasPic(d.image) ? `${t[3]} Ответ ученика — ${MODES[d.interaction]}.` : 'Сначала загрузите картинку (значки слева): области рисуют прямо на ней.';
+    }
   }
 
   // ---- Холст: картинка и области поверх неё ----
   let cv = null, ov = null;
   function drawCanvas() {
     canvasBox.innerHTML = '';
-    const bar = el('div', 'hs-bar');
-    const t = (id, label, ico) => {
-      const b = el('button', 'hs-tool' + (tool === id ? ' on' : ''));
-      b.type = 'button';
-      b.innerHTML = svg(ico) + `<span>${label}</span>`;
-      b.setAttribute('aria-pressed', String(tool === id));
-      b.onclick = () => { tool = id; poly = null; if (id !== 'move') selId = null; drawCanvas(); };
-      return b;
-    };
-    bar.append(
-      t('move', 'Выбрать и двигать', '<path d="M5 3l14 8-6 2-2 6z"/>'),
-      t('rect', 'Прямоугольник', '<rect x="4" y="6" width="16" height="12" rx="1"/>'),
-      t('ellipse', 'Эллипс', '<ellipse cx="12" cy="12" rx="9" ry="6"/>'),
-      t('polygon', 'Многоугольник', '<path d="M5 9l7-5 7 6-3 9H7z"/>'),
-    );
-    canvasBox.append(bar);
+    refreshBar();
     if (tool === 'polygon' && poly && poly.length) {
       // Рисование многоугольника: замкнуть, убрать последнюю точку или отменить
       const act = el('div', 'hs-bar hs-polybar');
@@ -193,12 +225,10 @@ const HotspotEditor = (() => {
       canvasBox.append(act);
     }
     if (!hasPic(d.image)) {
-      canvasBox.append(el('div', 'hs-empty', 'Сначала загрузите картинку (шаг 1): области рисуют прямо на ней.'));
+      canvasBox.append(el('div', 'hs-empty', 'Здесь появится картинка.'));
       cv = ov = null;
       return;
     }
-    canvasBox.append(el('p', 'hs-muted hs-hint', tool === 'move' ? 'Нажмите на область, чтобы выбрать её: тяните за середину — двигать, за точки на краях — менять размер. У многоугольника двойное нажатие на край добавляет вершину, на вершину — убирает её.'
-      : tool === 'polygon' ? 'Нажимайте на картинку, расставляя вершины. Закройте многоугольник: нажмите на первую вершину, двойное нажатие или кнопка «Замкнуть».' : 'Зажмите кнопку мыши на картинке и потяните: появится область.'));
     cv = el('div', 'hs-cv' + (tool === 'move' ? '' : ' drawing'));
     const img = el('img');
     img.alt = '';
@@ -438,7 +468,8 @@ const HotspotEditor = (() => {
       const inp = el('input', 'hs-in hs-zlabel');
       inp.type = 'text';
       inp.maxLength = LABEL_LEN;
-      inp.placeholder = 'Название, например «Дверь» (в «по порядку» его видит ученик)';
+      inp.placeholder = 'Название';
+      inp.title = 'Название области, например «Дверь». В заданиях «по порядку» его видит ученик.';
       inp.value = z.label;
       inp.setAttribute('aria-label', `Название области ${k + 1}`);
       inp.oninput = () => { z.label = inp.value; save(); drawTasks(); };

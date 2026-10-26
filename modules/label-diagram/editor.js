@@ -92,10 +92,8 @@ const LabelDiagramEditor = (() => {
     tools.append(counter, right);
     msg = el('div', 'ld-msg');
     msg.hidden = true;
-    const pic = el('section', 'ld-sec');
-    pic.append(el('h3', 'ld-h', '1. Картинка'), MediaUI.imageControl(d.image, { save: () => { save(); }, change: () => { drawCanvas(); } }));
     const pts = el('section', 'ld-sec');
-    pts.append(el('h3', 'ld-h', '2. Точки и подписи'));
+    pts.append(toolbar());
     canvasBox = el('div', 'ld-canvasbox');
     listBox = el('div', 'ld-list');
     // Картинка слева, подписи точек — в панели справа (на узкой колонке панель уходит под картинку)
@@ -103,7 +101,7 @@ const LabelDiagramEditor = (() => {
     split.append(canvasBox, listBox);
     pts.append(split);
     const dist = el('section', 'ld-sec');
-    dist.append(el('h3', 'ld-h', '3. Лишние подписи (необязательно)'));
+    dist.append(el('h3', 'ld-h', 'Лишние подписи (необязательно)'));
     const ta = el('textarea', 'ld-in ld-dist');
     ta.rows = 2;
     ta.placeholder = 'По одной в строке. Они попадут в банк, но не подходят ни к одной точке.';
@@ -111,9 +109,57 @@ const LabelDiagramEditor = (() => {
     ta.setAttribute('aria-label', 'Лишние подписи');
     ta.oninput = () => { d.distractors = ta.value.split('\n'); save(); };
     dist.append(ta);
-    root.append(tools, msg, pic, pts, dist);
+    root.append(tools, msg, pts, dist);
     drawCanvas();
     drawList();
+  }
+
+  // Панель над картинкой (как в Hotspot): слева картинка (два значка и маленькая миниатюра с ×), справа значок ученика и вид подписей
+  // («Ячейки на картинке» / «Номера» — та же настройка, что во вкладке «Дизайн»); под панелью одна строка-подсказка
+  const VIEW_ICONS = {
+    cells: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="15" r="1.5"/><path d="M9 14l5-6"/><rect x="13" y="5" width="6" height="3" rx="1"/>',
+    numbers: '<rect x="3" y="3" width="18" height="11" rx="2"/><path d="M8 8.5h.01M16 8.5h.01M4 18h16M4 21h16"/>',
+  };
+  let barBox, hintLine;
+  function toolbar() {
+    const wrap = el('div', 'ld-topwrap');
+    barBox = el('div', 'ld-top');
+    const left = el('div', 'ld-grp');
+    const pic = el('div', 'ld-picbox');
+    pic.append(MediaUI.imageControl(d.image, { save: () => { save(); }, change: () => { drawCanvas(); refreshBar(); } }));
+    left.append(pic);
+    const right = el('div', 'ld-grp');
+    const who = el('span', 'ld-who');
+    who.innerHTML = svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>');
+    who.title = 'Как ученик видит подписи';
+    right.append(who);
+    const row = el('span', 'ld-modes');
+    row.setAttribute('role', 'radiogroup');
+    row.setAttribute('aria-label', 'Вид подписей');
+    Object.keys(VIEWS).forEach(k => {
+      const b = el('button', 'ld-tbtn');
+      b.type = 'button';
+      b.innerHTML = svg(VIEW_ICONS[k]);
+      b.title = k === 'cells' ? 'Ячейки на картинке: у каждой точки ячейка для подписи, соединённая линией.' : 'Номера: на картинке точки с номерами, ячейки — списком под картинкой.';
+      b.dataset.view = k;
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-label', VIEWS[k]);
+      b.onclick = () => { d.view = k; save(); refreshBar(); drawCanvas(); };
+      row.append(b);
+    });
+    right.append(row);
+    barBox.append(left, right);
+    hintLine = el('p', 'ld-muted ld-status');
+    wrap.append(barBox, hintLine);
+    return wrap;
+  }
+  function refreshBar() {
+    if (!barBox) return;
+    barBox.querySelectorAll('[data-view]').forEach(b => { const on = b.dataset.view === d.view; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+    const nums = d.view === 'numbers';
+    hintLine.textContent = !hasPic(d.image) ? 'Сначала загрузите картинку (значки слева): точки ставят прямо на ней.'
+      : nums ? 'Нажмите на картинку, чтобы поставить точку; точку можно перетаскивать. Ячейки ученик увидит списком под картинкой. Удалить точку — × на точке или в списке.'
+      : 'Нажмите на картинку, чтобы поставить точку. Круг — точка, прямоугольник — ячейка для подписи: оба можно перетаскивать. Удалить точку — × на ярлыке или в списке.';
   }
 
   function updateCounter() {
@@ -123,14 +169,12 @@ const LabelDiagramEditor = (() => {
   // ---- Холст ----
   function drawCanvas() {
     canvasBox.innerHTML = '';
+    refreshBar();
     if (!hasPic(d.image)) {
-      canvasBox.append(el('div', 'ld-empty', 'Сначала загрузите картинку (шаг 1): точки ставят прямо на ней.'));
+      canvasBox.append(el('div', 'ld-empty', 'Здесь появится картинка.'));
       cv = ov = null;
       return;
     }
-    const nums = d.view === 'numbers';
-    canvasBox.append(el('p', 'ld-muted ld-hint', nums ? 'Нажмите на картинку, чтобы поставить точку; точку можно перетаскивать. В виде «Номера» ячеек на картинке нет: подписи ученик ставит в список под ней. Вид меняется во вкладке «Дизайн».'
-      : 'Нажмите на картинку, чтобы поставить точку. Круг — сама точка, прямоугольник — ячейка для подписи: оба можно перетаскивать. Удалить точку — крестик × на ярлыке или в списке ниже.'));
     cv = el('div', 'ld-cv');
     const img = el('img');
     img.alt = '';
@@ -255,7 +299,8 @@ const LabelDiagramEditor = (() => {
       const inp = el('input', 'ld-in ld-label');
       inp.type = 'text';
       inp.maxLength = LABEL_LEN;
-      inp.placeholder = 'Подпись, например «Корень»';
+      inp.placeholder = 'Подпись';
+      inp.title = 'Верная подпись точки, например «Корень»';
       inp.value = p.label;
       inp.setAttribute('aria-label', `Подпись точки ${k + 1}`);
       inp.oninput = () => { p.label = inp.value; save(); paint(); };

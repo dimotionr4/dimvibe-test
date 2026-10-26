@@ -25,6 +25,22 @@
 .hs-segbtn { min-height:36px; padding:0 16px; border:1.5px solid var(--line); border-radius:999px; background:var(--card); color:var(--text); cursor:pointer; }
 .hs-segbtn.on { border-color:var(--accent); background:var(--accent-soft); font-weight:600; }
 
+/* Панель инструментов над картинкой: слева картинка и рисование, справа способ ответа ученика */
+.hs-top { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; padding:6px 10px; margin-bottom:6px; border:1.5px solid var(--line); border-radius:12px; background:var(--card); }
+.hs-grp { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.hs-sep { width:1px; align-self:stretch; min-height:24px; background:var(--line); margin:0 4px; }
+.hs-tbtn { width:38px; height:36px; min-height:0; padding:0; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); cursor:pointer; }
+.hs-tbtn:hover { border-color:var(--accent); }
+.hs-tbtn.on { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+.hs-tbtn .hs-ico { width:20px; height:20px; }
+.hs-who { display:inline-flex; color:var(--muted); }
+.hs-who .hs-ico { width:22px; height:22px; }
+.hs-modes { display:inline-flex; gap:6px; }
+.hs-picbox .mb-img { display:flex; align-items:center; gap:6px; width:auto; }
+.hs-picbox .mb-line { margin:0; }
+.hs-picbox .mb-line .mb-thumb { width:36px; height:36px; }
+.hs-status { margin:0 0 8px; font-size:.88rem; }
+
 /* Холст: картинка, области поверх неё, номера, ручки выбранной области */
 .hs-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
 .hs-tool { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); cursor:pointer; }
