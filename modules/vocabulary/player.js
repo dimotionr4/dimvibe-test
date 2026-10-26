@@ -1,22 +1,28 @@
-// Плеер модуля Vocabulary: словарь для чтения. Два вида — «Словарь» (список с поиском и фильтром по части речи, подробности слова)
-// и «Карточки» (одно слово целиком, листать «Предыдущий / Следующий»). Баллов, проверок и результата нет.
+// Плеер модуля Vocabulary: словарь для чтения. Три вида — «Словарь» (список с поиском и фильтром по части речи, подробности слова),
+// «Карточки» (одно слово целиком, листать «Назад / Далее») и «Показать» (слово видно, перевод и примеры открываются нажатием).
+// Звук слова и примеров — общий audioButton из index.html: звучит один звук, смена слова или вида его останавливает.
+// Баллов, проверок и результата нет.
 // Общая часть прохождения (шапка, инструкция, ↻) живёт в index.html. Единиц ответа нет (units пуст), кнопки «Проверить» нет:
 // плеер сообщает noFooter(), и нижняя панель скрыта. Поиск, фильтр и открытое слово живут только в открытой странице.
 const VocabularyPlayer = (() => {
   const POS = { noun: 'Существительное', verb: 'Глагол', adj: 'Прилагательное', adv: 'Наречие', pron: 'Местоимение', prep: 'Предлог',
     conj: 'Союз', interj: 'Междометие', phrase: 'Фраза', other: 'Другое' };
-  let view = 'dictionary'; // 'dictionary' | 'cards'
+  const VIEWS = [['dictionary', 'Словарь'], ['cards', 'Карточки'], ['reveal', 'Показать']];
+  let view = 'dictionary'; // 'dictionary' | 'cards' | 'reveal'
   let query = '', posFilter = '', sortAz = false; // поиск, фильтр по части речи, сортировка по алфавиту
   let openId = null; // слово, открытое в списке (на узком экране — вместо списка)
   let cardIdx = 0; // какая карточка показана
+  let revealed = new Set(); // слова, у которых в режиме «Показать» открыт перевод; это не оценка знаний и нигде не сохраняется
+  let shownId = null; // слово, показанное справа в словаре: при смене звук останавливается
   let refocus = null;
   const words = () => data.words || [];
   const key = s => String(s || '').normalize('NFC').toLowerCase();
 
   const units = () => [];
   function reset() {
-    view = data.view === 'cards' ? 'cards' : 'dictionary';
-    query = ''; posFilter = ''; sortAz = false; openId = null; cardIdx = 0; refocus = null;
+    view = data.view === 'cards' || data.view === 'reveal' ? data.view : 'dictionary';
+    query = ''; posFilter = ''; sortAz = false; openId = null; cardIdx = 0; refocus = null; revealed = new Set(); shownId = null;
+    stopAudio();
   }
   const noFooter = () => true;
   const instant = () => true;
@@ -64,12 +70,18 @@ const VocabularyPlayer = (() => {
   }
 
   // Подробная запись слова: картинка, слово, транскрипция, значения с примерами. Общая для обоих видов
-  function entry(w) {
+  // hidden: режим «Показать» до нажатия — только слово, транскрипция и звук слова; скрытое в страницу не попадает вовсе
+  function entry(w, hidden) {
     const c = el('div', 'card vc-card vc-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm') + (data.imageFit === 'cover' ? ' vc-fit-cover' : ''));
-    const pic = picture(w.image);
+    const pic = hidden ? null : picture(w.image);
     if (pic) c.append(pic);
-    c.append(el('h2', 'vc-word', w.text));
+    const head = el('div', 'vc-whead');
+    head.append(el('h2', 'vc-word', w.text));
+    const wa = mediaSrc(w.audio);
+    if (wa) head.append(audioButton(wa, 'vcw' + w.id, 'audbtn vc-aud', '🔊', `Прослушать слово «${w.text}»`));
+    c.append(head);
     if (w.ipa) c.append(el('p', 'vc-ipa', w.ipa));
+    if (hidden) return c;
     meanings(w).forEach((m, i) => {
       const box = el('div', 'vc-mean');
       const line = el('p', 'vc-mline');
@@ -81,6 +93,8 @@ const VocabularyPlayer = (() => {
         const ul = el('ul', 'vc-exs');
         m.examples.forEach(x => {
           const li = el('li');
+          const xa = mediaSrc(x.audio);
+          if (xa) li.append(audioButton(xa, 'vce' + x.id, 'audbtn vc-aud vc-exaud', '🔊', 'Прослушать пример'));
           li.append(el('span', 'vc-extext', x.text));
           if (x.translation) li.append(el('span', 'vc-extr', x.translation));
           ul.append(li);
@@ -115,6 +129,7 @@ const VocabularyPlayer = (() => {
     sort.setAttribute('aria-pressed', String(sortAz));
     sort.setAttribute('aria-label', 'Сортировать по алфавиту');
     sort.onclick = () => { sortAz = !sortAz; refocus = '.vc-sort'; render(); };
+    // Список можно открыть пока звучит слово: звук останавливается только когда меняется слово справа
     bar.append(sort);
     left.append(bar);
 
@@ -150,7 +165,7 @@ const VocabularyPlayer = (() => {
         const b = el('button', 'vc-item' + (w.id === openId ? ' active' : ''));
         b.type = 'button';
         b.append(el('span', 'vc-iword', w.text), el('span', 'vc-itr', summary(w)));
-        b.onclick = () => { openId = w.id; refocus = null; render(); };
+        b.onclick = () => { if (openId !== w.id) stopAudio(); openId = w.id; refocus = null; render(); };
         items.append(b);
       });
     };
@@ -166,9 +181,11 @@ const VocabularyPlayer = (() => {
       const now = shown();
       const w = cur && matches(cur) ? cur : now[0];
       if (!w) return;
+      if (shownId !== w.id) stopAudio();
+      shownId = w.id;
       const back = el('button', 'vc-back', '‹ К списку');
       back.type = 'button';
-      back.onclick = () => { openId = null; refocus = '.vc-search'; render(); };
+      back.onclick = () => { stopAudio(); openId = null; refocus = '.vc-search'; render(); };
       right.append(back, entry(w));
     };
     showDetail();
@@ -176,19 +193,29 @@ const VocabularyPlayer = (() => {
     root.append(wrap);
   }
 
-  // ---- Карточки ----
-  function cards(root) {
+  // ---- Карточки и «Показать» ----
+  function cards(root, reveal) {
     const list = sorted();
     if (!list.length) return;
     if (cardIdx >= list.length) cardIdx = list.length - 1;
-    root.append(entry(list[cardIdx]));
+    const w = list[cardIdx];
+    const open = !reveal || revealed.has(w.id);
+    const card = entry(w, !open);
+    if (reveal) {
+      const t = el('button', 'vc-toggle', open ? 'Скрыть перевод' : 'Показать перевод');
+      t.type = 'button';
+      t.setAttribute('aria-expanded', String(open));
+      t.onclick = () => { if (open) revealed.delete(w.id); else revealed.add(w.id); refocus = '.vc-toggle'; render(); };
+      card.append(t);
+    }
+    root.append(card);
     const bar = el('div', 'tf-pager');
     const prev = el('button', '', '‹ Назад'), next = el('button', '', 'Далее ›');
     prev.type = next.type = 'button';
     prev.disabled = cardIdx <= 0;
     next.disabled = cardIdx >= list.length - 1;
-    prev.onclick = () => { cardIdx--; refocus = '.tf-pager button:first-child'; render(); };
-    next.onclick = () => { cardIdx++; refocus = '.tf-pager button:last-child'; render(); };
+    prev.onclick = () => { stopAudio(); cardIdx--; refocus = '.tf-pager button:first-child'; render(); };
+    next.onclick = () => { stopAudio(); cardIdx++; refocus = '.tf-pager button:last-child'; render(); };
     bar.append(prev, el('span', 'tf-count', `${cardIdx + 1} / ${list.length}`), next);
     root.append(bar);
   }
@@ -197,15 +224,15 @@ const VocabularyPlayer = (() => {
     const tabs = el('div', 'vc-tabs');
     tabs.setAttribute('role', 'group');
     tabs.setAttribute('aria-label', 'Вид');
-    [['dictionary', 'Словарь'], ['cards', 'Карточки']].forEach(([v, name]) => {
+    VIEWS.forEach(([v, name]) => {
       const b = el('button', 'vc-tab' + (view === v ? ' active' : ''), name);
       b.type = 'button';
       b.setAttribute('aria-pressed', String(view === v));
-      b.onclick = () => { if (view === v) return; view = v; refocus = null; render(); };
+      b.onclick = () => { if (view === v) return; stopAudio(); view = v; refocus = null; render(); };
       tabs.append(b);
     });
     root.append(tabs);
-    if (view === 'cards') cards(root); else dictionary(root);
+    if (view === 'cards' || view === 'reveal') cards(root, view === 'reveal'); else dictionary(root);
     if (refocus) {
       const t = document.querySelector(refocus);
       refocus = null;

@@ -21,11 +21,13 @@ const VocabularyEditor = (() => {
   // Части речи: ключ хранится в файле, ученик видит название
   const POS = { noun: 'Существительное', verb: 'Глагол', adj: 'Прилагательное', adv: 'Наречие', pron: 'Местоимение', prep: 'Предлог',
     conj: 'Союз', interj: 'Междометие', phrase: 'Фраза', other: 'Другое' };
-  const VIEWS = { dictionary: 'Словарь', cards: 'Карточки' };
+  const VIEWS = { dictionary: 'Словарь', cards: 'Карточки', reveal: 'Показать' };
   const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
   const FITS = { contain: 'Вписать целиком', cover: 'Заполнить рамку' };
   const emptyImage = () => ({ media: '', url: '', alt: '' });
   const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
+  // Звук слова и примера: {media} или нет
+  const audioOut = p => { const m = safeMediaPath(p); return m ? { media: m } : null; };
   const imageOut = im => {
     if (!im) return null;
     const alt = String(im.alt || '').trim().replace(/\s+/g, ' '), media = safeMediaPath(im.media);
@@ -43,20 +45,20 @@ const VocabularyEditor = (() => {
     return ids;
   };
   const newMeaning = () => ({ id: nextId('m', allIds('m')), pos: '', translation: '', note: '', examples: [] });
-  const newExample = () => ({ id: nextId('e', allIds('e')), text: '', translation: '' });
-  const newWord = () => { const id = nextId('w', allIds('w')); return { id, text: '', ipa: '', image: emptyImage(), meanings: [newMeaning()] }; };
+  const newExample = () => ({ id: nextId('e', allIds('e')), text: '', translation: '', audio: '' });
+  const newWord = () => { const id = nextId('w', allIds('w')); return { id, text: '', ipa: '', image: emptyImage(), audio: '', meanings: [newMeaning()] }; };
 
   function create() {
-    const w = { id: 'w1', text: '', ipa: '', image: emptyImage(), meanings: [{ id: 'm1', pos: '', translation: '', note: '', examples: [] }] };
+    const w = { id: 'w1', text: '', ipa: '', image: emptyImage(), audio: '', meanings: [{ id: 'm1', pos: '', translation: '', note: '', examples: [] }] };
     return { module: 'vocabulary', format: 1, view: 'dictionary', imageSize: 'm', imageFit: 'contain', words: [w] };
   }
 
   // Демо-пример (демо-режим в «Настройках», core/demo.js): три слова, у одного два значения, картинка, примеры
   function demo() {
-    const ex = (id, text, translation) => ({ id, text, translation });
-    return { ...create(), instruction: DimDemo.instruction('Изучите слова: найдите нужное в списке или листайте карточки.'), words: [
-      { id: 'w1', text: 'house', ipa: '/haʊs/', image: { ...emptyImage(), media: DimDemo.IMG.house }, meanings: [
-        { id: 'm1', pos: 'noun', translation: 'дом', note: 'Здание, где живут люди.', examples: [ex('e1', 'Tom lives in a small house.', 'Том живёт в маленьком доме.'), ex('e2', 'Our house is near the river.', 'Наш дом недалеко от реки.')] },
+    const ex = (id, text, translation, audio) => ({ id, text, translation, audio: audio || '' });
+    return { ...create(), instruction: DimDemo.instruction('Изучите слова: найдите нужное в списке, листайте карточки или проверьте себя в режиме «Показать».'), words: [
+      { id: 'w1', text: 'house', ipa: '/haʊs/', image: { ...emptyImage(), media: DimDemo.IMG.house }, audio: DimDemo.AUD.a, meanings: [
+        { id: 'm1', pos: 'noun', translation: 'дом', note: 'Здание, где живут люди.', examples: [ex('e1', 'Tom lives in a small house.', 'Том живёт в маленьком доме.', DimDemo.AUD.a), ex('e2', 'Our house is near the river.', 'Наш дом недалеко от реки.')] },
         { id: 'm2', pos: 'verb', translation: 'размещать', note: '', examples: [ex('e3', 'The museum houses a huge collection.', 'В музее хранится огромная коллекция.')] },
       ] },
       { id: 'w2', text: 'quickly', ipa: '/ˈkwɪkli/', image: emptyImage(), meanings: [
@@ -76,8 +78,12 @@ const VocabularyEditor = (() => {
     d.words.forEach(w => {
       if (!w.image) w.image = emptyImage();
       if (typeof w.ipa !== 'string') w.ipa = '';
+      if (typeof w.audio !== 'string') w.audio = '';
       if (!Array.isArray(w.meanings) || !w.meanings.length) w.meanings = [newMeaning()];
-      w.meanings.forEach(m => { if (!Array.isArray(m.examples)) m.examples = []; });
+      w.meanings.forEach(m => {
+        if (!Array.isArray(m.examples)) m.examples = [];
+        m.examples.forEach(x => { if (typeof x.audio !== 'string') x.audio = ''; });
+      });
     });
   }
 
@@ -170,7 +176,7 @@ const VocabularyEditor = (() => {
       tools.append(q);
     } else {
       const del = iconBtn(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', 'Удалить слово,' + n, () => {
-        const used = w.text.trim() || w.ipa.trim() || hasPic(w.image) || w.meanings.some(m => m.translation.trim() || m.note.trim() || m.examples.length);
+        const used = w.text.trim() || w.ipa.trim() || hasPic(w.image) || w.audio || w.meanings.some(m => m.translation.trim() || m.note.trim() || m.examples.length);
         if (used) { delAsk = w.id; drawList(); } else remove(k);
       });
       del.classList.add('vc-del');
@@ -185,9 +191,10 @@ const VocabularyEditor = (() => {
     ipa.classList.add('vc-ipa');
     head.append(text, ipa);
 
-    // Картинка слова: общий компактный значок (core/mediabar.js)
+    // Картинка и звук слова: общие компактные значки (core/mediabar.js)
     const media = el('div', 'vc-media');
-    media.append(MediaUI.imageControl(w.image, { save }));
+    const audio = MediaUI.picker('audio', () => w.audio || '', v => { w.audio = v; save(); }, 'Загрузить звук слова');
+    media.append(MediaUI.imageControl(w.image, { save, after: audio }));
 
     const meanings = el('div', 'vc-means');
     const drawMeans = () => {
@@ -239,7 +246,8 @@ const VocabularyEditor = (() => {
         const r = el('div', 'vc-ex');
         const t = input(x.text, 'Пример', `Пример ${i + 1}${lab}, слово ${k + 1}`, v => { x.text = v; save(); }, 300);
         const tt = input(x.translation, 'Перевод примера (необязательно)', `Перевод примера ${i + 1}${lab}, слово ${k + 1}`, v => { x.translation = v; save(); }, 300);
-        r.append(t, tt, iconBtn(svg('<path d="M6 6l12 12M18 6L6 18"/>'), 'Удалить пример', `Удалить пример ${i + 1}${lab}, слово ${k + 1}`, () => { m.examples.splice(i, 1); save(); drawEx(); }));
+        const au = MediaUI.picker('audio', () => x.audio || '', v => { x.audio = v; save(); }, 'Загрузить звук примера');
+        r.append(t, tt, au, iconBtn(svg('<path d="M6 6l12 12M18 6L6 18"/>'), 'Удалить пример', `Удалить пример ${i + 1}${lab}, слово ${k + 1}`, () => { m.examples.splice(i, 1); save(); drawEx(); }));
         exBox.append(r);
       });
       const add = el('button', 'vc-add vc-addex', '+ Пример');
@@ -299,7 +307,7 @@ const VocabularyEditor = (() => {
 
   // ---- Файл упражнения ----
   // Значение попадает в файл, если в нём есть перевод, пояснение или пример; пустые примеры отбрасываются
-  const exampleOut = x => ({ id: x.id, text: clean(x.text), ...(clean(x.translation) ? { translation: clean(x.translation) } : {}) });
+  const exampleOut = x => ({ id: x.id, text: clean(x.text), ...(clean(x.translation) ? { translation: clean(x.translation) } : {}), ...(audioOut(x.audio) ? { audio: audioOut(x.audio) } : {}) });
   const meaningOut = m => ({
     id: m.id, pos: POS[m.pos] ? m.pos : 'other', translation: clean(m.translation),
     ...(clean(m.note) ? { note: clean(m.note) } : {}),
@@ -310,12 +318,13 @@ const VocabularyEditor = (() => {
     id: w.id, text: clean(w.text),
     ...(clean(w.ipa) ? { ipa: clean(w.ipa) } : {}),
     ...(imageOut(w.image) ? { image: imageOut(w.image) } : {}),
+    ...(audioOut(w.audio) ? { audio: audioOut(w.audio) } : {}),
     meanings: w.meanings.filter(meaningFilled).map(meaningOut),
   });
   function exportData(draft) {
     return {
       module: 'vocabulary', format: 1,
-      ...(draft.view === 'cards' ? { view: 'cards' } : {}),
+      ...(draft.view === 'cards' || draft.view === 'reveal' ? { view: draft.view } : {}),
       ...(draft.words.some(w => imageOut(w.image)) ? { imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm', imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain' } : {}),
       words: draft.words.filter(w => clean(w.text) || w.meanings.some(meaningFilled)).map(wordOut),
     };
@@ -365,13 +374,14 @@ const VocabularyEditor = (() => {
       const im = s && s.image;
       const meanings = (Array.isArray(s && s.meanings) ? s.meanings : []).slice(0, MAX_MEANINGS).map(m => ({
         id: uid(m && m.id, mids, 'm'), pos: POS[m && m.pos] ? m.pos : '', translation: String((m && m.translation) || ''), note: String((m && m.note) || ''),
-        examples: (Array.isArray(m && m.examples) ? m.examples : []).slice(0, MAX_EXAMPLES).map(x => ({ id: uid(x && x.id, eids, 'e'), text: String((x && x.text) || ''), translation: String((x && x.translation) || '') })),
+        examples: (Array.isArray(m && m.examples) ? m.examples : []).slice(0, MAX_EXAMPLES).map(x => ({ id: uid(x && x.id, eids, 'e'), text: String((x && x.text) || ''), translation: String((x && x.translation) || ''), audio: (x && x.audio && safeMediaPath(x.audio.media)) || '' })),
       }));
       return { id: uid(s && s.id, wids, 'w'), text: String((s && s.text) || ''), ipa: String((s && s.ipa) || ''),
         image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: String((im && im.alt) || '') },
+        audio: (s && s.audio && safeMediaPath(s.audio.media)) || '',
         meanings: meanings.length ? meanings : [{ id: uid('', mids, 'm'), pos: '', translation: '', note: '', examples: [] }] };
     });
-    return { ...create(), view: file.view === 'cards' ? 'cards' : 'dictionary',
+    return { ...create(), view: file.view === 'cards' || file.view === 'reveal' ? file.view : 'dictionary',
       imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain', words };
   }
 
@@ -379,7 +389,8 @@ const VocabularyEditor = (() => {
   const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   function designOptions(draft) {
     const view = { field: 'view', label: 'Начальный вид', value: VIEWS[draft.view] ? draft.view : 'dictionary', names: VIEWS,
-      icons: { dictionary: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>'), cards: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>') } };
+      icons: { dictionary: sq('<rect x="5" y="4" width="14" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="5" y="16" width="14" height="4" rx="1"/>'), cards: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 12h6"/>'),
+        reveal: sq('<rect x="5" y="6" width="14" height="12" rx="2"/><path d="M8 10h8M8 14h4"/>') } };
     if (!draft.words.some(w => hasPic(w.image))) return [view];
     return [view,
       { field: 'imageSize', label: 'Размер картинок', value: SIZES[draft.imageSize] ? draft.imageSize : 'm', names: SIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } },
