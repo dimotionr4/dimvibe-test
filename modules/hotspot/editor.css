@@ -1,0 +1,66 @@
+/* Редактор модуля Hotspot. Цвета берутся из переменных ядра (editor.html) */
+.hs-wrap { position:relative; }
+.hs-muted { color:var(--muted); }
+.hs-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.hs-msg[hidden] { display:none; }
+.hs-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.hs-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.hs-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.hs-sec { margin-bottom:18px; }
+.hs-h { margin:0 0 8px; font-size:1rem; }
+.hs-hint { margin:2px 0 8px; font-size:.9rem; }
+.hs-in { width:100%; box-sizing:border-box; min-width:0; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+.hs-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; }
+.hs-ib:hover:not(:disabled) { color:var(--accent); }
+.hs-ib.hs-del:hover:not(:disabled) { color:var(--bad); }
+.hs-ib:disabled { opacity:.3; }
+.hs-add { margin:4px 0 8px; }
+.hs-add:disabled { opacity:.5; }
+.hs-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.hs-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.hs-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+
+/* Способ ответа */
+.hs-seg { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.hs-segbtn { min-height:36px; padding:0 16px; border:1.5px solid var(--line); border-radius:999px; background:var(--card); color:var(--text); cursor:pointer; }
+.hs-segbtn.on { border-color:var(--accent); background:var(--accent-soft); font-weight:600; }
+
+/* Холст: картинка, области поверх неё, номера, ручки выбранной области */
+.hs-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.hs-tool { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); cursor:pointer; }
+.hs-tool.on { border-color:var(--accent); background:var(--accent-soft); }
+.hs-empty { padding:28px 16px; text-align:center; color:var(--muted); border:1.5px dashed var(--line); border-radius:12px; }
+.hs-cv { position:relative; display:block; width:100%; max-width:760px; line-height:0; border:1px solid var(--line); border-radius:8px; overflow:visible; touch-action:none; user-select:none; -webkit-user-select:none; cursor:default; }
+.hs-cv.drawing { cursor:crosshair; }
+.hs-cv img { display:block; width:100%; height:auto; border-radius:8px; pointer-events:none; }
+.hs-cv.broken { min-height:120px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.hs-ov { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.hs-shape { fill:var(--accent); fill-opacity:.2; stroke:var(--accent); stroke-width:2; vector-effect:non-scaling-stroke; }
+.hs-shape.sel { fill-opacity:.35; stroke-width:3; }
+.hs-num { position:absolute; transform:translate(2px, 2px); min-width:20px; height:20px; padding:0 4px; box-sizing:border-box; border-radius:10px; background:var(--accent); color:#fff; font-size:.75rem; font-weight:700; line-height:20px; text-align:center; pointer-events:none; }
+.hs-num.sel { outline:2px solid #fff; }
+.hs-hd { position:absolute; width:14px; height:14px; margin:-7px 0 0 -7px; border:2px solid var(--accent); border-radius:50%; background:#fff; box-sizing:border-box; touch-action:none; }
+.hs-hd-nw, .hs-hd-se { cursor:nwse-resize; }
+.hs-hd-ne, .hs-hd-sw { cursor:nesw-resize; }
+.hs-hd-n, .hs-hd-s { cursor:ns-resize; }
+.hs-hd-e, .hs-hd-w { cursor:ew-resize; }
+
+/* Список областей */
+.hs-zones { margin-top:10px; }
+.hs-zrow { display:flex; align-items:center; gap:8px; margin-bottom:6px; padding:2px; border-radius:8px; }
+.hs-zrow.sel { background:var(--accent-soft); }
+.hs-zn { flex:none; width:28px; height:28px; min-height:0; padding:0; border-radius:50%; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
+.hs-zlabel { flex:1 1 0; min-height:34px; }
+.hs-shape-name { flex:none; font-size:.85rem; white-space:nowrap; }
+
+/* Задания */
+.hs-task { margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.hs-tasktop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.hs-tasktop .hs-tools2 { margin-left:auto; }
+.hs-tools2 { display:flex; align-items:center; flex:none; }
+.hs-kind { font-size:.88rem; }
+.hs-prompt { min-height:36px; margin-bottom:6px; }
+.hs-expl { min-height:38px; margin-top:4px; }
+.hs-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.hs-chip { min-height:34px; padding:0 12px; border:1.5px solid var(--line); border-radius:999px; background:var(--bg); color:var(--text); cursor:pointer; }
+.hs-chip.on { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 16%, var(--bg)); font-weight:600; }
