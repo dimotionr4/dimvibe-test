@@ -111,7 +111,10 @@ const HotspotEditor = (() => {
     areas.append(el('h3', 'hs-h', '3. Области на картинке'));
     canvasBox = el('div', 'hs-canvasbox');
     zoneBox = el('div', 'hs-zones');
-    areas.append(canvasBox, zoneBox);
+    // Картинка слева, названия областей — в панели справа (на узкой колонке панель уходит под картинку)
+    const split = el('div', 'hs-split');
+    split.append(canvasBox, zoneBox);
+    areas.append(split);
     const tasks = el('section', 'hs-sec');
     tasks.append(el('h3', 'hs-h', '4. Задания'));
     taskBox = el('div', 'hs-tasks');

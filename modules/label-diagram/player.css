@@ -35,6 +35,7 @@
 .ld-dot-l .ld-dot { width:20px; height:20px; }
 .ld-line-thin .ld-line { stroke-width:1; }
 .ld-line-thick .ld-line { stroke-width:4; }
+.ld-dashed .ld-line { stroke-dasharray:6 4; }
 .ld-round .chip.ld-slot { border-radius:20px; }
 
 /* Вид «Номера»: на картинке точки с номером, ячейки — списком под ней */

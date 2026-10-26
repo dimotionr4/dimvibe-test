@@ -33,6 +33,7 @@ const LabelDiagramEditor = (() => {
   };
   // Настройки «Дизайна» (этап 2, решения владельца 2026-10-26): вид подписей, форма ячеек, размер точки, толщина линии, «Правильно: …» в конце
   const VIEWS = { cells: 'Ячейки на картинке', numbers: 'Номера' }, SHAPES = { rect: 'Прямоугольные', round: 'Скруглённые' };
+  const DASHES = { solid: 'Сплошная', dashed: 'Пунктирная' };
   const DOTS = { s: 'Маленькая', m: 'Средняя', l: 'Крупная' }, LINES = { thin: 'Тонкая', normal: 'Обычная', thick: 'Толстая' }, REVEALS = { on: 'Показывать', off: 'Не показывать' };
   const pick = (map, v, dflt) => (map[v] ? v : dflt);
   const pointById = id => d.points.find(p => p.id === id);
@@ -41,7 +42,7 @@ const LabelDiagramEditor = (() => {
   const slotFor = (x, y) => ({ sx: round(clamp(x, 0.08, 0.92)), sy: round(clamp(y > 0.22 ? y - 0.12 : y + 0.12, 0.06, 0.94)) });
 
   function create() {
-    return { module: 'label_diagram', format: 1, view: 'cells', shape: 'rect', dot: 'm', line: 'normal', reveal: 'on', image: emptyImage(), points: [], distractors: [] };
+    return { module: 'label_diagram', format: 1, view: 'cells', shape: 'rect', dot: 'm', line: 'normal', dash: 'solid', reveal: 'on', image: emptyImage(), points: [], distractors: [] };
   }
 
   // Демо-пример (демо-режим в «Настройках», core/demo.js): дом на фото, пять точек с подписями, две лишние подписи
@@ -57,6 +58,7 @@ const LabelDiagramEditor = (() => {
     d.shape = pick(SHAPES, d.shape, 'rect');
     d.dot = pick(DOTS, d.dot, 'm');
     d.line = pick(LINES, d.line, 'normal');
+    d.dash = pick(DASHES, d.dash, 'solid');
     d.reveal = pick(REVEALS, d.reveal, 'on');
     if (!d.image) d.image = emptyImage();
     if (!Array.isArray(d.points)) d.points = [];
@@ -96,7 +98,10 @@ const LabelDiagramEditor = (() => {
     pts.append(el('h3', 'ld-h', '2. Точки и подписи'));
     canvasBox = el('div', 'ld-canvasbox');
     listBox = el('div', 'ld-list');
-    pts.append(canvasBox, listBox);
+    // Картинка слева, подписи точек — в панели справа (на узкой колонке панель уходит под картинку)
+    const split = el('div', 'ld-split');
+    split.append(canvasBox, listBox);
+    pts.append(split);
     const dist = el('section', 'ld-sec');
     dist.append(el('h3', 'ld-h', '3. Лишние подписи (необязательно)'));
     const ta = el('textarea', 'ld-in ld-dist');
@@ -125,7 +130,7 @@ const LabelDiagramEditor = (() => {
     }
     const nums = d.view === 'numbers';
     canvasBox.append(el('p', 'ld-muted ld-hint', nums ? 'Нажмите на картинку, чтобы поставить точку; точку можно перетаскивать. В виде «Номера» ячеек на картинке нет: подписи ученик ставит в список под ней. Вид меняется во вкладке «Дизайн».'
-      : 'Нажмите на картинку, чтобы поставить точку. Круг — сама точка, прямоугольник — ячейка для подписи: оба можно перетаскивать. Выбранную точку удаляет крестик в списке ниже.'));
+      : 'Нажмите на картинку, чтобы поставить точку. Круг — сама точка, прямоугольник — ячейка для подписи: оба можно перетаскивать. Удалить точку — крестик × на ярлыке или в списке ниже.'));
     cv = el('div', 'ld-cv');
     const img = el('img');
     img.alt = '';
@@ -145,6 +150,23 @@ const LabelDiagramEditor = (() => {
     paint();
   }
 
+  // Крестик «удалить точку» на ярлыке (ячейке; в виде «Номера» — на выбранной точке)
+  function cross(k) {
+    const x = el('span', 'ld-x', '×');
+    x.dataset.del = k;
+    x.title = 'Удалить точку';
+    return x;
+  }
+  function removePoint(k) {
+    const p = d.points[k];
+    if (!p) return;
+    d.points.splice(k, 1);
+    if (selId === p.id) selId = null;
+    save();
+    paint();
+    drawList();
+  }
+
   function paint() {
     if (!ov) return;
     ov.innerHTML = '';
@@ -157,17 +179,18 @@ const LabelDiagramEditor = (() => {
       dot.dataset.kind = 'a';
       dot.style.left = p.x * 100 + '%';
       dot.style.top = p.y * 100 + '%';
-      if (nums) { cv.append(dot); return; }
+      if (nums) { if (on) dot.append(cross(k)); cv.append(dot); return; }
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', p.x);
       line.setAttribute('y1', p.y);
       line.setAttribute('x2', p.sx);
       line.setAttribute('y2', p.sy);
-      line.setAttribute('class', 'ld-line' + (on ? ' sel' : ''));
+      line.setAttribute('class', 'ld-line' + (on ? ' sel' : '') + (d.dash === 'dashed' ? ' dashed' : ''));
       ov.append(line);
       const slot = el('span', 'ld-slot' + (on ? ' sel' : ''), `${k + 1}${clean(p.label) ? ' · ' + clean(p.label) : ''}`);
       slot.dataset.i = k;
       slot.dataset.kind = 's';
+      slot.append(cross(k));
       slot.style.left = p.sx * 100 + '%';
       slot.style.top = p.sy * 100 + '%';
       cv.append(dot, slot);
@@ -182,6 +205,7 @@ const LabelDiagramEditor = (() => {
   function down(e) {
     if (e.button > 0 || !cv) return;
     const t = e.target.dataset;
+    if (t && t.del !== undefined) { e.preventDefault(); justDragged = true; setTimeout(() => { justDragged = false; }, 0); removePoint(+t.del); return; }
     if (!t || t.i === undefined) return;
     const p = d.points[+t.i];
     if (!p) return;
@@ -205,7 +229,7 @@ const LabelDiagramEditor = (() => {
   }
 
   function addByClick(e) {
-    if (justDragged || !cv || (e.target.dataset && e.target.dataset.i !== undefined)) return;
+    if (justDragged || !cv || (e.target.dataset && (e.target.dataset.i !== undefined || e.target.dataset.del !== undefined))) return;
     if (d.points.length >= MAX_POINTS) return say(`Точек не больше ${MAX_POINTS}.`);
     const q = pt(e), x = round(q.x), y = round(q.y);
     const p = { id: nextId('p', d.points.map(z => z.id)), label: '', x, y, ...slotFor(x, y) };
@@ -241,7 +265,7 @@ const LabelDiagramEditor = (() => {
       del.innerHTML = svg('<path d="M6 6l12 12M18 6L6 18"/>');
       del.title = 'Удалить точку';
       del.setAttribute('aria-label', `Удалить точку ${k + 1}`);
-      del.onclick = () => { d.points.splice(k, 1); if (selId === p.id) selId = null; save(); paint(); drawList(); };
+      del.onclick = () => removePoint(k);
       r.append(n, inp, del);
       listBox.append(r);
     });
@@ -260,6 +284,7 @@ const LabelDiagramEditor = (() => {
       ...(draft.shape === 'round' ? { shape: 'round' } : {}),
       ...(draft.dot === 's' || draft.dot === 'l' ? { dot: draft.dot } : {}),
       ...(draft.line === 'thin' || draft.line === 'thick' ? { line: draft.line } : {}),
+      ...(draft.dash === 'dashed' ? { dash: 'dashed' } : {}),
       ...(draft.reveal === 'off' ? { reveal: false } : {}),
       ...(imageOut(draft.image) ? { image: imageOut(draft.image) } : {}),
       points,
@@ -307,7 +332,7 @@ const LabelDiagramEditor = (() => {
       return { id, label: String((p && p.label) || '').slice(0, LABEL_LEN), x, y, ...(hasSlot ? { sx: round(clamp(num(p.sx), 0.06, 0.94)), sy: round(clamp(num(p.sy), 0.04, 0.96)) } : slotFor(x, y)) };
     });
     const im = file.image;
-    return { ...create(), view: file.view === 'numbers' ? 'numbers' : 'cells', shape: file.shape === 'round' ? 'round' : 'rect', dot: pick(DOTS, file.dot, 'm'), line: pick(LINES, file.line, 'normal'), reveal: file.reveal === false ? 'off' : 'on',
+    return { ...create(), view: file.view === 'numbers' ? 'numbers' : 'cells', shape: file.shape === 'round' ? 'round' : 'rect', dot: pick(DOTS, file.dot, 'm'), line: pick(LINES, file.line, 'normal'), dash: file.dash === 'dashed' ? 'dashed' : 'solid', reveal: file.reveal === false ? 'off' : 'on',
       image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: '' },
       points, distractors: (Array.isArray(file.distractors) ? file.distractors : []).map(s => String(s || '').slice(0, LABEL_LEN)).slice(0, MAX_DIST) };
   }
@@ -322,8 +347,10 @@ const LabelDiagramEditor = (() => {
         icons: { rect: sq('<rect x="4" y="8" width="16" height="8" rx="1"/>'), round: sq('<rect x="4" y="8" width="16" height="8" rx="4"/>') } },
       { field: 'dot', label: 'Размер точки', value: pick(DOTS, draft.dot, 'm'), names: DOTS,
         icons: { s: sq('<circle cx="12" cy="12" r="2"/>'), m: sq('<circle cx="12" cy="12" r="4"/>'), l: sq('<circle cx="12" cy="12" r="7"/>') } },
-      { field: 'line', label: 'Линия к ячейке', value: pick(LINES, draft.line, 'normal'), names: LINES,
+      { field: 'line', label: 'Толщина линии к ячейке', value: pick(LINES, draft.line, 'normal'), names: LINES,
         icons: { thin: sq('<path d="M4 18L20 6" stroke-width="1"/>'), normal: sq('<path d="M4 18L20 6" stroke-width="2"/>'), thick: sq('<path d="M4 18L20 6" stroke-width="4"/>') } },
+      { field: 'dash', label: 'Вид линии', value: pick(DASHES, draft.dash, 'solid'), names: DASHES,
+        icons: { solid: sq('<path d="M4 18L20 6"/>'), dashed: sq('<path d="M4 18L20 6" stroke-dasharray="3 3"/>') } },
       { field: 'reveal', label: 'Верная подпись в конце', value: pick(REVEALS, draft.reveal, 'on'), names: REVEALS,
         icons: { on: sq('<path d="M4 12l5 5 11-11"/>'), off: sq('<path d="M5 5l14 14M19 5L5 19"/>') } },
     ];

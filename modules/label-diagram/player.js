@@ -146,7 +146,7 @@ const LabelDiagramPlayer = (() => {
   function stage() {
     const wrap = el('div', 'ld-stagewrap');
     const nums = numbered();
-    const st = el('div', 'ld-stage' + (finished ? ' fixed' : '') + (data.dot === 's' || data.dot === 'l' ? ' ld-dot-' + data.dot : '') + (data.line === 'thin' || data.line === 'thick' ? ' ld-line-' + data.line : ''));
+    const st = el('div', 'ld-stage' + (finished ? ' fixed' : '') + (data.dot === 's' || data.dot === 'l' ? ' ld-dot-' + data.dot : '') + (data.line === 'thin' || data.line === 'thick' ? ' ld-line-' + data.line : '') + (data.dash === 'dashed' ? ' ld-dashed' : ''));
     const img = el('img');
     img.alt = '';
     img.draggable = false;

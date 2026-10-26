@@ -47,6 +47,11 @@
 
 /* Список областей */
 .hs-zones { margin-top:10px; }
+.hs-split { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start; }
+.hs-split > .hs-canvasbox { flex:1 1 320px; min-width:0; }
+.hs-split > .hs-zones { flex:0 1 270px; min-width:240px; margin-top:0; }
+.hs-split .hs-zrow { flex-wrap:wrap; }
+.hs-split .hs-zlabel { flex:1 1 130px; }
 .hs-zrow { display:flex; align-items:center; gap:8px; margin-bottom:6px; padding:2px; border-radius:8px; }
 .hs-zrow.sel { background:var(--accent-soft); }
 .hs-zn { flex:none; width:28px; height:28px; min-height:0; padding:0; border-radius:50%; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
