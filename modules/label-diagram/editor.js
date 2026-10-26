@@ -31,13 +31,17 @@ const LabelDiagramEditor = (() => {
     const url = safeImageUrl(im.url);
     return url ? { url } : null;
   };
+  // Настройки «Дизайна» (этап 2, решения владельца 2026-10-26): вид подписей, форма ячеек, размер точки, толщина линии, «Правильно: …» в конце
+  const VIEWS = { cells: 'Ячейки на картинке', numbers: 'Номера' }, SHAPES = { rect: 'Прямоугольные', round: 'Скруглённые' };
+  const DOTS = { s: 'Маленькая', m: 'Средняя', l: 'Крупная' }, LINES = { thin: 'Тонкая', normal: 'Обычная', thick: 'Толстая' }, REVEALS = { on: 'Показывать', off: 'Не показывать' };
+  const pick = (map, v, dflt) => (map[v] ? v : dflt);
   const pointById = id => d.points.find(p => p.id === id);
   const distractorsOf = draft => (draft.distractors || []).map(clean).filter(Boolean).slice(0, MAX_DIST);
   // Ячейка по умолчанию — над точкой (у верхнего края — под ней)
   const slotFor = (x, y) => ({ sx: round(clamp(x, 0.08, 0.92)), sy: round(clamp(y > 0.22 ? y - 0.12 : y + 0.12, 0.06, 0.94)) });
 
   function create() {
-    return { module: 'label_diagram', format: 1, image: emptyImage(), points: [], distractors: [] };
+    return { module: 'label_diagram', format: 1, view: 'cells', shape: 'rect', dot: 'm', line: 'normal', reveal: 'on', image: emptyImage(), points: [], distractors: [] };
   }
 
   // Демо-пример (демо-режим в «Настройках», core/demo.js): дом на фото, пять точек с подписями, две лишние подписи
@@ -49,6 +53,11 @@ const LabelDiagramEditor = (() => {
   }
 
   function normalize() {
+    d.view = pick(VIEWS, d.view, 'cells');
+    d.shape = pick(SHAPES, d.shape, 'rect');
+    d.dot = pick(DOTS, d.dot, 'm');
+    d.line = pick(LINES, d.line, 'normal');
+    d.reveal = pick(REVEALS, d.reveal, 'on');
     if (!d.image) d.image = emptyImage();
     if (!Array.isArray(d.points)) d.points = [];
     if (!Array.isArray(d.distractors)) d.distractors = [];
@@ -114,7 +123,9 @@ const LabelDiagramEditor = (() => {
       cv = ov = null;
       return;
     }
-    canvasBox.append(el('p', 'ld-muted ld-hint', 'Нажмите на картинку, чтобы поставить точку. Круг — сама точка, прямоугольник — ячейка для подписи: оба можно перетаскивать. Выбранную точку удаляет крестик в списке ниже.'));
+    const nums = d.view === 'numbers';
+    canvasBox.append(el('p', 'ld-muted ld-hint', nums ? 'Нажмите на картинку, чтобы поставить точку; точку можно перетаскивать. В виде «Номера» ячеек на картинке нет: подписи ученик ставит в список под ней. Вид меняется во вкладке «Дизайн».'
+      : 'Нажмите на картинку, чтобы поставить точку. Круг — сама точка, прямоугольник — ячейка для подписи: оба можно перетаскивать. Выбранную точку удаляет крестик в списке ниже.'));
     cv = el('div', 'ld-cv');
     const img = el('img');
     img.alt = '';
@@ -138,8 +149,15 @@ const LabelDiagramEditor = (() => {
     if (!ov) return;
     ov.innerHTML = '';
     cv.querySelectorAll('.ld-dot, .ld-slot').forEach(n => n.remove());
+    const nums = d.view === 'numbers'; // «Номера»: ни ячеек, ни линий — точки с номерами
     d.points.forEach((p, k) => {
       const on = p.id === selId;
+      const dot = el('span', 'ld-dot' + (on ? ' sel' : '') + (nums ? ' num' : ''), nums ? String(k + 1) : null);
+      dot.dataset.i = k;
+      dot.dataset.kind = 'a';
+      dot.style.left = p.x * 100 + '%';
+      dot.style.top = p.y * 100 + '%';
+      if (nums) { cv.append(dot); return; }
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', p.x);
       line.setAttribute('y1', p.y);
@@ -147,11 +165,6 @@ const LabelDiagramEditor = (() => {
       line.setAttribute('y2', p.sy);
       line.setAttribute('class', 'ld-line' + (on ? ' sel' : ''));
       ov.append(line);
-      const dot = el('span', 'ld-dot' + (on ? ' sel' : ''));
-      dot.dataset.i = k;
-      dot.dataset.kind = 'a';
-      dot.style.left = p.x * 100 + '%';
-      dot.style.top = p.y * 100 + '%';
       const slot = el('span', 'ld-slot' + (on ? ' sel' : ''), `${k + 1}${clean(p.label) ? ' · ' + clean(p.label) : ''}`);
       slot.dataset.i = k;
       slot.dataset.kind = 's';
@@ -243,6 +256,11 @@ const LabelDiagramEditor = (() => {
     const seen = new Set(), dist = distractorsOf(draft).filter(s => { const k = s.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
     return {
       module: 'label_diagram', format: 1,
+      ...(draft.view === 'numbers' ? { view: 'numbers' } : {}),
+      ...(draft.shape === 'round' ? { shape: 'round' } : {}),
+      ...(draft.dot === 's' || draft.dot === 'l' ? { dot: draft.dot } : {}),
+      ...(draft.line === 'thin' || draft.line === 'thick' ? { line: draft.line } : {}),
+      ...(draft.reveal === 'off' ? { reveal: false } : {}),
       ...(imageOut(draft.image) ? { image: imageOut(draft.image) } : {}),
       points,
       ...(dist.length ? { distractors: dist } : {}),
@@ -271,7 +289,7 @@ const LabelDiagramEditor = (() => {
     for (let a = 0; a < draft.points.length; a++) for (let b = a + 1; b < draft.points.length; b++) {
       const p = draft.points[a], q = draft.points[b];
       if (Math.hypot(p.x - q.x, p.y - q.y) < 0.03) warnings.push(`Точки ${a + 1} и ${b + 1} почти совпадают: ученику будет трудно понять, какая к какой ячейке.`);
-      if (Math.hypot(p.sx - q.sx, p.sy - q.sy) < 0.06) warnings.push(`Ячейки точек ${a + 1} и ${b + 1} накладываются друг на друга: раздвиньте их.`);
+      if (draft.view !== 'numbers' && Math.hypot(p.sx - q.sx, p.sy - q.sy) < 0.06) warnings.push(`Ячейки точек ${a + 1} и ${b + 1} накладываются друг на друга: раздвиньте их.`);
     }
     return { errors, warnings };
   }
@@ -289,9 +307,27 @@ const LabelDiagramEditor = (() => {
       return { id, label: String((p && p.label) || '').slice(0, LABEL_LEN), x, y, ...(hasSlot ? { sx: round(clamp(num(p.sx), 0.06, 0.94)), sy: round(clamp(num(p.sy), 0.04, 0.96)) } : slotFor(x, y)) };
     });
     const im = file.image;
-    return { ...create(), image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: '' },
+    return { ...create(), view: file.view === 'numbers' ? 'numbers' : 'cells', shape: file.shape === 'round' ? 'round' : 'rect', dot: pick(DOTS, file.dot, 'm'), line: pick(LINES, file.line, 'normal'), reveal: file.reveal === false ? 'off' : 'on',
+      image: { media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: '' },
       points, distractors: (Array.isArray(file.distractors) ? file.distractors : []).map(s => String(s || '').slice(0, LABEL_LEN)).slice(0, MAX_DIST) };
   }
 
-  return { create, demo, render, load, exportData, validate, unitCount };
+  // Настройки во вкладке «Дизайн» (рисует ядро)
+  const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  function designOptions(draft) {
+    return [
+      { field: 'view', label: 'Вид подписей', value: pick(VIEWS, draft.view, 'cells'), names: VIEWS,
+        icons: { cells: sq('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="15" r="1.5"/><path d="M9 14l5-6"/><rect x="13" y="5" width="6" height="3" rx="1"/>'), numbers: sq('<rect x="3" y="3" width="18" height="11" rx="2"/><path d="M8 8.5h.01M16 8.5h.01M4 18h16M4 21h16"/>') } },
+      { field: 'shape', label: 'Форма ячеек', value: pick(SHAPES, draft.shape, 'rect'), names: SHAPES,
+        icons: { rect: sq('<rect x="4" y="8" width="16" height="8" rx="1"/>'), round: sq('<rect x="4" y="8" width="16" height="8" rx="4"/>') } },
+      { field: 'dot', label: 'Размер точки', value: pick(DOTS, draft.dot, 'm'), names: DOTS,
+        icons: { s: sq('<circle cx="12" cy="12" r="2"/>'), m: sq('<circle cx="12" cy="12" r="4"/>'), l: sq('<circle cx="12" cy="12" r="7"/>') } },
+      { field: 'line', label: 'Линия к ячейке', value: pick(LINES, draft.line, 'normal'), names: LINES,
+        icons: { thin: sq('<path d="M4 18L20 6" stroke-width="1"/>'), normal: sq('<path d="M4 18L20 6" stroke-width="2"/>'), thick: sq('<path d="M4 18L20 6" stroke-width="4"/>') } },
+      { field: 'reveal', label: 'Верная подпись в конце', value: pick(REVEALS, draft.reveal, 'on'), names: REVEALS,
+        icons: { on: sq('<path d="M4 12l5 5 11-11"/>'), off: sq('<path d="M5 5l14 14M19 5L5 19"/>') } },
+    ];
+  }
+
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions };
 })();

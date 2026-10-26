@@ -30,9 +30,25 @@
 .ld-cross { color:var(--bad); font-weight:700; }
 .ld-right { flex:1 0 100%; font-size:.78rem; color:var(--muted); }
 
+/* «Дизайн»: размер точки, толщина линии, форма ячеек (скруглённые) */
+.ld-dot-s .ld-dot { width:10px; height:10px; }
+.ld-dot-l .ld-dot { width:20px; height:20px; }
+.ld-line-thin .ld-line { stroke-width:1; }
+.ld-line-thick .ld-line { stroke-width:4; }
+.ld-round .chip.ld-slot { border-radius:20px; }
+
+/* Вид «Номера»: на картинке точки с номером, ячейки — списком под ней */
+.ld-dot.num { width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:.75rem; font-weight:700; line-height:1; }
+.ld-dot-s .ld-dot.num { width:20px; height:20px; font-size:.68rem; }
+.ld-dot-l .ld-dot.num { width:30px; height:30px; font-size:.85rem; }
+.ld-numlist { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px; margin-top:12px; }
+.chip.ld-slot.ld-inline { position:static; transform:none; width:auto; max-width:none; min-height:40px; justify-content:flex-start; text-align:left; }
+
 /* Банк подписей */
 .ld-label { margin:0 0 8px; font-size:.9rem; color:var(--muted); }
-.ld-zone { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px; min-height:44px; }
+.ld-zone { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-height:44px; }
+.ld-help { flex:none; width:28px; height:28px; box-sizing:border-box; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--muted); font-weight:700; font-size:.9rem; line-height:25px; text-align:center; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.ld-help:hover, .ld-help.on { border-color:var(--accent); color:var(--accent); }
 .ld-empty { align-self:center; color:var(--muted); font-size:.9rem; }
 .ld-bank.ld-target { cursor:pointer; outline:2px dashed var(--accent); outline-offset:-4px; }
 .ld-bank.ld-over { outline:3px solid var(--accent); outline-offset:-4px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }

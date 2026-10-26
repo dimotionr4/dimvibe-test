@@ -12,6 +12,7 @@ const LabelDiagramPlayer = (() => {
   let fresh = false, cache = null; // fresh: упражнение только что собрано (units); cache: перемешивание для предпросмотра
   let drag = null, justDragged = false;
   let imgFailed = false;
+  let helpOpen = false; // показана ли инструкция под значком «?»
 
   const instant = () => false;
   const unitOf = id => gaps.find(g => g.id === id);
@@ -41,6 +42,7 @@ const LabelDiagramPlayer = (() => {
     sel = null;
     endDrag();
     imgFailed = false;
+    helpOpen = false;
     if (reuse) { cards = cache.cards.map(c => ({ ...c })); return; }
     cards = shuffle(texts.map((text, key) => ({ key, text })));
     cache = { sig, cards: cards.map(c => ({ ...c })) };
@@ -114,19 +116,20 @@ const LabelDiagramPlayer = (() => {
 
   // Ячейка точки: пустая — пунктир с номером; с подписью — её текст (✓ / ✗ после проверки). Нажатие: положить выбранную карточку
   // или, если ничего не выбрано, вернуть лежащую карточку в банк; лежащую карточку можно и перетащить
-  function slot(p, k) {
+  // inline — ячейка в списке под картинкой (вид «Номера»), а не на картинке
+  function slot(p, k, inline) {
     const g = unitOf(p.id);
     const has = g.bankKey != null, fixed = g.locked || finished;
     const st = g.state === 'ok' ? ' ok' : g.state === 'bad' ? ' bad' : '';
     const target = !!sel && !g.locked && !finished;
-    const s = el('div', 'chip ld-slot' + (has ? ' has' : '') + st + (target ? ' ld-target' : '') + (fixed ? ' fixed' : ''));
+    const s = el('div', 'chip ld-slot' + (inline ? ' ld-inline' : '') + (has ? ' has' : '') + st + (target ? ' ld-target' : '') + (fixed ? ' fixed' : ''));
     s.dataset.drop = g.id;
     s.append(el('span', 'ld-no', String(k + 1)));
     if (has) s.append(el('span', 'ld-text', g.value));
     if (st) s.append(el('span', st === ' ok' ? 'ld-tick' : 'ld-cross', st === ' ok' ? '✓' : '✗'));
-    if (finished && g.state === 'bad') s.append(el('span', 'ld-right', 'Правильно: ' + g.answer));
+    if (finished && g.state === 'bad' && data.reveal !== false) s.append(el('span', 'ld-right', 'Правильно: ' + g.answer));
     s.setAttribute('aria-label', `Точка ${k + 1}` + (has ? `: ${g.value}` : ', пусто') + (st === ' ok' ? ', верно' : st === ' bad' ? ', неверно' : ''));
-    at(s, num(p.sx, p.x), num(p.sy, p.y));
+    if (!inline) at(s, num(p.sx, p.x), num(p.sy, p.y));
     if (!fixed) {
       s.setAttribute('role', 'button');
       s.onclick = e => {
@@ -142,7 +145,8 @@ const LabelDiagramPlayer = (() => {
 
   function stage() {
     const wrap = el('div', 'ld-stagewrap');
-    const st = el('div', 'ld-stage' + (finished ? ' fixed' : ''));
+    const nums = numbered();
+    const st = el('div', 'ld-stage' + (finished ? ' fixed' : '') + (data.dot === 's' || data.dot === 'l' ? ' ld-dot-' + data.dot : '') + (data.line === 'thin' || data.line === 'thick' ? ' ld-line-' + data.line : ''));
     const img = el('img');
     img.alt = '';
     img.draggable = false;
@@ -155,7 +159,7 @@ const LabelDiagramPlayer = (() => {
     ov.setAttribute('viewBox', '0 0 1 1');
     ov.setAttribute('preserveAspectRatio', 'none');
     st.append(img, ov);
-    pts.forEach((p, k) => {
+    if (!nums) pts.forEach((p, k) => {
       const g = unitOf(p.id);
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', p.x);
@@ -165,32 +169,50 @@ const LabelDiagramPlayer = (() => {
       line.setAttribute('class', 'ld-line' + (g.state === 'ok' ? ' ok' : g.state === 'bad' ? ' bad' : ''));
       ov.append(line);
     });
-    pts.forEach(p => {
+    pts.forEach((p, k) => {
       const g = unitOf(p.id);
-      st.append(at(el('span', 'ld-dot' + (g.state === 'ok' ? ' ok' : g.state === 'bad' ? ' bad' : '')), p.x, p.y));
+      st.append(at(el('span', 'ld-dot' + (nums ? ' num' : '') + (g.state === 'ok' ? ' ok' : g.state === 'bad' ? ' bad' : ''), nums ? String(k + 1) : null), p.x, p.y));
     });
-    pts.forEach((p, k) => st.append(slot(p, k)));
+    if (!nums) pts.forEach((p, k) => st.append(slot(p, k)));
     wrap.append(st);
     return wrap;
+  }
+
+  // Вид «Номера»: на картинке только пронумерованные точки, ячейки — списком под ней (Дизайн → «Вид подписей»)
+  const numbered = () => data.view === 'numbers';
+  function numList() {
+    const box = el('div', 'ld-numlist');
+    pts.forEach((p, k) => box.append(slot(p, k, true)));
+    return box;
   }
 
   function bankCard() {
     const placed = sel != null && holder(sel);
     const c = el('div', 'card ld-bank' + (placed ? ' ld-target' : ''));
     c.dataset.drop = '';
-    c.append(el('p', 'ld-label', placed ? 'Нажмите сюда, чтобы вернуть подпись' : 'Нажмите на подпись, потом на ячейку у точки — или перетащите подпись.'));
+    // Инструкция спрятана за значком «?» (место под картинкой); подсказка «вернуть подпись» показывается сама, пока выбрана лежащая подпись
+    if (placed) c.append(el('p', 'ld-label', 'Нажмите сюда, чтобы вернуть подпись'));
+    else if (helpOpen) c.append(el('p', 'ld-label', 'Нажмите на подпись, потом на ячейку у точки — или перетащите подпись.'));
     const zone = el('div', 'ld-zone');
+    // Значок — span, не button: Comic рисует рамку и сбивает положение у любой кнопки
+    const q = el('span', 'ld-help' + (helpOpen ? ' on' : ''), '?');
+    q.setAttribute('role', 'button');
+    q.setAttribute('aria-label', 'Как подписывать');
+    q.setAttribute('aria-expanded', String(helpOpen));
+    q.title = 'Как подписывать';
+    q.onclick = e => { e.stopPropagation(); helpOpen = !helpOpen; render(); };
+    zone.append(q);
     const left = cards.filter(x => !holder(x.key));
     left.forEach(x => zone.append(chip(x)));
-    if (!left.length) zone.append(el('span', 'ld-empty', 'Все подписи поставлены.'));
-    c.append(zone);
+    if (!left.length) zone.append(el('span', 'ld-empty', 'Все подписи поставлены.'));    c.append(zone);
     c.onclick = () => { if (placed) place(sel, ''); };
     return c;
   }
 
   function renderInto(root) {
-    const c = el('div', 'card ld-card');
+    const c = el('div', 'card ld-card' + (data.shape === 'round' ? ' ld-round' : ''));
     c.append(stage());
+    if (numbered()) c.append(numList());
     root.append(c);
     if (!finished) root.append(bankCard());
   }
