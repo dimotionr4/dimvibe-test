@@ -13,6 +13,16 @@
   border:1px solid var(--line); border-radius:16px; background:var(--card); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
 .fc-back { transform:rotateY(180deg); background:color-mix(in srgb, var(--accent) 10%, var(--card)); border-color:var(--accent); }
 .fc-text { display:block; font-size:1.5rem; line-height:1.4; overflow-wrap:anywhere; white-space:pre-wrap; }
+.fc-content { display:flex; flex-direction:column; align-items:center; gap:10px; max-width:100%; }
+.fc-img { display:block; max-width:100%; max-height:200px; object-fit:contain; border-radius:10px; }
+.fc-broken::before { content:''; display:block; width:80px; height:48px; border-radius:8px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+.fc-audio { display:flex; justify-content:center; min-height:0; margin-top:8px; }
+.fc-aud { min-height:40px; min-width:48px; padding:0 12px; }
+.fc-dirs { margin-top:-4px; }
+/* Компактный размер: ниже карточка, мельче текст и картинка */
+.fc-compact .fc-face { min-height:120px; padding:12px; }
+.fc-compact .fc-text { font-size:1.15rem; }
+.fc-compact .fc-img { max-height:110px; }
 .fc-card:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:16px; }
 
 /* Появление вместо поворота */
