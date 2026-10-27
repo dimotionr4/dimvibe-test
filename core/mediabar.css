@@ -1,29 +1,75 @@
-/* Общие компактные элементы загрузки картинок и звука (core/mediabar.js). Цвета — из переменных редактора */
-.mb-pick { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; } /* значки стоят у правого края (решение владельца 2026-10-24) */
+/* Общие элементы загрузки картинок и звука (core/mediabar.js, вид по наброску владельца 2026-10-27). Цвета — из переменных редактора */
+.mb-pick { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; } /* стоят у правого края (решение владельца 2026-10-24) */
+.mb-pick:empty { display:none; } /* звук рядом с картинкой, пока его нет: «+» общий у картинки */
 .mb-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-/* Два значка: «загрузить файл» и «из медиатеки» (решение владельца 2026-10-24: без выпадающего списка) */
-.mb-btn { position:relative; display:inline-flex; align-items:center; justify-content:center; min-height:34px; min-width:34px; padding:0 8px; border-radius:8px; color:var(--muted); }
+.mb-ico.fill { fill:currentColor; stroke:none; }
+.mb-btn { display:inline-flex; align-items:center; justify-content:center; min-height:34px; min-width:34px; padding:0 8px; border-radius:8px; color:var(--muted); }
 .mb-btn:hover { border-color:var(--accent); color:var(--accent); }
-/* Знак действия в правом нижнем углу значка: стрелка — загрузить, стопка — медиатека */
-.mb-badge { position:absolute; right:3px; bottom:3px; width:11px; height:11px; fill:var(--card); stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; background:var(--card); border-radius:3px; }
-.mb-play { min-height:34px; min-width:34px; padding:0; border-radius:8px; }
-/* Крестик «убрать»: в углу миниатюры, у звука — рядом с ▶ */
-.mb-x { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; min-height:0; padding:0; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--muted); font-size:15px; line-height:1; cursor:pointer; }
-.mb-x:hover, .mb-x:focus-visible { color:var(--bad); border-color:var(--bad); }
+
+/* Плитка: «+», выбор «картинка / звук», миниатюра */
+.mb-tile { position:relative; display:inline-flex; align-items:center; justify-content:center; flex:none; width:44px; height:44px; min-height:0; padding:0; border:1.5px solid var(--muted); border-radius:10px; background:var(--card); color:var(--text); }
+.mb-addwrap { display:inline-flex; }
+.mb-add { cursor:pointer; }
+.mb-add .mb-ico { width:24px; height:24px; padding:4px; border-radius:50%; background:var(--text); color:var(--card); stroke-width:3; }
+.mb-add:hover, .mb-add:focus-visible { border-color:var(--accent); }
+.mb-add:hover .mb-ico { background:var(--accent); color:#fff; }
+.mb-choice { width:auto; gap:2px; padding:0 4px; border-color:var(--accent); }
+.mb-choice[hidden], .mb-add[hidden] { display:none; }
+.mb-pickk { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; min-height:0; padding:0; border:0; border-radius:8px; background:none; color:var(--text); }
+.mb-pickk .mb-ico { width:22px; height:22px; }
+.mb-pickk:hover, .mb-pickk:focus-visible { background:var(--accent-soft); color:var(--accent); }
+
+.mb-thumb { padding:2px; background:var(--bg); }
+.mb-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; border-radius:7px; }
+.mb-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
+/* ↻ «заменить»: поверх картинки при наведении мыши (решение владельца 2026-10-27); на сенсорном экране виден всегда */
+.mb-rep { position:absolute; inset:0; display:none; align-items:center; justify-content:center; min-height:0; padding:0; border:0; border-radius:8px; background:rgba(0,0,0,.45); color:#fff; cursor:pointer; }
+.mb-rep .mb-ico { width:22px; height:22px; stroke-width:2.4; }
+.mb-thumb:hover .mb-rep, .mb-rep:focus-visible { display:flex; }
+@media (hover:none) { .mb-rep { display:flex; inset:auto; left:2px; bottom:2px; width:20px; height:20px; border-radius:6px; } .mb-rep .mb-ico { width:14px; height:14px; } }
+
+/* Крестик «убрать»: чёрный квадратик в углу миниатюры, у звука — рядом с ▶ */
+.mb-x { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; min-height:0; padding:0 0 2px; border-radius:5px; border:0; background:var(--text); color:var(--card); font-size:16px; font-weight:700; line-height:1; cursor:pointer; }
+.mb-x:hover, .mb-x:focus-visible { background:var(--bad); color:#fff; }
 .mb-thumb .mb-x { position:absolute; top:-8px; right:-8px; z-index:1; }
 .mb-aud { display:inline-flex; align-items:center; gap:4px; }
+.mb-play { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; min-height:0; padding:0; border:0; border-radius:8px; background:var(--text); color:var(--card); }
+.mb-play:hover, .mb-play:focus-visible { background:var(--accent); color:#fff; }
 .mb-warn .mb-x { vertical-align:middle; }
 .mb-status { font-size:.85rem; color:var(--muted); }
 .mb-status:empty { display:none; }
 .mb-status.err { color:var(--bad); flex-basis:100%; }
-.mb-thumb { position:relative; width:36px; height:36px; flex:none; border:1px solid var(--line); border-radius:8px; background:var(--bg); padding:2px; display:inline-flex; align-items:center; justify-content:center; }
-.mb-thumb img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
-.mb-thumb.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 .mb-img { min-width:0; width:100%; }
 .mb-bar .media-pick.mb-pick { margin:0; } /* общий отступ .media-pick сдвигал звук ниже картинки */
-.mb-bar { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; }
-.mb-line { display:flex; align-items:center; gap:8px; margin-top:6px; }
-.mb-line .mb-thumb { width:44px; height:44px; }
-.mb-line input { flex:1; min-width:0; }
-.mb-linkmark { position:absolute; right:-6px; bottom:-6px; font-size:.7rem; line-height:1; background:var(--card); border:1px solid var(--line); border-radius:6px; padding:1px 2px; }
+.mb-bar { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; padding-top:8px; } /* сверху место для × в углу миниатюры */
+.mb-linkmark { position:absolute; left:-6px; bottom:-6px; font-size:.7rem; line-height:1; background:var(--card); border:1px solid var(--line); border-radius:6px; padding:1px 2px; }
 .mb-warn { color:var(--bad); font-size:.85rem; margin:6px 0; }
+
+/* Окно «Добавить изображение / аудио» */
+.mbd { position:fixed; inset:0; z-index:30; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
+.mbd-box { width:min(460px, 100%); max-height:calc(100dvh - 32px); overflow:auto; background:var(--card); color:var(--text); border-radius:14px; padding:18px; box-shadow:0 12px 40px rgba(0,0,0,.35); display:flex; flex-direction:column; gap:12px; }
+.mbd-head { display:flex; align-items:center; gap:10px; }
+.mbd-title { margin:0; font-size:1.05rem; flex:1; }
+.mbd-lib { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:4px 12px; font-size:.9rem; }
+.mbd-lib:hover { border-color:var(--accent); color:var(--accent); }
+.mbd-close { min-height:0; width:30px; height:30px; padding:0; border:0; background:none; color:var(--muted); font-size:22px; line-height:1; }
+.mbd-close:hover { color:var(--text); }
+.mbd-tabs { display:flex; gap:8px; flex-wrap:wrap; }
+.mbd-tab { position:relative; display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:4px 12px; font-size:.85rem; }
+.mbd-tab .mb-ico { width:16px; height:16px; }
+.mbd-tab.on { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); cursor:default; }
+.mbd-tab small { position:absolute; right:6px; bottom:-8px; font-size:.65rem; padding:0 4px; border-radius:4px; background:var(--card); color:var(--muted); }
+.mbd-tab.soon:disabled { opacity:.6; }
+.mbd-zone { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:150px; padding:16px; border:1.5px dashed var(--accent); border-radius:12px; text-align:center; color:var(--muted); font-size:.9rem; cursor:pointer; }
+.mbd-zone:hover, .mbd-zone:focus-visible, .mbd-zone.over { background:var(--accent-soft); color:var(--text); outline:none; }
+.mbd-zone.busy { cursor:progress; opacity:.7; }
+.mbd-zone small { font-size:.78rem; }
+.mbd-zico { color:var(--accent); }
+.mbd-zico .mb-ico { width:30px; height:30px; }
+.mbd-status { margin:0; font-size:.85rem; color:var(--muted); }
+.mbd-status:empty { display:none; }
+.mbd-status.err { color:var(--bad); }
+.mbd-or { margin:0; text-align:center; font-size:.82rem; color:var(--muted); }
+.mbd-linkrow { display:flex; gap:8px; }
+.mbd-link { flex:1; min-width:0; min-height:36px; padding:4px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+.mbd-hint { margin:0; font-size:.75rem; color:var(--muted); }
