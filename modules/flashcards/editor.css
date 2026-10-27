@@ -1,0 +1,25 @@
+/* Редактор модуля Flashcards. Цвета берутся из переменных ядра (editor.html) */
+.fcx-wrap { position:relative; }
+.fcx-muted { color:var(--muted); }
+.fcx-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.fcx-ico { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.fcx-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:10px; }
+.fcx-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.fcx-in { width:100%; box-sizing:border-box; min-width:0; min-height:36px; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
+textarea.fcx-in { resize:vertical; }
+.fcx-ib { border:none; background:transparent; color:var(--muted); padding:0 4px; min-height:32px; min-width:30px; flex:none; }
+.fcx-ib:hover:not(:disabled) { color:var(--accent); }
+.fcx-ib.fcx-del:hover:not(:disabled) { color:var(--bad); }
+.fcx-ib:disabled { opacity:.3; }
+.fcx-ask { display:inline-flex; gap:4px; margin-left:4px; }
+.fcx-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
+.fcx-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
+.fcx-add { margin:4px 0 8px; }
+.fcx-add:disabled { opacity:.5; }
+
+.fcx-card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; }
+.fcx-top { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
+.fcx-top .fcx-tools2 { margin-left:auto; }
+.fcx-tools2 { display:flex; align-items:center; flex:none; }
+.fcx-sides { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.fcx-sides .fcx-in { flex:1 1 220px; width:auto; }

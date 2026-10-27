@@ -66,5 +66,8 @@ Fill Blanks: skill `.claude/skills/fill-blanks/`.
 ## Vocabulary — сделан этап 1 (2026-10-26)
 Правила перенесены в skill `.claude/skills/vocabulary/`; здесь не дублируются.
 
-## Остальные модули (Flashcards, Word Search и др.)
+## Flashcards — сделан этап 1 (2026-10-27)
+Правила перенесены в skill `.claude/skills/flashcards/`; здесь не дублируются.
+
+## Остальные модули (Word Search и др.)
 Принципы для них ещё не перенесены. Переносим по одному, по мере работы с каждым модулем, после согласования.

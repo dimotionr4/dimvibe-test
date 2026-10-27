@@ -1,0 +1,46 @@
+/* Плеер модуля Flashcards. «Назад / Далее» — классы tf-* из modules/true-false/player.css. Цвета — из переменных страницы (index.html) */
+.fc-tabs { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+.fc-tab { min-height:40px; padding:0 16px; border-radius:999px; }
+.fc-tab.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+.fc-empty { color:var(--muted); margin:8px 0; }
+
+/* Карточка: две стороны лежат в одной ячейке сетки, высота — по более длинной */
+.fc-scene { perspective:1000px; }
+.fc-card { display:block; width:100%; padding:0; border:none; background:none; text-align:center; cursor:pointer; font:inherit; color:inherit; }
+.fc-inner { display:grid; transition:transform .5s; transform-style:preserve-3d; }
+.fc-flipped .fc-inner { transform:rotateY(180deg); }
+.fc-face { grid-area:1 / 1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; min-height:220px; padding:20px 16px;
+  border:1px solid var(--line); border-radius:16px; background:var(--card); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+.fc-back { transform:rotateY(180deg); background:color-mix(in srgb, var(--accent) 10%, var(--card)); border-color:var(--accent); }
+.fc-text { display:block; font-size:1.5rem; line-height:1.4; overflow-wrap:anywhere; white-space:pre-wrap; }
+.fc-card:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:16px; }
+
+/* Появление вместо поворота */
+.fc-fade .fc-inner { transform:none !important; transform-style:flat; transition:none; }
+.fc-fade .fc-face { transform:none; backface-visibility:visible; -webkit-backface-visibility:visible; transition:opacity .3s; }
+.fc-fade .fc-back { opacity:0; }
+.fc-fade .fc-flipped .fc-back { opacity:1; }
+.fc-fade .fc-flipped .fc-front { opacity:0; }
+@media (prefers-reduced-motion: reduce) {
+  .fc-inner, .fc-face { transition:none !important; }
+}
+
+.fc-hintbox { margin-top:10px; text-align:center; }
+.fc-hintbox[hidden] { display:none; }
+.fc-hintbtn { min-height:36px; padding:0 14px; }
+.fc-hint { margin:8px 0 0; color:var(--muted); overflow-wrap:anywhere; }
+
+.fc-rate { display:flex; gap:8px; margin-top:12px; }
+.fc-rate button { flex:1; min-height:48px; font-size:1rem; }
+.fc-rate button:disabled { opacity:.45; }
+.fc-rate .fc-known.chosen { background:var(--ok, #2e8b57); color:#fff; border-color:var(--ok, #2e8b57); }
+.fc-rate .fc-repeat.chosen { background:var(--bad, #c0392b); color:#fff; border-color:var(--bad, #c0392b); }
+.fc-counts { display:flex; flex-wrap:wrap; gap:4px 14px; justify-content:center; margin:12px 0 0; color:var(--muted); }
+.fc-counts .fc-k { color:var(--text); font-weight:600; }
+.fc-summary { text-align:center; padding:16px 8px; }
+.fc-summary h2 { margin:0 0 8px; font-size:1.3rem; }
+.fc-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:14px; }
+.fc-actions button, .fc-summary > button { min-height:44px; padding:0 18px; }
+.fc-main { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+.tf-pager { margin-top:12px; }
+body.no-footer footer { display:none; }

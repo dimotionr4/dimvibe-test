@@ -229,6 +229,7 @@ const ICON = {
   label_diagram: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="15" r="1.5"/><path d="M9 14l5-6"/><rect x="13" y="5.5" width="6" height="3" rx="1"/>',
   text_to_image: '<rect x="3" y="3" width="18" height="11" rx="2"/><path d="M3 12l5-4 4 3 3-2 6 4"/><rect x="6" y="17" width="12" height="4" rx="2"/>',
   word_search: '<rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 8h6M7 12h3"/><circle cx="16.5" cy="16.5" r="3.5"/><path d="M19 19l2.5 2.5"/>',
+  flashcards: '<rect x="3" y="7" width="14" height="11" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v9"/><path d="M7 12h6"/>',
   generic: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>'
 };
 const MODS = [
@@ -246,7 +247,7 @@ const MODS = [
   { id: 'timeline', name: 'Timeline', desc: 'Расставить события в хронологическом порядке.', ready: true },
   { id: 'mini_dialogues', name: 'Mini Dialogues', desc: 'Диалог-переписка с пропусками в репликах.' },
   { id: 'word_scramble', name: 'Word Scramble / Sentence Builder', desc: 'Собрать слово или фразу из рассыпанных частей.', ready: true },
-  { id: 'flashcards', name: 'Flashcards' }, { id: 'vocabulary', name: 'Vocabulary', desc: 'Словарь слов с переводами и примерами: поиск и карточки, без проверок.', ready: true }, { id: 'word_search', name: 'Word Search', desc: 'Найти слова из списка в сетке букв.', ready: true },
+  { id: 'flashcards', name: 'Flashcards', desc: 'Карточки с двумя сторонами: перевернуть и отметить «Знаю» или «Повторить», без баллов.', ready: true },{ id: 'vocabulary', name: 'Vocabulary', desc: 'Словарь слов с переводами и примерами: поиск и карточки, без проверок.', ready: true }, { id: 'word_search', name: 'Word Search', desc: 'Найти слова из списка в сетке букв.', ready: true },
   { id: 'hotspot', name: 'Hotspot', desc: 'Найти места на картинке: нажать на область или поставить маркер.', ready: true }, { id: 'label_diagram', name: 'Label the Diagram', desc: 'Подписать схему: поставить подписи к точкам на картинке.', ready: true },
 { id: 'prepositions', name: 'Prepositions', desc: 'В пропуски текста нужно поставить подходящие предлоги.', ready: true },
   { id: 'text_to_image', name: 'Text to Image', desc: 'Подписать картинки словами: банк слов, список или ввод.', ready: true },
