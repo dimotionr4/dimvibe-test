@@ -260,9 +260,10 @@ const CategoriesEditor = (() => {
     const fixHide = () => { if (!hasPic(it.image) && !hasAud(it) && it.hideText) { it.hideText = false; box.checked = false; } };
     const sync = () => { hide.hidden = !hasPic(it.image) && !hasAud(it); inp.placeholder = ph(); updateCounter(); marks(); };
     const audio = MediaUI.picker('audio', () => it.audio || '', v => { it.audio = v; fixHide(); save(); sync(); }, 'Загрузить звук карточки');
-    media.append(MediaUI.imageControl(it.image, { save: () => { fixHide(); save(); }, after: audio, change: sync }), hide);
+    // Звук стоит перед полем карточки (набросок владельца 2026-10-27), «+» — в строке картинки
+    media.append(MediaUI.imageControl(it.image, { save: () => { fixHide(); save(); }, after: audio, audioOutside: true, change: sync }), hide);
     hide.hidden = !hasPic(it.image) && !hasAud(it);
-    r.append(inp, mv, del, media);
+    r.append(audio, inp, mv, del, media);
     return r;
   }
 

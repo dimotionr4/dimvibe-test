@@ -157,8 +157,9 @@ const WordScrambleEditor = (() => {
     // Картинка и звук задания: общие компактные значки (core/mediabar.js), миниатюра и значки одной строкой
     const media = el('div', 'ws-media');
     const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук задания');
-    media.append(el('span', 'ws-flabel', 'Картинка, звук'), MediaUI.imageControl(t.image, { save, after: audio }));
-    box.append(modes, ans, el('p', 'ws-muted ws-hint', 'Свои кусочки — через косую черту: I have / been to / London.'), prev, media,
+    // Звук стоит перед полем ответа (набросок владельца 2026-10-27), «+» — в строке картинки
+    media.append(el('span', 'ws-flabel', 'Картинка, звук'), MediaUI.imageControl(t.image, { save, after: audio, audioOutside: true }));
+    box.append(modes, MediaUI.withAudio(audio, ans), el('p', 'ws-muted ws-hint', 'Свои кусочки — через косую черту: I have / been to / London.'), prev, media,
       field('ws-instr', t.instruction, 'Своя инструкция к заданию (необязательно)', 'Инструкция', v => { t.instruction = v; }),
       field('ws-hintin', t.hint, 'Необязательно: ученик откроет её сам', 'Подсказка', v => { t.hint = v; }),
       field('ws-expl', t.explanation, 'Необязательно: ученик увидит его после проверки', 'Пояснение', v => { t.explanation = v; }));

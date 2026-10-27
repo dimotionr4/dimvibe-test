@@ -196,8 +196,9 @@ const SpliceEditor = (() => {
     // Картинка и звук слова: общие компактные значки (core/mediabar.js), миниатюра и значки одной строкой
     const media = el('div', 'sp-media');
     const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук задания');
-    media.append(el('span', 'sp-flabel', 'Картинка, звук'), MediaUI.imageControl(t.image, { save, after: audio }));
-    box.append(ans, auto, prev, media);
+    // Звук стоит перед полем слова (набросок владельца 2026-10-27), «+» — в строке картинки
+    media.append(el('span', 'sp-flabel', 'Картинка, звук'), MediaUI.imageControl(t.image, { save, after: audio, audioOutside: true }));
+    box.append(MediaUI.withAudio(audio, ans), auto, prev, media);
     if (mosaic && d.level !== 'easy') box.append(el('p', 'sp-muted sp-hint', d.mediaAlways
       ? 'Картинка и звук показываются у окошек и на Medium / Hard (включено во вкладке «Поведение»): они подсказывают, какое слово где собирать.'
       : 'В мозаике Medium и Hard картинка и звук по умолчанию скрыты: они выдали бы, какое слово где собирать. Показать их можно во вкладке «Поведение».'));

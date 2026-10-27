@@ -295,13 +295,15 @@ const MediaUI = (() => {
   // Картинка вида {media, url, alt}: «+» (или миниатюра с × и ↻), окно добавления с медиатекой и ссылкой.
   // У миниатюры картинки по ссылке значок 🔗.
   // opts: save() — записать черновик, change() — картинка изменилась, after — элемент в конец строки
-  // (если это MediaUI.picker('audio'), «+» предлагает на выбор картинку или звук)
+  // (если это MediaUI.picker('audio'), «+» предлагает на выбор картинку или звук);
+  // audioOutside — звук (after) модуль ставит сам перед полем со словом (решение владельца 2026-10-27), «+» остаётся здесь
   const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
   function imageControl(im, opts) {
     const o = opts || {};
     const box = el('div', 'mb-img');
     const aud = o.after && o.after.mbKind === 'audio' ? o.after : null;
-    if (aud) { aud.mbPaired = true; aud.refresh(); }
+    const outside = !!(aud && o.audioOutside);
+    if (aud) { aud.mbPaired = true; if (outside) aud.classList.add('mb-out'); aud.refresh(); }
     const draw = () => {
       box.textContent = '';
       const pic = hasPic(im);
@@ -315,7 +317,7 @@ const MediaUI = (() => {
         const link = safeMediaPath(im.media) ? '' : im.url;
         bar.append(thumb(mediaSrc(link ? { url: im.url } : { media: im.media }), () => addPic(true), removePic, link));
       }
-      if (o.after) bar.append(o.after);
+      if (o.after && !outside) bar.append(o.after);
       const kinds = [];
       if (!pic) kinds.push('image');
       if (aud && !aud.mbHas()) kinds.push('audio');
@@ -334,5 +336,12 @@ const MediaUI = (() => {
     return box;
   }
 
-  return { iconButton, removeButton, pickFile, fromLibrary, dialog, picker, imageControl, playButton, statusEl, ICON };
+  // Звук перед полем со словом (как на наброске владельца): строка [▶ ×][поле]; пока звука нет, видно только поле
+  function withAudio(audio, field) {
+    const w = el('div', 'mb-withaud');
+    w.append(audio, field);
+    return w;
+  }
+
+  return { iconButton, removeButton, pickFile, fromLibrary, dialog, picker, imageControl, withAudio, playButton, statusEl, ICON };
 })();

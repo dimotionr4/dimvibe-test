@@ -33,6 +33,10 @@
 .mb-x:hover, .mb-x:focus-visible { background:var(--bad); color:#fff; }
 .mb-thumb .mb-x { position:absolute; top:-8px; right:-8px; z-index:1; }
 .mb-aud { display:inline-flex; align-items:center; gap:4px; }
+/* Звук перед полем со словом (imageControl {audioOutside}, решение владельца 2026-10-27) */
+.media-pick.mb-pick.mb-out { margin:0; flex:none; }
+.mb-withaud { display:flex; align-items:center; gap:6px; min-width:0; }
+.mb-withaud > :not(.mb-pick) { flex:1 1 auto; min-width:0; }
 .mb-play { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; min-height:0; padding:0; border:0; border-radius:8px; background:var(--text); color:var(--card); }
 .mb-play:hover, .mb-play:focus-visible { background:var(--accent); color:#fff; }
 .mb-warn .mb-x { vertical-align:middle; }

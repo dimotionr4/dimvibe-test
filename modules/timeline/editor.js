@@ -188,10 +188,11 @@ const TimelineEditor = (() => {
     // Картинка и звук события: общие компактные значки (core/mediabar.js), строкой под полями
     const media = el('div', 'tl-media');
     const audio = MediaUI.picker('audio', () => ev.audio || '', v => { ev.audio = v; save(); }, 'Загрузить звук события');
-    media.append(MediaUI.imageControl(ev.image, { save, after: audio, change: () => { text.placeholder = ph(); marks(); } }));
+    // Звук стоит перед полем события (набросок владельца 2026-10-27), «+» — в строке картинки
+    media.append(MediaUI.imageControl(ev.image, { save, after: audio, audioOutside: true, change: () => { text.placeholder = ph(); marks(); } }));
     const extra = el('div', 'tl-extra');
     extra.append(media, ex);
-    r.append(grip, num, date, text, tools, extra);
+    r.append(grip, num, date, audio, text, tools, extra);
     return r;
   }
 

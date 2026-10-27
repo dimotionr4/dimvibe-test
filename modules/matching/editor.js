@@ -233,8 +233,13 @@ const MatchingEditor = (() => {
     });
   }
 
-  // Колонка стороны пары: поле текста и под ним полоса картинки и звука
-  const fcol = (it, side, i) => { const c = el('div', 'mt-fcol'); c.append(field(it, side, i), mediaBar(it, side)); return c; };
+  // Колонка стороны пары: звук и поле текста одной строкой (набросок владельца 2026-10-27), под ними полоса картинки и «+»
+  const fcol = (it, side, i) => {
+    const c = el('div', 'mt-fcol');
+    const audio = MediaUI.picker('audio', () => it[side + 'Audio'] || '', v => { it[side + 'Audio'] = v; save(); markDupes(); }, 'Загрузить звук');
+    c.append(MediaUI.withAudio(audio, field(it, side, i)), mediaBar(it, side, audio));
+    return c;
+  };
 
   function field(it, side, i) {
     const ta = el('textarea', 'mt-in');
@@ -314,10 +319,9 @@ const MatchingEditor = (() => {
 
   // Полоса картинки и звука под полем карточки: общие компактные элементы (core/mediabar.js) — значок картинки со списком действий
   // (загрузить, из медиатеки, ссылка, убрать), рядом значок звука, миниатюра и описание; стоит ровно под своим полем
-  function mediaBar(it, s) {
+  function mediaBar(it, s, audio) {
     const col = el('div', 'mt-media');
-    const audio = MediaUI.picker('audio', () => it[s + 'Audio'] || '', v => { it[s + 'Audio'] = v; save(); markDupes(); }, 'Загрузить звук');
-    col.append(MediaUI.imageControl(it[s + 'Image'], { save, change: markDupes, after: audio }));
+    col.append(MediaUI.imageControl(it[s + 'Image'], { save, change: markDupes, after: audio, audioOutside: true }));
     return col;
   }
   const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));

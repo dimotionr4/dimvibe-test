@@ -233,9 +233,10 @@ const OddOneOutEditor = (() => {
     const fixHide = () => { if (!hasPic(it.image) && !hasAud(it) && it.hideText) { it.hideText = false; chk.checked = false; } };
     const sync = () => { hide.hidden = !hasPic(it.image) && !hasAud(it); inp.placeholder = ph(); marks(box, g); };
     const audio = MediaUI.picker('audio', () => it.audio || '', v => { it.audio = v; fixHide(); save(); sync(); }, 'Загрузить звук элемента');
-    media.append(MediaUI.imageControl(it.image, { save: () => { fixHide(); save(); }, after: audio, change: sync }), hide);
+    // Звук стоит перед полем элемента (набросок владельца 2026-10-27), «+» — в строке картинки
+    media.append(MediaUI.imageControl(it.image, { save: () => { fixHide(); save(); }, after: audio, audioOutside: true, change: sync }), hide);
     hide.hidden = !hasPic(it.image) && !hasAud(it);
-    r.append(mark, inp, tools, media);
+    r.append(mark, audio, inp, tools, media);
     return r;
   }
 
