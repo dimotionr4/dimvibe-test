@@ -1,0 +1,99 @@
+{
+  "id": "ex-ue5q3b",
+  "module": "text_to_image",
+  "format": 1,
+  "published": true,
+  "title": "Демо — Text to Image",
+  "mode": "word_bank",
+  "imageSize": "m",
+  "imageFit": "contain",
+  "showAnswers": true,
+  "items": [
+    {
+      "id": "i1",
+      "answer": "one",
+      "image": {
+        "media": "media/ex-vh5bb9/img-8b138b5e.webp"
+      }
+    },
+    {
+      "id": "i2",
+      "answer": "two",
+      "image": {
+        "media": "media/ex-vh5bb9/img-2db88fd0.png"
+      }
+    },
+    {
+      "id": "i3",
+      "answer": "four",
+      "image": {
+        "media": "media/ex-vh5bb9/img-bc5f3595.webp"
+      }
+    },
+    {
+      "id": "i4",
+      "answer": "house",
+      "alternatives": [
+        "home"
+      ],
+      "image": {
+        "media": "media/ex-ugfvkv/img-0133b924.jpg"
+      }
+    },
+    {
+      "id": "i5",
+      "answer": "question mark",
+      "image": {
+        "media": "media/ex-vh5bb9/img-79b1fc9b.png"
+      }
+    }
+  ],
+  "distractors": [
+    "three",
+    "tree"
+  ],
+  "instruction": {
+    "title": "",
+    "text": "Подпишите каждую картинку словом.",
+    "audio": {
+      "media": "media/library/aud-a50607d4.wav"
+    },
+    "image": {
+      "media": "media/ex-ugfvkv/img-0133b924.jpg",
+      "alt": "",
+      "size": "medium",
+      "align": "center"
+    }
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "brand",
+    "showInstruction": true,
+    "showImage": true,
+    "gap": {
+      "shape": "frame",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "classic",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "classicFont": "system",
+    "comicFont": "blogger",
+    "comicOutline": "neat",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "plain",
+      "fontSize": "m",
+      "fontWeight": "normal"
+    },
+    "check": {
+      "variant": "filled",
+      "align": "right"
+    }
+  }
+}
