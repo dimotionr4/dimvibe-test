@@ -1,0 +1,100 @@
+{
+  "id": "ex-vu09t8",
+  "module": "label_diagram",
+  "format": 1,
+  "published": true,
+  "title": "Демо — Label the Diagram",
+  "image": {
+    "media": "media/ex-ugfvkv/img-0133b924.jpg"
+  },
+  "points": [
+    {
+      "id": "p1",
+      "label": "Bedroom",
+      "x": 0.3,
+      "y": 0.285,
+      "sx": 0.1,
+      "sy": 0.12
+    },
+    {
+      "id": "p2",
+      "label": "Kitchen",
+      "x": 0.6323,
+      "y": 0.3532,
+      "sx": 0.8415,
+      "sy": 0.6258
+    },
+    {
+      "id": "p3",
+      "label": "Living room",
+      "x": 0.31,
+      "y": 0.53,
+      "sx": 0.12,
+      "sy": 0.8
+    },
+    {
+      "id": "p4",
+      "label": "Round room",
+      "x": 0.82,
+      "y": 0.245,
+      "sx": 0.8523,
+      "sy": 0.0643
+    },
+    {
+      "id": "p5",
+      "label": "Hall",
+      "x": 0.6,
+      "y": 0.19,
+      "sx": 0.55,
+      "sy": 0.05
+    }
+  ],
+  "distractors": [
+    "Garage",
+    "Bathroom"
+  ],
+  "instruction": {
+    "title": "",
+    "text": "Подпишите комнаты дома.",
+    "audio": {
+      "media": "media/library/aud-a50607d4.wav"
+    },
+    "image": {
+      "media": "media/ex-ugfvkv/img-0133b924.jpg",
+      "alt": "",
+      "size": "medium",
+      "align": "center"
+    }
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "brand",
+    "showInstruction": true,
+    "showImage": true,
+    "gap": {
+      "shape": "line",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "classic",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "classicFont": "system",
+    "comicFont": "blogger",
+    "comicOutline": "neat",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "plain",
+      "fontSize": "m",
+      "fontWeight": "normal"
+    },
+    "check": {
+      "variant": "filled",
+      "align": "right"
+    }
+  }
+}
