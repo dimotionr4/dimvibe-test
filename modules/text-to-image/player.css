@@ -5,6 +5,7 @@
 .ti-label { margin:0 0 8px; font-size:.9rem; color:var(--muted); }
 .ti-help { flex:none; width:28px; height:28px; box-sizing:border-box; border-radius:50%; border:1.5px solid var(--line); background:var(--card); color:var(--muted); font-weight:700; font-size:.9rem; line-height:25px; text-align:center; cursor:pointer; user-select:none; -webkit-user-select:none; }
 .ti-help:hover, .ti-help.on { border-color:var(--accent); color:var(--accent); }
+.card.ti-bank.ti-bank-bottom { top:auto; bottom:0; margin-top:var(--card-gap); margin-bottom:0; }
 .ti-bank.ti-over { outline:3px solid var(--accent); outline-offset:-4px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
 
 /* Слова банка. Общий .chip из index.html задан позже, поэтому .chip.ti-chip; использованное слово приглушено (.used) */

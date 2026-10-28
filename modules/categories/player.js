@@ -192,10 +192,14 @@ const CategoriesPlayer = (() => {
 
   function renderInto(root) {
     const size = 'cs-size-' + (['s', 'l'].includes(data.imageSize) ? data.imageSize : 'm');
-    if (!finished) { const bank = bankCard(); bank.classList.add(size); root.append(bank); }
+    const bottom = bankPos(data.design, 'categories') === 'bottom'; // по умолчанию банк сверху
+    const bank = finished ? null : bankCard();
+    if (bank) bank.classList.add(size);
+    if (bank && !bottom) root.append(bank);
     const grid = el('div', 'cs-grid ' + size + ' ' + (data.view === 'stacked' ? 'cs-stacked' : 'cs-columns'));
     cats.forEach(cat => grid.append(catCard(cat)));
     root.append(grid);
+    if (bank && bottom) root.append(bank);
   }
 
   // ---- Перетаскивание ----

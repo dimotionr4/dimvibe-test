@@ -20,7 +20,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/mistake-mode/player.css?v=15">
 <link rel="stylesheet" href="modules/hotspot/player.css?v=5">
 <link rel="stylesheet" href="modules/label-diagram/player.css?v=5">
-<link rel="stylesheet" href="modules/text-to-image/player.css?v=2">
+<link rel="stylesheet" href="modules/text-to-image/player.css?v=3">
 <link rel="stylesheet" href="modules/word-search/player.css?v=1">
 <link rel="stylesheet" href="modules/vocabulary/player.css?v=2">
 <link rel="stylesheet" href="modules/flashcards/player.css?v=2">
@@ -106,6 +106,8 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   /* Банк занимает не больше четверти экрана и прокручивается сам */
   .bank { display:flex; flex-wrap:wrap; gap:6px; max-height:25vh; overflow-y:auto; margin-bottom:8px; }
   .bank:empty { display:none; }
+  /* Банк сверху (вкладка «Дизайн»): полоса над упражнением, остаётся на виду при прокрутке */
+  main > .bank { position:sticky; top:0; z-index:5; max-width:var(--content-w); margin:0 auto 10px; padding:8px 0; background:var(--bg); border-bottom:1px solid var(--line); }
   .chip { display:inline-flex; align-items:center; min-height:36px; padding:2px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer; user-select:none; }
   .chip.used { opacity:.35; cursor:default; }
   .chip.selected { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
@@ -148,7 +150,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   </div>
 </footer>
 
-<script src="core/design.js?v=12"></script>
+<script src="core/design.js?v=13"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/mediaviewer.js?v=3"></script>
 <script src="core/richtext.js?v=5"></script>
@@ -166,8 +168,8 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/ordering/player.js?v=4"></script>
 <script src="modules/timeline/player.js?v=3"></script>
 <script src="modules/word-scramble/tokens.js?v=1"></script>
-<script src="modules/word-scramble/player.js?v=4"></script>
-<script src="modules/categories/player.js?v=3"></script>
+<script src="modules/word-scramble/player.js?v=5"></script>
+<script src="modules/categories/player.js?v=4"></script>
 <script src="modules/odd-one-out/player.js?v=2"></script>
 <script src="modules/splice/tokens.js?v=1"></script>
 <script src="modules/splice/player.js?v=4"></script>
@@ -175,8 +177,8 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/essay-writing/player.js?v=2"></script>
 <script src="modules/hotspot/geometry.js?v=2"></script>
 <script src="modules/hotspot/player.js?v=7"></script>
-<script src="modules/label-diagram/player.js?v=4"></script>
-<script src="modules/text-to-image/player.js?v=1"></script>
+<script src="modules/label-diagram/player.js?v=5"></script>
+<script src="modules/text-to-image/player.js?v=2"></script>
 <script src="modules/word-search/player.js?v=1"></script>
 <script src="modules/vocabulary/player.js?v=2"></script>
 <script src="modules/flashcards/player.js?v=2"></script>
@@ -220,6 +222,10 @@ function applyLook() {
   document.documentElement.classList.remove(...PAGE_CLASSES, ...CHECK_CLASSES, ...CHIP_CLASSES);
   document.documentElement.classList.add(...pageClasses(page), ...checkClasses(normalizeCheck(dz.check)), ...chipClasses(normalizeChips(q('chips') || dz.chips)));
   $('root').classList.toggle('panel', page.background === 'card');
+  // Банк слов Fill Blanks и Prepositions: по умолчанию в нижней панели, сверху — закреплённой полосой над упражнением
+  const bk = $('bank'), bankTop = (data.module === 'fill_blanks' || data.module === 'prepositions') && bankPos(dz, data.module) === 'top';
+  if (bankTop && bk.parentNode !== $('main')) $('main').insertBefore(bk, $('root'));
+  else if (!bankTop && bk.parentNode !== document.querySelector('footer')) document.querySelector('footer').insertBefore(bk, document.querySelector('footer').firstChild);
   document.documentElement.classList.toggle('style-comic', (q('style') || dz.style) === 'comic');
   document.documentElement.classList.toggle('line-black', (q('line') || dz.comicLine) === 'black');
   // Толщина линии Comic: тонкая, обычная (по умолчанию), толстая

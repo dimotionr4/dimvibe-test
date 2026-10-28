@@ -457,7 +457,7 @@
   </div>
 </div>
 
-<script src="core/design.js?v=12"></script>
+<script src="core/design.js?v=13"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
@@ -724,7 +724,7 @@ function exerciseFor(draft, published) {
     id: draft.id, module: body.module, format: body.format, published, title: draft.title.trim(), ...body,
     instruction,
     behavior: { checks: checks >= 1 && checks <= 5 ? checks : 'auto' },
-    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design), page: normalizePage(draft.design && draft.design.page), check: normalizeCheck(draft.design && draft.design.check), ...(normalizeChips(draft.design && draft.design.chips) === 'paper' ? { chips: 'paper' } : {}) },
+    design: { accent, showInstruction, showImage, gap: normalizeGapDesign(draft.design && draft.design.gap), ...normalizeStyle(draft.design), page: normalizePage(draft.design && draft.design.page), check: normalizeCheck(draft.design && draft.design.check), ...(normalizeChips(draft.design && draft.design.chips) === 'paper' ? { chips: 'paper' } : {}), ...(draft.design && BANK_POS[draft.design.bankPos] ? { bankPos: draft.design.bankPos } : {}) },
   };
 }
 
@@ -1174,7 +1174,8 @@ function renderDesign() {
       <div class="dz-mock">${designMock({ tf: current.module === 'true_false' || current.module === 'multiple_choice' || current.module === 'matching' || current.module === 'mistake_mode' || current.module === 'color_coding' || current.module === 'select_title' || current.module === 'ordering' || current.module === 'timeline' || current.module === 'word_scramble' || current.module === 'categories' || current.module === 'odd_one_out' || current.module === 'splice' || current.module === 'essay_writing' || current.module === 'hotspot' || current.module === 'label_diagram' || current.module === 'vocabulary' || current.module === 'flashcards' || current.module === 'word_search', mt: current.module === 'matching', mm: current.module === 'mistake_mode' || current.module === 'color_coding', ac, st, gd, gdRaw, pg, ck, showI, showImg, chosen, shade, im: current.instruction && current.instruction.image })}</div>
       <div class="dz-side">
         ${card('Текст', fontGrp(st) + grp('page', 'fontSize', 'Размер', PAGE_FONTSIZES, pg.fontSize, OPT_ICONS.fontsize) + grp('page', 'fontWeight', 'Жирность', PAGE_WEIGHTS, pg.fontWeight, OPT_ICONS.weight))}
-        ${BANK_MODULES.includes(current.module) ? card('Банк слов', grp('style', 'chips', 'Ярлыки', CHIP_STYLES, normalizeChips(current.design && current.design.chips), { pill: O('<rect x="3" y="7" width="18" height="10" rx="5"/>'), paper: O('<path d="M3 8l2-1 3 1 3-1 2 1v8l-2 1-3-1-3 1-2-1z"/><path d="M14 7l3 1 3-1v9l-3 1-3-1z"/>') })) : ''}
+        ${BANK_MODULES.includes(current.module) ? card('Банк слов', grp('style', 'chips', 'Ярлыки', CHIP_STYLES, normalizeChips(current.design && current.design.chips), { pill: O('<rect x="3" y="7" width="18" height="10" rx="5"/>'), paper: O('<path d="M3 8l2-1 3 1 3-1 2 1v8l-2 1-3-1-3 1-2-1z"/><path d="M14 7l3 1 3-1v9l-3 1-3-1z"/>') })
+          + grp('style', 'bankPos', 'Положение', BANK_POS, bankPos(current.design, current.module), { top: O('<rect x="4" y="4" width="16" height="5" rx="1.5" fill="currentColor"/><path d="M4 14h16M4 19h10"/>'), bottom: O('<path d="M4 5h16M4 10h10"/><rect x="4" y="15" width="16" height="5" rx="1.5" fill="currentColor"/>') })) : ''}
         ${st.style === 'comic' ? card('Линии Comic', grp('style', 'comicOutline', 'Очертания', COMIC_OUTLINES, st.comicOutline, OPT_ICONS.outline)) : ''}
         ${card('Страница', grp('page', 'width', 'Ширина', PAGE_WIDTHS, pg.width, OPT_ICONS.pagew) + grp('page', 'density', 'Плотность', PAGE_DENSITIES, pg.density, OPT_ICONS.density) + grp('page', 'background', 'Фон', PAGE_BACKGROUNDS, pg.background, OPT_ICONS.background))}
         ${modOpts ? card((document.querySelector(`#modPick [data-mod="${current.module}"] b`) || {}).textContent || 'Модуль', modOpts) : ''}
@@ -1574,6 +1575,7 @@ async function openFile(f) {
         page: normalizePage(file.design && file.design.page),
         check: normalizeCheck(file.design && file.design.check),
         chips: normalizeChips(file.design && file.design.chips),
+        ...(file.design && BANK_POS[file.design.bankPos] ? { bankPos: file.design.bankPos } : {}),
       },
       instruction: {
         title: String((file.instruction && file.instruction.title) || ''),

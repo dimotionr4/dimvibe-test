@@ -213,8 +213,11 @@ const LabelDiagramPlayer = (() => {
     const c = el('div', 'card ld-card' + (data.shape === 'round' ? ' ld-round' : ''));
     c.append(stage());
     if (numbered()) c.append(numList());
+    // По умолчанию банк под схемой; «Сверху» — над ней
+    const top = bankPos(data.design, 'label_diagram') === 'top';
+    if (top && !finished) root.append(bankCard());
     root.append(c);
-    if (!finished) root.append(bankCard());
+    if (!top && !finished) root.append(bankCard());
   }
 
   // ---- Перетаскивание (как в Categories) ----

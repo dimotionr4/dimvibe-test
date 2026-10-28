@@ -175,10 +175,14 @@ const TextToImagePlayer = (() => {
   }
 
   function renderInto(root) {
-    if (modeOf() === 'word_bank' && !finished) root.append(bank());
+    // По умолчанию банк сверху (закреплён у верхнего края); «Снизу» — после картинок, закреплён у нижнего
+    const bottom = bankPos(data.design, 'text_to_image') === 'bottom';
+    const bk = modeOf() === 'word_bank' && !finished ? bank() : null;
+    if (bk && !bottom) root.append(bk);
     const grid = el('div', `ti-grid ti-size-${sizeOf()} ti-fit-${data.imageFit === 'cover' ? 'cover' : 'contain'}`);
     items.forEach((it, k) => grid.append(cell(it, k)));
     root.append(grid);
+    if (bk && bottom) { bk.classList.add('ti-bank-bottom'); root.append(bk); }
   }
 
   // ---- Перетаскивание (как в Label the Diagram) ----

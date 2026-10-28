@@ -281,18 +281,19 @@ const WordScramblePlayer = (() => {
     zone.dataset.drop = 'zone';
     if (!picked[t.id].length) zone.append(el('span', 'ws-empty', 'Нажимайте на кусочки ниже, чтобы собрать ответ.'));
     if (finished) zone.append(el('span', st === 'ok' ? 'ws-tick' : 'ws-cross', st === 'ok' ? '✓' : '✗'));
-    c.append(zone);
-    // Банк: оставшиеся кусочки в перемешанном порядке; нажатие ставит кусочек в конец ответа
+    // Банк: оставшиеся кусочки в перемешанном порядке; нажатие ставит кусочек в конец ответа. По умолчанию под ответом, по выбору автора — над ним
     const used = new Set(picked[t.id]);
     const left = banks[t.id].filter(i => !used.has(i));
+    let bank = null;
     if (left.length) {
-      const bank = el('div', 'ws-bank');
+      bank = el('div', 'ws-bank');
       bank.setAttribute('role', 'group');
       bank.setAttribute('aria-label', 'Кусочки');
       bank.dataset.drop = 'bank';
       left.forEach(i => bank.append(token(p[i], `${p[i]}: добавить в ответ`, () => take(t, i), 'bank', i, t)));
-      c.append(bank);
     }
+    if (bank && bankPos(data.design, 'word_scramble') === 'top') c.append(bank, zone);
+    else c.append(zone, ...(bank ? [bank] : []));
     // Подсказка: ученик открывает сама, баллов и проверок она не трогает
     const hint = String(t.hint || '').trim();
     if (hint && !finished) {

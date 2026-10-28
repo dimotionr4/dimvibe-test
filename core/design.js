@@ -88,6 +88,11 @@ const normalizeChips = v => (v === 'paper' ? 'paper' : 'pill');
 const CHIP_CLASSES = ['chips-paper'];
 const chipClasses = v => (v === 'paper' ? ['chips-paper'] : []);
 
+// Положение банка слов: сверху или снизу. Без выбора — как было до настройки (у каждого модуля своё прежнее место)
+const BANK_POS = { top: 'Сверху', bottom: 'Снизу' };
+const BANK_POS_DEFAULT = { fill_blanks: 'bottom', prepositions: 'bottom', word_scramble: 'bottom', label_diagram: 'bottom', categories: 'top', text_to_image: 'top' };
+const bankPos = (design, module) => (design && BANK_POS[design.bankPos] ? design.bankPos : BANK_POS_DEFAULT[module] || 'bottom');
+
 // Шрифт упражнения: свой набор у каждого стиля, первый в наборе — по умолчанию (прежний вид). Файлы шрифтов — core/fonts.css
 // (Blogger Sans — core/comic.css). Грузинского в шрифтах нет, поэтому в конце каждого набора запасные шрифты с ним.
 const FONT_TAIL = 'system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif';
