@@ -82,6 +82,12 @@ function normalizeCheck(c) {
 const CHECK_CLASSES = ['chk-outline', 'chk-soft', 'chk-left', 'chk-center'];
 const checkClasses = c => [c.variant !== 'filled' ? 'chk-' + c.variant : '', c.align !== 'right' ? 'chk-' + c.align : ''].filter(Boolean);
 
+// Ярлыки банка слов: овальные (прежний вид) или бумажные кусочки (стили — core/chips.css). Класс на <html> плеера только для бумажных
+const CHIP_STYLES = { pill: 'Овальные', paper: 'Бумажные кусочки' };
+const normalizeChips = v => (v === 'paper' ? 'paper' : 'pill');
+const CHIP_CLASSES = ['chips-paper'];
+const chipClasses = v => (v === 'paper' ? ['chips-paper'] : []);
+
 // Шрифт упражнения: свой набор у каждого стиля, первый в наборе — по умолчанию (прежний вид). Файлы шрифтов — core/fonts.css
 // (Blogger Sans — core/comic.css). Грузинского в шрифтах нет, поэтому в конце каждого набора запасные шрифты с ним.
 const FONT_TAIL = 'system-ui, "Noto Sans", "Noto Sans Georgian", "Segoe UI", sans-serif';

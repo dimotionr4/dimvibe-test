@@ -10,6 +10,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <title>DimVibe — тест Fill Blanks</title>
 <link rel="stylesheet" href="core/gap.css?v=7">
 <link rel="stylesheet" href="core/check.css?v=1">
+<link rel="stylesheet" href="core/chips.css?v=1">
 <link rel="stylesheet" href="core/comic.css?v=14">
 <link rel="stylesheet" href="core/fonts.css?v=1">
 <link rel="stylesheet" href="modules/image-to-gaps/player.css?v=3">
@@ -141,7 +142,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   </div>
 </footer>
 
-<script src="core/design.js?v=11"></script>
+<script src="core/design.js?v=12"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/mediaviewer.js?v=3"></script>
 <script src="core/richtext.js?v=5"></script>
@@ -210,8 +211,8 @@ function applyLook() {
   }
   // Макет: ширина колонки, плотность, фон (core/design.js); «Карточка» — рамка вокруг всего упражнения
   const page = normalizePage(dz.page);
-  document.documentElement.classList.remove(...PAGE_CLASSES, ...CHECK_CLASSES);
-  document.documentElement.classList.add(...pageClasses(page), ...checkClasses(normalizeCheck(dz.check)));
+  document.documentElement.classList.remove(...PAGE_CLASSES, ...CHECK_CLASSES, ...CHIP_CLASSES);
+  document.documentElement.classList.add(...pageClasses(page), ...checkClasses(normalizeCheck(dz.check)), ...chipClasses(normalizeChips(q('chips') || dz.chips)));
   $('root').classList.toggle('panel', page.background === 'card');
   document.documentElement.classList.toggle('style-comic', (q('style') || dz.style) === 'comic');
   document.documentElement.classList.toggle('line-black', (q('line') || dz.comicLine) === 'black');
