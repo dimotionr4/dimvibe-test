@@ -296,15 +296,16 @@
   /* Предпросмотр: настоящий плеер в рамке высотой 600 px, как в LearnWorlds */
   .modal { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; z-index:10; }
   .modal[hidden] { display:none; }
-  .modal-box { background:var(--bg); border-radius:12px; padding:12px; width:min(1000px, 100%); }  .modal-box.choose { width:min(460px, 100%); margin-top:15vh; }
+  .modal-box { background:var(--bg); border-radius:12px; padding:12px; width:min(1000px, 100%); }  .modal-box.choose { width:min(760px, 100%); margin-top:6vh; }
   .kind { display:block; width:100%; text-align:left; margin-bottom:8px; padding:10px 12px; }
   .demo-note { margin:0 0 10px; padding:6px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-size:.85rem; }
   .demo-note[hidden] { display:none; }
   .kind[hidden] { display:none; }
   .kind b, .kind span { display:block; }
   .kind span { color:var(--muted); font-size:.9rem; }
-  .modpick { display:flex; gap:8px; margin-bottom:12px; }
-  .modpick button { flex:1; text-align:left; padding:8px 12px; }
+  /* Модулей больше двадцати: кнопки переносятся в сетку, на телефоне — в два столбца */
+  .modpick { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:12px; }
+  .modpick button { min-width:0; text-align:left; padding:8px 12px; }
   .modpick button b, .modpick button span { display:block; }
   .modpick button span { color:var(--muted); font-size:.85rem; }
   .modpick button.active { background:var(--accent-soft); border-color:var(--accent); }
