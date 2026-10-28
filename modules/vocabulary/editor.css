@@ -20,10 +20,10 @@
 .vc-wtop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
 .vc-wtop .vc-tools2 { margin-left:auto; }
 .vc-tools2 { display:flex; align-items:center; flex:none; }
-.vc-head { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.vc-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .vc-text { flex:2 1 200px; font-weight:600; }
 .vc-ipa { flex:1 1 140px; }
-.vc-media { margin-bottom:8px; }
+.vc-media { margin-bottom:8px; } /* плитка картинки слева, слово и транскрипция справа (MediaUI.side, 2026-10-28) */
 
 .vc-mean { margin-bottom:8px; }
 .vc-mean.multi { border-left:3px solid var(--line); padding-left:10px; }

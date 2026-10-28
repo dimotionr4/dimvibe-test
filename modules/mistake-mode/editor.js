@@ -123,11 +123,9 @@ const MistakeModeEditor = (() => {
     box.dataset.id = t.id;
     if (many) box.append(head(t, k));
 
-    // Картинка и звук текста: общие компактные элементы (core/mediabar.js), значки со списком действий
-    const media = el('div', 'mm-media');
+    // Картинка текста — большая плитка слева от текста, звук — перед полем текста (наброски владельца 2026-10-27…28, core/mediabar.js)
     const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук');
-    media.append(MediaUI.imageControl(t.image, { save, after: audio }));
-    box.append(media);
+    const pic = MediaUI.imageControl(t.image, { save, after: audio, audioOutside: true, big: true });
 
     const ta = el('textarea', 'mm-in mm-body');
     ta.rows = 4;
@@ -174,7 +172,7 @@ const MistakeModeEditor = (() => {
       refresh();
     };
     setTimeout(fit, 0);
-    box.append(ta, count, el('p', 'mm-muted mm-hint', 'Нажмите на слово, чтобы пометить его как ошибку. Повторное нажатие снимает пометку.'), pick, errs);
+    box.append(MediaUI.side(pic, MediaUI.withAudio(audio, ta, true), count), el('p', 'mm-muted mm-hint', 'Нажмите на слово, чтобы пометить его как ошибку. Повторное нажатие снимает пометку.'), pick, errs);
     refresh();
     return box;
   }

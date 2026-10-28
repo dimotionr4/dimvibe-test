@@ -246,7 +246,6 @@ const CategoriesEditor = (() => {
     del.disabled = c.items.length <= 1;
     del.onclick = () => { c.items.splice(c.items.indexOf(it), 1); save(); drawList(); };
     // Картинка и звук карточки: общие значки «загрузить» и «из медиатеки», миниатюра и ▶ с крестиком (core/mediabar.js)
-    const media = el('div', 'cs-media');
     // «Спрятать текст» (решение владельца 2026-10-25): видна, только когда есть картинка или звук; текст тогда — подсказка автору,
     // ученик увидит его только после конца упражнения
     const hide = el('label', 'cs-hide');
@@ -260,10 +259,12 @@ const CategoriesEditor = (() => {
     const fixHide = () => { if (!hasPic(it.image) && !hasAud(it) && it.hideText) { it.hideText = false; box.checked = false; } };
     const sync = () => { hide.hidden = !hasPic(it.image) && !hasAud(it); inp.placeholder = ph(); updateCounter(); marks(); };
     const audio = MediaUI.picker('audio', () => it.audio || '', v => { it.audio = v; fixHide(); save(); sync(); }, 'Загрузить звук карточки');
-    // Звук стоит перед полем карточки (набросок владельца 2026-10-27), «+» — в строке картинки
-    media.append(MediaUI.imageControl(it.image, { save: () => { fixHide(); save(); }, after: audio, audioOutside: true, change: sync }), hide);
+    // Большая плитка картинки слева, справа поле со звуком перед ним и «Спрятать текст» (наброски владельца 2026-10-27…28)
+    const line = el('div', 'mb-line');
+    line.append(audio, inp, mv, del);
+    const pic = MediaUI.imageControl(it.image, { save: () => { fixHide(); save(); }, after: audio, audioOutside: true, big: true, change: sync });
     hide.hidden = !hasPic(it.image) && !hasAud(it);
-    r.append(audio, inp, mv, del, media);
+    r.append(MediaUI.side(pic, line, hide));
     return r;
   }
 

@@ -196,13 +196,14 @@ const OrderingEditor = (() => {
       b(svg('<path d="M6 6l12 12M18 6L6 18"/>'), 'Удалить', () => { s.items.splice(j, 1); save(); redraw(); }, s.items.length <= MIN_ITEMS),
     );
     tools.lastChild.classList.add('or-del');
-    // Картинка элемента: общие значки «загрузить» и «из медиатеки», миниатюра с крестиком (core/mediabar.js)
-    const media = el('div', 'or-media');
-    media.append(MediaUI.imageControl(it.image, { save, change: () => {
+    // Картинка элемента — большая плитка слева от поля (core/mediabar.js, набросок владельца 2026-10-28)
+    const pic = MediaUI.imageControl(it.image, { save, big: true, change: () => {
       inp.placeholder = hasPic(it.image) ? 'Подпись к картинке (необязательно)' : `Элемент ${j + 1}`;
       markDups(s, r.parentElement);
-    } }));
-    r.append(grip, num, inp, tools, media);
+    } });
+    const line = el('div', 'mb-line');
+    line.append(inp, tools);
+    r.append(grip, num, MediaUI.side(pic, line));
     return r;
   }
 

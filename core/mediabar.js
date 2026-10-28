@@ -286,6 +286,9 @@ const MediaUI = (() => {
         box.append(thumb(mediaSrc({ media: path }), () => add(true), () => after('')));
       } else if (!box.mbPaired) {
         box.append(addTile([kind], () => add(false), label));
+      } else if (box.mbSmallAdd) {
+        // Картинка уже занимает плитку: звук добавляют серым значком «динамик +» на месте будущей ▶ (решение владельца 2026-10-28)
+        box.append(iconButton(ICON.audio + '<span class="mb-addplus">+</span>', label || 'Добавить звук', () => add(false), 'mb-addaud'));
       }
     };
     box.refresh();
@@ -296,11 +299,13 @@ const MediaUI = (() => {
   // У миниатюры картинки по ссылке значок 🔗.
   // opts: save() — записать черновик, change() — картинка изменилась, after — элемент в конец строки
   // (если это MediaUI.picker('audio'), «+» предлагает на выбор картинку или звук);
-  // audioOutside — звук (after) модуль ставит сам перед полем со словом (решение владельца 2026-10-27), «+» остаётся здесь
+  // audioOutside — звук (after) модуль ставит сам перед полем со словом (решение владельца 2026-10-27), «+» остаётся здесь;
+  // когда картинка выбрана, звук добавляют значком «динамик +» перед полем.
+  // big — большая плитка высотой в два поля слева от полей задания (решение владельца 2026-10-28), раскладка — MediaUI.side
   const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
   function imageControl(im, opts) {
     const o = opts || {};
-    const box = el('div', 'mb-img');
+    const box = el('div', 'mb-img' + (o.big ? ' mb-big' : ''));
     const aud = o.after && o.after.mbKind === 'audio' ? o.after : null;
     const outside = !!(aud && o.audioOutside);
     if (aud) { aud.mbPaired = true; if (outside) aud.classList.add('mb-out'); aud.refresh(); }
@@ -320,8 +325,9 @@ const MediaUI = (() => {
       if (o.after && !outside) bar.append(o.after);
       const kinds = [];
       if (!pic) kinds.push('image');
-      if (aud && !aud.mbHas()) kinds.push('audio');
+      if (aud && !aud.mbHas() && !(outside && pic)) kinds.push('audio');
       if (kinds.length) bar.append(addTile(kinds, k => (k === 'image' ? addPic(false) : aud.mbAdd())));
+      if (outside && aud.mbSmallAdd !== pic) { aud.mbSmallAdd = pic; aud.refresh(); }
       box.append(bar);
       if (!pic && String(im.url || '').trim() && !safeMediaPath(im.media)) {
         // Старая неправильная ссылка (без https): выбрать картинку заново или убрать крестиком
@@ -336,12 +342,21 @@ const MediaUI = (() => {
     return box;
   }
 
-  // Звук перед полем со словом (как на наброске владельца): строка [▶ ×][поле]; пока звука нет, видно только поле
-  function withAudio(audio, field) {
-    const w = el('div', 'mb-withaud');
+  // Звук перед полем со словом (как на наброске владельца): строка [▶ ×][поле]; пока звука нет, видно только поле.
+  // top — кнопки у верхнего края (для многострочного поля)
+  function withAudio(audio, field, top) {
+    const w = el('div', 'mb-withaud' + (top ? ' top' : ''));
     w.append(audio, field);
     return w;
   }
+  // Раскладка по наброску владельца 2026-10-28: большая плитка (imageControl {big}) слева, поля задания справа столбцом
+  function side(media, ...content) {
+    const w = el('div', 'mb-side');
+    const body = el('div', 'mb-sidebody');
+    body.append(...content.filter(Boolean));
+    w.append(media, body);
+    return w;
+  }
 
-  return { iconButton, removeButton, pickFile, fromLibrary, dialog, picker, imageControl, withAudio, playButton, statusEl, ICON };
+  return { iconButton, removeButton, pickFile, fromLibrary, dialog, picker, imageControl, withAudio, side, playButton, statusEl, ICON };
 })();

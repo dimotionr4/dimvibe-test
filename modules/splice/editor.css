@@ -39,8 +39,7 @@
 .sp-field .sp-in { margin-bottom:0; flex:1; }
 .sp-hint { margin:0 0 6px; font-size:.85rem; }
 /* Картинка и звук слова: подпись слева, миниатюра и значки одной строкой */
-.sp-media { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-.sp-media .mb-img { display:flex; align-items:center; gap:8px; width:auto; flex:1; }
-.sp-media .mb-bar { justify-content:flex-start; }
-.sp-media .mb-line { order:-1; margin-top:0; }
+/* Картинка слова — большая плитка слева от поля и кнопок «Авто» (MediaUI.side, набросок владельца 2026-10-28) */
+.sp-task > .mb-side { margin-bottom:8px; }
+.sp-task .mb-side .sp-auto { margin-bottom:0; }
 .sp-flabel { flex:none; width:6.5em; font-size:.88rem; color:var(--muted); }

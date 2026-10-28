@@ -189,10 +189,10 @@ const VocabularyEditor = (() => {
     text.classList.add('vc-text');
     const ipa = input(w.ipa, 'Транскрипция (необязательно)', `Транскрипция слова ${k + 1}`, v => { w.ipa = v; save(); }, 80);
     ipa.classList.add('vc-ipa');
-    // Картинка и звук слова: общие компактные значки (core/mediabar.js); звук — перед полем слова (набросок владельца 2026-10-27)
-    const media = el('div', 'vc-media');
+    // Картинка слова — большая плитка слева, справа звук перед полем слова и транскрипция (наброски владельца 2026-10-27…28)
     const audio = MediaUI.picker('audio', () => w.audio || '', v => { w.audio = v; save(); }, 'Загрузить звук слова');
-    media.append(MediaUI.imageControl(w.image, { save, after: audio, audioOutside: true }));
+    const media = MediaUI.side(MediaUI.imageControl(w.image, { save, after: audio, audioOutside: true, big: true }), head);
+    media.classList.add('vc-media');
     head.append(audio, text, ipa);
 
     const meanings = el('div', 'vc-means');
@@ -214,7 +214,7 @@ const VocabularyEditor = (() => {
     };
     drawMeans();
 
-    box.append(top, head, media, meanings);
+    box.append(top, media, meanings);
     return box;
   }
 

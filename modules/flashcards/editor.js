@@ -139,7 +139,9 @@ const FlashcardsEditor = (() => {
     t.setAttribute('aria-label', `${name} сторона карточки ${k + 1}`);
     t.oninput = () => { c[s] = t.value; save(); };
     const audio = MediaUI.picker('audio', () => c[s + 'Audio'] || '', v => { c[s + 'Audio'] = v; save(); }, `Загрузить звук: ${name.toLowerCase()} сторона`);
-    box.append(t, MediaUI.imageControl(c[s + 'Image'], { save, after: audio }));
+    // Картинка стороны — большая плитка слева, звук — перед полем текста (наброски владельца 2026-10-27…28, core/mediabar.js)
+    const pic = MediaUI.imageControl(c[s + 'Image'], { save, after: audio, audioOutside: true, big: true });
+    box.append(MediaUI.side(pic, MediaUI.withAudio(audio, t, true)));
     return box;
   }
 

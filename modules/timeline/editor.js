@@ -185,14 +185,13 @@ const TimelineEditor = (() => {
     ex.value = ev.explanation;
     ex.setAttribute('aria-label', `Пояснение к событию ${j + 1}`);
     ex.oninput = () => { ev.explanation = ex.value; save(); };
-    // Картинка и звук события: общие компактные значки (core/mediabar.js), строкой под полями
-    const media = el('div', 'tl-media');
+    // Картинка события — большая плитка слева; справа дата, звук перед полем события, кнопки, под ними пояснение
+    // (наброски владельца 2026-10-27…28, core/mediabar.js)
     const audio = MediaUI.picker('audio', () => ev.audio || '', v => { ev.audio = v; save(); }, 'Загрузить звук события');
-    // Звук стоит перед полем события (набросок владельца 2026-10-27), «+» — в строке картинки
-    media.append(MediaUI.imageControl(ev.image, { save, after: audio, audioOutside: true, change: () => { text.placeholder = ph(); marks(); } }));
-    const extra = el('div', 'tl-extra');
-    extra.append(media, ex);
-    r.append(grip, num, date, audio, text, tools, extra);
+    const pic = MediaUI.imageControl(ev.image, { save, after: audio, audioOutside: true, big: true, change: () => { text.placeholder = ph(); marks(); } });
+    const line = el('div', 'mb-line');
+    line.append(date, audio, text, tools);
+    r.append(grip, num, MediaUI.side(pic, line, ex));
     return r;
   }
 

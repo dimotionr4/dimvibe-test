@@ -27,12 +27,8 @@
 /* Элементы: ручка, номер места, поле, выше / ниже / удалить */
 .or-items { list-style:none; margin:0 0 4px; padding:0; position:relative; }
 .or-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:8px; background:var(--card); border-radius:8px; }
-/* Картинка элемента — строкой под полем, вровень с ним (ручка 28 + номер 22 + два промежутка) */
-.or-media { flex:1 0 100%; padding-left:68px; box-sizing:border-box; min-width:0; }
-/* Миниатюра и значки — одной строкой слева (в общем виде значки прижаты вправо, а миниатюра стоит строкой ниже) */
-.or-media .mb-img { display:flex; align-items:center; gap:8px; }
-.or-media .mb-bar { justify-content:flex-start; }
-.or-media .mb-line { order:-1; margin-top:0; }
+/* Картинка элемента — большая плитка слева от поля (MediaUI.side, набросок владельца 2026-10-28) */
+.or-row > .or-grip, .or-row > .or-num { align-self:flex-start; margin-top:22px; }
 .or-sound { display:flex; align-items:center; gap:8px; margin:0 0 4px; }
 .or-num { flex:none; min-width:22px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
 .or-item-in { flex:1 1 auto; width:auto; min-height:36px; }

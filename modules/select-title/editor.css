@@ -22,7 +22,7 @@
 .st-texttop { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px; }
 .st-texttop .st-tools2 { margin-left:auto; }
 .st-tools2 { display:flex; align-items:center; flex:none; }
-.st-media { margin-bottom:8px; }
+.st-text .mb-sidebody { gap:0; } /* картинка текста — большая плитка слева (MediaUI.side, 2026-10-28) */
 .st-body { line-height:1.5; min-height:140px; }
 .st-count { font-size:.85rem; margin:2px 0 6px; text-align:right; }
 .st-expl { min-height:38px; margin-top:4px; }

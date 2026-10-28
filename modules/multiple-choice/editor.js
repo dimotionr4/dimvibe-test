@@ -240,16 +240,30 @@ const MultipleChoiceEditor = (() => {
     ta.setAttribute('aria-label', 'Текст вопроса');
     const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
     ta.oninput = () => { it.text = ta.value; fit(); headTxt.textContent = clean(it.text) || 'Пустой вопрос'; headTxt.classList.toggle('empty', !clean(it.text)); save(); };
-    b.append(ta);
     setTimeout(fit, 0);
 
-    // Картинка и озвучка вопроса (необязательно)
-    const mq = el('div', 'mc-label mc-labelrow', 'Картинка и звук вопроса (необязательно)');
-    mq.append(help('Картинка стоит сверху, снизу, слева или справа от текста вопроса. У ученика на ней значок увеличения. Размер и вписывание картинок — во вкладке «Дизайн». Звук ученик включает значком динамика у вопроса, он не влияет на выбор и баллы.'));
+    // Картинка вопроса — большая плитка слева от текста, звук — перед полем вопроса (наброски владельца 2026-10-27…28, core/mediabar.js);
+    // положение картинки выбирается под ними, когда картинка есть
+    const qAudio = audioField(() => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить звук вопроса');
     const qbox = el('div', 'mc-media');
-    const drawQ = () => { qbox.innerHTML = ''; qbox.append(imageField(it.image, true, drawQ, audioField(() => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить звук вопроса'))); };
+    const drawQ = () => {
+      qbox.innerHTML = '';
+      if (!hasPic(it.image)) return;
+      const al = el('div', 'mc-label mc-labelrow', 'Положение картинки');
+      al.append(help('Картинка стоит сверху, снизу, слева или справа от текста вопроса. У ученика на ней значок увеличения. Размер и вписывание картинок — во вкладке «Дизайн». Звук ученик включает значком динамика у вопроса, он не влияет на выбор и баллы.'));
+      const seg = el('span', 'mc-seg');
+      Object.entries(ALIGNS).forEach(([v, label]) => {
+        const bt = el('button', it.image.align === v ? 'active' : '', label);
+        bt.type = 'button';
+        bt.setAttribute('aria-pressed', String(it.image.align === v));
+        bt.onclick = () => { it.image.align = v; save(); drawQ(); };
+        seg.append(bt);
+      });
+      qbox.append(al, seg);
+    };
+    const qpic = MediaUI.imageControl(it.image, { save, change: drawQ, after: qAudio, audioOutside: true, big: true });
     drawQ();
-    b.append(mq, qbox);
+    b.append(MediaUI.side(qpic, MediaUI.withAudio(qAudio, ta, true)), qbox);
 
     // Тип вопроса: как в общих настройках или свой
     const tl = el('div', 'mc-label mc-labelrow', 'Тип вопроса');

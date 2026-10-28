@@ -56,15 +56,15 @@
    даже если текст в одном поле занимает больше строк. В узкой колонке всё идёт друг под другом */
 .mt-fields { display:grid; grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr); column-gap:6px; row-gap:4px; align-items:start; container-type:inline-size; }
 .mt-fcol { display:contents; }
-.mt-fcol:first-child > .mb-withaud { grid-column:1; grid-row:1; }
-.mt-fcol:first-child > .mt-media { grid-column:1; grid-row:2; }
-.mt-fields > .mt-link { grid-column:2; grid-row:1; }
-.mt-fcol:last-child > .mb-withaud { grid-column:3; grid-row:1; }
-.mt-fcol:last-child > .mt-media { grid-column:3; grid-row:2; }
-@container (max-width: 280px) {
+/* С 2026-10-28 у каждой стороны большая плитка картинки слева от поля (MediaUI.side) */
+.mt-fcol:first-child > .mb-side { grid-column:1; grid-row:1; }
+.mt-fields > .mt-link { grid-column:2; grid-row:1; align-self:center; }
+.mt-fcol:last-child > .mb-side { grid-column:3; grid-row:1; }
+/* Сторона пары с плиткой 80 px требует ~230 px: уже — стороны встают друг под другом (запрос к ширине строки .mt-row) */
+.mt-row { container-type:inline-size; }
+@container (max-width: 560px) {
   .mt-fields { grid-template-columns:minmax(0,1fr); }
   .mt-fields > .mt-link { display:none; }
-  .mt-fcol:first-child > .mb-withaud, .mt-fcol:first-child > .mt-media { grid-column:1; }
-  .mt-fcol:first-child > .mb-withaud { grid-row:1; } .mt-fcol:first-child > .mt-media { grid-row:2; }
-  .mt-fcol:last-child > .mb-withaud { grid-column:1; grid-row:3; } .mt-fcol:last-child > .mt-media { grid-column:1; grid-row:4; }
+  .mt-fcol:first-child > .mb-side { grid-column:1; grid-row:1; }
+  .mt-fcol:last-child > .mb-side { grid-column:1; grid-row:2; }
 }
