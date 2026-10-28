@@ -10,7 +10,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <title>DimVibe — тест Fill Blanks</title>
 <link rel="stylesheet" href="core/gap.css?v=7">
 <link rel="stylesheet" href="core/check.css?v=1">
-<link rel="stylesheet" href="core/chips.css?v=2">
+<link rel="stylesheet" href="core/chips.css?v=3">
 <link rel="stylesheet" href="core/comic.css?v=14">
 <link rel="stylesheet" href="core/fonts.css?v=1">
 <link rel="stylesheet" href="modules/image-to-gaps/player.css?v=3">
@@ -28,7 +28,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/select-title/player.css?v=3">
 <link rel="stylesheet" href="modules/ordering/player.css?v=2">
 <link rel="stylesheet" href="modules/timeline/player.css?v=3">
-<link rel="stylesheet" href="modules/word-scramble/player.css?v=2">
+<link rel="stylesheet" href="modules/word-scramble/player.css?v=3">
 <link rel="stylesheet" href="modules/categories/player.css?v=3">
 <link rel="stylesheet" href="modules/odd-one-out/player.css?v=2">
 <link rel="stylesheet" href="modules/splice/player.css?v=3">
@@ -109,6 +109,12 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   .chip { display:inline-flex; align-items:center; min-height:36px; padding:2px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer; user-select:none; }
   .chip.used { opacity:.35; cursor:default; }
   .chip.selected { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+  /* Перетаскивание слова: копия за указателем, поднятое слово бледнеет, цель подсвечена */
+  .chip.dg-ghost { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; box-shadow:0 8px 20px rgba(0,0,0,.25); border-color:var(--accent); }
+  .chip.dg-lifted, .gap.dg-lifted { opacity:.35; }
+  .dg-over { outline:3px solid var(--accent); outline-offset:-4px; }
+  .dg-dragging, .dg-dragging * { cursor:grabbing !important; user-select:none; -webkit-user-select:none; }
+  .bank .chip:not(.used) { cursor:grab; touch-action:manipulation; }
   /* Нижняя панель: кнопка «Проверить» и блок результата — в core/check.css */
   .unavailable { flex:1; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; color:var(--muted); font-size:1.1rem; }
 </style>
@@ -160,7 +166,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <script src="modules/ordering/player.js?v=4"></script>
 <script src="modules/timeline/player.js?v=3"></script>
 <script src="modules/word-scramble/tokens.js?v=1"></script>
-<script src="modules/word-scramble/player.js?v=3"></script>
+<script src="modules/word-scramble/player.js?v=4"></script>
 <script src="modules/categories/player.js?v=3"></script>
 <script src="modules/odd-one-out/player.js?v=2"></script>
 <script src="modules/splice/tokens.js?v=1"></script>
@@ -533,8 +539,10 @@ function makeGap(idx) {
     el.appendChild(sel);
   } else {
     el.textContent = g.value;
+    el.dataset.drop = String(idx);
+    if (!frozen(g) && g.bankKey !== null) el.addEventListener('pointerdown', e => pressWord(e, g.bankKey, el));
     el.onclick = () => {
-      if (frozen(g)) return;
+      if (frozen(g) || justDragged) return;
       if (selected !== null) {
         // Выбранное слово встаёт в пропуск; прежнее слово из этого пропуска возвращается в банк
         const w = bankOrder.find(b => b.key === selected);
@@ -572,11 +580,133 @@ function renderBank() {
     const chip = document.createElement('span');
     chip.className = 'chip' + (used.has(w.key) ? ' used' : '') + (selected === w.key ? ' selected' : '');
     chip.textContent = w.text;
-    if (!used.has(w.key) && !finished) chip.onclick = () => { selected = selected === w.key ? null : w.key; render(); };
+    if (!used.has(w.key) && !finished) {
+      chip.onclick = () => { if (justDragged) return; selected = selected === w.key ? null : w.key; render(); };
+      chip.addEventListener('pointerdown', e => pressWord(e, w.key, chip));
+      chip.oncontextmenu = e => e.preventDefault();
+    }
     bank.appendChild(chip);
   });
+  bank.dataset.drop = '';
   bank.scrollTop = scroll;
 }
+
+// ---- Перетаскивание (банк слов, как в Categories): слово из банка или из пропуска — в пропуск или обратно в банк ----
+// Мышь: перенос начинается, когда указатель сдвинулся на несколько точек. Палец: после удержания HOLD мс; если палец поехал раньше — это прокрутка
+const DRAG_HOLD = 250, DRAG_SLOP = 10, DRAG_EDGE = 48, DRAG_SPEED = 14;
+let drag = null, justDragged = false;
+
+function pressWord(e, key, src) {
+  if (e.button > 0 || finished || drag) return;
+  e.stopPropagation();
+  const touch = e.pointerType === 'touch';
+  drag = { key, src, pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, touch, on: false, timer: 0, ghost: null, over: null, raf: 0 };
+  if (touch) drag.timer = setTimeout(() => { if (drag && !drag.on) beginDrag(); }, DRAG_HOLD);
+  window.addEventListener('pointermove', moveDrag, { passive: false });
+  window.addEventListener('pointerup', upDrag);
+  window.addEventListener('pointercancel', cancelDrag);
+}
+
+function beginDrag() {
+  drag.on = true;
+  const w = bankOrder.find(b => b.key === drag.key);
+  const gh = document.createElement('span');
+  gh.className = 'chip dg-ghost';
+  gh.textContent = w ? w.text : '';
+  document.body.append(gh);
+  drag.ghost = gh;
+  drag.src.classList.add('dg-lifted');
+  document.documentElement.classList.add('dg-dragging');
+  if (drag.touch && navigator.vibrate) { try { navigator.vibrate(15); } catch (_) {} }
+  followDrag();
+  drag.raf = requestAnimationFrame(tickDrag);
+}
+
+function followDrag() {
+  drag.ghost.style.transform = `translate(${drag.x + 10}px, ${drag.y - 18}px)`;
+  const under = document.elementFromPoint(drag.x, drag.y);
+  const zone = under && under.closest('[data-drop]');
+  if (zone !== drag.over) {
+    if (drag.over) drag.over.classList.remove('dg-over');
+    drag.over = zone;
+    if (zone) zone.classList.add('dg-over');
+  }
+}
+
+// У верхнего или нижнего края области упражнения она прокручивается сама
+function tickDrag() {
+  if (!drag || !drag.on) return;
+  const sc = $('main');
+  if (sc) {
+    const r = sc.getBoundingClientRect();
+    const v = drag.y < r.top + DRAG_EDGE ? -DRAG_SPEED : drag.y > r.bottom - DRAG_EDGE ? DRAG_SPEED : 0;
+    if (v) { sc.scrollTop += v; followDrag(); }
+  }
+  drag.raf = requestAnimationFrame(tickDrag);
+}
+
+function moveDrag(e) {
+  if (!drag || e.pointerId !== drag.pid) return;
+  drag.x = e.clientX; drag.y = e.clientY;
+  const far = Math.hypot(drag.x - drag.x0, drag.y - drag.y0);
+  if (!drag.on) {
+    if (drag.touch) { if (far > DRAG_SLOP) endDrag(); return; }
+    if (far < 6) return;
+    beginDrag();
+  }
+  e.preventDefault();
+  followDrag();
+}
+
+function upDrag(e) {
+  if (!drag || e.pointerId !== drag.pid) return;
+  const on = drag.on, key = drag.key, over = drag.over;
+  endDrag();
+  if (!on) return; // простое нажатие — его обработает onclick
+  justDragged = true;
+  setTimeout(() => { justDragged = false; }, 0);
+  dropWord(key, over);
+}
+function cancelDrag(e) { if (drag && e.pointerId === drag.pid) { const on = drag.on; endDrag(); if (on) render(); } }
+
+function endDrag() {
+  if (!drag) return;
+  clearTimeout(drag.timer);
+  cancelAnimationFrame(drag.raf);
+  if (drag.ghost) drag.ghost.remove();
+  if (drag.over) drag.over.classList.remove('dg-over');
+  if (drag.src) drag.src.classList.remove('dg-lifted');
+  document.documentElement.classList.remove('dg-dragging');
+  window.removeEventListener('pointermove', moveDrag);
+  window.removeEventListener('pointerup', upDrag);
+  window.removeEventListener('pointercancel', cancelDrag);
+  drag = null;
+}
+
+// Слово отпущено: на пропуск — встаёт туда (слово, что там было, меняется местами или возвращается в банк); мимо или на банк — слово возвращается в банк
+function dropWord(key, over) {
+  const w = bankOrder.find(b => b.key === key);
+  const from = gaps.find(g => g.bankKey === key);
+  const target = over && over.dataset.drop !== '' ? gaps[Number(over.dataset.drop)] : null;
+  if (!w || (target && (frozen(target) || target === from))) { render(); return; }
+  if (target) {
+    const oldKey = target.bankKey, oldText = target.value;
+    if (from) { from.value = oldKey !== null ? oldText : ''; from.bankKey = oldKey; from.state = null; }
+    target.value = w.text;
+    target.bankKey = key;
+    target.state = null;
+    if (selected === key) selected = null;
+  } else if (from) {
+    from.value = '';
+    from.bankKey = null;
+    from.state = null;
+  }
+  note = '';
+  render();
+}
+
+// Пока слово едет за пальцем, страница не прокручивается (иначе браузер отменит перенос)
+document.addEventListener('touchmove', e => { if (drag && drag.on) e.preventDefault(); }, { passive: false });
 
 // Строка внизу: до первой проверки — сколько заполнено, потом результат и остаток проверок, в конце — итог
 function updateStatus() {

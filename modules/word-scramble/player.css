@@ -19,6 +19,12 @@
 .ws-tiles .ws-tok { border-radius:8px; box-shadow:0 2px 0 var(--line); }
 .ws-chips .ws-tok { border-radius:999px; }
 .ws-zone .ws-tok { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
+/* Перетаскивание: копия за указателем, поднятый кусочек бледнеет, область-цель подсвечена */
+.ws-ghost { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; border:1.5px solid var(--accent); border-radius:8px; background:var(--card); color:var(--text); box-shadow:0 8px 20px rgba(0,0,0,.25); }
+.ws-tok.ws-lifted { opacity:.35; }
+.ws-over { outline:3px solid var(--accent); outline-offset:-4px; }
+.ws-dragging, .ws-dragging * { cursor:grabbing !important; user-select:none; -webkit-user-select:none; }
+.ws-tok:not(:disabled) { cursor:grab; }
 .ws-tok:disabled { cursor:default; color:var(--text); opacity:1; }
 .ws-hintbtn { min-height:36px; padding:2px 10px; font-size:.92rem; }
 .ws-hinttext { margin:8px 0 0; padding:6px 10px; border-radius:8px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }

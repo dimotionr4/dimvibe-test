@@ -105,14 +105,139 @@ const WordScramblePlayer = (() => {
     return e;
   }
 
-  function token(text, label, fn) {
+  // from: 'bank' или 'zone'; i — номер кусочка в правильном порядке
+  function token(text, label, fn, from, i, t) {
     const b = el('button', 'ws-tok', text);
     b.type = 'button';
     b.setAttribute('aria-label', label);
     b.disabled = finished;
-    b.onclick = fn;
+    b.onclick = () => { if (!justDragged) fn(); };
+    if (!finished) {
+      b.addEventListener('pointerdown', e => press(e, t, from, i, b, text));
+      b.oncontextmenu = e => e.preventDefault();
+    }
     return b;
   }
+
+  // ---- Перетаскивание (как в Categories): кусочек из банка — в ответ на нужное место; кусочек в ответе — на другое место или обратно в банк ----
+  // Мышь: перенос начинается, когда указатель сдвинулся на несколько точек. Палец: после удержания HOLD мс; если палец поехал раньше — это прокрутка
+  const HOLD = 250, SLOP = 10, EDGE = 48, SPEED = 14;
+  let drag = null, justDragged = false;
+
+  function press(e, t, from, i, src, text) {
+    if (e.button > 0 || finished || drag) return;
+    e.stopPropagation();
+    const touch = e.pointerType === 'touch';
+    drag = { t, from, i, src, text, pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, touch, on: false, timer: 0, ghost: null, over: null, raf: 0 };
+    if (touch) drag.timer = setTimeout(() => { if (drag && !drag.on) begin(); }, HOLD);
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  }
+
+  function begin() {
+    drag.on = true;
+    const gh = el('span', 'ws-tok ws-ghost', drag.text);
+    document.body.append(gh);
+    drag.ghost = gh;
+    drag.src.classList.add('ws-lifted');
+    document.documentElement.classList.add('ws-dragging');
+    if (drag.touch && navigator.vibrate) { try { navigator.vibrate(15); } catch (_) {} }
+    follow();
+    drag.raf = requestAnimationFrame(tick);
+  }
+
+  function follow() {
+    drag.ghost.style.transform = `translate(${drag.x + 10}px, ${drag.y - 18}px)`;
+    const under = document.elementFromPoint(drag.x, drag.y);
+    const zone = under && under.closest('[data-drop]');
+    // Цель — только область ответа и банк этого же задания
+    const ok = zone && zone.closest('.ws-card') && zone.closest('.ws-card').dataset.t === drag.t.id ? zone : null;
+    if (ok !== drag.over) {
+      if (drag.over) drag.over.classList.remove('ws-over');
+      drag.over = ok;
+      if (ok) ok.classList.add('ws-over');
+    }
+  }
+
+  function tick() {
+    if (!drag || !drag.on) return;
+    const sc = document.getElementById('main');
+    if (sc) {
+      const r = sc.getBoundingClientRect();
+      const v = drag.y < r.top + EDGE ? -SPEED : drag.y > r.bottom - EDGE ? SPEED : 0;
+      if (v) { sc.scrollTop += v; follow(); }
+    }
+    drag.raf = requestAnimationFrame(tick);
+  }
+
+  function onMove(e) {
+    if (!drag || e.pointerId !== drag.pid) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    const far = Math.hypot(drag.x - drag.x0, drag.y - drag.y0);
+    if (!drag.on) {
+      if (drag.touch) { if (far > SLOP) endDrag(); return; } // палец поехал до удержания — это прокрутка
+      if (far < 6) return;
+      begin();
+    }
+    e.preventDefault();
+    follow();
+  }
+
+  function onUp(e) {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const d = drag, on = d.on, over = d.over, x = d.x, y = d.y;
+    endDrag();
+    if (!on) return; // простое нажатие — его обработает onclick
+    justDragged = true;
+    setTimeout(() => { justDragged = false; }, 0);
+    drop(d, over, x, y);
+  }
+  function onCancel(e) { if (drag && e.pointerId === drag.pid) { const on = drag.on; endDrag(); if (on) render(); } }
+
+  function endDrag() {
+    if (!drag) return;
+    clearTimeout(drag.timer);
+    cancelAnimationFrame(drag.raf);
+    if (drag.ghost) drag.ghost.remove();
+    if (drag.over) drag.over.classList.remove('ws-over');
+    if (drag.src) drag.src.classList.remove('ws-lifted');
+    document.documentElement.classList.remove('ws-dragging');
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    drag = null;
+  }
+
+  // Место вставки в ответе: перед первым кусочком, который стоит правее указателя в его строке или ниже него
+  function insertAt(zone, x, y) {
+    const toks = [...zone.querySelectorAll('.ws-tok')];
+    for (let k = 0; k < toks.length; k++) {
+      const r = toks[k].getBoundingClientRect();
+      if (y < r.top || (y <= r.bottom && x < r.left + r.width / 2)) return k;
+    }
+    return toks.length;
+  }
+
+  // Кусочек отпущен: на область ответа — встаёт на это место; на банк — возвращается в банк; мимо — остаётся где был
+  function drop(d, over, x, y) {
+    const { t, from, i } = d, list = picked[t.id];
+    if (over && over.dataset.drop === 'zone') {
+      let at = insertAt(over, x, y);
+      if (from === 'zone') {
+        const p = list.indexOf(i);
+        list.splice(p, 1);
+        if (at > p) at--;
+      }
+      list.splice(at, 0, i);
+    } else if (over && over.dataset.drop === 'bank' && from === 'zone') list.splice(list.indexOf(i), 1);
+    else { render(); return; }
+    sync(t);
+    render();
+  }
+
+  // Пока кусочек едет за пальцем, страница не прокручивается (иначе браузер отменит перенос)
+  document.addEventListener('touchmove', e => { if (drag && drag.on) e.preventDefault(); }, { passive: false });
 
   // Картинка задания: высота по «Размеру картинок», лупа увеличения на углу (addZoom, core/mediaviewer.js).
   // Просмотр картинки и прослушивание звука не тратят проверку и не трогают кусочки
@@ -152,7 +277,8 @@ const WordScramblePlayer = (() => {
     const zone = el('div', 'ws-zone');
     zone.setAttribute('role', 'group');
     zone.setAttribute('aria-label', 'Ваш ответ');
-    picked[t.id].forEach((i, pos) => zone.append(token(p[i], `${p[i]}: убрать из ответа`, () => give(t, pos))));
+    picked[t.id].forEach((i, pos) => zone.append(token(p[i], `${p[i]}: убрать из ответа`, () => give(t, pos), 'zone', i, t)));
+    zone.dataset.drop = 'zone';
     if (!picked[t.id].length) zone.append(el('span', 'ws-empty', 'Нажимайте на кусочки ниже, чтобы собрать ответ.'));
     if (finished) zone.append(el('span', st === 'ok' ? 'ws-tick' : 'ws-cross', st === 'ok' ? '✓' : '✗'));
     c.append(zone);
@@ -163,7 +289,8 @@ const WordScramblePlayer = (() => {
       const bank = el('div', 'ws-bank');
       bank.setAttribute('role', 'group');
       bank.setAttribute('aria-label', 'Кусочки');
-      left.forEach(i => bank.append(token(p[i], `${p[i]}: добавить в ответ`, () => take(t, i))));
+      bank.dataset.drop = 'bank';
+      left.forEach(i => bank.append(token(p[i], `${p[i]}: добавить в ответ`, () => take(t, i), 'bank', i, t)));
       c.append(bank);
     }
     // Подсказка: ученик открывает сама, баллов и проверок она не трогает

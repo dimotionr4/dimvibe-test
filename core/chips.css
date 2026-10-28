@@ -4,7 +4,7 @@
    По умолчанию (овальные ярлыки) классов нет — вид прежний. Номер версии `?v=` у подключения поднимайте при изменении. */
 /* position не задаём: у перетаскиваемой копии он fixed, перебить его нельзя. Поля у банков — чтобы тень и наклон не обрезались */
 .chips-paper :is(.bank, .ws-bank) { padding:6px 8px; margin-left:-8px; margin-right:-8px; }
-.chips-paper :is(.bank .chip, .ti-chip, .ld-chip, .cs-chip.chip, .ws-tok) { border:1px solid rgba(0,0,0,.2); border-radius:3px 6px 4px 7px; background:#fffbea; color:#2b2b2b; box-shadow:0 2px 4px rgba(0,0,0,.22); transform:rotate(-1.4deg); }
+.chips-paper :is(.bank .chip, .dg-ghost, .ti-chip, .ld-chip, .cs-chip.chip, .ws-tok) { border:1px solid rgba(0,0,0,.2); border-radius:3px 6px 4px 7px; background:#fffbea; color:#2b2b2b; box-shadow:0 2px 4px rgba(0,0,0,.22); transform:rotate(-1.4deg); }
 .chips-paper :is(.bank .chip, .ti-chip, .ld-chip, .cs-chip.chip, .ws-tok):nth-child(even) { transform:rotate(1.1deg); border-radius:6px 3px 7px 4px; }
 .chips-paper :is(.bank .chip, .ti-chip, .ld-chip, .cs-chip.chip, .ws-tok):nth-child(3n) { transform:rotate(-.4deg); }
 /* Выбранный ярлык: бумага остаётся, выделяет рамка цвета упражнения */
