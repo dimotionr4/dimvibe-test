@@ -55,6 +55,13 @@
       "runtimeArgs": ["-m", "http.server", "8867", "--bind", "127.0.0.1"],
       "port": 8867,
       "url": "http://127.0.0.1:8867"
+    },
+    {
+      "name": "site-in",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8879", "--bind", "127.0.0.1"],
+      "port": 8879,
+      "url": "http://127.0.0.1:8879"
     }
   ]
 }

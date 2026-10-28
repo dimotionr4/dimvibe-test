@@ -16,7 +16,8 @@ function safeImageUrl(value) {
 // Изображение инструкции: image = {media | url, alt, size: small|medium|large, align: left|center|right}.
 // media — путь в хранилище (core/media.js, должен быть подключён раньше), url — внешняя ссылка https.
 // Возвращает элемент или null, если источника нет или он неподходящий. Если картинка не загрузится, вместо неё покажется описание.
-function instructionImageEl(image) {
+// overlay — элемент в правом нижнем углу картинки (кнопка звука в плеере); тогда возвращается обёртка с картинкой и этим элементом
+function instructionImageEl(image, overlay) {
   const url = image && (typeof mediaSrc === 'function' ? mediaSrc(image) : safeImageUrl(image.url));
   if (!url) return null;
   // Размеры небольшие, чтобы картинка не забивала задание. Слева и справа текст обтекает её сбоку;
@@ -38,9 +39,18 @@ function instructionImageEl(image) {
   img.alt = alt;
   img.loading = 'lazy';
   img.referrerPolicy = 'no-referrer'; // сайту с картинкой не сообщаем, откуда её открыли
-  img.style.cssText = `${layout}height:auto;max-height:240px;object-fit:contain;border-radius:8px;`;
   img.src = url;
-  return img;
+  if (!overlay) {
+    img.style.cssText = `${layout}height:auto;max-height:240px;object-fit:contain;border-radius:8px;`;
+    return img;
+  }
+  // Обёртка берёт размер и положение картинки на себя, картинка заполняет её по ширине
+  const wrap = document.createElement('div');
+  wrap.className = 'instr-pic';
+  wrap.style.cssText = `${layout}position:relative;`;
+  img.style.cssText = 'display:block;width:100%;height:auto;max-height:240px;object-fit:contain;border-radius:8px;';
+  wrap.append(img, overlay);
+  return wrap;
 }
 
 function richText(source) {
