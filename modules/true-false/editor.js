@@ -79,7 +79,11 @@ const TrueFalseEditor = (() => {
     const head = el('div', 'tf-thead');
     head.append(el('span', 'tf-th-n', '№'), el('span', 'tf-th-t', 'Утверждение'), el('span', 'tf-th-a', 'Верный ответ'));
     listBox = el('div', 'tf-list');
-    addBtn = el('button', 'tf-add', '+ Утверждение');
+    addBtn = el('button', 'tf-add');
+    addBtn.type = 'button';
+    addBtn.innerHTML = svg('<path d="M12 6v12M6 12h12"/>');
+    addBtn.title = 'Добавить утверждение';
+    addBtn.setAttribute('aria-label', 'Добавить утверждение');
     addBtn.onclick = () => addItem(d.items.length);
     undoBar = el('div', 'tf-undo');
     table.append(top.bar, ...(top.extra ? [top.extra] : []), head, listBox, addBtn, undoBar);

@@ -69,8 +69,8 @@
 .tf-body textarea { width:100%; resize:none; overflow:hidden; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); }
 .tf-body .tf-label { margin-top:2px; }
 .tf-nav { display:flex; gap:4px; margin-top:8px; }
-.tf-add { display:block; margin:8px 12px; border:none; background:transparent; color:var(--muted); }
-.tf-add:hover:not(:disabled) { color:var(--accent); }
+.tf-add { display:flex; align-items:center; justify-content:center; width:44px; height:44px; min-height:0; padding:0; margin:10px 16px; border:1.5px dashed var(--accent); border-radius:10px; background:transparent; color:var(--accent); }
+.tf-add:hover:not(:disabled) { background:var(--accent-soft); }
 .tf-add:disabled { opacity:.5; }
 .tf-undo { display:flex; align-items:center; gap:8px; padding:0 16px 12px; font-size:.9rem; }
 .tf-undo[hidden] { display:none; }
