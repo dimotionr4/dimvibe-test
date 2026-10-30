@@ -4,7 +4,8 @@
 const MultipleChoiceEditor = (() => {
   const MAX_Q = 10, MAX_OPT = 8, DEFAULT_OPT = 4;
   const VIEWS = { one: 'По одному вопросу', list: 'Все списком' };
-  const LABELS = { letters: 'Буквы A, B, C', numbers: 'Цифры 1, 2, 3' };
+  const LABELS = { letters: 'Буквы A, B, C', numbers: 'Цифры 1, 2, 3', none: 'Без маркеров' };
+  const labelsOf = () => (d.labels === 'numbers' || d.labels === 'none' ? d.labels : 'letters');
   const { nextId } = GapEngine;
   let d, root, save, openId = null, delAsk = null, msgTimer = null, drag = null;
   let msg, counter, listBox, addBtn;
@@ -26,6 +27,18 @@ const MultipleChoiceEditor = (() => {
   const newOptions = n => Array.from({ length: n }, (_, k) => newOption('o' + (k + 1)));
   const newItem = id => ({ id, text: '', mode: '', options: newOptions(DEFAULT_OPT), correct: [], image: { ...emptyImage(), align: 'top' }, audio: '' });
   const ALIGNS = { top: 'Сверху', bottom: 'Снизу', left: 'Слева', right: 'Справа' };
+  const ALIGN_ICONS = {
+    top: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 11h18" /><rect x="5" y="5" width="14" height="4" fill="currentColor" stroke="none"/>',
+    bottom: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 13h18"/><rect x="5" y="15" width="14" height="4" fill="currentColor" stroke="none"/>',
+    left: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M11 3v18"/><rect x="5" y="5" width="4" height="14" fill="currentColor" stroke="none"/>',
+    right: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M13 3v18"/><rect x="15" y="5" width="4" height="14" fill="currentColor" stroke="none"/>',
+  };
+  const MODE_NAMES = { single: 'Одна верная', multiple: 'Несколько верных' };
+  const MODE_ICONS = [
+    ['', 'Как в общих', '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'],
+    ['single', 'Single Choice: один верный', '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/>'],
+    ['multiple', 'Multiple Select: несколько верных', '<path d="M4 6l2 2 3-3M4 14l2 2 3-3M12 7h8M12 15h8"/>'],
+  ];
   const SIZES = { s: 'Малый (S)', m: 'Средний (M)', l: 'Большой (L)' };
   const FITS = { contain: 'Вписать целиком', cover: 'Заполнить рамку' };
   const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
@@ -187,10 +200,23 @@ const MultipleChoiceEditor = (() => {
       b.onclick = e => { e.stopPropagation(); fn(); };
       return b;
     };
+    // Тип вопроса значками: как в общих / один верный / несколько верных
+    const modes = el('span', 'mc-modes');
+    MODE_ICONS.forEach(([v, tip, ico]) => {
+      const on = (it.mode || '') === v;
+      const b = btn('mc-mode' + (on ? ' on' : ''), svg(ico), v === '' ? `${tip} (${d.mode === 'multiple' ? 'Multiple' : 'Single'})` : tip, () => { it.mode = v; save(); drawList(); });
+      b.setAttribute('aria-pressed', String(on));
+      modes.append(b);
+    });
+    modes.append(el('span', 'mc-modename', MODE_NAMES[modeOf(it)]));
     tools.append(
       btn('', svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', () => move(i, -1), i === 0),
       btn('', svg('<path d="M6 9l6 6 6-6"/>'), 'Ниже', () => move(i, 1), i === d.items.length - 1),
       btn('', svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать', () => duplicate(i), d.items.length >= MAX_Q),
+      btn('mc-eye' + (it.hidden ? ' on' : ''), it.hidden
+        ? svg('<path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4.5 9.5 6a15 15 0 0 1-2.6 3M6.7 7.5A15 15 0 0 0 2.5 12C3.5 13.5 7 18 12 18c1.3 0 2.5-.3 3.6-.8"/>')
+        : svg('<path d="M2.5 12C3.5 10.5 7 6 12 6s8.5 4.5 9.5 6c-1 1.5-4.5 6-9.5 6s-8.5-4.5-9.5-6z"/><circle cx="12" cy="12" r="3"/>'),
+        it.hidden ? 'Скрыт: ученик не увидит этот вопрос. Нажмите, чтобы показать' : 'Временно скрыть вопрос от ученика', () => { it.hidden = !it.hidden; save(); drawList(); }),
     );
     if (delAsk === it.id) {
       const q = el('span', 'mc-ask');
@@ -203,7 +229,8 @@ const MultipleChoiceEditor = (() => {
       q.append(yes, no);
       tools.append(q);
     } else tools.append(btn('mc-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => askDelete(i)));
-    head.append(grip, sum, tools);
+    r.classList.toggle('hidden-q', !!it.hidden);
+    head.append(grip, sum, modes, tools);
     r.append(head);
     if (open) r.append(body(it, txt));
     return r;
@@ -251,10 +278,13 @@ const MultipleChoiceEditor = (() => {
       if (!hasPic(it.image)) return;
       const al = el('div', 'mc-label mc-labelrow', 'Положение картинки');
       al.append(help('Картинка стоит сверху, снизу, слева или справа от текста вопроса. У ученика на ней значок увеличения. Размер и вписывание картинок — во вкладке «Дизайн». Звук ученик включает значком динамика у вопроса, он не влияет на выбор и баллы.'));
-      const seg = el('span', 'mc-seg');
+      const seg = el('span', 'mc-seg mc-iconseg');
       Object.entries(ALIGNS).forEach(([v, label]) => {
-        const bt = el('button', it.image.align === v ? 'active' : '', label);
+        const bt = el('button', it.image.align === v ? 'active' : '');
+        bt.innerHTML = svg(ALIGN_ICONS[v]);
         bt.type = 'button';
+        bt.title = label;
+        bt.setAttribute('aria-label', 'Картинка: ' + label.toLowerCase());
         bt.setAttribute('aria-pressed', String(it.image.align === v));
         bt.onclick = () => { it.image.align = v; save(); drawQ(); };
         seg.append(bt);
@@ -265,29 +295,16 @@ const MultipleChoiceEditor = (() => {
     drawQ();
     b.append(MediaUI.side(qpic, MediaUI.withAudio(qAudio, ta, true)), qbox);
 
-    // Тип вопроса: как в общих настройках или свой
-    const tl = el('div', 'mc-label mc-labelrow', 'Тип вопроса');
-    tl.append(help('«Как в общих» берёт тип из блока «Тип вопросов» вверху. Выбранный здесь тип действует только для этого вопроса.'));
-    const seg = el('span', 'mc-seg');
-    [['', `Как в общих (${d.mode === 'multiple' ? 'Multiple' : 'Single'})`], ['single', 'Single Choice'], ['multiple', 'Multiple Select']].forEach(([v, label]) => {
-      const bt = el('button', (it.mode || '') === v ? 'active' : '', label);
-      bt.type = 'button';
-      bt.setAttribute('aria-pressed', String((it.mode || '') === v));
-      bt.onclick = () => { it.mode = v; save(); drawList(); };
-      seg.append(bt);
-    });
-    b.append(tl, seg);
-
     const multi = modeOf(it) === 'multiple';
     const ol = el('div', 'mc-label mc-labelrow', 'Варианты');
     ol.append(help(multi ? 'Отметьте квадратом все верные варианты (можно один или все). Ученик должен выбрать точный набор.' : 'Отметьте кружком один верный вариант.'));
     // Метки вариантов (одни на всё упражнение): буквы или цифры; бледно видны в отметке каждого варианта
     const ls = el('span', 'mc-seg mc-lseg');
-    [['letters', 'A B C'], ['numbers', '1 2 3']].forEach(([v, label]) => {
-      const bt = el('button', (d.labels === 'numbers' ? 'numbers' : 'letters') === v ? 'active' : '', label);
+    [['letters', 'ABC'], ['numbers', '123'], ['none', '—']].forEach(([v, label]) => {
+      const bt = el('button', labelsOf() === v ? 'active' : '', label);
       bt.type = 'button';
       bt.title = LABELS[v];
-      bt.setAttribute('aria-pressed', String((d.labels === 'numbers' ? 'numbers' : 'letters') === v));
+      bt.setAttribute('aria-pressed', String(labelsOf() === v));
       bt.onclick = () => { d.labels = v; save(); drawList(); };
       ls.append(bt);
     });
@@ -302,7 +319,7 @@ const MultipleChoiceEditor = (() => {
       mark.type = 'button';
       mark.setAttribute('role', multi ? 'checkbox' : 'radio');
       mark.setAttribute('aria-checked', String(on));
-      mark.textContent = d.labels === 'numbers' ? String(k + 1) : String.fromCharCode(65 + k);
+      mark.textContent = labelsOf() === 'none' ? '' : labelsOf() === 'numbers' ? String(k + 1) : String.fromCharCode(65 + k);
       mark.title = on ? 'Верный вариант (нажмите, чтобы снять)' : 'Отметить верным';
       mark.setAttribute('aria-label', `${mark.title}: вариант ${k + 1}`);
       mark.onclick = () => {
@@ -416,13 +433,13 @@ const MultipleChoiceEditor = (() => {
       module: 'multiple_choice', format: 1,
       view: draft.view === 'list' ? 'list' : 'one',
       mode: draft.mode === 'multiple' ? 'multiple' : 'single',
-      labels: draft.labels === 'numbers' ? 'numbers' : 'letters',
+      labels: labelsOf(),
       shuffle: draft.shuffle !== false,
       ...(draft.showCount ? { showCount: true } : {}),
       ...(draft.showCorrect ? { showCorrect: true } : {}),
       imageSize: SIZES[draft.imageSize] ? draft.imageSize : 'm',
       imageFit: FITS[draft.imageFit] ? draft.imageFit : 'contain',
-      items: draft.items.map(it => {
+      items: draft.items.filter(it => !it.hidden).map(it => {
         const qi = imageOut(it.image, { align: it.image && ALIGNS[it.image.align] ? it.image.align : 'top' }), qa = audioOut(it.audio);
         return {
           id: it.id,
@@ -440,7 +457,7 @@ const MultipleChoiceEditor = (() => {
     };
   }
 
-  const unitCount = draft => draft.items.length;
+  const unitCount = draft => draft.items.filter(it => !it.hidden).length;
 
   // errors не дают опубликовать, warnings — только предупреждают
   function validate(draft) {
@@ -448,8 +465,12 @@ const MultipleChoiceEditor = (() => {
     d = draft;
     const items = draft.items;
     if (!items.length) errors.push('Нет ни одного вопроса.');
+    else if (items.every(it => it.hidden)) errors.push('Все вопросы скрыты (значок глаза). Покажите хотя бы один.');
     if (items.length > MAX_Q) errors.push(`Вопросов больше ${MAX_Q}. Разделите задание на два.`);
+    const nHidden = items.filter(it => it.hidden).length;
+    if (nHidden && nHidden < items.length) warnings.push(`Скрыто вопросов: ${nHidden}. В файл упражнения они не попадут.`);
     items.forEach((it, n) => {
+      if (it.hidden) return;
       const who = `Вопрос ${n + 1}`;
       if (!clean(it.text)) errors.push(`${who}: нет текста вопроса.`);
       if (it.options.length < 2) errors.push(`${who}: нужно минимум два варианта.`);
@@ -485,7 +506,7 @@ const MultipleChoiceEditor = (() => {
       };
     });
     return {
-      ...create(), mode: general, view: file.view === 'list' ? 'list' : 'one', labels: file.labels === 'numbers' ? 'numbers' : 'letters',
+      ...create(), mode: general, view: file.view === 'list' ? 'list' : 'one', labels: file.labels === 'numbers' || file.labels === 'none' ? file.labels : 'letters',
       shuffle: file.shuffle !== false, showCount: file.showCount === true, showCorrect: file.showCorrect === true,
       imageSize: SIZES[file.imageSize] ? file.imageSize : 'm', imageFit: FITS[file.imageFit] ? file.imageFit : 'contain',
       items: items.length ? items : create().items,

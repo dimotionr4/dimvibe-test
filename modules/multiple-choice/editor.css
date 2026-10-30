@@ -35,6 +35,14 @@
 .mc-ib:hover:not(:disabled) { color:var(--accent); }
 .mc-ib.mc-del:hover:not(:disabled) { color:var(--bad); }
 .mc-ib:disabled { opacity:.3; }
+.mc-head { flex-wrap:wrap; }
+.mc-modes { display:flex; align-items:center; gap:2px; flex:none; }
+.mc-mode.on { background:var(--accent-soft); color:var(--accent); border-radius:8px; }
+.mc-modename { font-size:.78rem; color:var(--muted); margin-left:6px; }
+.mc-eye.on { color:var(--accent); }
+.mc-row.hidden-q .mc-sum { opacity:.45; }
+.mc-iconseg button { width:40px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+.mc-iconseg .mc-ico { width:20px; height:20px; }
 .mc-ask { display:inline-flex; gap:4px; margin-left:4px; }
 .mc-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
 .mc-yes { background:var(--bad); color:#fff; border-color:var(--bad); }

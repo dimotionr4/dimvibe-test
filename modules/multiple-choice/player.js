@@ -39,7 +39,7 @@ const MultipleChoicePlayer = (() => {
     if (text != null) e.textContent = text;
     return e;
   }
-  const label = n => (data.labels === 'numbers' ? String(n + 1) : String.fromCharCode(65 + n));
+  const label = n => (data.labels === 'numbers' || data.labels === 'none' ? String(n + 1) : String.fromCharCode(65 + n));
 
   // Картинка; лупа увеличения (addZoom, core/mediaviewer.js) — отдельная кнопка на углу картинки, вариант не выбирает
   function picture(im, cls) {
@@ -122,7 +122,8 @@ const MultipleChoicePlayer = (() => {
       b.setAttribute('role', multi ? 'checkbox' : 'radio');
       b.setAttribute('aria-checked', String(on));
       const top = el('span', 'mc-otop');
-      top.append(el('span', 'mc-mark'), el('span', 'mc-lab', label(n)));
+      top.append(el('span', 'mc-mark'));
+      if (data.labels !== 'none') top.append(el('span', 'mc-lab', label(n)));
       b.append(top);
       const pic = picture(o.image, 'mc-opic');
       if (pic) b.append(pic.box);
