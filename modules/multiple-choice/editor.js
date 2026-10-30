@@ -35,7 +35,6 @@ const MultipleChoiceEditor = (() => {
   };
   const MODE_NAMES = { single: 'Одна верная', multiple: 'Несколько верных' };
   const MODE_ICONS = [
-    ['', 'Как в общих', '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'],
     ['single', 'Single Choice: один верный', '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/>'],
     ['multiple', 'Multiple Select: несколько верных', '<path d="M4 6l2 2 3-3M4 14l2 2 3-3M12 7h8M12 15h8"/>'],
   ];
@@ -149,7 +148,7 @@ const MultipleChoiceEditor = (() => {
 
   function summary(it) {
     const filled = it.options.filter(hasOptContent).length, n = it.correct.length;
-    return `${modeOf(it) === 'multiple' ? 'Multiple' : 'Single'} · вариантов: ${filled} · верных: ${n}`;
+    return `вариантов: ${filled} · верных: ${n}`;
   }
 
   function row(it, i) {
@@ -187,7 +186,7 @@ const MultipleChoiceEditor = (() => {
     sum.type = 'button';
     sum.setAttribute('aria-expanded', String(open));
     const txt = el('span', 'mc-txt' + (clean(it.text) ? '' : ' empty'), clean(it.text) || 'Пустой вопрос');
-    sum.append(el('span', 'mc-n', `${i + 1}.`), txt, el('span', 'mc-meta', summary(it)));
+    sum.append(el('span', 'mc-n', `${i + 1}.`), txt);
     sum.onclick = () => { openId = open ? null : it.id; delAsk = null; drawList(); };
     const tools = el('span', 'mc-tools2');
     const btn = (cls, html, tip, fn, disabled) => {
@@ -203,8 +202,8 @@ const MultipleChoiceEditor = (() => {
     // Тип вопроса значками: как в общих / один верный / несколько верных
     const modes = el('span', 'mc-modes');
     MODE_ICONS.forEach(([v, tip, ico]) => {
-      const on = (it.mode || '') === v;
-      const b = btn('mc-mode' + (on ? ' on' : ''), svg(ico), v === '' ? `${tip} (${d.mode === 'multiple' ? 'Multiple' : 'Single'})` : tip, () => { it.mode = v; save(); drawList(); });
+      const on = modeOf(it) === v;
+      const b = btn('mc-mode' + (on ? ' on' : ''), svg(ico), tip,() => { it.mode = v; save(); drawList(); });
       b.setAttribute('aria-pressed', String(on));
       modes.append(b);
     });
@@ -371,7 +370,9 @@ const MultipleChoiceEditor = (() => {
       const inputs = listBox.querySelectorAll(`.mc-row[data-id="${it.id}"] .mc-optline input`);
       if (inputs.length) inputs[inputs.length - 1].focus();
     };
-    b.append(add);
+    const foot = el('div', 'mc-foot');
+    foot.append(add, el('span', 'mc-meta', summary(it)));
+    b.append(foot);
     return b;
   }
   const headSummary = it => {

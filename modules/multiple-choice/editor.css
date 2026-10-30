@@ -27,7 +27,9 @@
 .mc-grip { cursor:grab; color:var(--muted); padding:0 4px; user-select:none; touch-action:none; }
 .mc-sum { flex:1; min-width:0; display:flex; align-items:center; gap:8px; text-align:left; border:none; background:transparent; min-height:44px; padding:0 4px; color:var(--text); }
 .mc-n { color:var(--muted); flex:none; }
-.mc-txt { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mc-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.mc-foot .mc-meta { border:none; padding:0; }
+.mc-txt { font-weight:700; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mc-txt.empty { color:var(--muted); font-style:italic; }
 .mc-meta { flex:none; font-size:.78rem; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:0 8px; }
 .mc-tools2 { display:flex; align-items:center; flex:none; }
@@ -64,7 +66,6 @@
 .mc-addopt { margin-top:8px; }
 .mc-addopt:disabled, .mc-add:disabled { opacity:.5; }
 .mc-add { margin:4px 0 8px; }
-@media (max-width:480px) { .mc-meta { display:none; } }
 
 /* Картинка и звук: вопроса и вариантов */
 .mc-media, .mc-optpanel { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
