@@ -140,6 +140,9 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   html:not(.style-comic) .check-btn { border-radius:var(--r-m); box-shadow:var(--shadow-2); }
   html:not(.style-comic) .check-btn:disabled { box-shadow:none; }
   html:not(.style-comic) footer { padding:12px 16px 14px; background:var(--card); border-top-color:color-mix(in srgb, var(--line) 55%, transparent); box-shadow:0 -6px 18px rgba(20,20,40,.06); }
+  /* Единый отклик кнопок во всех модулях (2026-10-30): плавная смена и бирюзовая рамка при наведении мышью; не касается Comic */
+  html:not(.style-comic) main button { transition:background .12s, border-color .12s, box-shadow .12s; }
+  @media (hover:hover) { html:not(.style-comic) main button:not(:disabled):not(.active):not(.primary):hover { border-color:var(--accent); } }
 </style>
 </head>
 <body>
