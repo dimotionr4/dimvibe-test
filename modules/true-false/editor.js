@@ -7,7 +7,7 @@ const TrueFalseEditor = (() => {
   const PRESETS = { tf: ['True', 'False'], fo: ['Fact', 'Opinion'], fi: ['Formal', 'Informal'], sd: ['Safe', 'Dangerous'], hu: ['Healthy', 'Unhealthy'], pp: ['Past', 'Present'] };
   const VIEWS = { one: 'По одному утверждению', list: 'Все списком' };
   const { nextId } = GapEngine;
-  let d, root, save, openId = null, openSec = 'exp', fmtOpen = false, undo = null, undoTimer = null, msgTimer = null, drag = null;
+  let d, root, save, openId = null, openSec = 'exp', undo = null, undoTimer = null, msgTimer = null, drag = null;
   let msg, counter, listBox, addBtn, undoBar;
   const recheck = new Set(); // утверждения, у которых изменился формат ответов: автору напоминаем проверить верный ответ
 
@@ -88,31 +88,21 @@ const TrueFalseEditor = (() => {
     drawUndo();
   }
 
-  // Верхняя строка таблицы: счётчик, общий формат ответов и «Ещё» (названия, третий вариант)
+  // Верхняя строка таблицы: счётчик, общий формат ответов и «+3» (третий вариант); для Custom под строкой поля названий
   function topBar() {
     const bar = el('div', 'tf-top');
     counter = el('span', 'tf-muted');
     const right = el('span', 'tf-right');
     const parts = formatEditor(d.answers, kind => formatChanged(kind, d.items.filter(i => !i.override)), true);
-    const more = el('button', 'tf-fmtmore' + (fmtOpen ? ' on' : ''), fmtOpen ? 'Меньше' : 'Ещё');
+    const more = el('button', 'tf-third' + (d.answers.third ? ' on' : ''), '+3');
     more.type = 'button';
-    more.title = 'Свои названия, третий вариант ответа';
-    more.setAttribute('aria-expanded', String(fmtOpen));
-    more.onclick = () => { fmtOpen = !fmtOpen; draw(); };
+    more.title = 'Третий вариант ответа';
+    more.setAttribute('aria-pressed', String(!!d.answers.third));
+    more.onclick = () => { d.answers.third = !d.answers.third; formatChanged('structure', d.items.filter(i => !i.override)); };
     right.append(el('span', 'tf-muted', 'Общий формат'), parts.sel, more, help(`Напишите утверждения. У каждого выберите один верный ответ из двух вариантов (при желании — из трёх). Пояснение ученик видит только после проверки, если ответил верно, и в конце. Название пары (True / False, Fact / Opinion и другие) общее для всех утверждений, но у любого утверждения можно включить «Другой формат ответов». Правильный ответ запоминается по месту кнопки, а не по тексту. Не больше ${MAX} утверждений. Показ «по одному» или «списком» — во вкладке «Дизайн».`));
     bar.append(counter, right);
     let extra = null;
-    if (fmtOpen) {
-      extra = el('div', 'tf-extra');
-      extra.append(parts.box);
-      const rc = el('label', 'tf-check tf-soon');
-      const cb = el('input');
-      cb.type = 'checkbox';
-      cb.disabled = true;
-      rc.append(cb, document.createTextNode(' Require correction if False '), el('span', 'tf-badge', 'Coming soon'));
-      rc.title = 'Пока не работает';
-      extra.append(rc);
-    }
+    if (parts.box) { extra = el('div', 'tf-extra'); extra.append(parts.box); }
     return { bar, extra };
   }
 
@@ -147,6 +137,14 @@ const TrueFalseEditor = (() => {
       i.oninput = () => { fmt[field] = i.value; onChange('label'); };
       return i;
     };
+    if (split) {
+      // Общий формат: поля с подписями в одну строку; третий вариант включает кнопка «+3» в верхней строке
+      const row = el('div', 'tf-fields');
+      const lab = (text, field, ph) => { const l = el('label', 'tf-fld'); l.append(el('span', 'tf-muted', text), input(field, ph, text)); row.append(l); };
+      if (fmt.preset === 'custom') { lab('Название 1', 'a', 'Первая кнопка'); lab('Название 2', 'b', 'Вторая кнопка'); }
+      if (fmt.third) lab('Третий вариант', 'c', DEFAULT_C);
+      return { sel, box: row.children.length ? row : null };
+    }
     if (fmt.preset === 'custom') {
       const row = el('div', 'tf-pair');
       row.append(input('a', 'Первая кнопка', 'Название первой кнопки'), input('b', 'Вторая кнопка', 'Название второй кнопки'));
@@ -160,7 +158,7 @@ const TrueFalseEditor = (() => {
     thirdRow.append(cb, document.createTextNode(' Третий вариант ответа'));
     box.append(thirdRow);
     if (fmt.third) box.append(input('c', DEFAULT_C, 'Название третьего варианта'));
-    return split ? { sel, box } : box;
+    return box;
   }
 
   // Изменился формат: у утверждений с уже выбранным ответом просим проверить, не поменялся ли смысл
