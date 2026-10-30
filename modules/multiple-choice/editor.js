@@ -34,7 +34,7 @@ const MultipleChoiceEditor = (() => {
     right: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M13 3v18"/><rect x="15" y="5" width="4" height="14" fill="currentColor" stroke="none"/>',
   };
   const MODE_NAMES = { single: 'Одна верная', multiple: 'Несколько верных' };
-  const MODE_ICONS = [
+  const MODE_ICONS = [ // порядок: слева «одна верная», справа «несколько»
     ['single', 'Single Choice: один верный', '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/>'],
     ['multiple', 'Multiple Select: несколько верных', '<path d="M4 6l2 2 3-3M4 14l2 2 3-3M12 7h8M12 15h8"/>'],
   ];
@@ -110,7 +110,7 @@ const MultipleChoiceEditor = (() => {
     listBox = el('div', 'mc-list');
     addBtn = el('button', 'mc-add', '+ Вопрос');
     addBtn.onclick = () => addItem(d.items.length);
-    root.append(tools, msg, defaultBlock(), listBox, addBtn);
+    root.append(tools, msg, listBox, addBtn);
     drawList();
   }
 
@@ -119,23 +119,6 @@ const MultipleChoiceEditor = (() => {
     counter.textContent = `Вопросов: ${n}/${MAX_Q}`;
     counter.classList.toggle('mc-limit', n >= MAX_Q);
     addBtn.disabled = n >= MAX_Q;
-  }
-
-  // Тип вопросов по умолчанию: у вопроса можно выбрать свой
-  function defaultBlock() {
-    const box = el('section', 'mc-block');
-    const head = el('div', 'mc-labelrow');
-    head.append(el('h3', '', 'Тип вопросов'), help('Общий тип для вопросов, у которых не выбран свой. Single Choice — один верный ответ, Multiple Select — один и больше. При смене типа отметки верных вариантов не стираются: если в Single отмечено несколько, публикация заблокируется, пока не останется один.'));
-    const seg = el('span', 'mc-seg');
-    [['single', 'Single Choice'], ['multiple', 'Multiple Select']].forEach(([v, label]) => {
-      const b = el('button', d.mode === v ? 'active' : '', label);
-      b.type = 'button';
-      b.setAttribute('aria-pressed', String(d.mode === v));
-      b.onclick = () => { d.mode = v; save(); draw(); };
-      seg.append(b);
-    });
-    box.append(head, seg);
-    return box;
   }
 
   // ---- Список вопросов ----
@@ -201,12 +184,17 @@ const MultipleChoiceEditor = (() => {
     };
     // Тип вопроса значками: как в общих / один верный / несколько верных
     const modes = el('span', 'mc-modes');
-    MODE_ICONS.forEach(([v, tip, ico]) => {
-      const on = modeOf(it) === v;
-      const b = btn('mc-mode' + (on ? ' on' : ''), svg(ico), tip,() => { it.mode = v; save(); drawList(); });
-      b.setAttribute('aria-pressed', String(on));
-      modes.append(b);
-    });
+    // Переключатель-триггер: нажатие меняет тип вопроса на другой, активный значок подсвечен
+    const cur = modeOf(it), next = cur === 'multiple' ? 'single' : 'multiple';
+    const trig = el('button', 'mc-trigger ' + cur);
+    trig.type = 'button';
+    trig.innerHTML = MODE_ICONS.map(([v, , ico]) => `<span class="mc-tg${v === cur ? ' on' : ''}">${svg(ico)}</span>`).join('');
+    trig.title = `${MODE_NAMES[cur]}. Нажмите, чтобы переключить на «${MODE_NAMES[next].toLowerCase()}»`;
+    trig.setAttribute('role', 'switch');
+    trig.setAttribute('aria-checked', String(cur === 'multiple'));
+    trig.setAttribute('aria-label', 'Несколько верных ответов');
+    trig.onclick = e => { e.stopPropagation(); it.mode = next; save(); drawList(); };
+    modes.append(trig);
     modes.append(el('span', 'mc-modename', MODE_NAMES[modeOf(it)]));
     tools.append(
       btn('', svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', () => move(i, -1), i === 0),
