@@ -14,23 +14,23 @@
 .tl-rail::after { content:""; position:absolute; left:50%; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; background:var(--card); border:3px solid var(--accent); box-sizing:border-box; }
 .tl-point.ok .tl-rail::after { border-color:var(--ok); background:var(--ok); }
 .tl-point.bad .tl-rail::after { border-color:var(--bad); background:var(--bad); }
-.card.tl-ev { grid-area:ev; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0; padding:6px 8px; min-height:48px; line-height:1.4; border-radius:10px; user-select:none; -webkit-user-select:none; }
+.card.tl-ev { grid-area:ev; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0; padding:6px 8px; min-height:48px; line-height:1.4; border-radius:var(--r-m,12px); user-select:none; -webkit-user-select:none; }
 /* Лицо события: картинка слева, текст (подпись) справа, кнопка звука; на узком экране текст переносится под картинку */
 .tl-face { flex:1 1 0; min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
 .tl-text { flex:1 1 8em; min-width:0; overflow-wrap:anywhere; }
 .tl-aud { flex:none; }
 /* Картинка события: высота по «Размеру картинок» (S 56 / M 90 / L 140 px), вписана целиком */
-.tl-pic { position:relative; flex:none; display:block; height:90px; max-width:min(100%, 220px); border-radius:8px; overflow:hidden; }
+.tl-pic { position:relative; flex:none; display:block; height:90px; max-width:min(100%, 220px); border-radius:var(--r-s,8px); overflow:hidden; }
 .tl-pic img { display:block; height:100%; width:auto; max-width:100%; object-fit:contain; }
 .tl-size-s .tl-pic { height:56px; }
 .tl-size-l .tl-pic { height:140px; max-width:min(100%, 300px); }
 .tl-pic.broken { width:60px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 .tl-expl { flex:1 0 100%; font-size:.92rem; color:var(--muted); overflow-wrap:anywhere; }
-.tl-grip { flex:none; width:32px; min-height:40px; padding:0; border:none; background:transparent; color:var(--muted); cursor:grab; touch-action:none; }
+.tl-grip { flex:none; width:32px; min-height:var(--tap,44px); padding:0; border:none; background:transparent; color:var(--muted); cursor:grab; touch-action:none; }
 .tl-grip svg { width:22px; height:22px; fill:currentColor; }
 .tl-grip:hover { color:var(--accent); }
 .tl-arrows { flex:none; display:flex; }
-.tl-ib { border:none; background:transparent; color:var(--muted); padding:0; min-height:40px; min-width:36px; }
+.tl-ib { border:none; background:transparent; color:var(--muted); padding:0; min-height:var(--tap,44px); min-width:36px; }
 .tl-ib:hover:not(:disabled) { color:var(--accent); }
 .tl-ib:disabled { opacity:.25; cursor:default; }
 .tl-ico { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vertical-align:middle; }
