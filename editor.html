@@ -501,11 +501,12 @@
   </div>
 </div>
 
+<script src="core/icons.js"></script>
 <script src="core/design.js?v=14"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
-<script src="core/mediabar.js?v=8"></script>
+<script src="core/mediabar.js?v=9"></script>
 <script src="core/richtext.js?v=6"></script>
 <script src="core/rough.js?v=10"></script>
 <script src="core/gap-engine.js?v=1"></script>
@@ -1422,6 +1423,11 @@ const ICONS = {
   warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
   branch: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8M18 11c0 4-6 3-12 5"/>',
 };
+// Значки Solar (core/icons.js) заменяют нарисованные; без файла остаются прежние
+if (window.DVIcons) {
+  const U = DVIcons.ui;
+  Object.assign(ICONS, { gear: U.settings, undo: U.undo, redo: U.redo, plus: U.add, folder: U.folder, image: U.image, eye: U.eye, sun: U.sun, moon: U.moon, close: U.close, copy: U.copy, download: U.download });
+}
 const iconSvg = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
 document.querySelectorAll('[data-icon]').forEach(el => el.insertAdjacentHTML('afterbegin', iconSvg(el.dataset.icon)));
 

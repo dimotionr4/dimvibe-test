@@ -224,7 +224,7 @@
 <div id="toast" role="status" hidden></div>
 <script src="core/shell.js?v=2"></script>
 <script src="core/icons.js"></script>
-<script src="core/sidebar.js?v=3"></script>
+<script src="core/sidebar.js?v=4"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -255,7 +255,7 @@ const MODS = {
   word_search: { name: 'Word Search', icon: '<rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 8h6M7 12h3"/><circle cx="16.5" cy="16.5" r="3.5"/><path d="M19 19l2.5 2.5"/>' },
   hotspot: { name: 'Hotspot', icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 8V6M12 18v-2M8 12H6M18 12h-2"/>' }
 };
-for (const k in DVIcons.modules) if (MODS[k]) MODS[k].icon = DVIcons.modules[k]; // значки Solar из core/icons.js (true_false пока прежний)
+for (const k in DVIcons.modules) if (MODS[k]) MODS[k].icon = DVIcons.modules[k]; // значки Solar из core/icons.js
 const modOf = d => MODS[d.module] || MODS.fill_blanks;
 const I = {
   pen: '<path d="M4 20l4-1 11-11-3-3L5 16z"/>',
@@ -278,6 +278,7 @@ const view = { q: '', status: 'all', mod: 'all', folder: 'all', trash: false, ed
 // ---- Папки. Хранятся отдельно от черновиков (dimvibe.folders.v1): { folders: [{id, name, icon, color}], map: { номер упражнения: id папки } }.
 // Порядок папок — порядок в списке. Упражнение без записи в map лежит «Без папки». Редактор об этом ключе не знает.
 const K_FOLDERS = 'dimvibe.folders.v1';
+if (window.DVIcons) Object.assign(I, { trash: DVIcons.ui.trash, copy: DVIcons.ui.copy, eye: DVIcons.ui.eye, restore: DVIcons.ui.undo });
 const FICONS = {
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/>',
