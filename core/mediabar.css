@@ -7,7 +7,7 @@
 .mb-btn:hover { border-color:var(--accent); color:var(--accent); }
 
 /* Плитка: «+», выбор «картинка / звук», миниатюра */
-.mb-tile { position:relative; display:inline-flex; align-items:center; justify-content:center; flex:none; width:44px; height:44px; min-height:0; padding:0; border:1.5px solid var(--muted); border-radius:10px; background:var(--card); color:var(--text); }
+.mb-tile { position:relative; display:inline-flex; align-items:center; justify-content:center; flex:none; width:44px; height:44px; min-height:0; padding:0; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); }
 .mb-addwrap { display:inline-flex; }
 .mb-add { cursor:pointer; }
 .mb-add .mb-ico { width:24px; height:24px; padding:4px; border-radius:50%; background:var(--text); color:var(--card); stroke-width:3; }
@@ -39,7 +39,7 @@
 .mb-withaud.top { align-items:flex-start; }
 .mb-withaud > :not(.mb-pick) { flex:1 1 0; width:auto; min-width:0; } /* поле со своей шириной 100% не уезжает под звук */
 /* «Динамик +»: добавить звук, когда плитку уже занимает картинка (решение владельца 2026-10-28) */
-.mb-addaud { position:relative; display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; min-height:0; padding:0; border:1.5px dashed var(--muted); border-radius:8px; background:none; color:var(--muted); }
+.mb-addaud { position:relative; display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; min-height:0; padding:0; border:1px dashed var(--line); border-radius:8px; background:none; color:var(--muted); }
 .mb-addaud:hover, .mb-addaud:focus-visible { border-color:var(--accent); color:var(--accent); }
 .mb-addplus { position:absolute; right:1px; bottom:-1px; font-size:13px; font-weight:700; line-height:1; }
 
@@ -50,12 +50,12 @@
 .mb-sidebody { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:8px; }
 .mb-big { width:auto; }
 .mb-big .mb-bar { padding:0; justify-content:flex-start; }
-.mb-big .mb-tile { width:80px; height:80px; border-radius:12px; }
+.mb-big .mb-tile { width:80px; height:80px; border-radius:8px; }
 .mb-big .mb-add .mb-ico { width:36px; height:36px; padding:7px; }
 .mb-big .mb-choice { gap:4px; justify-content:center; }
 .mb-big .mb-pickk { width:34px; height:34px; }
 .mb-big .mb-thumb { padding:3px; }
-.mb-big .mb-thumb img { border-radius:9px; }
+.mb-big .mb-thumb img { border-radius:7px; }
 .mb-big .mb-rep .mb-ico { width:30px; height:30px; }
 .mb-big .mb-thumb .mb-x { width:22px; height:22px; top:-9px; right:-9px; }
 .mb-play { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; min-height:0; padding:0; border:0; border-radius:8px; background:var(--text); color:var(--card); }
