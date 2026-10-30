@@ -15,6 +15,8 @@
     :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
   }
   :root[data-theme="dark"] { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --ok:#4ccf82; --bad:#ff7070; --line:#41415a; }
+  /* Шкала вида (2026-10-30): скругления --r-*, отступы --sp-*, тени --shadow-*, минимальная цель нажатия --tap */
+  :root { --r-s:8px; --r-m:12px; --r-l:18px; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --shadow-1:0 1px 3px rgba(20,20,40,.08); --shadow-2:0 4px 14px rgba(20,20,40,.10); --tap:44px;}
   .seg { display:flex; gap:4px; }
   .seg button { flex:1; min-height:32px; padding:2px 6px; font-size:.85rem; }
   .seg button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -458,7 +460,7 @@
   </div>
 </div>
 
-<script src="core/design.js?v=13"></script>
+<script src="core/design.js?v=14"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
