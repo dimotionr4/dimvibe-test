@@ -31,15 +31,24 @@
 .sp-auto { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:6px; }
 .sp-autob { min-height:30px; min-width:34px; padding:0 10px; font-size:.88rem; }
 /* Части, которые получит ученик */
-.sp-prev { display:flex; flex-wrap:wrap; align-items:center; gap:4px; min-height:30px; margin-bottom:8px; }
-.sp-chip { display:inline-block; padding:2px 8px; border:1px solid var(--accent); border-radius:6px; background:var(--accent-soft); font-weight:600; white-space:pre; }
+.sp-prev { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:42px; margin-bottom:0; }
+.sp-chip { display:inline-block; padding:6px 14px; border:1px solid var(--accent); border-radius:8px; background:var(--accent-soft); font-size:1.15rem; font-weight:600; line-height:1.3; white-space:pre; box-shadow:0 2px 0 var(--line); }
 .sp-warn { flex:1 0 100%; color:var(--bad); font-size:.9rem; }
 /* Необязательные поля: подпись слева, поле справа */
-.sp-field { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-.sp-field .sp-in { margin-bottom:0; flex:1; }
+.sp-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; margin-top:10px; }
+@media (max-width:640px) { .sp-fields { grid-template-columns:1fr; } }
+.sp-field { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.sp-field .sp-in { margin-bottom:0; }
+.sp-chiprow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
+.sp-chiprow .sp-prev { flex:1 1 auto; }
+.sp-chiprow .sp-auto { margin:0 0 0 auto; }
+.sp-join { padding:0 6px; }
+.sp-join .sp-ico { width:16px; height:16px; }
 .sp-hint { margin:0 0 6px; font-size:.85rem; }
 /* Картинка и звук слова: подпись слева, миниатюра и значки одной строкой */
 /* Картинка слова — большая плитка слева от поля и кнопок «Авто» (MediaUI.side, набросок владельца 2026-10-28) */
 .sp-task > .mb-side { margin-bottom:8px; }
 .sp-task .mb-side .sp-auto { margin-bottom:0; }
-.sp-flabel { flex:none; width:6.5em; font-size:.88rem; color:var(--muted); }
+.sp-flabel { font-size:.85rem; color:var(--muted); }
+.sp-task.multi { background:transparent; border:none; border-bottom:1px solid var(--line); border-radius:0; padding:10px 0 16px; }
+.sp-task.multi:last-child { border-bottom:none; }

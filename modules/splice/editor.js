@@ -161,7 +161,7 @@ const SpliceEditor = (() => {
     preview(t, prev);
     // «Авто»: расставить черты примерно поровну; «Склеить» убирает черты
     const auto = el('div', 'sp-auto');
-    auto.append(el('span', 'sp-muted', 'Авто:'));
+    auto.append(el('span', 'sp-muted', 'На части:'));
     [2, 3, 4].forEach(n => {
       const b = el('button', 'sp-autob', String(n));
       b.type = 'button';
@@ -176,8 +176,11 @@ const SpliceEditor = (() => {
       };
       auto.append(b);
     });
-    const join = el('button', 'sp-autob', 'Склеить');
+    const join = el('button', 'sp-autob sp-join');
     join.type = 'button';
+    join.innerHTML = svg('<rect x="3" y="8" width="8" height="8" rx="1.5"/><rect x="13" y="8" width="8" height="8" rx="1.5"/><path d="M11 12h2"/>');
+    join.title = 'Склеить: убрать все черты';
+    join.setAttribute('aria-label', `Склеить, задание ${k + 1}`);
     join.onclick = () => { t.answer = T.text(t.answer); ans.value = t.answer; save(); preview(t, prev); };
     auto.append(join);
     // Необязательное поле с подписью слева
@@ -191,18 +194,24 @@ const SpliceEditor = (() => {
       i.setAttribute('aria-label', `${label}, задание ${k + 1}`);
       i.oninput = () => { set(i.value); save(); };
       row.append(el('span', 'sp-flabel', label), i);
+      row.title = ph;
       return row;
     };
+    // Части слева, «На части: 2 3 4» справа в одной строке (набросок владельца 2026-10-30)
+    const chips = el('div', 'sp-chiprow');
+    chips.append(prev, auto);
     // Картинка слова — большая плитка слева, справа звук перед полем слова и кнопки «Авто» (наброски владельца 2026-10-27…28)
     const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук задания');
     const pic = MediaUI.imageControl(t.image, { save, after: audio, audioOutside: true, big: true });
-    box.append(MediaUI.side(pic, MediaUI.withAudio(audio, ans), auto), prev);
+    box.append(MediaUI.side(pic, MediaUI.withAudio(audio, ans), chips));
     if (mosaic && d.level !== 'easy') box.append(el('p', 'sp-muted sp-hint', d.mediaAlways
       ? 'Картинка и звук показываются у окошек и на Medium / Hard (включено во вкладке «Поведение»): они подсказывают, какое слово где собирать.'
       : 'В мозаике Medium и Hard картинка и звук по умолчанию скрыты: они выдали бы, какое слово где собирать. Показать их можно во вкладке «Поведение».'));
-    if (mosaic) box.append(field('sp-labelin', t.label, 'Видно на уровне Easy, например: сделать современным', 'Название', v => { t.label = v; }));
-    else box.append(field('sp-hintin', t.hint, 'Необязательно: ученик откроет её сам', 'Подсказка', v => { t.hint = v; }));
-    box.append(field('sp-expl', t.explanation, 'Необязательно: ученик увидит его после проверки', 'Пояснение', v => { t.explanation = v; }));
+    const fields = el('div', 'sp-fields');
+    if (mosaic) fields.append(field('sp-labelin', t.label, 'Видно на уровне Easy, например: сделать современным', 'Название', v => { t.label = v; }));
+    else fields.append(field('sp-hintin', t.hint, 'Необязательно: ученик откроет её сам', 'Подсказка', v => { t.hint = v; }));
+    fields.append(field('sp-expl', t.explanation, 'Необязательно: ученик увидит его после проверки', 'Пояснение после проверки', v => { t.explanation = v; }));
+    box.append(fields);
     return box;
   }
 
