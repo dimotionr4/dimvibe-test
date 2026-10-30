@@ -66,7 +66,8 @@
 .mc-mark:hover { border-color:var(--accent); }
 .mc-mark.on { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 22%, var(--card)); font-size:0; }
 .mc-mark.on::after { content:""; position:absolute; left:11px; top:5px; width:7px; height:14px; border:solid var(--ok); border-width:0 3px 3px 0; transform:rotate(45deg); }
-.mc-addopt { margin-top:8px; }
+.mc-addopt { margin-top:8px; border:none; background:transparent; color:var(--accent); font-size:1.5rem; line-height:1; min-width:44px; }
+.mc-addopt:hover:not(:disabled) { background:var(--accent-soft); }
 .mc-addopt:disabled, .mc-add:disabled { opacity:.5; }
 .mc-add { margin:4px 0 8px; }
 

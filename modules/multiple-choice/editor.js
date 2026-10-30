@@ -348,8 +348,10 @@ const MultipleChoiceEditor = (() => {
     });
     b.append(opts);
     if (!multi && it.correct.length > 1) b.append(el('div', 'mc-warn', `В Single Choice нужен один верный вариант, а отмечено ${it.correct.length}. Отметки сохранены: выберите один, иначе публикация заблокируется. Если переключить на Multiple Select, они снова заработают.`));
-    const add = el('button', 'mc-addopt', '+ Вариант');
+    const add = el('button', 'mc-addopt', '+');
     add.type = 'button';
+    add.title = 'Добавить вариант';
+    add.setAttribute('aria-label', 'Добавить вариант');
     add.disabled = it.options.length >= MAX_OPT;
     add.onclick = () => {
       it.options.push(newOption(nextId('o', it.options.map(x => x.id))));
