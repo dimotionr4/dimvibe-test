@@ -75,6 +75,7 @@
     <div id="creditPop" class="creditpop" role="dialog" aria-label="Авторство и лицензии" hidden>
       <b>Авторство и лицензии</b>
       <p>Шрифт Comic: Blogger Sans, © Sergiy S. Tkachenko, <a href="https://creativecommons.org/licenses/by-nd/4.0/" target="_blank" rel="noopener">CC BY-ND 4.0</a></p>
+      <p>Значки: Solar Icon Set, © 480 Design, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></p>
       <p>Шрифты Balsamiq Sans, Pangolin, Neucha, Nunito, Noto Sans: <a href="https://openfontlicense.org" target="_blank" rel="noopener">SIL Open Font License 1.1</a>, авторы и лицензии — в папке fonts</p>
     </div>`;
     shell.insertAdjacentHTML('afterbegin', html);

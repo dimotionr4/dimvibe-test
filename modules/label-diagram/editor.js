@@ -16,7 +16,7 @@ const LabelDiagramEditor = (() => {
     if (text != null) e.textContent = text;
     return e;
   }
-  const svg = inner => `<svg class="ld-ico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  const svg = inner => `<svg class="ld-ico" viewBox="0 0 24 24" aria-hidden="true">${window.DVIcons ? DVIcons.swap(inner) : inner}</svg>`;
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));

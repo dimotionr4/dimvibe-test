@@ -13,7 +13,7 @@ const SelectTitleEditor = (() => {
     if (text != null) e.textContent = text;
     return e;
   }
-  const svg = inner => `<svg class="st-ico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  const svg = inner => `<svg class="st-ico" viewBox="0 0 24 24" aria-hidden="true">${window.DVIcons ? DVIcons.swap(inner) : inner}</svg>`;
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
   const WORD = /[\p{L}\p{N}\p{M}]+(?:['’‐-][\p{L}\p{N}\p{M}]+)*/gu;
   const wordCount = s => (String(s || '').match(WORD) || []).length;

@@ -75,7 +75,7 @@ const FillBlanksEditor = (() => {
     ['dropdown', 'Выпадающий список', '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M9 11l3 3 3-3"/>'],
     ['typing', 'Ввод вручную', '<rect x="2" y="7" width="20" height="11" rx="2"/><path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M7 15h10"/>'],
   ];
-  const svg = inner => `<svg class="fb-ico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  const svg = inner => `<svg class="fb-ico" viewBox="0 0 24 24" aria-hidden="true">${window.DVIcons ? DVIcons.swap(inner) : inner}</svg>`;
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
 
   function draw() {

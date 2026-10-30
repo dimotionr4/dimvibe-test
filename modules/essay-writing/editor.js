@@ -17,7 +17,7 @@ const EssayWritingEditor = (() => {
     if (text != null) e.textContent = text;
     return e;
   }
-  const svg = inner => `<svg class="ew-ico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  const svg = inner => `<svg class="ew-ico" viewBox="0 0 24 24" aria-hidden="true">${window.DVIcons ? DVIcons.swap(inner) : inner}</svg>`;
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
   const level = v => (v === 'advisory' ? 'advisory' : 'required');
