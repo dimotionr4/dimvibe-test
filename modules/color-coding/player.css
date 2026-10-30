@@ -9,7 +9,7 @@
 #root.panel .cc-palette { background:var(--card); }
 /* Категория — тег, целиком залитый своим цветом, надпись цветом --cc-ink (тёмным или белым, по цвету тега).
    Выбранная: жирная надпись, ✓ и двойная рамка (просвет цвета страницы и линия цвета текста) */
-.cc-chip { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:2px 14px; border-radius:999px; border:none; background:var(--cc); color:var(--cc-ink, #1d1d2b); font-weight:600; cursor:pointer; touch-action:manipulation; }
+.cc-chip { display:inline-flex; align-items:center; gap:6px; min-height:var(--tap,44px); padding:2px 14px; border-radius:999px; border:none; background:var(--cc); color:var(--cc-ink, #1d1d2b); font-weight:600; cursor:pointer; touch-action:manipulation; }
 .cc-chip:hover:not(:disabled) { filter:brightness(1.06); }
 .cc-chip:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
 .cc-chip.on { font-weight:800; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--text); }

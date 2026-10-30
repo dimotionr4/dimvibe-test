@@ -1,6 +1,6 @@
 /* Плеер модуля Flashcards. «Назад / Далее» — классы tf-* из modules/true-false/player.css. Цвета — из переменных страницы (index.html) */
 .fc-tabs { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
-.fc-tab { min-height:40px; padding:0 16px; border-radius:999px; }
+.fc-tab { min-height:var(--tap,44px); padding:0 16px; border-radius:999px; }
 .fc-tab.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
 .fc-empty { color:var(--muted); margin:8px 0; }
 
@@ -10,20 +10,20 @@
 .fc-inner { display:grid; transition:transform .5s; transform-style:preserve-3d; }
 .fc-flipped .fc-inner { transform:rotateY(180deg); }
 .fc-face { grid-area:1 / 1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; min-height:220px; padding:20px 16px;
-  border:1px solid var(--line); border-radius:16px; background:var(--card); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  border:1px solid var(--line); border-radius:var(--r-l,18px); background:var(--card); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
 .fc-back { transform:rotateY(180deg); background:color-mix(in srgb, var(--accent) 10%, var(--card)); border-color:var(--accent); }
 .fc-text { display:block; font-size:1.5rem; line-height:1.4; overflow-wrap:anywhere; white-space:pre-wrap; }
 .fc-content { display:flex; flex-direction:column; align-items:center; gap:10px; max-width:100%; }
-.fc-img { display:block; max-width:100%; max-height:200px; object-fit:contain; border-radius:10px; }
+.fc-img { display:block; max-width:100%; max-height:200px; object-fit:contain; border-radius:var(--r-m,12px); }
 .fc-broken::before { content:''; display:block; width:80px; height:48px; border-radius:8px; background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); }
 .fc-audio { display:flex; justify-content:center; min-height:0; margin-top:8px; }
-.fc-aud { min-height:40px; min-width:48px; padding:0 12px; }
+.fc-aud { min-height:var(--tap,44px); min-width:48px; padding:0 12px; }
 .fc-dirs { margin-top:-4px; }
 /* Компактный размер: ниже карточка, мельче текст и картинка */
 .fc-compact .fc-face { min-height:120px; padding:12px; }
 .fc-compact .fc-text { font-size:1.15rem; }
 .fc-compact .fc-img { max-height:110px; }
-.fc-card:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:16px; }
+.fc-card:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:var(--r-l,18px); }
 
 /* Появление вместо поворота */
 .fc-fade .fc-inner { transform:none !important; transform-style:flat; transition:none; }
@@ -37,7 +37,7 @@
 
 .fc-hintbox { margin-top:10px; text-align:center; }
 .fc-hintbox[hidden] { display:none; }
-.fc-hintbtn { min-height:36px; padding:0 14px; }
+.fc-hintbtn { min-height:var(--tap,44px); padding:0 14px; }
 .fc-hint { margin:8px 0 0; color:var(--muted); overflow-wrap:anywhere; }
 
 .fc-rate { display:flex; gap:8px; margin-top:12px; }

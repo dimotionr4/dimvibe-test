@@ -4,7 +4,7 @@
 .ew-gnum { margin:0 0 6px; font-weight:600; color:var(--muted); }
 .ew-topic { margin:0 0 4px; font-weight:700; font-size:1.1rem; overflow-wrap:anywhere; }
 .ew-prompt { margin:0 0 10px; white-space:pre-wrap; overflow-wrap:anywhere; }
-.ew-text { display:block; width:100%; min-height:180px; resize:vertical; font:inherit; line-height:1.5; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--text); }
+.ew-text { display:block; width:100%; min-height:180px; resize:vertical; font:inherit; line-height:1.5; padding:10px 12px; border:1.5px solid var(--line); border-radius:var(--r-m,12px); background:var(--bg); color:var(--text); }
 .ew-text:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
 .ew-counts { margin:6px 0 4px; color:var(--muted); font-size:.92rem; }
 .ew-gh { margin:10px 0 4px; font-weight:600; font-size:.92rem; }
@@ -18,12 +18,12 @@
 .ew-copy[aria-disabled="true"] { opacity:.6; }
 .ew-sbtn[aria-expanded="true"] { border-color:var(--accent); }
 .ew-copied { color:var(--muted); font-size:.9rem; }
-.ew-sample { margin:12px 0 0; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
+.ew-sample { margin:12px 0 0; padding:8px 12px; border-radius:var(--r-m,12px); background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
 .ew-sample[hidden] { display:none; }
 .ew-sample .ew-gh { margin-top:0; }
 .ew-sample-text { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
 .ew-check { margin-top:8px; }
-.ew-ci { display:flex; align-items:flex-start; gap:10px; min-height:40px; padding:6px 0; cursor:pointer; }
+.ew-ci { display:flex; align-items:flex-start; gap:10px; min-height:var(--tap,44px); padding:6px 0; cursor:pointer; }
 .ew-ci input { flex:none; width:22px; height:22px; margin:1px 0 0; accent-color:var(--accent); }
 .ew-store { margin:10px 0 0; color:var(--muted); font-size:.82rem; }
 .ew-store.ew-warn { color:var(--bad); font-size:.9rem; }

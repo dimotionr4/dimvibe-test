@@ -2,7 +2,7 @@
 .card.mm-card { line-height:1.5; }
 .mm-ins { margin:0 0 10px; color:var(--muted); }
 .mm-tnum { margin:0 0 6px; font-weight:600; color:var(--muted); }
-.mm-pic { position:relative; width:100%; height:160px; border-radius:10px; overflow:hidden; margin:0 0 10px; }
+.mm-pic { position:relative; width:100%; height:160px; border-radius:var(--r-m,12px); overflow:hidden; margin:0 0 10px; }
 .mm-pic img { display:block; width:100%; height:100%; object-fit:contain; }
 .mm-fit-cover .mm-pic img { object-fit:cover; }
 .mm-size-s .mm-pic { height:100px; }
@@ -75,5 +75,5 @@
 .mm-fixmark { flex:none; font-weight:700; }
 .mm-fixin.ok .mm-fixmark { color:var(--ok); }
 .mm-fixin.bad .mm-fixmark { color:var(--bad); }
-.mm-expl { margin-top:12px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+.mm-expl { margin-top:12px; padding:8px 12px; border-radius:var(--r-m,12px); background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
 .mm-expl p { margin:2px 0; }

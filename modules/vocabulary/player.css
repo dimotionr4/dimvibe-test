@@ -2,7 +2,7 @@
    Цвета — из переменных страницы (index.html) */
 .card.vc-card { line-height:1.5; }
 .vc-tabs { display:flex; gap:6px; margin-bottom:10px; }
-.vc-tab { min-height:40px; padding:0 16px; border-radius:999px; }
+.vc-tab { min-height:var(--tap,44px); padding:0 16px; border-radius:999px; }
 .vc-tab.active, .vc-chip.active, .vc-sort.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
 
 /* Словарь: на широком экране список и подробности рядом, на узком — одно из двух */
@@ -17,10 +17,10 @@
   .vc-back { display:none; }
 }
 .vc-bar { display:flex; gap:6px; margin-bottom:8px; }
-.vc-search { flex:1; min-width:0; min-height:42px; box-sizing:border-box; font:inherit; padding:6px 12px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--text); }
-.vc-sort { min-height:42px; padding:0 12px; }
+.vc-search { flex:1; min-width:0; min-height:var(--tap,44px); box-sizing:border-box; font:inherit; padding:6px 12px; border:1px solid var(--line); border-radius:var(--r-m,12px); background:var(--card); color:var(--text); }
+.vc-sort { min-height:var(--tap,44px); padding:0 12px; }
 .vc-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
-.vc-chip { min-height:34px; padding:0 12px; border-radius:999px; font-size:.9rem; }
+.vc-chip { min-height:var(--tap,44px); padding:0 12px; border-radius:999px; font-size:.9rem; }
 .vc-items { display:flex; flex-direction:column; gap:6px; }
 .vc-item { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; min-height:48px; padding:8px 12px; text-align:left; }
 .vc-item.active { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card)); }
@@ -28,17 +28,17 @@
 .vc-itr { color:var(--muted); font-size:.92rem; overflow-wrap:anywhere; }
 .vc-empty { color:var(--muted); margin:8px 0; }
 .vc-clear { min-height:32px; padding:0 10px; }
-.vc-back { margin-bottom:8px; min-height:40px; }
+.vc-back { margin-bottom:8px; min-height:var(--tap,44px); }
 
 /* Запись слова */
-.vc-pic { position:relative; width:100%; height:160px; border-radius:10px; overflow:hidden; margin:0 0 10px; }
+.vc-pic { position:relative; width:100%; height:160px; border-radius:var(--r-m,12px); overflow:hidden; margin:0 0 10px; }
 .vc-pic img { display:block; width:100%; height:100%; object-fit:contain; }
 .vc-fit-cover .vc-pic img { object-fit:cover; }
 .vc-size-s .vc-pic { height:100px; }
 .vc-size-l .vc-pic { height:240px; }
 .vc-pic.broken { background:repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); min-height:40px; }
 .vc-whead { display:flex; align-items:center; gap:10px; }
-.vc-aud { flex:none; min-height:36px; min-width:40px; padding:0 8px; }
+.vc-aud { flex:none; min-height:var(--tap,44px); min-width:40px; padding:0 8px; }
 ul.vc-exs li .vc-exaud { float:right; margin:0 0 4px 8px; }
 .vc-toggle { margin-top:12px; min-height:44px; width:100%; }
 h2.vc-word { margin:0; font-size:1.5rem; overflow-wrap:anywhere; }
