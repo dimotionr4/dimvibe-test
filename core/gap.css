@@ -4,7 +4,7 @@
 
 /* Форма: линия, рамка, плашка, свободная форма. Цвет и состояние (верно, неверно, не заполнено) задаёт --gap-c */
 .gap.shape-line { border-bottom:2px var(--gap-line) var(--gap-c); }
-.gap.shape-frame { border:2px var(--gap-line) var(--gap-c); border-radius:6px; }
+.gap.shape-frame { border:2px var(--gap-line) var(--gap-c); border-radius:var(--r-s,8px); }
 .gap.shape-pill { border-radius:999px; padding:0 14px; background:color-mix(in srgb, var(--gap-c) 16%, transparent); }
 .gap.shape-free { border:2px solid var(--gap-c); border-radius:14px 6px 12px 5px / 7px 13px 6px 14px; background:color-mix(in srgb, var(--gap-c) 10%, transparent); padding:0 10px; }
 .gap.dashed { --gap-line:dashed; }

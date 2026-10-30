@@ -9,12 +9,12 @@
 .ti-bank.ti-over { outline:3px solid var(--accent); outline-offset:-4px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); }
 
 /* Слова банка. Общий .chip из index.html задан позже, поэтому .chip.ti-chip; использованное слово приглушено (.used) */
-.chip.ti-chip { display:inline-flex; align-items:center; max-width:100%; min-height:40px; margin:0; padding:6px 14px; border:1.5px solid var(--line); border-radius:999px; background:var(--card); color:var(--text); line-height:1.3; text-align:left; cursor:grab; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; box-sizing:border-box; overflow-wrap:anywhere; touch-action:manipulation; }
+.chip.ti-chip { display:inline-flex; align-items:center; max-width:100%; min-height:var(--tap,44px); margin:0; padding:6px 14px; border:1.5px solid var(--line); border-radius:999px; background:var(--card); color:var(--text); line-height:1.3; text-align:left; cursor:grab; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; box-sizing:border-box; overflow-wrap:anywhere; touch-action:manipulation; }
 .chip.ti-chip:not(.used):hover { border-color:var(--accent); }
 .chip.ti-chip.used { cursor:default; }
 .chip.ti-chip.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 16%, var(--card)); box-shadow:0 0 0 2px var(--accent); }
 .ti-chip.ti-lifted { opacity:.35; }
-.ti-ghost.chip.ti-chip { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; box-shadow:0 8px 20px rgba(0,0,0,.25); border-color:var(--accent); }
+.ti-ghost.chip.ti-chip { position:fixed; left:0; top:0; z-index:1000; margin:0; pointer-events:none; box-shadow:var(--shadow-2,0 8px 20px rgba(0,0,0,.25)); border-color:var(--accent); }
 .ti-dragging, .ti-dragging * { cursor:grabbing !important; user-select:none; }
 
 /* Сетка: размер картинки задаёт «Дизайн» (S / M / L), вписывание — contain или cover */
@@ -22,7 +22,7 @@
 .ti-size-s { --w:110px; --h:88px; }
 .ti-size-l { --w:210px; --h:170px; }
 .ti-cell { min-width:0; display:flex; flex-direction:column; gap:10px; }
-.ti-pic { height:var(--h); display:flex; align-items:center; justify-content:center; border-radius:10px; overflow:hidden; user-select:none; -webkit-user-select:none; }
+.ti-pic { height:var(--h); display:flex; align-items:center; justify-content:center; border-radius:var(--r-m,12px); overflow:hidden; user-select:none; -webkit-user-select:none; }
 .ti-pic img { width:100%; height:100%; display:block; pointer-events:none; }
 .ti-fit-contain .ti-pic img { object-fit:contain; }
 .ti-fit-cover .ti-pic img { object-fit:cover; }
