@@ -71,7 +71,8 @@
   /* Строки и карточки упражнений */
   .items { display:grid; gap:8px; }
   .items.cards { grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:var(--gap); }
-  .ex { position:relative; display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+  .ex { position:relative; display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid color-mix(in srgb, var(--line) 60%, transparent); border-radius:16px; background:var(--card); box-shadow:0 1px 3px rgba(20,20,40,.08); transition:box-shadow .15s, border-color .15s; }
+  @media (hover:hover) { .ex:not(.dragging):hover { border-color:var(--accent); box-shadow:0 4px 14px rgba(20,20,40,.1); } }
   .ex:hover { border-color:var(--accent); }
   .ex .ic { width:40px; height:40px; flex:none; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; }
   .ex .ic svg { width:22px; height:22px; stroke-width:1.8; }
@@ -216,7 +217,7 @@
 </div></div>
 <div id="toast" role="status" hidden></div>
 <script src="core/shell.js?v=2"></script>
-<script src="core/sidebar.js?v=2"></script>
+<script src="core/sidebar.js?v=3"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);

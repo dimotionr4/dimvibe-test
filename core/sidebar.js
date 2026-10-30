@@ -25,16 +25,18 @@
   const css = document.createElement('style');
   css.textContent = `
     #shell { display:flex; align-items:flex-start; }
-    #side { flex:none; width:var(--sw, 260px); position:sticky; top:48px; height:calc(100vh - 48px); height:calc(100dvh - 48px); overflow-y:auto; border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:10px; background:var(--bg); z-index:20; }
-    #side.collapsed { width:56px; padding:14px 8px; align-items:center; overflow:visible; }
+    #side { flex:none; width:var(--sw, 260px); position:sticky; top:48px; height:calc(100vh - 48px); height:calc(100dvh - 48px); overflow-y:auto; border-right:1px solid var(--line); padding:16px 12px; display:flex; flex-direction:column; gap:4px; background:var(--bg); z-index:20; }
+    #side.collapsed { width:56px; padding:16px 8px; align-items:center; overflow:visible; }
     #side.collapsed .lbl { display:none; }
-    #side.collapsed .side-btn { width:40px; padding:0; justify-content:center; }
+    #side.collapsed .side-btn { width:44px; padding:0; justify-content:center; }
     #side:not(.collapsed) [data-tip]::after { display:none; }
     #side.collapsed [data-tip]::after { top:50%; left:calc(100% + 8px); transform:translateY(-50%); }
     #side h3 { font-size:.85rem; color:var(--muted); font-weight:600; margin:6px 0 0; text-transform:uppercase; letter-spacing:.04em; }
-    .side-btn { display:flex; align-items:center; gap:8px; min-height:36px; padding:6px 12px; border:1px solid var(--line); background:var(--card); color:inherit; font:inherit; border-radius:8px; text-align:left; text-decoration:none; cursor:pointer; position:relative; }
+    .side-btn { display:flex; align-items:center; gap:12px; min-height:42px; padding:6px 14px; border:1px solid transparent; background:transparent; color:inherit; font:inherit; font-weight:500; border-radius:12px; text-align:left; text-decoration:none; cursor:pointer; position:relative; transition:background .12s; }
+    .side-btn svg { color:var(--muted); }
+    .side-btn:hover svg, .side-btn.active svg, .side-btn[aria-pressed="true"] svg { color:inherit; }
     .side-btn:hover { background:var(--accent-soft); }
-    .side-btn.active, .side-btn[aria-pressed="true"] { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+    .side-btn.active, .side-btn[aria-pressed="true"] { background:var(--accent-soft); border-color:transparent; color:var(--accent); font-weight:600; }
     .side-btn .si { display:inline-flex; flex:none; }
     .side-btn svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
     .side-btn.push { margin-top:auto; }

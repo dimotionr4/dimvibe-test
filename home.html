@@ -80,8 +80,9 @@
   .grid.v-cards.manual { grid-template-columns:repeat(auto-fill, minmax(max(130px, calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols))), 1fr)); }
   .grid.v-list { grid-template-columns:1fr; --gap:8px; }
   .grid.v-icons { grid-template-columns:repeat(auto-fill, 72px); }
-  .mod { position:relative; border:1px solid var(--line); border-radius:14px; background:var(--card); }
-  .mod .main { display:flex; flex-direction:column; gap:8px; padding:16px; height:100%; text-decoration:none; border-radius:14px; }
+  .mod { position:relative; border:1px solid color-mix(in srgb, var(--line) 60%, transparent); border-radius:18px; background:var(--card); box-shadow:0 1px 3px rgba(20,20,40,.08); transition:box-shadow .15s, border-color .15s, transform .15s; }
+  @media (hover:hover) { .mod:not(.soon):not(.dragging):hover { border-color:var(--accent); box-shadow:0 6px 18px rgba(20,20,40,.12); transform:translateY(-2px); } }
+  .mod .main { display:flex; flex-direction:column; gap:8px; padding:18px; height:100%; text-decoration:none; border-radius:18px; }
   .mod a.main:hover, .mod a.main:focus-visible { box-shadow:0 0 0 1px var(--accent), 0 4px 16px rgba(2,156,145,.18); outline:none; }
   .ic { width:48px; height:48px; flex:none; border-radius:12px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; }
   .ic svg { width:28px; height:28px; stroke-width:1.8; }
@@ -203,7 +204,7 @@
 </main>
 </div>
 <script src="core/shell.js?v=2"></script>
-<script src="core/sidebar.js?v=2"></script>
+<script src="core/sidebar.js?v=3"></script>
 <script>
 // Реестр модулей: чтобы добавить модуль, достаточно строки здесь (ready: true — модуль подключён в editor.html).
 // Названия «скоро» взяты из файлов спецификации docs/spec/04_MODULES; описания — только там, где они известны.
