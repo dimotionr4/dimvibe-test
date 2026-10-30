@@ -7,8 +7,8 @@ const TrueFalseEditor = (() => {
   const PRESETS = { tf: ['True', 'False'], fo: ['Fact', 'Opinion'], fi: ['Formal', 'Informal'], sd: ['Safe', 'Dangerous'], hu: ['Healthy', 'Unhealthy'], pp: ['Past', 'Present'] };
   const VIEWS = { one: 'По одному утверждению', list: 'Все списком' };
   const { nextId } = GapEngine;
-  let d, root, save, openId = null, delAsk = null, msgTimer = null, drag = null;
-  let msg, counter, listBox, addBtn;
+  let d, root, save, openId = null, openSec = 'exp', fmtOpen = false, undo = null, undoTimer = null, msgTimer = null, drag = null;
+  let msg, counter, listBox, addBtn, undoBar;
   const recheck = new Set(); // утверждения, у которых изменился формат ответов: автору напоминаем проверить верный ответ
 
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
@@ -58,7 +58,7 @@ const TrueFalseEditor = (() => {
     d = draft;
     save = onSave;
     if (!d.items.some(i => i.id === openId)) openId = null;
-    delAsk = null;
+    undo = null;
     draw();
   }
 
@@ -72,18 +72,48 @@ const TrueFalseEditor = (() => {
   function draw() {
     root.innerHTML = '';
     root.className = 'tf-wrap';
-    const tools = el('div', 'tf-tools');
-    counter = el('span', 'tf-muted');
-    const right = el('span', 'tf-right');
-    right.append(help(`Напишите утверждения. У каждого выберите один верный ответ из двух вариантов (при желании — из трёх). Пояснение ученик видит только после проверки, если ответил верно, и в конце. Название пары (True / False, Fact / Opinion и другие) общее для всех утверждений, но у любого утверждения можно включить «Другой формат ответов». Не больше ${MAX} утверждений. Показ «по одному» или «списком» — во вкладке «Дизайн».`));
-    tools.append(counter, right);
     msg = el('div', 'tf-msg');
     msg.hidden = true;
+    const table = el('div', 'tf-table');
+    const top = topBar();
+    const head = el('div', 'tf-thead');
+    head.append(el('span', 'tf-th-n', '№'), el('span', 'tf-th-t', 'Утверждение'), el('span', 'tf-th-a', 'Верный ответ'));
     listBox = el('div', 'tf-list');
     addBtn = el('button', 'tf-add', '+ Утверждение');
     addBtn.onclick = () => addItem(d.items.length);
-    root.append(tools, msg, answersBlock(), listBox, addBtn);
+    undoBar = el('div', 'tf-undo');
+    table.append(top.bar, ...(top.extra ? [top.extra] : []), head, listBox, addBtn, undoBar);
+    root.append(msg, table);
     drawList();
+    drawUndo();
+  }
+
+  // Верхняя строка таблицы: счётчик, общий формат ответов и «Ещё» (названия, третий вариант)
+  function topBar() {
+    const bar = el('div', 'tf-top');
+    counter = el('span', 'tf-muted');
+    const right = el('span', 'tf-right');
+    const parts = formatEditor(d.answers, kind => formatChanged(kind, d.items.filter(i => !i.override)), true);
+    const more = el('button', 'tf-fmtmore' + (fmtOpen ? ' on' : ''), fmtOpen ? 'Меньше' : 'Ещё');
+    more.type = 'button';
+    more.title = 'Свои названия, третий вариант ответа';
+    more.setAttribute('aria-expanded', String(fmtOpen));
+    more.onclick = () => { fmtOpen = !fmtOpen; draw(); };
+    right.append(el('span', 'tf-muted', 'Общий формат'), parts.sel, more, help(`Напишите утверждения. У каждого выберите один верный ответ из двух вариантов (при желании — из трёх). Пояснение ученик видит только после проверки, если ответил верно, и в конце. Название пары (True / False, Fact / Opinion и другие) общее для всех утверждений, но у любого утверждения можно включить «Другой формат ответов». Правильный ответ запоминается по месту кнопки, а не по тексту. Не больше ${MAX} утверждений. Показ «по одному» или «списком» — во вкладке «Дизайн».`));
+    bar.append(counter, right);
+    let extra = null;
+    if (fmtOpen) {
+      extra = el('div', 'tf-extra');
+      extra.append(parts.box);
+      const rc = el('label', 'tf-check tf-soon');
+      const cb = el('input');
+      cb.type = 'checkbox';
+      cb.disabled = true;
+      rc.append(cb, document.createTextNode(' Require correction if False '), el('span', 'tf-badge', 'Coming soon'));
+      rc.title = 'Пока не работает';
+      extra.append(rc);
+    }
+    return { bar, extra };
   }
 
   function updateCounter() {
@@ -94,7 +124,7 @@ const TrueFalseEditor = (() => {
   }
 
   // ---- Формат ответов: общий для упражнения и индивидуальный (один и тот же редактор) ----
-  function formatEditor(fmt, onChange) {
+  function formatEditor(fmt, onChange, split) {
     const box = el('div', 'tf-fmt');
     const sel = el('select');
     sel.setAttribute('aria-label', 'Пара ответов');
@@ -108,7 +138,7 @@ const TrueFalseEditor = (() => {
       fmt.preset = sel.value;
       onChange('structure');
     };
-    box.append(sel);
+    if (!split) box.append(sel);
     const input = (field, ph, label) => {
       const i = el('input');
       i.value = fmt[field];
@@ -130,7 +160,7 @@ const TrueFalseEditor = (() => {
     thirdRow.append(cb, document.createTextNode(' Третий вариант ответа'));
     box.append(thirdRow);
     if (fmt.third) box.append(input('c', DEFAULT_C, 'Название третьего варианта'));
-    return box;
+    return split ? { sel, box } : box;
   }
 
   // Изменился формат: у утверждений с уже выбранным ответом просим проверить, не поменялся ли смысл
@@ -139,22 +169,6 @@ const TrueFalseEditor = (() => {
     save();
     if (kind === 'structure') { draw(); } else { syncLabels(); markTags(); }
     if (items.some(it => it.correct)) say('Проверьте правильный ответ: названия изменились, смысл мог поменяться. Это напоминание, оно не мешает публикации.');
-  }
-
-  function answersBlock() {
-    const box = el('section', 'tf-block');
-    const head = el('div', 'tf-labelrow');
-    head.append(el('h3', '', 'Варианты ответов'), help('Общие для всех утверждений. Если нужен другой формат для одного утверждения, включите «Другой формат ответов» в его строке. Правильный ответ запоминается по месту кнопки, а не по тексту, поэтому при смене названий он остаётся на своём месте.'));
-    box.append(head, formatEditor(d.answers, kind => formatChanged(kind, d.items.filter(i => !i.override))));
-    const rc = el('label', 'tf-check tf-soon');
-    const cb = el('input');
-    cb.type = 'checkbox';
-    cb.disabled = true;
-    const soon = el('span', 'tf-badge', 'Coming soon');
-    rc.append(cb, document.createTextNode(' Require correction if False '), soon);
-    rc.title = 'Пока не работает';
-    box.append(rc);
-    return box;
   }
 
   // ---- Список утверждений ----
@@ -204,8 +218,7 @@ const TrueFalseEditor = (() => {
       save();
       drawList();
     };
-    // Слева кнопки правильного ответа, справа поле утверждения
-    const main = el('div', 'tf-main');
+    // Слева номер и поле утверждения, справа ряд кнопок правильного ответа и под ним значки действий
     const picks = el('div', 'tf-picks');
     picks.setAttribute('role', 'radiogroup');
     picks.setAttribute('aria-label', `Правильный ответ, утверждение ${i + 1}`);
@@ -222,7 +235,7 @@ const TrueFalseEditor = (() => {
     });
     const field = el('div', 'tf-field');
     const ta = el('textarea');
-    ta.rows = 2;
+    ta.rows = 1;
     ta.placeholder = 'Утверждение, например: The sun rises in the east.';
     ta.value = it.text;
     ta.setAttribute('aria-label', `Текст утверждения ${i + 1}`);
@@ -233,16 +246,7 @@ const TrueFalseEditor = (() => {
     tag.hidden = !(recheck.has(it.id) && it.correct);
     field.append(ta, tag);
     if (it.correct === 'c' && !fmtOf(it).third) field.append(el('div', 'tf-warn', 'Ответ привязан к третьему варианту, а он отключён: включите его или выберите другой ответ.'));
-    main.append(picks, field);
     const tools = el('span', 'tf-tools2');
-    const more = el('button', 'tf-ib tf-more' + (it.id === openId ? ' on' : ''));
-    more.type = 'button';
-    more.innerHTML = svg('<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>');
-    more.title = 'Пояснение, озвучка, другой формат ответов';
-    more.setAttribute('aria-label', more.title);
-    more.setAttribute('aria-expanded', String(it.id === openId));
-    more.onclick = () => { openId = openId === it.id ? null : it.id; delAsk = null; drawList(); };
-    tools.append(more);
     const btn = (cls, html, tip, fn, disabled) => {
       const b = el('button', 'tf-ib ' + cls);
       b.type = 'button';
@@ -253,25 +257,29 @@ const TrueFalseEditor = (() => {
       b.onclick = e => { e.stopPropagation(); fn(); };
       return b;
     };
+    const sec = (name, html, tip, filled) => {
+      const on = it.id === openId && openSec === name;
+      const b = btn((on ? 'on' : '') + (filled ? ' has' : ''), html, tip, () => {
+        if (on) openId = null; else { openId = it.id; openSec = name; }
+        drawList();
+      });
+      b.setAttribute('aria-expanded', String(on));
+      return b;
+    };
     tools.append(
-      btn('', svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', () => move(i, -1), i === 0),
-      btn('', svg('<path d="M6 9l6 6 6-6"/>'), 'Ниже', () => move(i, 1), i === d.items.length - 1),
+      sec('exp', svg('<path d="M5 5h14v11H10l-5 4z"/><path d="M9 9h6M9 12h4"/>'), 'Пояснение ученику', clean(it.explanation)),
+      sec('aud', svg('<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>'), 'Озвучка утверждения', it.audio),
+      sec('fmt', svg('<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'), 'Другой формат ответов', it.override),
       btn('', svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать', () => duplicate(i), d.items.length >= MAX),
+      btn('tf-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => removeItem(i)),
     );
-    if (delAsk === it.id) {
-      const q = el('span', 'tf-ask');
-      const yes = el('button', 'tf-yes', 'Удалить');
-      yes.type = 'button';
-      yes.onclick = () => removeItem(i);
-      const no = el('button', '', 'Нет');
-      no.type = 'button';
-      no.onclick = () => { delAsk = null; drawList(); };
-      q.append(yes, no);
-      tools.append(q);
-    } else tools.append(btn('tf-del', svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить', () => askDelete(i)));
-    head.append(grip, el('span', 'tf-n', `${i + 1}.`), main, tools);
+    const side = el('div', 'tf-side');
+    side.append(picks, tools);
+    const lead = el('div', 'tf-lead');
+    lead.append(grip, el('span', 'tf-n', `${i + 1}.`));
+    head.append(lead, field, side);
     r.append(head);
-    if (it.id === openId) r.append(body(it, r));
+    if (it.id === openId) r.append(body(it, i));
     return r;
   }
 
@@ -286,40 +294,58 @@ const TrueFalseEditor = (() => {
   });
   const clearDrop = () => listBox.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
 
-  function body(it, r) {
+  function body(it, i) {
     const b = el('div', 'tf-body');
-    const el2 = el('div', 'tf-label tf-labelrow', 'Пояснение (необязательно)');
-    el2.append(help('Ученик увидит пояснение после проверки, если ответил на это утверждение верно, и в конце упражнения. Пока ответ неверный, пояснение скрыто, чтобы не выдать ответ. Баллы оно не меняет.'));
-    const ex = el('textarea');
-    ex.rows = 2;
-    ex.placeholder = 'Почему это верно или неверно';
-    ex.value = it.explanation || '';
-    ex.setAttribute('aria-label', 'Пояснение');
-    const fit2 = () => { ex.style.height = 'auto'; ex.style.height = ex.scrollHeight + 2 + 'px'; };
-    ex.oninput = () => { it.explanation = ex.value; fit2(); save(); };
-    b.append(el2, ex);
-    setTimeout(fit2, 0);
-
-    const al = el('div', 'tf-label tf-labelrow', 'Озвучка утверждения (необязательно)');
-    al.append(help('Ученик нажимает значок динамика рядом с утверждением и слышит этот звук. Можно слушать сколько угодно раз.'));
-    b.append(al);
-    if (window.mediaPicker) b.append(window.mediaPicker('audio', () => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить озвучку'));
-
-    // Индивидуальный формат: настройки сохраняются, даже если галочку снять
-    const ov = el('label', 'tf-check');
-    const ocb = el('input');
-    ocb.type = 'checkbox';
-    ocb.checked = !!it.override;
-    ocb.onchange = () => {
-      it.override = ocb.checked;
-      if (it.correct) recheck.add(it.id);
-      save();
-      drawList();
-      if (it.correct) say('Проверьте правильный ответ: формат ответов этого утверждения изменился.');
+    if (openSec === 'exp') {
+      const lab = el('div', 'tf-label tf-labelrow', 'Пояснение ученику');
+      lab.append(help('Ученик увидит пояснение после проверки, если ответил на это утверждение верно, и в конце упражнения. Пока ответ неверный, пояснение скрыто, чтобы не выдать ответ. Баллы оно не меняет.'));
+      const ex = el('textarea');
+      ex.rows = 2;
+      ex.placeholder = 'Почему это верно или неверно';
+      ex.value = it.explanation || '';
+      ex.setAttribute('aria-label', 'Пояснение');
+      const fit2 = () => { ex.style.height = 'auto'; ex.style.height = ex.scrollHeight + 2 + 'px'; };
+      ex.oninput = () => { it.explanation = ex.value; fit2(); save(); };
+      b.append(lab, ex);
+      setTimeout(fit2, 0);
+    } else if (openSec === 'aud') {
+      const al = el('div', 'tf-label tf-labelrow', 'Озвучка утверждения');
+      al.append(help('Ученик нажимает значок динамика рядом с утверждением и слышит этот звук. Можно слушать сколько угодно раз.'));
+      b.append(al);
+      if (window.mediaPicker) b.append(window.mediaPicker('audio', () => it.audio || '', v => { it.audio = v; save(); }, 'Загрузить озвучку'));
+    } else {
+      // Индивидуальный формат: настройки сохраняются, даже если галочку снять
+      const ov = el('label', 'tf-check');
+      const ocb = el('input');
+      ocb.type = 'checkbox';
+      ocb.checked = !!it.override;
+      ocb.onchange = () => {
+        it.override = ocb.checked;
+        if (it.correct) recheck.add(it.id);
+        save();
+        drawList();
+        if (it.correct) say('Проверьте правильный ответ: формат ответов этого утверждения изменился.');
+      };
+      ov.append(ocb, document.createTextNode(' Другой формат ответов'));
+      b.append(ov);
+      if (it.override) b.append(formatEditor(it.fmt, kind => formatChanged(kind, [it])));
+    }
+    const nav = el('div', 'tf-nav');
+    const arrow = (html, tip, dir, disabled) => {
+      const x = el('button', 'tf-ib');
+      x.type = 'button';
+      x.innerHTML = html;
+      x.title = tip;
+      x.setAttribute('aria-label', tip);
+      x.disabled = disabled;
+      x.onclick = () => move(i, dir);
+      return x;
     };
-    ov.append(ocb, document.createTextNode(' Другой формат ответов'));
-    b.append(ov);
-    if (it.override) b.append(formatEditor(it.fmt, kind => formatChanged(kind, [it])));
+    nav.append(
+      arrow(svg('<path d="M6 15l6-6 6 6"/>'), 'Выше', -1, i === 0),
+      arrow(svg('<path d="M6 9l6 6 6-6"/>'), 'Ниже', 1, i === d.items.length - 1),
+    );
+    b.append(nav);
     return b;
   }
 
@@ -327,7 +353,6 @@ const TrueFalseEditor = (() => {
     if (d.items.length >= MAX) return say(`Утверждений не больше ${MAX}. Разделите задание на два.`);
     const id = nextId('q', d.items.map(i => i.id));
     d.items.splice(index, 0, newItem(id));
-    openId = id;
     save();
     drawList();
     const ta = listBox.querySelector(`.tf-row[data-id="${id}"] textarea`);
@@ -339,7 +364,6 @@ const TrueFalseEditor = (() => {
     const copy = JSON.parse(JSON.stringify(d.items[i]));
     copy.id = nextId('q', d.items.map(x => x.id));
     d.items.splice(i + 1, 0, copy);
-    openId = copy.id;
     save();
     drawList();
   }
@@ -350,25 +374,43 @@ const TrueFalseEditor = (() => {
     [d.items[i], d.items[j]] = [d.items[j], d.items[i]];
     save();
     drawList();
-    const b = listBox.querySelector(`.tf-row[data-id="${d.items[j].id}"] .tf-ib:not(:disabled)`);
+    const b = listBox.querySelector(`.tf-row[data-id="${d.items[j].id}"] .tf-nav .tf-ib:not(:disabled)`) || listBox.querySelector(`.tf-row[data-id="${d.items[j].id}"] .tf-ib:not(:disabled)`);
     if (b) b.focus();
   }
 
-  // Заполненное утверждение удаляется после подтверждения прямо в строке, пустое — сразу
-  function askDelete(i) {
-    const it = d.items[i];
-    if (!clean(it.text) && !it.correct && !clean(it.explanation) && !it.audio) return removeItem(i);
-    delAsk = it.id;
-    drawList();
-  }
+  // Удаление сразу; внизу таблицы плашка «Отменить»
   function removeItem(i) {
     const [it] = d.items.splice(i, 1);
     recheck.delete(it.id);
+    const wasLast = !d.items.length;
     if (openId === it.id) openId = null;
-    delAsk = null;
-    if (!d.items.length) d.items.push(newItem('q1'));
+    if (wasLast) d.items.push(newItem('q1'));
+    undo = { it, i, wasLast };
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => { undo = null; if (undoBar && undoBar.isConnected) drawUndo(); }, 10000);
     save();
     drawList();
+    drawUndo();
+  }
+  function undoRemove() {
+    if (!undo) return;
+    const { it, i, wasLast } = undo;
+    undo = null;
+    clearTimeout(undoTimer);
+    if (wasLast) d.items.length = 0;
+    d.items.splice(Math.min(i, d.items.length), 0, it);
+    save();
+    drawList();
+    drawUndo();
+  }
+  function drawUndo() {
+    undoBar.innerHTML = '';
+    undoBar.hidden = !undo;
+    if (!undo) return;
+    const b = el('button', '', 'Отменить');
+    b.type = 'button';
+    b.onclick = undoRemove;
+    undoBar.append(el('span', 'tf-muted', 'Утверждение удалено.'), b);
   }
 
   // ---- Файл упражнения ----
