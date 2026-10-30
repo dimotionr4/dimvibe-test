@@ -204,6 +204,7 @@
 </main>
 </div>
 <script src="core/shell.js?v=2"></script>
+<script src="core/icons.js"></script>
 <script src="core/sidebar.js?v=3"></script>
 <script>
 // Реестр модулей: чтобы добавить модуль, достаточно строки здесь (ready: true — модуль подключён в editor.html).
@@ -233,6 +234,7 @@ const ICON = {
   flashcards: '<rect x="3" y="7" width="14" height="11" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v9"/><path d="M7 12h6"/>',
   generic: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>'
 };
+Object.assign(ICON, DVIcons.modules); // значки Solar из core/icons.js (true_false пока прежний)
 const MODS = [
   { id: 'fill_blanks', name: 'Fill Blanks', desc: 'В пропуски текста нужно вписать или выбрать слова.', ready: true },
   { id: 'image_to_gaps', name: 'Image to Gaps', desc: 'В пропуски текста ставятся картинки.', ready: true },
