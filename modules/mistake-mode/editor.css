@@ -36,17 +36,6 @@
 .mm-w.on { background:color-mix(in srgb, var(--bad) 22%, var(--card)); box-shadow:inset 0 -2px 0 var(--bad); font-weight:600; }
 
 /* Список ошибок */
-.mm-errs { margin-top:8px; }
-.mm-err { padding:4px 0; }
-.mm-errline { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
-.mm-fix { margin:2px 0 6px 0; }
-.mm-fixon { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:.9rem; cursor:pointer; }
-.mm-fixfields { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
-.mm-fixfields[hidden] { display:none; }
-.mm-fixfields .mm-in { flex:1 1 220px; width:auto; min-height:34px; }
-.mm-errw { flex:none; max-width:100%; overflow-wrap:anywhere; }
-.mm-expl { flex:1 1 200px; width:auto; min-height:34px; }
-.mm-err.broken .mm-errw { color:var(--bad); }
 .mm-bad { color:var(--bad); flex:1 1 200px; }
 
 /* Новый вид карточки (2026-10-30): шапка с переключателем «Текст / Ошибки», крупный текст, панель выбранного слова */
@@ -98,3 +87,21 @@
 .mm-sub .mm-lab { margin:2px 0 6px; }
 .mm-altrow .mm-lab { margin:2px 0; }
 @media (max-width:640px) { .mm-row { grid-template-columns:1fr auto; } .mm-cols { display:none; } .mm-cell { grid-column:1 / -1; } }
+
+/* Выравнивание размеров (2026-10-30): все кнопки-значки 36×36, поля и кнопки режима высотой 36 */
+.mm-ib { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; min-width:36px; min-height:36px; padding:0; border-radius:8px; flex:none; }
+.mm-ib svg, .mm-ib .mb-ico { width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.mm-tools2 { gap:2px; }
+.mm-seg button { min-height:34px; }
+.mm-seg { box-sizing:border-box; height:42px; align-items:center; }
+.mm-row .mm-in, .mm-alt .mm-in { height:36px; min-height:36px; padding:0 10px; }
+.mm-row .mm-modebtn { height:36px; min-height:36px; box-sizing:border-box; }
+.mm-modebtn svg { width:18px; height:18px; flex:none; }
+.mm-ibgap { width:36px; }
+.mm-ib.dot::after { top:5px; right:5px; }
+.mm-sub .mm-expl { width:100%; height:auto; min-height:60px; padding:8px 10px; }
+.mm-alt { display:flex; align-items:center; gap:6px; }
+.mm-alt .mm-in { flex:1; width:auto; }
+.mm-mediarow { justify-content:flex-start; }
+.mm-mediarow .mb-img { margin:0; }
+.mm-subrow, .mm-texttop { min-height:42px; }

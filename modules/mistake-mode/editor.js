@@ -278,11 +278,13 @@ const MistakeModeEditor = (() => {
         updateCounter();
       }
 
-      // Нажатие на слово ставит пометку (или выделяет уже помеченное); снять её можно ластиком в таблице
+      // Нажатие на слово ставит пометку, повторное снимает; в таблице пометку снимает ластик
       function choose(i, word) {
         const have = t.errors.find(e => !e.broken && e.index === i);
-        if (have) st.sel = have.id;
-        else {
+        if (have) { // повторное нажатие снимает ошибку (вместе с введённым исправлением и пояснением)
+          t.errors.splice(t.errors.indexOf(have), 1);
+          if (st.sel === have.id) st.sel = null;
+        } else {
           if (good().length >= MAX_ERRORS) return say(`В тексте не больше ${MAX_ERRORS} ошибок.`);
           const back = t.errors.find(e => e.broken && e.word === word); // потерянная пометка возвращается на это слово вместе с пояснением
           if (back) { back.index = i; delete back.broken; st.sel = back.id; }
