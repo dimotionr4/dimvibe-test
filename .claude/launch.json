@@ -69,6 +69,13 @@
       "runtimeArgs": ["-m", "http.server", "8891", "--bind", "127.0.0.1"],
       "port": 8891,
       "url": "http://127.0.0.1:8891"
+    },
+    {
+      "name": "site-ccfix",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8907", "--bind", "127.0.0.1"],
+      "port": 8907,
+      "url": "http://127.0.0.1:8907"
     }
   ]
 }
