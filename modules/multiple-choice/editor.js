@@ -131,7 +131,9 @@ const MultipleChoiceEditor = (() => {
 
   function summary(it) {
     const filled = it.options.filter(hasOptContent).length, n = it.correct.length;
-    return `вариантов: ${filled} · верных: ${n}`;
+    const stat = (ico, tip, v) => `<span class="mc-stat" title="${tip}" aria-label="${tip}: ${v}">${svg(ico)}${v}</span>`;
+    return stat('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>', 'Вариантов', filled)
+      + stat('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'Верных', n);
   }
 
   function row(it, i) {
@@ -361,13 +363,15 @@ const MultipleChoiceEditor = (() => {
       if (inputs.length) inputs[inputs.length - 1].focus();
     };
     const foot = el('div', 'mc-foot');
-    foot.append(add, el('span', 'mc-meta', summary(it)));
+    const meta = el('span', 'mc-meta');
+    meta.innerHTML = summary(it);
+    foot.append(add, meta);
     b.append(foot);
     return b;
   }
   const headSummary = it => {
     const m = listBox.querySelector(`.mc-row[data-id="${it.id}"] .mc-meta`);
-    if (m) m.textContent = summary(it);
+    if (m) m.innerHTML = summary(it);
   };
 
   function addItem(index) {
