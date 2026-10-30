@@ -338,11 +338,8 @@ const MistakeModeEditor = (() => {
         } else cell.append(el('span', 'mm-muted', '—'));
         row.append(cell);
         const hasExpl = !!String(e.explanation || '').trim();
-        const hasAlts = String(e.alts || '').trim() !== '';
         const tools = el('span', 'mm-tools2');
         tools.append(iconBtn(svg(COMMENT), 'Пояснение после ответа', () => { open.expl = !open.expl; drawTable(); }, (open.expl ? 'on' : '') + (hasExpl ? ' dot' : '')));
-        if (e.requiresCorrection) tools.append(iconBtn(svg('<path d="M4 7h10M4 12h10M4 17h6M17 14v6M14 17h6"/>'), 'Также засчитывать', () => { open.alts = !open.alts; drawTable(); }, (open.alts ? 'on' : '') + (hasAlts ? ' dot' : '')));
-        else tools.append(el('span', 'mm-ibgap'));
         tools.append(iconBtn(svg('<path d="M4 17l9-11 7 6-7 8H8z"/><path d="M9 20h11"/>'), 'Снять отметку', () => {
           t.errors.splice(t.errors.indexOf(e), 1);
           if (st.sel === e.id) st.sel = null;
@@ -364,11 +361,11 @@ const MistakeModeEditor = (() => {
           blk.append(x);
           setTimeout(() => autoFit(ex, 60), 0);
         }
-        if (open.alts && e.requiresCorrection) {
+        if (e.requiresCorrection) {
           // Допустимые ответы — плашки с крестиком; «+» открывает поле для нового (Enter или выход из поля — добавить)
           const alts = String(e.alts || '').split(/\r?\n/).filter(s => s.trim());
           const sync = () => { e.alts = alts.join('\n'); save(); };
-          const x = el('div', 'mm-sub');
+          const x = el('div', 'mm-sub mm-altsub');
           const chips = el('div', 'mm-chips');
           const drawChips = adding => {
             chips.innerHTML = '';
@@ -393,7 +390,8 @@ const MistakeModeEditor = (() => {
           const head = el('div', 'mm-altrow');
           head.append(el('span', 'mm-lab', 'Также засчитывать'), iconBtn(svg('<path d="M12 5v14M5 12h14"/>'), 'Добавить допустимый вариант', () => drawChips(true)));
           drawChips();
-          x.append(head, chips);
+          head.append(chips);
+          x.append(head);
           blk.append(x);
         }
         return blk;

@@ -133,3 +133,11 @@
 .mm-sw span { cursor:pointer; }
 .mm-sw span.on, .mm-swrow span.on { color:var(--accent); }
 .mm-swrow { display:inline-flex; align-items:center; gap:8px; height:36px; font-weight:600; color:var(--muted); cursor:pointer; }
+
+/* «Также засчитывать»: плюс заметной кнопкой, варианты справа от неё в той же строке */
+.mm-altrow { flex-wrap:wrap; gap:8px; }
+.mm-altrow > .mm-ib { border:1px solid var(--accent); color:var(--accent); background:var(--accent-soft); }
+.mm-altrow > .mm-ib:hover:not(:disabled) { background:var(--accent); color:#fff; }
+.mm-altrow > .mm-ib svg { stroke-width:2.5; }
+.mm-altrow .mm-chips { margin-top:0; }
+.mm-altsub .mm-lab { margin:0; }
