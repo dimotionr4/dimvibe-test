@@ -363,37 +363,35 @@ const MistakeModeEditor = (() => {
           setTimeout(() => autoFit(ex, 60), 0);
         }
         if (open.alts && e.requiresCorrection) {
+          // Допустимые ответы — плашки с крестиком; «+» открывает поле для нового (Enter или выход из поля — добавить)
           const alts = String(e.alts || '').split(/\r?\n/).filter(s => s.trim());
-          if (!alts.length) alts.push('');
-          const sync = () => { e.alts = alts.filter(s => s.trim()).join('\n'); save(); };
+          const sync = () => { e.alts = alts.join('\n'); save(); };
           const x = el('div', 'mm-sub');
-          const altBox = el('div', 'mm-alts');
-          const drawAlts = () => {
-            altBox.innerHTML = '';
+          const chips = el('div', 'mm-chips');
+          const drawChips = adding => {
+            chips.innerHTML = '';
             alts.forEach((s, j) => {
-              const r = el('div', 'mm-alt');
-              const inp = el('input', 'mm-in');
+              const c = el('span', 'mm-chip');
+              c.append(el('span', '', s), iconBtn(svg(CLOSE), `Убрать вариант «${s}»`, () => { alts.splice(j, 1); sync(); drawChips(); }, 'mm-chipx'));
+              chips.append(c);
+            });
+            if (adding) {
+              const inp = el('input', 'mm-in mm-chipin');
               inp.type = 'text';
               inp.placeholder = 'Допустимый ответ';
-              inp.value = s;
-              inp.setAttribute('aria-label', `Допустимый вариант ${j + 1}`);
-              inp.oninput = () => { alts[j] = inp.value; sync(); };
-              // ✓ подтверждает вариант; пустой вариант при этом убирается
-              const ok = () => { if (!inp.value.trim()) alts.splice(j, 1); sync(); drawTable(); };
-              inp.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); ok(); } };
-              r.append(inp, iconBtn(svg('<path d="M5 12l5 5 9-10"/>'), 'Готово', ok));
-              altBox.append(r);
-            });
+              inp.setAttribute('aria-label', 'Новый допустимый ответ');
+              let done = false;
+              const commit = () => { if (done) return; done = true; const v = inp.value.trim(); if (v) { alts.push(v); sync(); } drawChips(); };
+              inp.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); commit(); } else if (ev.key === 'Escape') { inp.value = ''; commit(); } };
+              inp.onblur = commit;
+              chips.append(inp);
+              setTimeout(() => inp.focus(), 0);
+            }
           };
           const head = el('div', 'mm-altrow');
-          head.append(el('span', 'mm-lab', 'Также засчитывать'), iconBtn(svg('<path d="M12 5v14M5 12h14"/>'), 'Добавить допустимый вариант', () => {
-            alts.push('');
-            drawAlts();
-            const l = altBox.querySelectorAll('input');
-            l[l.length - 1].focus();
-          }));
-          drawAlts();
-          x.append(head, altBox);
+          head.append(el('span', 'mm-lab', 'Также засчитывать'), iconBtn(svg('<path d="M12 5v14M5 12h14"/>'), 'Добавить допустимый вариант', () => drawChips(true)));
+          drawChips();
+          x.append(head, chips);
           blk.append(x);
         }
         return blk;

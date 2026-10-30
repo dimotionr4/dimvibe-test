@@ -105,3 +105,11 @@
 .mm-mediarow { justify-content:flex-start; }
 .mm-mediarow .mb-img { margin:0; }
 .mm-subrow, .mm-texttop { min-height:42px; }
+
+/* Допустимые ответы — плашки */
+.mm-chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.mm-chip { display:inline-flex; align-items:center; gap:4px; height:34px; box-sizing:border-box; padding:0 4px 0 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+.mm-ib.mm-chipx { width:26px; height:26px; min-width:26px; min-height:26px; }
+.mm-chipx svg { width:14px; height:14px; }
+.mm-in.mm-chipin { width:200px; height:34px; min-height:34px; }
+.mm-altrow { display:flex; align-items:center; gap:6px; }
