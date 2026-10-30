@@ -23,3 +23,9 @@
 .chk-center .actions { flex-direction:column; align-items:center; gap:8px; }
 .chk-center .score { flex:none; width:100%; text-align:center; }
 @media (max-width: 480px) { .chk-center .check-btn { width:100%; } }
+
+/* Результат на узком экране (2026-10-30): отдельная строка на всю ширину над кнопкой, слова не рвутся посреди рамки */
+@media (max-width: 480px) {
+  .score.result { flex:1 1 100%; order:-1; padding:8px 12px; line-height:1.4; }
+  html:not(.chk-left):not(.chk-center) .score.result + .check-btn { margin-left:auto; }
+}
