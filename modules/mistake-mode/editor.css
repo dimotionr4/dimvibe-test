@@ -48,3 +48,30 @@
 .mm-expl { flex:1 1 200px; width:auto; min-height:34px; }
 .mm-err.broken .mm-errw { color:var(--bad); }
 .mm-bad { color:var(--bad); flex:1 1 200px; }
+
+/* Новый вид карточки (2026-10-30): шапка с переключателем «Текст / Ошибки», крупный текст, панель выбранного слова */
+.mm-text.mm-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+.mm-texttop > b { flex:none; }
+.mm-seg { display:inline-flex; gap:2px; padding:3px; border:1px solid var(--line); border-radius:10px; background:var(--bg); margin:0 auto; }
+.mm-seg button { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:0 12px; border:none; border-radius:8px; background:transparent; color:var(--muted); font-weight:600; }
+.mm-seg button.on { background:var(--accent-soft); color:var(--accent); }
+.mm-ib.on { color:var(--accent); background:var(--accent-soft); border-radius:8px; }
+.mm-mediarow { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:6px 0; }
+.mm-mediarow[hidden], .mm-textins[hidden], .mm-lost[hidden], .mm-panel[hidden] { display:none; }
+.mm-textins { margin:6px 0; }
+.mm-pick { font-family:Georgia, 'Times New Roman', serif; font-size:1.25rem; line-height:2.1; min-height:96px; padding:16px 18px; border:1px solid var(--line); border-radius:12px; background:var(--bg); }
+.mm-w.on { box-shadow:inset 0 -2px 0 var(--bad); }
+.mm-w.cur { outline:2px solid var(--text); outline-offset:2px; border-radius:6px; }
+.mm-foot { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 12px; margin:8px 0; font-size:.85rem; }
+.mm-lostrow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:4px 0; }
+.mm-panel { margin-top:6px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:color-mix(in srgb, var(--accent) 6%, var(--card)); }
+.mm-ph { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.mm-ptitle { display:flex; align-items:baseline; gap:10px; }
+.mm-pw { color:var(--bad); font-size:1.05rem; overflow-wrap:anywhere; }
+.mm-modebtn { display:inline-flex; align-items:center; gap:8px; min-height:34px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--muted); font-weight:600; }
+.mm-modebtn.on { color:var(--accent); background:var(--accent-soft); border-color:transparent; }
+.mm-lab { color:var(--muted); font-size:.9rem; margin:12px 0 6px; }
+.mm-altrow { display:flex; align-items:center; gap:8px; }
+.mm-alts { display:grid; gap:6px; }
+.mm-alt { display:flex; align-items:center; gap:4px; }
+.mm-expl { min-height:60px; }

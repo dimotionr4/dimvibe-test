@@ -117,169 +117,272 @@ const MistakeModeEditor = (() => {
   const newTextId = () => nextId('t', d.texts.map(t => t.id));
   const newErrId = () => nextId('e', allErrors().map(e => e.id));
 
-  function card(t, k) {
-    const many = d.texts.length > 1;
-    const box = el('section', 'mm-text' + (many ? ' multi' : ''));
-    box.dataset.id = t.id;
-    if (many) box.append(head(t, k));
+  // Состояние карточки (не в файле): режим «Текст / Ошибки», выбранное слово, открытые поля
+  const ui = {};
+  const state = t => ui[t.id] || (ui[t.id] = { mode: t.text.trim() ? 'errors' : 'text', sel: null, instr: !!t.instruction.trim(), expl: {}, edited: false });
+  const plural = n => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'ошибка' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'ошибки' : 'ошибок')}`;
+  const iconBtn = (html, tip, fn, cls, disabled) => { const x = el('button', 'mm-ib' + (cls ? ' ' + cls : '')); x.type = 'button'; x.innerHTML = html; x.title = tip; x.setAttribute('aria-label', tip); x.disabled = !!disabled; x.onclick = fn; return x; };
+  const autoFit = (ta, min) => { ta.style.height = 'auto'; ta.style.height = Math.max(ta.scrollHeight + 2, min || 0) + 'px'; };
+  const CLOSE = '<path d="M6 6l12 12M18 6L6 18"/>';
+  const COMMENT = '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>';
 
-    // Картинка текста — большая плитка слева от текста, звук — перед полем текста (наброски владельца 2026-10-27…28, core/mediabar.js)
-    const audio = MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); }, 'Загрузить звук');
-    const pic = MediaUI.imageControl(t.image, { save, after: audio, audioOutside: true, big: true });
+  function card(t, k) {
+    const st = state(t);
+    const box = el('section', 'mm-text mm-card');
+    box.dataset.id = t.id;
+    const headBox = el('div', 'mm-texthead');
+    const mediaRow = el('div', 'mm-mediarow');
+    const instr = el('textarea', 'mm-in mm-textins');
+    instr.rows = 1;
+    instr.placeholder = 'Инструкция к тексту (необязательно), например: Найдите три ошибки в предложениях';
+    instr.value = t.instruction;
+    instr.setAttribute('aria-label', `Инструкция к тексту ${k + 1}`);
+    instr.oninput = () => { t.instruction = instr.value; autoFit(instr, 38); save(); };
+    const body = el('div', 'mm-cbody');
 
     const ta = el('textarea', 'mm-in mm-body');
     ta.rows = 4;
     ta.placeholder = 'Вставьте или напишите текст с ошибками, например: She go to school every day.';
     ta.value = t.text;
     ta.setAttribute('aria-label', `Текст ${k + 1}`);
-    const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.max(ta.scrollHeight + 2, 96) + 'px'; };
     const count = el('div', 'mm-muted mm-count');
-    const pick = el('div', 'mm-pick');
-    pick.setAttribute('role', 'group');
-    pick.setAttribute('aria-label', 'Слова текста: нажмите на слово, чтобы пометить его как ошибку');
-    const errs = el('div', 'mm-errs');
-
-    function refresh() {
-      const n = wordCount(t);
-      count.textContent = `Слов: ${n}/${MAX_WORDS}`;
-      count.classList.toggle('mm-limit', n > MAX_WORDS);
-      pick.innerHTML = '';
-      const parts = MistakeTokens.split(t.text);
-      if (!n) pick.append(el('span', 'mm-muted', 'Когда вы введёте текст, здесь можно будет нажимать на слова.'));
-      parts.forEach(p => {
-        if (!p.word) { pick.append(document.createTextNode(p.s)); return; }
-        const on = t.errors.some(e => !e.broken && e.index === p.i);
-        const w = el('span', 'mm-w' + (on ? ' on' : ''), p.s);
-        w.tabIndex = 0;
-        w.setAttribute('role', 'button');
-        w.setAttribute('aria-pressed', String(on));
-        const go = () => toggle(t, p.i, p.s, refresh);
-        w.onclick = go;
-        w.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-        pick.append(w);
-      });
-      errs.innerHTML = '';
-      t.errors.slice().sort((a, b) => a.index - b.index).forEach(e => errs.append(errRow(t, e, refresh)));
-      updateCounter();
-    }
-
+    const showCount = () => { const n = wordCount(t); count.textContent = `Слов: ${n}/${MAX_WORDS}`; count.classList.toggle('mm-limit', n > MAX_WORDS); };
     ta.oninput = () => {
       const old = MistakeTokens.words(t.text);
       t.text = ta.value;
       MistakeTokens.reanchor(old, MistakeTokens.words(t.text), t.errors);
-      fit();
+      st.edited = true;
+      autoFit(ta, 96);
+      showCount();
       save();
-      refresh();
+      updateCounter();
     };
-    setTimeout(fit, 0);
-    box.append(MediaUI.side(pic, MediaUI.withAudio(audio, ta, true), count), el('p', 'mm-muted mm-hint', 'Нажмите на слово, чтобы пометить его как ошибку. Повторное нажатие снимает пометку.'), pick, errs);
-    refresh();
-    return box;
-  }
 
-  function toggle(t, i, word, refresh) {
-    const have = t.errors.findIndex(e => !e.broken && e.index === i);
-    if (have >= 0) t.errors.splice(have, 1);
-    else {
-      if (t.errors.filter(e => !e.broken).length >= MAX_ERRORS) return say(`В тексте не больше ${MAX_ERRORS} ошибок.`);
-      const lost = t.errors.find(e => e.broken && e.word === word); // потерянная пометка возвращается на это слово вместе с пояснением
-      if (lost) { lost.index = i; delete lost.broken; }
-      else t.errors.push({ id: newErrId(), index: i, word, explanation: '', requiresCorrection: false, correction: '', alts: '' });
+    // ---- Шапка ----
+    function drawHead() {
+      headBox.innerHTML = '';
+      const top = el('div', 'mm-texttop');
+      top.append(el('b', '', `Текст ${k + 1}`));
+      const seg = el('div', 'mm-seg');
+      seg.setAttribute('role', 'group');
+      [['text', 'Текст', '<path d="M5 6V4h14v2M12 4v16M9 20h6"/>'], ['errors', 'Ошибки', '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 7l3 3"/>']].forEach(([m, name, ic]) => {
+        const b = el('button', st.mode === m ? 'on' : '');
+        b.type = 'button';
+        b.innerHTML = svg(ic) + `<span>${name}</span>`;
+        b.setAttribute('aria-pressed', String(st.mode === m));
+        b.onclick = () => setMode(m);
+        seg.append(b);
+      });
+      top.append(seg);
+      const tools = el('span', 'mm-tools2');
+      const many = d.texts.length;
+      tools.append(
+        iconBtn(svg(COMMENT), 'Инструкция к тексту', () => { st.instr = !st.instr; drawHead(); showInstr(); if (st.instr) instr.focus(); }, st.instr ? 'on' : ''),
+        iconBtn(MediaUI.ICON.image, hasPic(t.image) ? 'Заменить картинку' : 'Добавить картинку', () => MediaUI.dialog('image', {
+          replace: hasPic(t.image),
+          done: p => { t.image.url = ''; t.image.media = p; mediaChanged(); },
+          onLink: u => { t.image.media = ''; t.image.url = u; mediaChanged(); },
+        }), hasPic(t.image) ? 'on' : ''),
+        iconBtn(MediaUI.ICON.audio, t.audio ? 'Заменить звук' : 'Добавить звук', () => MediaUI.dialog('audio', { replace: !!t.audio, done: p => { t.audio = p; mediaChanged(); } }), t.audio ? 'on' : ''),
+        iconBtn(svg('<path d="M6 15l6-6 6 6"/>'), 'Текст выше', () => move(k, -1), '', k === 0),
+        iconBtn(svg('<path d="M6 9l6 6 6-6"/>'), 'Текст ниже', () => move(k, 1), '', k === many - 1),
+        iconBtn(svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать текст', () => duplicate(k), '', many >= MAX_TEXTS),
+      );
+      if (delAsk === t.id) {
+        const q = el('span', 'mm-ask');
+        const yes = el('button', 'mm-yes', 'Удалить текст');
+        yes.type = 'button';
+        yes.onclick = () => remove(k);
+        const no = el('button', '', 'Нет');
+        no.type = 'button';
+        no.onclick = () => { delAsk = null; drawList(); };
+        q.append(yes, no);
+        tools.append(q);
+      } else tools.append(iconBtn(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить текст', () => { if (t.text.trim() || t.instruction.trim()) { delAsk = t.id; drawList(); } else remove(k); }, 'mm-del'));
+      top.append(tools);
+      headBox.append(top);
     }
-    save();
-    refresh();
-  }
-
-  function errRow(t, e, refresh) {
-    const r = el('div', 'mm-err' + (e.broken ? ' broken' : ''));
-    r.dataset.id = e.id;
-    const line = el('div', 'mm-errline');
-    line.append(el('b', 'mm-errw', `«${e.word}»`));
-    if (e.broken) line.append(el('span', 'mm-bad', 'Пометка потеряна после правки текста: нажмите на это слово в тексте заново или удалите пометку.'));
-    else {
-      const ta = el('input', 'mm-in mm-expl');
-      ta.type = 'text';
-      ta.placeholder = 'Пояснение (необязательно)';
-      ta.value = e.explanation || '';
-      ta.setAttribute('aria-label', `Пояснение к ошибке «${e.word}»`);
-      ta.oninput = () => { e.explanation = ta.value; save(); };
-      line.append(ta);
+    function showInstr() { instr.hidden = !st.instr; if (st.instr) autoFit(instr, 38); }
+    function mediaChanged() { save(); drawMedia(); drawHead(); }
+    function drawMedia() {
+      mediaRow.innerHTML = '';
+      if (hasPic(t.image)) mediaRow.append(MediaUI.imageControl(t.image, { save, change: () => { drawMedia(); drawHead(); } }));
+      if (t.audio) mediaRow.append(MediaUI.picker('audio', () => t.audio || '', v => { t.audio = v; save(); if (!v) { drawMedia(); drawHead(); } }, 'Загрузить звук'));
+      mediaRow.hidden = !mediaRow.childNodes.length;
     }
-    const del = el('button', 'mm-ib mm-del');
-    del.type = 'button';
-    del.innerHTML = svg('<path d="M6 6l12 12M18 6L6 18"/>');
-    del.title = 'Снять пометку';
-    del.setAttribute('aria-label', `Снять пометку с «${e.word}»`);
-    del.onclick = () => { t.errors.splice(t.errors.indexOf(e), 1); save(); refresh(); };
-    line.append(del);
-    r.append(line);
-    if (!e.broken) r.append(fixBox(e));
-    return r;
-  }
+    function setMode(m) {
+      if (st.mode === m) return;
+      st.mode = m;
+      if (m === 'errors' && st.edited) {
+        st.edited = false;
+        if (t.errors.some(e => e.broken)) say('Текст обновлён. Часть пометок потеряна: нажмите эти слова заново или удалите пометки.');
+        else if (t.errors.length) say('Текст обновлён. Разметка неизменённых слов сохранена.');
+      }
+      drawHead();
+      drawBody();
+    }
 
-  // Исправление: включатель и поля ответов. Выключение не стирает введённое (поля просто скрываются)
-  function fixBox(e) {
-    const box = el('div', 'mm-fix');
-    const lab = el('label', 'mm-fixon');
-    const cb = el('input');
-    cb.type = 'checkbox';
-    cb.checked = !!e.requiresCorrection;
-    lab.append(cb, document.createTextNode(' Ученик должен ввести исправление'));
-    box.append(lab);
-    const fields = el('div', 'mm-fixfields');
-    fields.hidden = !e.requiresCorrection;
-    const main = el('input', 'mm-in');
-    main.type = 'text';
-    main.placeholder = 'Правильное исправление, например: goes';
-    main.value = e.correction || '';
-    main.setAttribute('aria-label', `Правильное исправление для «${e.word}»`);
-    main.oninput = () => { e.correction = main.value; save(); };
-    const alts = el('textarea', 'mm-in mm-alts');
-    alts.rows = 1;
-    alts.placeholder = 'Другие допустимые варианты, каждый с новой строки (необязательно)';
-    alts.value = e.alts || '';
-    alts.setAttribute('aria-label', `Допустимые варианты для «${e.word}»`);
-    const fit = () => { alts.style.height = 'auto'; alts.style.height = alts.scrollHeight + 2 + 'px'; };
-    alts.oninput = () => { e.alts = alts.value; fit(); save(); };
-    fields.append(main, alts);
-    cb.onchange = () => { e.requiresCorrection = cb.checked; fields.hidden = !cb.checked; save(); if (cb.checked) { fit(); main.focus(); } };
-    box.append(fields);
+    // ---- Тело: текст или ошибки ----
+    function drawBody() {
+      body.innerHTML = '';
+      if (st.mode === 'text') {
+        body.append(ta, count);
+        showCount();
+        setTimeout(() => autoFit(ta, 96), 0);
+        return;
+      }
+      const pick = el('div', 'mm-pick');
+      pick.setAttribute('role', 'group');
+      pick.setAttribute('aria-label', 'Слова текста: нажмите на слово, чтобы настроить ошибку');
+      const foot = el('div', 'mm-foot');
+      const hint = el('span', 'mm-muted');
+      const info = el('span', 'mm-muted');
+      foot.append(hint, info);
+      const lost = el('div', 'mm-lost');
+      const panel = el('div', 'mm-panel');
+      body.append(pick, foot, lost, panel);
+
+      const good = () => t.errors.filter(e => !e.broken).sort((a, b) => a.index - b.index);
+
+      function refresh() {
+        const n = wordCount(t);
+        pick.innerHTML = '';
+        if (!n) pick.append(el('span', 'mm-muted', 'Когда вы введёте текст, здесь можно будет нажимать на слова.'));
+        MistakeTokens.split(t.text).forEach(p => {
+          if (!p.word) { pick.append(document.createTextNode(p.s)); return; }
+          const e = t.errors.find(x => !x.broken && x.index === p.i);
+          const w = el('span', 'mm-w' + (e ? ' on' : '') + (e && e.id === st.sel ? ' cur' : ''), p.s);
+          w.tabIndex = 0;
+          w.setAttribute('role', 'button');
+          w.setAttribute('aria-pressed', String(!!e));
+          const go = () => choose(p.i, p.s);
+          w.onclick = go;
+          w.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } };
+          pick.append(w);
+        });
+        info.textContent = `${plural(good().length)} · ${n}/${MAX_WORDS} слов`;
+        info.classList.toggle('mm-limit', n > MAX_WORDS);
+        lost.innerHTML = '';
+        t.errors.filter(e => e.broken).forEach(e => {
+          const r = el('div', 'mm-lostrow');
+          r.append(el('b', '', `«${e.word}»`), el('span', 'mm-bad', 'Пометка потеряна после правки текста: нажмите это слово в тексте заново или удалите пометку.'),
+            iconBtn(svg(CLOSE), `Удалить пометку «${e.word}»`, () => { t.errors.splice(t.errors.indexOf(e), 1); save(); refresh(); }, 'mm-del'));
+          lost.append(r);
+        });
+        lost.hidden = !lost.childNodes.length;
+        drawPanel();
+        updateCounter();
+      }
+
+      // Нажатие на помеченное слово открывает его панель, на обычное — ставит пометку; снять её можно ластиком
+      function choose(i, word) {
+        const have = t.errors.find(e => !e.broken && e.index === i);
+        if (have) st.sel = have.id;
+        else {
+          if (good().length >= MAX_ERRORS) return say(`В тексте не больше ${MAX_ERRORS} ошибок.`);
+          const back = t.errors.find(e => e.broken && e.word === word); // потерянная пометка возвращается на это слово вместе с пояснением
+          if (back) { back.index = i; delete back.broken; st.sel = back.id; }
+          else {
+            const e = { id: newErrId(), index: i, word, explanation: '', requiresCorrection: false, correction: '', alts: '' };
+            t.errors.push(e);
+            st.sel = e.id;
+          }
+        }
+        save();
+        refresh();
+      }
+
+      function drawPanel() {
+        const list = good();
+        const cur = list.find(e => e.id === st.sel);
+        panel.innerHTML = '';
+        panel.hidden = !cur;
+        hint.textContent = cur ? 'Снять отметку — иконка ластика' : 'Нажмите слово → настройте ошибку';
+        if (!cur) return;
+        const pos = list.indexOf(cur);
+        const go = dir => { st.sel = list[(pos + dir + list.length) % list.length].id; refresh(); };
+        const ph = el('div', 'mm-ph');
+        const title = el('span', 'mm-ptitle');
+        title.append(el('b', 'mm-pw', cur.word), el('span', 'mm-muted', `${pos + 1} / ${list.length}`));
+        const explOpen = cur.id in st.expl ? st.expl[cur.id] : !!String(cur.explanation || '').trim();
+        const tools = el('span', 'mm-tools2');
+        tools.append(
+          iconBtn(svg('<path d="M15 6l-6 6 6 6"/>'), 'Предыдущая ошибка', () => go(-1), '', list.length < 2),
+          iconBtn(svg('<path d="M9 6l6 6-6 6"/>'), 'Следующая ошибка', () => go(1), '', list.length < 2),
+          iconBtn(svg(COMMENT), 'Пояснение после ответа', () => { st.expl[cur.id] = !explOpen; drawPanel(); }, explOpen ? 'on' : ''),
+          iconBtn(svg('<path d="M4 17l9-11 7 6-7 8H8z"/><path d="M9 20h11"/>'), 'Снять отметку', () => {
+            t.errors.splice(t.errors.indexOf(cur), 1);
+            const rest = good();
+            st.sel = rest.length ? rest[Math.min(pos, rest.length - 1)].id : null;
+            save();
+            refresh();
+          }),
+          iconBtn(svg(CLOSE), 'Закрыть', () => { st.sel = null; refresh(); }),
+        );
+        ph.append(title, tools);
+        panel.append(ph);
+
+        const mode = el('button', 'mm-modebtn' + (cur.requiresCorrection ? ' on' : ''));
+        mode.type = 'button';
+        mode.innerHTML = svg('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>') + `<span>${cur.requiresCorrection ? 'Ввести исправление' : 'Только найти ошибку'}</span>`;
+        mode.title = 'Нажмите, чтобы переключить';
+        mode.onclick = () => { cur.requiresCorrection = !cur.requiresCorrection; save(); drawPanel(); };
+        panel.append(mode);
+
+        if (cur.requiresCorrection) {
+          panel.append(el('div', 'mm-lab', 'Правильное исправление'));
+          const main = el('input', 'mm-in');
+          main.type = 'text';
+          main.value = cur.correction || '';
+          main.setAttribute('aria-label', `Правильное исправление для «${cur.word}»`);
+          main.oninput = () => { cur.correction = main.value; save(); };
+          panel.append(main);
+          const alts = String(cur.alts || '').split(/\r?\n/).filter(s => s.trim());
+          const sync = () => { cur.alts = alts.filter(s => s.trim()).join('\n'); save(); };
+          const altBox = el('div', 'mm-alts');
+          const drawAlts = () => {
+            altBox.innerHTML = '';
+            alts.forEach((s, j) => {
+              const r = el('div', 'mm-alt');
+              const inp = el('input', 'mm-in');
+              inp.type = 'text';
+              inp.value = s;
+              inp.setAttribute('aria-label', `Допустимый вариант ${j + 1}`);
+              inp.oninput = () => { alts[j] = inp.value; sync(); };
+              r.append(inp, iconBtn(svg(CLOSE), 'Убрать вариант', () => { alts.splice(j, 1); sync(); drawAlts(); }, 'mm-del'));
+              altBox.append(r);
+            });
+          };
+          const al = el('div', 'mm-altrow');
+          al.append(el('span', 'mm-lab', 'Также засчитывать'), iconBtn(svg('<path d="M12 5v14M5 12h14"/>'), 'Добавить допустимый вариант', () => {
+            alts.push('');
+            drawAlts();
+            const l = altBox.querySelectorAll('input');
+            l[l.length - 1].focus();
+          }));
+          drawAlts();
+          panel.append(al, altBox);
+        }
+        if (explOpen) {
+          panel.append(el('div', 'mm-lab', 'Пояснение после ответа'));
+          const ex = el('textarea', 'mm-in mm-expl');
+          ex.rows = 2;
+          ex.value = cur.explanation || '';
+          ex.setAttribute('aria-label', `Пояснение к ошибке «${cur.word}»`);
+          ex.oninput = () => { cur.explanation = ex.value; autoFit(ex, 60); save(); };
+          panel.append(ex);
+          setTimeout(() => autoFit(ex, 60), 0);
+        }
+      }
+      refresh();
+    }
+
+    drawHead();
+    drawMedia();
+    showInstr();
+    drawBody();
+    box.append(headBox, mediaRow, instr, body);
     return box;
-  }
-
-  function head(t, k) {
-    const h = el('div', 'mm-texthead');
-    const top = el('div', 'mm-texttop');
-    top.append(el('b', '', `Текст ${k + 1}`));
-    const tools = el('span', 'mm-tools2');
-    const b = (html, tip, fn, disabled) => { const x = el('button', 'mm-ib'); x.type = 'button'; x.innerHTML = html; x.title = tip; x.setAttribute('aria-label', tip + ', текст ' + (k + 1)); x.disabled = !!disabled; x.onclick = fn; return x; };
-    tools.append(
-      b(svg('<path d="M6 15l6-6 6 6"/>'), 'Текст выше', () => move(k, -1), k === 0),
-      b(svg('<path d="M6 9l6 6 6-6"/>'), 'Текст ниже', () => move(k, 1), k === d.texts.length - 1),
-      b(svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать текст', () => duplicate(k), d.texts.length >= MAX_TEXTS),
-    );
-    if (delAsk === t.id) {
-      const q = el('span', 'mm-ask');
-      const yes = el('button', 'mm-yes', 'Удалить текст');
-      yes.type = 'button';
-      yes.onclick = () => remove(k);
-      const no = el('button', '', 'Нет');
-      no.type = 'button';
-      no.onclick = () => { delAsk = null; drawList(); };
-      q.append(yes, no);
-      tools.append(q);
-    } else tools.append(b(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить текст', () => { if (t.text.trim() || t.instruction.trim()) { delAsk = t.id; drawList(); } else remove(k); }));
-    top.append(tools);
-    const ins = el('textarea', 'mm-in mm-textins');
-    ins.rows = 1;
-    ins.placeholder = 'Инструкция к тексту (необязательно), например: Найдите три ошибки в предложениях';
-    ins.value = t.instruction;
-    ins.setAttribute('aria-label', `Инструкция к тексту ${k + 1}`);
-    const fit = () => { ins.style.height = 'auto'; ins.style.height = ins.scrollHeight + 2 + 'px'; };
-    ins.oninput = () => { t.instruction = ins.value; fit(); save(); };
-    setTimeout(fit, 0);
-    h.append(top, ins);
-    return h;
   }
 
   function addText() {
