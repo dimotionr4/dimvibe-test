@@ -163,18 +163,21 @@ const MistakeModeEditor = (() => {
       headBox.innerHTML = '';
       const top = el('div', 'mm-texttop');
       top.append(el('b', '', `Текст ${k + 1}`));
-      const seg = el('div', 'mm-seg');
-      seg.setAttribute('role', 'group');
-      [['text', 'Текст', '<path d="M5 6V4h14v2M12 4v16M9 20h6"/>'], ['errors', 'Ошибки', '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 7l3 3"/>']].forEach(([m, name, ic]) => {
-        const b = el('button', st.mode === m ? 'on' : '');
-        b.type = 'button';
-        b.innerHTML = svg(ic) + `<span>${name}</span>`;
-        b.setAttribute('aria-pressed', String(st.mode === m));
-        b.onclick = () => setMode(m);
-        seg.append(b);
-      });
-      const sub = el('div', 'mm-subrow');
-      sub.append(seg);
+      // Ползунок: влево режим «Текст», вправо «Ошибки»
+      const seg = el('div', 'mm-sw');
+      const swText = el('span', st.mode === 'text' ? 'on' : '', 'Текст');
+      const swErr = el('span', st.mode === 'errors' ? 'on' : '', 'Ошибки');
+      const swBtn = el('button', 'mm-switch' + (st.mode === 'errors' ? ' on' : ''));
+      swBtn.type = 'button';
+      swBtn.setAttribute('role', 'switch');
+      swBtn.setAttribute('aria-checked', String(st.mode === 'errors'));
+      swBtn.setAttribute('aria-label', 'Режим: текст или ошибки');
+      swBtn.append(el('i'));
+      swBtn.onclick = () => setMode(st.mode === 'errors' ? 'text' : 'errors');
+      swText.onclick = () => setMode('text');
+      swErr.onclick = () => setMode('errors');
+      seg.append(swText, swBtn, swErr);
+      top.append(seg);
       const media = el('span', 'mm-tools2');
       const tools = el('span', 'mm-tools2');
       const many = d.texts.length;
@@ -203,9 +206,8 @@ const MistakeModeEditor = (() => {
         q.append(yes, no);
         tools.append(q);
       } else tools.append(iconBtn(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить текст', () => { if (t.text.trim() || t.instruction.trim()) { delAsk = t.id; drawList(); } else remove(k); }, 'mm-del'));
-      top.append(tools);
-      sub.append(media);
-      headBox.append(top, sub);
+      top.append(media, tools);
+      headBox.append(top);
     }
     function showInstr() { instr.hidden = !st.instr; if (st.instr) autoFit(instr, 38); }
     function mediaChanged() { save(); drawMedia(); drawHead(); }
@@ -317,13 +319,17 @@ const MistakeModeEditor = (() => {
         const row = el('div', 'mm-row');
         const open = st.open[e.id] || (st.open[e.id] = {});
         row.append(el('b', 'mm-ew', e.word));
-        const mode = el('button', 'mm-modebtn' + (e.requiresCorrection ? ' on' : ''));
-        mode.type = 'button';
-        mode.innerHTML = e.requiresCorrection
-          ? svg('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>') + '<span>Исправить</span>'
-          : svg('<path d="M5 4l14 7-6 2-2 6z"/>') + '<span>Найти</span>';
-        mode.title = 'Нажмите, чтобы переключить: «Найти» — ученик только находит ошибку, «Исправить» — ещё вводит исправление';
-        mode.onclick = () => { e.requiresCorrection = !e.requiresCorrection; save(); drawTable(); };
+        // Ползунок «Найти / Исправить»: выключен — ученик только находит ошибку, включён — ещё вводит исправление
+        const mode = el('label', 'mm-swrow');
+        const sw = el('button', 'mm-switch' + (e.requiresCorrection ? ' on' : ''));
+        sw.type = 'button';
+        sw.setAttribute('role', 'switch');
+        sw.setAttribute('aria-checked', String(!!e.requiresCorrection));
+        sw.setAttribute('aria-label', `Ученик вводит исправление для «${e.word}»`);
+        sw.append(el('i'));
+        sw.onclick = () => { e.requiresCorrection = !e.requiresCorrection; save(); drawTable(); };
+        mode.append(sw, el('span', e.requiresCorrection ? 'on' : '', e.requiresCorrection ? 'Исправить' : 'Найти'));
+        mode.title = 'Найти — ученик только находит ошибку; Исправить — ещё вводит исправление';
         row.append(mode);
         const cell = el('div', 'mm-cell');
         if (e.requiresCorrection) {
