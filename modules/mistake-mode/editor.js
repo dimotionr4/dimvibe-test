@@ -119,7 +119,7 @@ const MistakeModeEditor = (() => {
 
   // Состояние карточки (не в файле): режим «Текст / Ошибки», выбранное слово, открытые поля
   const ui = {};
-  const state = t => ui[t.id] || (ui[t.id] = { mode: t.text.trim() ? 'errors' : 'text', sel: null, instr: !!t.instruction.trim(), expl: {}, edited: false });
+  const state = t => ui[t.id] || (ui[t.id] = { mode: t.text.trim() ? 'errors' : 'text', sel: null, instr: !!t.instruction.trim(), open: {}, edited: false });
   const plural = n => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'ошибка' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'ошибки' : 'ошибок')}`;
   const iconBtn = (html, tip, fn, cls, disabled) => { const x = el('button', 'mm-ib' + (cls ? ' ' + cls : '')); x.type = 'button'; x.innerHTML = html; x.title = tip; x.setAttribute('aria-label', tip); x.disabled = !!disabled; x.onclick = fn; return x; };
   const autoFit = (ta, min) => { ta.style.height = 'auto'; ta.style.height = Math.max(ta.scrollHeight + 2, min || 0) + 'px'; };
@@ -173,10 +173,12 @@ const MistakeModeEditor = (() => {
         b.onclick = () => setMode(m);
         seg.append(b);
       });
-      top.append(seg);
+      const sub = el('div', 'mm-subrow');
+      sub.append(seg);
+      const media = el('span', 'mm-tools2');
       const tools = el('span', 'mm-tools2');
       const many = d.texts.length;
-      tools.append(
+      media.append(
         iconBtn(svg(COMMENT), 'Инструкция к тексту', () => { st.instr = !st.instr; drawHead(); showInstr(); if (st.instr) instr.focus(); }, st.instr ? 'on' : ''),
         iconBtn(MediaUI.ICON.image, hasPic(t.image) ? 'Заменить картинку' : 'Добавить картинку', () => MediaUI.dialog('image', {
           replace: hasPic(t.image),
@@ -184,6 +186,8 @@ const MistakeModeEditor = (() => {
           onLink: u => { t.image.media = ''; t.image.url = u; mediaChanged(); },
         }), hasPic(t.image) ? 'on' : ''),
         iconBtn(MediaUI.ICON.audio, t.audio ? 'Заменить звук' : 'Добавить звук', () => MediaUI.dialog('audio', { replace: !!t.audio, done: p => { t.audio = p; mediaChanged(); } }), t.audio ? 'on' : ''),
+      );
+      tools.append(
         iconBtn(svg('<path d="M6 15l6-6 6 6"/>'), 'Текст выше', () => move(k, -1), '', k === 0),
         iconBtn(svg('<path d="M6 9l6 6 6-6"/>'), 'Текст ниже', () => move(k, 1), '', k === many - 1),
         iconBtn(svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>'), 'Дублировать текст', () => duplicate(k), '', many >= MAX_TEXTS),
@@ -200,7 +204,8 @@ const MistakeModeEditor = (() => {
         tools.append(q);
       } else tools.append(iconBtn(svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>'), 'Удалить текст', () => { if (t.text.trim() || t.instruction.trim()) { delAsk = t.id; drawList(); } else remove(k); }, 'mm-del'));
       top.append(tools);
-      headBox.append(top);
+      sub.append(media);
+      headBox.append(top, sub);
     }
     function showInstr() { instr.hidden = !st.instr; if (st.instr) autoFit(instr, 38); }
     function mediaChanged() { save(); drawMedia(); drawHead(); }
@@ -235,12 +240,11 @@ const MistakeModeEditor = (() => {
       pick.setAttribute('role', 'group');
       pick.setAttribute('aria-label', 'Слова текста: нажмите на слово, чтобы настроить ошибку');
       const foot = el('div', 'mm-foot');
-      const hint = el('span', 'mm-muted');
       const info = el('span', 'mm-muted');
-      foot.append(hint, info);
+      foot.append(el('span', 'mm-muted', 'Нажмите слово → настройте ошибку'), info);
       const lost = el('div', 'mm-lost');
-      const panel = el('div', 'mm-panel');
-      body.append(pick, foot, lost, panel);
+      const table = el('div', 'mm-table');
+      body.append(pick, foot, lost, table);
 
       const good = () => t.errors.filter(e => !e.broken).sort((a, b) => a.index - b.index);
 
@@ -260,7 +264,7 @@ const MistakeModeEditor = (() => {
           w.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } };
           pick.append(w);
         });
-        info.textContent = `${plural(good().length)} · ${n}/${MAX_WORDS} слов`;
+        info.textContent = `${n}/${MAX_WORDS} слов`;
         info.classList.toggle('mm-limit', n > MAX_WORDS);
         lost.innerHTML = '';
         t.errors.filter(e => e.broken).forEach(e => {
@@ -270,11 +274,11 @@ const MistakeModeEditor = (() => {
           lost.append(r);
         });
         lost.hidden = !lost.childNodes.length;
-        drawPanel();
+        drawTable();
         updateCounter();
       }
 
-      // Нажатие на помеченное слово открывает его панель, на обычное — ставит пометку; снять её можно ластиком
+      // Нажатие на слово ставит пометку (или выделяет уже помеченное); снять её можно ластиком в таблице
       function choose(i, word) {
         const have = t.errors.find(e => !e.broken && e.index === i);
         if (have) st.sel = have.id;
@@ -292,53 +296,75 @@ const MistakeModeEditor = (() => {
         refresh();
       }
 
-      function drawPanel() {
+      // Таблица «Исправления»: строка на ошибку; под строкой по желанию пояснение и допустимые варианты
+      function drawTable() {
         const list = good();
-        const cur = list.find(e => e.id === st.sel);
-        panel.innerHTML = '';
-        panel.hidden = !cur;
-        hint.textContent = cur ? 'Снять отметку — иконка ластика' : 'Нажмите слово → настройте ошибку';
-        if (!cur) return;
-        const pos = list.indexOf(cur);
-        const go = dir => { st.sel = list[(pos + dir + list.length) % list.length].id; refresh(); };
-        const ph = el('div', 'mm-ph');
-        const title = el('span', 'mm-ptitle');
-        title.append(el('b', 'mm-pw', cur.word), el('span', 'mm-muted', `${pos + 1} / ${list.length}`));
-        const explOpen = cur.id in st.expl ? st.expl[cur.id] : !!String(cur.explanation || '').trim();
-        const tools = el('span', 'mm-tools2');
-        tools.append(
-          iconBtn(svg('<path d="M15 6l-6 6 6 6"/>'), 'Предыдущая ошибка', () => go(-1), '', list.length < 2),
-          iconBtn(svg('<path d="M9 6l6 6-6 6"/>'), 'Следующая ошибка', () => go(1), '', list.length < 2),
-          iconBtn(svg(COMMENT), 'Пояснение после ответа', () => { st.expl[cur.id] = !explOpen; drawPanel(); }, explOpen ? 'on' : ''),
-          iconBtn(svg('<path d="M4 17l9-11 7 6-7 8H8z"/><path d="M9 20h11"/>'), 'Снять отметку', () => {
-            t.errors.splice(t.errors.indexOf(cur), 1);
-            const rest = good();
-            st.sel = rest.length ? rest[Math.min(pos, rest.length - 1)].id : null;
-            save();
-            refresh();
-          }),
-          iconBtn(svg(CLOSE), 'Закрыть', () => { st.sel = null; refresh(); }),
-        );
-        ph.append(title, tools);
-        panel.append(ph);
+        table.innerHTML = '';
+        table.hidden = !list.length;
+        if (!list.length) return;
+        table.append(el('div', 'mm-ttitle', `Исправления · ${list.length}`));
+        const cols = el('div', 'mm-row mm-cols');
+        ['Ошибка', 'Действие ученика', 'Исправление'].forEach(c => cols.append(el('span', '', c)));
+        cols.append(el('span'));
+        table.append(cols);
+        list.forEach(e => table.append(errBlock(e)));
+      }
 
-        const mode = el('button', 'mm-modebtn' + (cur.requiresCorrection ? ' on' : ''));
+      function errBlock(e) {
+        const blk = el('div', 'mm-eb' + (e.id === st.sel ? ' cur' : ''));
+        const row = el('div', 'mm-row');
+        const open = st.open[e.id] || (st.open[e.id] = {});
+        row.append(el('b', 'mm-ew', e.word));
+        const mode = el('button', 'mm-modebtn' + (e.requiresCorrection ? ' on' : ''));
         mode.type = 'button';
-        mode.innerHTML = svg('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>') + `<span>${cur.requiresCorrection ? 'Ввести исправление' : 'Только найти ошибку'}</span>`;
-        mode.title = 'Нажмите, чтобы переключить';
-        mode.onclick = () => { cur.requiresCorrection = !cur.requiresCorrection; save(); drawPanel(); };
-        panel.append(mode);
-
-        if (cur.requiresCorrection) {
-          panel.append(el('div', 'mm-lab', 'Правильное исправление'));
+        mode.innerHTML = e.requiresCorrection
+          ? svg('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>') + '<span>Исправить</span>'
+          : svg('<path d="M5 4l14 7-6 2-2 6z"/>') + '<span>Найти</span>';
+        mode.title = 'Нажмите, чтобы переключить: «Найти» — ученик только находит ошибку, «Исправить» — ещё вводит исправление';
+        mode.onclick = () => { e.requiresCorrection = !e.requiresCorrection; save(); drawTable(); };
+        row.append(mode);
+        const cell = el('div', 'mm-cell');
+        if (e.requiresCorrection) {
           const main = el('input', 'mm-in');
           main.type = 'text';
-          main.value = cur.correction || '';
-          main.setAttribute('aria-label', `Правильное исправление для «${cur.word}»`);
-          main.oninput = () => { cur.correction = main.value; save(); };
-          panel.append(main);
-          const alts = String(cur.alts || '').split(/\r?\n/).filter(s => s.trim());
-          const sync = () => { cur.alts = alts.filter(s => s.trim()).join('\n'); save(); };
+          main.value = e.correction || '';
+          main.setAttribute('aria-label', `Правильное исправление для «${e.word}»`);
+          main.oninput = () => { e.correction = main.value; save(); };
+          cell.append(main);
+        } else cell.append(el('span', 'mm-muted', '—'));
+        row.append(cell);
+        const hasExpl = !!String(e.explanation || '').trim();
+        const hasAlts = String(e.alts || '').trim() !== '';
+        const tools = el('span', 'mm-tools2');
+        tools.append(iconBtn(svg(COMMENT), 'Пояснение после ответа', () => { open.expl = !open.expl; drawTable(); }, (open.expl ? 'on' : '') + (hasExpl ? ' dot' : '')));
+        if (e.requiresCorrection) tools.append(iconBtn(svg('<path d="M4 7h10M4 12h10M4 17h6M17 14v6M14 17h6"/>'), 'Также засчитывать', () => { open.alts = !open.alts; drawTable(); }, (open.alts ? 'on' : '') + (hasAlts ? ' dot' : '')));
+        else tools.append(el('span', 'mm-ibgap'));
+        tools.append(iconBtn(svg('<path d="M4 17l9-11 7 6-7 8H8z"/><path d="M9 20h11"/>'), 'Снять отметку', () => {
+          t.errors.splice(t.errors.indexOf(e), 1);
+          if (st.sel === e.id) st.sel = null;
+          save();
+          refresh();
+        }));
+        row.append(tools);
+        blk.append(row);
+
+        if (open.expl) {
+          const x = el('div', 'mm-sub');
+          x.append(el('div', 'mm-lab', 'Пояснение после ответа'));
+          const ex = el('textarea', 'mm-in mm-expl');
+          ex.rows = 2;
+          ex.value = e.explanation || '';
+          ex.setAttribute('aria-label', `Пояснение к ошибке «${e.word}»`);
+          ex.oninput = () => { e.explanation = ex.value; autoFit(ex, 60); save(); };
+          x.append(ex);
+          blk.append(x);
+          setTimeout(() => autoFit(ex, 60), 0);
+        }
+        if (open.alts && e.requiresCorrection) {
+          const alts = String(e.alts || '').split(/\r?\n/).filter(s => s.trim());
+          if (!alts.length) alts.push('');
+          const sync = () => { e.alts = alts.filter(s => s.trim()).join('\n'); save(); };
+          const x = el('div', 'mm-sub');
           const altBox = el('div', 'mm-alts');
           const drawAlts = () => {
             altBox.innerHTML = '';
@@ -346,33 +372,29 @@ const MistakeModeEditor = (() => {
               const r = el('div', 'mm-alt');
               const inp = el('input', 'mm-in');
               inp.type = 'text';
+              inp.placeholder = 'Допустимый ответ';
               inp.value = s;
               inp.setAttribute('aria-label', `Допустимый вариант ${j + 1}`);
               inp.oninput = () => { alts[j] = inp.value; sync(); };
-              r.append(inp, iconBtn(svg(CLOSE), 'Убрать вариант', () => { alts.splice(j, 1); sync(); drawAlts(); }, 'mm-del'));
+              // ✓ подтверждает вариант; пустой вариант при этом убирается
+              const ok = () => { if (!inp.value.trim()) alts.splice(j, 1); sync(); drawTable(); };
+              inp.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); ok(); } };
+              r.append(inp, iconBtn(svg('<path d="M5 12l5 5 9-10"/>'), 'Готово', ok));
               altBox.append(r);
             });
           };
-          const al = el('div', 'mm-altrow');
-          al.append(el('span', 'mm-lab', 'Также засчитывать'), iconBtn(svg('<path d="M12 5v14M5 12h14"/>'), 'Добавить допустимый вариант', () => {
+          const head = el('div', 'mm-altrow');
+          head.append(el('span', 'mm-lab', 'Также засчитывать'), iconBtn(svg('<path d="M12 5v14M5 12h14"/>'), 'Добавить допустимый вариант', () => {
             alts.push('');
             drawAlts();
             const l = altBox.querySelectorAll('input');
             l[l.length - 1].focus();
           }));
           drawAlts();
-          panel.append(al, altBox);
+          x.append(head, altBox);
+          blk.append(x);
         }
-        if (explOpen) {
-          panel.append(el('div', 'mm-lab', 'Пояснение после ответа'));
-          const ex = el('textarea', 'mm-in mm-expl');
-          ex.rows = 2;
-          ex.value = cur.explanation || '';
-          ex.setAttribute('aria-label', `Пояснение к ошибке «${cur.word}»`);
-          ex.oninput = () => { cur.explanation = ex.value; autoFit(ex, 60); save(); };
-          panel.append(ex);
-          setTimeout(() => autoFit(ex, 60), 0);
-        }
+        return blk;
       }
       refresh();
     }

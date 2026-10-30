@@ -75,3 +75,26 @@
 .mm-alts { display:grid; gap:6px; }
 .mm-alt { display:flex; align-items:center; gap:4px; }
 .mm-expl { min-height:60px; }
+
+/* Таблица «Исправления» (2026-10-30, по снимкам владельца) */
+.mm-texttop { margin-bottom:10px; }
+.mm-subrow { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 12px; margin-bottom:12px; }
+.mm-seg { margin:0; }
+.mm-w.on { box-shadow:inset 0 -2px 0 var(--bad); }
+.mm-w.cur { background:color-mix(in srgb, var(--bad) 22%, var(--card)); outline:none; }
+.mm-table[hidden] { display:none; }
+.mm-ttitle { font-weight:700; margin:14px 0 8px; }
+.mm-row { display:grid; grid-template-columns:minmax(60px,.8fr) 150px minmax(120px,2fr) auto; align-items:center; gap:8px 12px; padding:10px 0; }
+.mm-cols { padding:0 0 6px; color:var(--muted); font-size:.85rem; border-bottom:1px solid var(--line); }
+.mm-eb { border-bottom:1px solid var(--line); }
+.mm-eb .mm-row { padding:10px 0; }
+.mm-ew { overflow-wrap:anywhere; }
+.mm-modebtn { justify-content:flex-start; border:none; }
+.mm-cell { min-width:0; }
+.mm-ib.dot { position:relative; }
+.mm-ib.dot::after { content:''; position:absolute; top:4px; right:3px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+.mm-ibgap { display:inline-block; width:38px; }
+.mm-sub { margin:0 0 10px 14px; padding-left:12px; border-left:2px solid var(--line); }
+.mm-sub .mm-lab { margin:2px 0 6px; }
+.mm-altrow .mm-lab { margin:2px 0; }
+@media (max-width:640px) { .mm-row { grid-template-columns:1fr auto; } .mm-cols { display:none; } .mm-cell { grid-column:1 / -1; } }
