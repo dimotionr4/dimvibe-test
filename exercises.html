@@ -151,7 +151,13 @@
   .mvlist { display:grid; gap:4px; }
   .mvlist .opt { display:flex; align-items:center; gap:8px; }
   .mvlist .opt svg { width:18px; height:18px; color:var(--fc, var(--muted)); }
-  @media (max-width:640px) {</style>
+  /* Телефон: строка упражнения переносится, кнопки действий уходят отдельной строкой под название (правка 2026-10-30: блок был обрезан) */
+  @media (max-width:640px) {
+    .ex { flex-wrap:wrap; }
+    .ex .body { flex:1 1 160px; }
+    .ex .acts { flex:1 1 100%; justify-content:flex-end; border-top:1px solid var(--line); padding-top:6px; }
+  }
+</style>
 </head>
 <body>
 <header id="bar">
