@@ -3,7 +3,7 @@
 .card.st-card { line-height:1.5; } /* перебивает увеличенный интервал общего .card */
 .st-tnum { margin:0 0 6px; font-weight:600; color:var(--muted); }
 /* Картинка над текстом: высота по «Размеру картинок», вписать целиком или заполнить рамку */
-.st-pic { position:relative; width:100%; height:180px; border-radius:10px; overflow:hidden; margin:0 0 10px; }
+.st-pic { position:relative; width:100%; height:180px; border-radius:var(--r-m,12px); overflow:hidden; margin:0 0 10px; }
 .st-pic img { display:block; width:100%; height:100%; object-fit:contain; }
 .st-fit-cover .st-pic img { object-fit:cover; }
 .st-size-s .st-pic { height:110px; }
@@ -31,7 +31,7 @@
 .st-opt:disabled { cursor:default; color:var(--text); }
 .st-opt:disabled:not(.ok):not(.right):not(.bad) { opacity:.6; }
 .st-card.missing { border-color:var(--bad); border-style:dashed; }
-.st-expl { margin:12px 0 0; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+.st-expl { margin:12px 0 0; padding:8px 12px; border-radius:var(--r-m,12px); background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
 
 /* Comic: цвета состояний остаются своими, контур берёт --rc, заливка --rb */
 .style-comic .st-opt.on:not(.hintbtn) { --rc:var(--accent); --rb:color-mix(in srgb, var(--accent) 14%, var(--card)); }

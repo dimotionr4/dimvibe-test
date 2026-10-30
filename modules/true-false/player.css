@@ -14,11 +14,11 @@
 .tf-ans.active.bad { background:color-mix(in srgb, var(--bad) 18%, var(--card)); color:var(--text); }
 .tf-card.missing { border-color:var(--bad); border-style:dashed; }
 .tf-mark { font-weight:700; }
-.tf-expl { margin-top:10px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+.tf-expl { margin-top:10px; padding:8px 12px; border-radius:var(--r-m,12px); background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
 
 /* Режим «по одному» */
 .tf-dots { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
-.tf-dot { min-width:40px; min-height:40px; padding:0 8px; border-radius:999px; }
+.tf-dot { min-width:var(--tap,44px); min-height:var(--tap,44px); padding:0 8px; border-radius:999px; }
 .tf-dot.answered:not(.active) { border-color:var(--accent); }
 .tf-dot.ok:not(.active) { border-color:var(--ok); color:var(--ok); }
 .tf-dot.bad:not(.active) { border-color:var(--bad); color:var(--bad); }
@@ -36,3 +36,7 @@
 .style-comic .tf-dot.ok:not(.active):not(.hintbtn) { --rc:var(--ok); }
 .style-comic .tf-dot.bad:not(.active):not(.hintbtn) { --rc:var(--bad); }
 .style-comic .tf-card.missing { --rc:var(--bad); }
+
+/* Кнопки ответа в Classic: лёгкая тень, как у слов банка (шкала вида 2026-10-30) */
+html:not(.style-comic) :is(.tf-ans, .mc-opt, .st-opt) { border-radius:var(--r-m,12px); box-shadow:var(--shadow-1,none); }
+html:not(.style-comic) :is(.tf-ans, .mc-opt, .st-opt):disabled { box-shadow:none; }

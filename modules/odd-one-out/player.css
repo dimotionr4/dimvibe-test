@@ -13,7 +13,7 @@
    Общие .chip и .card из index.html заданы позже, поэтому здесь :is(.chip, .card).oo-item */
 :is(.chip, .card).oo-item { display:flex; align-items:center; gap:6px; max-width:100%; min-height:44px; margin:0; padding:8px 14px; border:1.5px solid var(--line); background:var(--card); color:var(--text); line-height:1.3; cursor:pointer; user-select:none; -webkit-user-select:none; box-sizing:border-box; }
 .chip.oo-item { border-radius:999px; }
-.card.oo-item { justify-content:center; text-align:center; min-height:64px; border-radius:12px; }
+.card.oo-item { justify-content:center; text-align:center; min-height:64px; border-radius:var(--r-m,12px); }
 .oo-line { display:flex; flex-wrap:wrap; align-items:center; justify-content:inherit; gap:2px 6px; min-width:0; }
 .oo-text { min-width:0; overflow-wrap:anywhere; }
 .oo-revealed { font-style:italic; }
@@ -25,7 +25,7 @@
 .chip.oo-item.oo-sound { padding:6px 14px 6px 8px; }
 /* Элемент с картинкой: картинка сверху, под ней подпись и звук. Высота по «Размеру картинок» (S 56 / M 90 / L 140 px), вписана целиком */
 .card.oo-item.oo-withpic { flex-direction:column; justify-content:flex-start; gap:4px; padding:8px; }
-.oo-pic { position:relative; display:block; height:90px; max-width:100%; border-radius:8px; overflow:hidden; }
+.oo-pic { position:relative; display:block; height:90px; max-width:100%; border-radius:var(--r-s,8px); overflow:hidden; }
 .oo-pic img { display:block; height:100%; width:auto; max-width:100%; object-fit:contain; pointer-events:none; }
 .oo-size-s .oo-pic { height:56px; }
 .oo-size-l .oo-pic { height:140px; }
@@ -40,7 +40,7 @@
 .oo-tick { flex:none; color:var(--ok); font-weight:700; }
 .oo-cross { flex:none; color:var(--bad); font-weight:700; }
 .oo-card.missing { border-color:var(--bad); border-style:dashed; }
-.oo-expl { margin:12px 0 0; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
+.oo-expl { margin:12px 0 0; padding:8px 12px; border-radius:var(--r-m,12px); background:color-mix(in srgb, var(--accent) 10%, var(--card)); line-height:1.45; }
 
 /* Comic: контур берёт --rc, заливка --rb; свою рамку и фон элемента прячем, как у общего .chip */
 .style-comic :is(.chip, .card).oo-item:is(*, .on, .ok, .bad, .right) { border-color:transparent; background:transparent; box-shadow:none; }
