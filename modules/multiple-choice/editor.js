@@ -190,7 +190,8 @@ const MultipleChoiceEditor = (() => {
     const cur = modeOf(it), next = cur === 'multiple' ? 'single' : 'multiple';
     const trig = el('button', 'mc-trigger ' + cur);
     trig.type = 'button';
-    trig.innerHTML = MODE_ICONS.map(([v, , ico]) => `<span class="mc-tg${v === cur ? ' on' : ''}">${svg(ico)}</span>`).join('');
+    // Дорожка с двумя значками по краям, белый «шарик» со значком текущего типа ездит между ними (как переключатель инструкции)
+    trig.innerHTML = MODE_ICONS.map(([v, , ico]) => `<span class="mc-tg ${v}">${svg(ico)}</span>`).join('') + `<i class="mc-knob">${svg(MODE_ICONS.find(m => m[0] === cur)[2])}</i>`;
     trig.title = `${MODE_NAMES[cur]}. Нажмите, чтобы переключить на «${MODE_NAMES[next].toLowerCase()}»`;
     trig.setAttribute('role', 'switch');
     trig.setAttribute('aria-checked', String(cur === 'multiple'));
@@ -265,9 +266,8 @@ const MultipleChoiceEditor = (() => {
     const drawQ = () => {
       qbox.innerHTML = '';
       if (!hasPic(it.image)) return;
-      const al = el('div', 'mc-label mc-labelrow', 'Положение картинки');
-      al.append(help('Картинка стоит сверху, снизу, слева или справа от текста вопроса. У ученика на ней значок увеличения. Размер и вписывание картинок — во вкладке «Дизайн». Звук ученик включает значком динамика у вопроса, он не влияет на выбор и баллы.'));
       const seg = el('span', 'mc-seg mc-iconseg');
+      seg.title = 'Положение картинки у вопроса. Размер и вписывание картинок — во вкладке «Дизайн».';
       Object.entries(ALIGNS).forEach(([v, label]) => {
         const bt = el('button', it.image.align === v ? 'active' : '');
         bt.innerHTML = svg(ALIGN_ICONS[v]);
@@ -278,7 +278,7 @@ const MultipleChoiceEditor = (() => {
         bt.onclick = () => { it.image.align = v; save(); drawQ(); };
         seg.append(bt);
       });
-      qbox.append(al, seg);
+      qbox.append(seg);
     };
     const qpic = MediaUI.imageControl(it.image, { save, change: drawQ, after: qAudio, audioOutside: true, big: true });
     drawQ();
@@ -332,8 +332,8 @@ const MultipleChoiceEditor = (() => {
       const key = it.id + ':' + o.id, isOpen = optOpen.has(key);
       const more = el('button', 'mc-ib mc-more' + (isOpen ? ' on' : '') + (hasPic(o.image) || o.audio ? ' has' : ''));
       more.type = 'button';
-      more.innerHTML = svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/>');
-      more.title = 'Картинка и звук варианта';
+      more.innerHTML = svg('<path d="M20.5 11.5l-8.2 8.2a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/>');
+      more.title = 'Добавить к варианту картинку или звук';
       more.setAttribute('aria-label', `Картинка и звук варианта ${k + 1}`);
       more.setAttribute('aria-expanded', String(isOpen));
       more.onclick = () => { if (optOpen.has(key)) optOpen.delete(key); else optOpen.add(key); drawList(); };
@@ -350,7 +350,7 @@ const MultipleChoiceEditor = (() => {
     });
     b.append(opts);
     if (!multi && it.correct.length > 1) b.append(el('div', 'mc-warn', `В Single Choice нужен один верный вариант, а отмечено ${it.correct.length}. Отметки сохранены: выберите один, иначе публикация заблокируется. Если переключить на Multiple Select, они снова заработают.`));
-    const add = el('button', 'mc-addopt', '+');
+    const add = el('button', 'mc-addopt' + (multi ? ' multi' : ''), '+');
     add.type = 'button';
     add.title = 'Добавить вариант';
     add.setAttribute('aria-label', 'Добавить вариант');

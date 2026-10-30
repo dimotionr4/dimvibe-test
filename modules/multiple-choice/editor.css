@@ -12,7 +12,9 @@
 .mc-label { font-size:.9rem; color:var(--muted); margin:12px 0 4px; }
 .mc-seg { display:inline-flex; flex-wrap:wrap; gap:4px; }
 .mc-seg button { min-height:32px; padding:0 10px; border-radius:8px; font-size:.85rem; }
-.mc-seg button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.mc-seg button { color:var(--text); border-color:var(--muted); font-weight:600; }
+.mc-seg button:hover:not(.active) { border-color:var(--accent); color:var(--accent); }
+.mc-seg button.active { background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 1px 4px color-mix(in srgb, var(--accent) 45%, transparent); }
 .mc-block { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:12px; }
 .mc-block .mc-labelrow { margin-bottom:8px; }
 
@@ -45,14 +47,23 @@
 .mc-head { flex-wrap:wrap; }
 .mc-modes { display:flex; align-items:center; gap:2px; flex:none; }
 .mc-mode.on { background:var(--accent-soft); color:var(--accent); border-radius:8px; }
-.mc-trigger { display:inline-flex; gap:2px; padding:2px; min-height:32px; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
-.mc-tg { display:inline-flex; align-items:center; justify-content:center; width:30px; height:26px; border-radius:8px; color:var(--muted); }
-.mc-tg.on { background:var(--accent-soft); color:var(--accent); }
+/* Переключатель типа вопроса: как переключатель инструкции — дорожка (серая / цвет темы) и белый шарик со значком */
+.mc-trigger { position:relative; flex:none; width:60px; min-width:60px; height:30px; min-height:30px; padding:0; border:none; border-radius:999px; background:var(--line); transition:background .15s; }
+.mc-trigger.multiple { background:var(--accent); }
+.mc-tg { position:absolute; top:0; height:30px; width:30px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+.mc-trigger.multiple .mc-tg { color:#fff; }
+.mc-tg.single { left:0; }
+.mc-tg.multiple { right:0; }
+.mc-tg .mc-ico { width:16px; height:16px; }
+.mc-knob { position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#fff; color:var(--accent); box-shadow:0 1px 3px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; transition:transform .15s; }
+.mc-trigger.multiple .mc-knob { transform:translateX(30px); }
+.mc-knob .mc-ico { width:15px; height:15px; stroke-width:2.2; }
 .mc-modename { font-size:.78rem; color:var(--muted); margin-left:6px; }
 .mc-eye.on { color:var(--accent); }
 .mc-row.hidden-q .mc-sum { opacity:.45; }
-.mc-iconseg button { width:40px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
-.mc-iconseg .mc-ico { width:20px; height:20px; }
+.mc-iconseg { gap:3px; margin-top:6px; }
+.mc-iconseg button { width:30px; min-height:26px; height:26px; padding:0; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; }
+.mc-iconseg .mc-ico { width:15px; height:15px; }
 .mc-ask { display:inline-flex; gap:4px; margin-left:4px; }
 .mc-ask button { min-height:32px; padding:0 10px; font-size:.85rem; }
 .mc-yes { background:var(--bad); color:#fff; border-color:var(--bad); }
@@ -72,7 +83,9 @@
 .mc-mark.on { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 22%, var(--card)); font-size:0; }
 .mc-mark.on::after { content:""; position:absolute; left:11px; top:5px; width:7px; height:14px; border:solid var(--ok); border-width:0 3px 3px 0; transform:rotate(45deg); }
 .mc-foot { margin-top:8px; }
-.mc-addopt { border-radius:8px; border:1.5px dashed var(--accent); background:transparent; color:var(--accent); font-size:1.5rem; line-height:1; min-width:44px; }
+/* «+» — тот же размер и форма, что отметка верного варианта: круг у Single, скруглённый квадрат у Multiple */
+.mc-addopt { width:34px; height:34px; min-width:34px; min-height:0; padding:0; border-radius:50%; border:2px dashed var(--accent); background:transparent; color:var(--accent); font-size:1.4rem; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
+.mc-addopt.multi { border-radius:8px; }
 .mc-addopt:hover:not(:disabled) { background:var(--accent-soft); }
 .mc-addopt:disabled, .mc-add:disabled { opacity:.5; }
 .mc-add { margin:4px 0 8px; }
