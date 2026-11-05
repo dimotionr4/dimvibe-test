@@ -13,7 +13,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="core/chips.css?v=3">
 <link rel="stylesheet" href="core/comic.css?v=14">
 <link rel="stylesheet" href="core/fonts.css?v=1">
-<link rel="stylesheet" href="core/motion.css?v=2">
+<link rel="stylesheet" href="core/motion.css?v=3">
 <link rel="stylesheet" href="modules/image-to-gaps/player.css?v=4">
 <link rel="stylesheet" href="modules/true-false/player.css?v=4">
 <link rel="stylesheet" href="modules/multiple-choice/player.css?v=6">
@@ -175,6 +175,14 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
   </div>
 </footer>
 
+<script>
+/* Анимации (core/motion.css): появление — только при загрузке, вспышка/встряска — только сразу после «Проверить» */
+(function(){var h=document.documentElement,r=document.getElementById('root'),T=function(c,ms){h.classList.add(c);setTimeout(function(){h.classList.remove(c);},ms);};
+h.classList.add('mo-intro');
+var mo=new MutationObserver(function(){if(r.children.length){mo.disconnect();setTimeout(function(){h.classList.remove('mo-intro');},700);}});mo.observe(r,{childList:true});
+setTimeout(function(){h.classList.remove('mo-intro');},8000);
+document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#check'))T('mo-check',700);},true);})();
+</script>
 <script src="core/design.js?v=14"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/mediaviewer.js?v=3"></script>

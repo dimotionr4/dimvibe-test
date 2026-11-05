@@ -1,4 +1,5 @@
-/* Анимации плеера DimVibe (общий слой для всех модулей).
+/* Анимации плеера. Классы на <html> ставит маленький скрипт в index.html: mo-intro — только при загрузке (до 0,6 с после первого показа), mo-check — 0,6 с после нажатия «Проверить»; обычные действия (заполнение пропуска и т. п.) ничего не анимируют.
+   Анимации плеера DimVibe (общий слой для всех модулей).
    Правила: 0,2–0,4 с, только transform и opacity, уважаем prefers-reduced-motion.
    Не трогает свои анимации модулей (Mistake Mode, Flashcards) и формы Comic (rough.js). */
 :root { --mo-fast:.12s; --mo-base:.28s; --mo-ease:cubic-bezier(.2,.7,.2,1); }
@@ -6,11 +7,11 @@
 @keyframes mo-rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 
 /* Появление блоков упражнения при открытии и после «Начать заново» */
-#root > * { animation:mo-rise var(--mo-base) var(--mo-ease) both; }
-#root > :nth-child(2) { animation-delay:.04s; }
-#root > :nth-child(3) { animation-delay:.08s; }
-#root > :nth-child(4) { animation-delay:.12s; }
-#root > :nth-child(n+5) { animation-delay:.16s; }
+html.mo-intro #root > * { animation:mo-rise var(--mo-base) var(--mo-ease) both; }
+html.mo-intro #root > :nth-child(2) { animation-delay:.04s; }
+html.mo-intro #root > :nth-child(3) { animation-delay:.08s; }
+html.mo-intro #root > :nth-child(4) { animation-delay:.12s; }
+html.mo-intro #root > :nth-child(n+5) { animation-delay:.16s; }
 
 /* Отклик на нажатие: кнопки чуть вдавливаются */
 main button, footer button, header button { transition:transform var(--mo-fast) var(--mo-ease); }
@@ -19,13 +20,13 @@ main button:active:not(:disabled), footer button:active:not(:disabled), header b
 /* Проверка: верный ответ коротко «пульсирует», неверный слегка трясётся (общие классы .ok / .bad модулей) */
 @keyframes mo-pop { 0% { transform:scale(1); } 45% { transform:scale(1.05); } 100% { transform:scale(1); } }
 @keyframes mo-shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-4px); } 40% { transform:translateX(4px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(2px); } }
-.gap.ok, .mc-opt.ok, .tf-ans.ok { animation:mo-pop .3s var(--mo-ease); }
-.gap.bad, .mc-opt.bad, .tf-ans.bad { animation:mo-shake .36s var(--mo-ease); }
+html.mo-check .gap.ok, html.mo-check .mc-opt.ok, html.mo-check .tf-ans.ok { animation:mo-pop .3s var(--mo-ease); }
+html.mo-check .gap.bad, html.mo-check .mc-opt.bad, html.mo-check .tf-ans.bad { animation:mo-shake .36s var(--mo-ease); }
 
 /* Результат и баллы плавно появляются, полоса итога «заполняется» */
 @keyframes mo-grow { from { transform:scaleX(0); } to { transform:scaleX(1); } }
-.score.result { animation:mo-rise var(--mo-base) var(--mo-ease) both; }
-.score .bar:not([hidden]) i { transform-origin:left; animation:mo-grow .4s var(--mo-ease) both; }
+html.mo-check .score.result { animation:mo-rise var(--mo-base) var(--mo-ease) both; }
+html.mo-check .score .bar:not([hidden]) i { transform-origin:left; animation:mo-grow .4s var(--mo-ease) both; }
 
 @media (prefers-reduced-motion: reduce) {
   #root > *, .gap.ok, .mc-opt.ok, .tf-ans.ok, .gap.bad, .mc-opt.bad, .tf-ans.bad, .score.result, .score .bar i { animation:none; }
