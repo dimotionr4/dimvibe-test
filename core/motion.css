@@ -1,0 +1,23 @@
+/* Анимации плеера DimVibe (общий слой для всех модулей).
+   Правила: 0,2–0,4 с, только transform и opacity, уважаем prefers-reduced-motion.
+   Не трогает свои анимации модулей (Mistake Mode, Flashcards) и формы Comic (rough.js). */
+:root { --mo-fast:.12s; --mo-base:.28s; --mo-ease:cubic-bezier(.2,.7,.2,1); }
+
+@keyframes mo-rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* Появление блоков упражнения при открытии и после «Начать заново» */
+#root > * { animation:mo-rise var(--mo-base) var(--mo-ease) both; }
+#root > :nth-child(2) { animation-delay:.04s; }
+#root > :nth-child(3) { animation-delay:.08s; }
+#root > :nth-child(4) { animation-delay:.12s; }
+#root > :nth-child(n+5) { animation-delay:.16s; }
+
+/* Отклик на нажатие: кнопки чуть вдавливаются */
+main button, footer button, header button { transition:transform var(--mo-fast) var(--mo-ease); }
+main button:active:not(:disabled), footer button:active:not(:disabled), header button:active:not(:disabled) { transform:scale(.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  #root > * { animation:none; }
+  main button, footer button, header button { transition:none; }
+  main button:active, footer button:active, header button:active { transform:none; }
+}
