@@ -28,8 +28,15 @@ html.mo-check .gap.bad, html.mo-check .mc-opt.bad, html.mo-check .tf-ans.bad { a
 html.mo-check .score.result { animation:mo-rise var(--mo-base) var(--mo-ease) both; }
 html.mo-check .score .bar:not([hidden]) i { transform-origin:left; animation:mo-grow .4s var(--mo-ease) both; }
 
+/* Переход между вопросами (кнопки «Предыдущий / Следующий» и номера): новый вопрос заезжает со стороны движения.
+   Класс mo-next / mo-prev на <html> ставит скрипт в index.html на 0,5 с. Flashcards не трогаем: у него свой переворот. */
+@keyframes mo-in-next { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
+@keyframes mo-in-prev { from { opacity:0; transform:translateX(-24px); } to { opacity:1; transform:none; } }
+html.mo-next #root > :not(.tf-dots):not(.tf-pager):not(:has(.fc-card)) { animation:mo-in-next var(--mo-base) var(--mo-ease) both; }
+html.mo-prev #root > :not(.tf-dots):not(.tf-pager):not(:has(.fc-card)) { animation:mo-in-prev var(--mo-base) var(--mo-ease) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  #root > *, .gap.ok, .mc-opt.ok, .tf-ans.ok, .gap.bad, .mc-opt.bad, .tf-ans.bad, .score.result, .score .bar i { animation:none; }
+  #root > *, .gap.ok, .mc-opt.ok, .tf-ans.ok, .gap.bad, .mc-opt.bad, .tf-ans.bad, .score.result, .score .bar i, #root > * { animation:none !important; }
   main button, footer button, header button { transition:none; }
   main button:active, footer button:active, header button:active { transform:none; }
 }
