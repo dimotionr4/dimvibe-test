@@ -315,7 +315,8 @@ function build() {
 // Банк: у каждого ответа свой экземпляр (два пропуска с ответом «the» — два слова в банке) и ловушки.
 // Выпадающий список: ответы, альтернативы и ловушки без повторов (общий пул)
 function shuffleWords() {
-  if (unitPlayer()) { bankOrder = []; poolOrder = []; return; }
+  // Mini Dialogues (этап 2): банк слов и список строятся как у Fill Blanks; у остальных модулей со своим плеером банка нет
+  if (unitPlayer() && data.module !== 'mini_dialogues') { bankOrder = []; poolOrder = []; return; }
   if (isImg()) { bankOrder = ImageToGapsPlayer.shuffle(); return; }
   const answers = gaps.map(g => g.answer);
   const distractors = data.distractors || [];

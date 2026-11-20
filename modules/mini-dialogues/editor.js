@@ -1,11 +1,18 @@
 // Редактор модуля Mini Dialogues (мини-диалоги): говорящие, диалоги, реплики и пропуски внутри реплик.
-// Этап 1 (2026-11-21): только текст, ответ вводится с клавиатуры. Банк слов, выпадающий список, картинки и звук — следующие этапы.
+// Этап 1 (2026-11-21): только текст, ввод с клавиатуры. Этап 2 (2026-11-21): способ ответа на всё упражнение — ввод, банк слов или выпадающий список, слова-ловушки.
+// Картинки и звук — следующие этапы.
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Разметка пропусков в репликах — общий движок (core/gap-engine.js). Реплика хранится как parts: строки и пропуски {gap: ID}.
 const MiniDialoguesEditor = (() => {
   const MAX_GAPS = 20, MAX_SPEAKERS = 6, LONG_LINE = 220;
+  // Способ ответа — один на всё упражнение. Значки: банк слов, выпадающий список, ввод вручную
+  const MODES = [
+    ['word_bank', 'Банк слов', '<rect x="2" y="5" width="9" height="5" rx="2.5"/><rect x="13" y="5" width="9" height="5" rx="2.5"/><rect x="6" y="14" width="12" height="5" rx="2.5"/>'],
+    ['dropdown', 'Выпадающий список', '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M9 11l3 3 3-3"/>'],
+    ['typing', 'Ввод вручную', '<rect x="2" y="7" width="20" height="11" rx="2"/><path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M7 15h10"/>'],
+  ];
   let d, root, save, openGap = null, msgTimer = null;
-  let counter, msg, panelBox, gapBar;
+  let counter, msg, panelBox, gapBar, bankBox;
 
   const norm = s => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
   const { isGap, nextId } = GapEngine;
@@ -25,7 +32,7 @@ const MiniDialoguesEditor = (() => {
 
   function create() {
     return {
-      module: 'mini_dialogues', format: 1, mode: 'typing',
+      module: 'mini_dialogues', format: 1, mode: 'typing', distractors: [],
       speakers: [{ id: 'sp1', name: '', side: 'auto' }, { id: 'sp2', name: '', side: 'auto' }],
       dialogues: [{ id: 'd1', title: '', lines: [{ id: 'l1', speaker: 'sp1', parts: [''] }, { id: 'l2', speaker: 'sp2', parts: [''] }] }],
       gaps: {},
@@ -36,7 +43,8 @@ const MiniDialoguesEditor = (() => {
   function demo() {
     return {
       ...create(),
-      instruction: DimDemo.instruction('Вставьте пропущенные слова в диалоги.'),
+      mode: 'word_bank', distractors: ['wants', 'cup'],
+      instruction: DimDemo.instruction('Вставьте слова из банка в пропуски диалогов.'),
       speakers: [{ id: 'sp1', name: 'Anna', side: 'left' }, { id: 'sp2', name: 'Tom', side: 'right' }, { id: 'sp3', name: 'Waiter', side: 'left' }],
       dialogues: [
         { id: 'd1', title: 'At the café', lines: [
@@ -85,7 +93,19 @@ const MiniDialoguesEditor = (() => {
     root.className = 'md-wrap';
     counter = el('span', 'md-muted');
     const tools = el('div', 'md-tools');
-    tools.append(counter, help('Диалог — это несколько реплик от двух и более говорящих. Выделите слово или фразу в реплике (двойной щелчок выделяет одно слово): над ним появится кнопка «Пропуск». Нажмите на готовый пропуск, чтобы настроить ответ.'));
+    const modes = el('span', 'md-modes');
+    modes.setAttribute('role', 'group');
+    modes.setAttribute('aria-label', 'Способ ответа');
+    MODES.forEach(([v, label, icon]) => {
+      const b = el('button', d.mode === v ? 'active' : '');
+      b.innerHTML = `<svg class="md-ico" viewBox="0 0 24 24" aria-hidden="true">${window.DVIcons ? DVIcons.swap(icon) : icon}</svg>`;
+      b.dataset.tip = 'Способ ответа: ' + label;
+      b.setAttribute('aria-label', label);
+      b.setAttribute('aria-pressed', String(d.mode === v));
+      b.onclick = () => { d.mode = v; save(); draw(); };
+      modes.append(b);
+    });
+    tools.append(counter, modes, help('Диалог — это несколько реплик от двух и более говорящих. Выделите слово или фразу в реплике (двойной щелчок выделяет одно слово): над ним появится кнопка «Пропуск». Нажмите на готовый пропуск, чтобы настроить ответ.'));
     msg = el('div', 'md-msg');
     msg.hidden = true;
 
@@ -95,6 +115,7 @@ const MiniDialoguesEditor = (() => {
     const add = el('button', 'md-add', '+ Диалог');
     add.onclick = addDialogue;
     box.append(add);
+    if (d.mode !== 'typing') box.append(bankSection());
 
     panelBox = el('div', 'md-panel-box');
     gapBar = el('div', 'selbar');
@@ -204,6 +225,7 @@ const MiniDialoguesEditor = (() => {
       markEmpty(ed, line.parts);
       placePanel();
       updateCounter();
+      drawBank();
       if (openGap && !gapOrder().includes(openGap)) { openGap = null; drawPanel(); }
       save();
     };
@@ -375,6 +397,7 @@ const MiniDialoguesEditor = (() => {
       noAnswer.hidden = !!g.answer.trim();
       const c = root.querySelector(`.md-chip[data-gap="${id}"]`);
       if (c) c.textContent = g.answer || '?';
+      drawBank();
       placePanel();
       save();
     };
@@ -433,6 +456,49 @@ const MiniDialoguesEditor = (() => {
     addEventListener('resize', () => placePanel());
   }
 
+  // ---- Банк слов и ловушки ----
+  function bankSection() {
+    const box = el('section', 'md-card md-bank');
+    const head = el('div', 'md-head');
+    head.append(el('h3', '', 'Банк слов и список'),
+      help('Ответы пропусков (серые) добавляются сами. Слова-ловушки — неверные варианты; они появятся и в банке слов, и в выпадающем списке.'));
+    bankBox = el('div', 'md-chips');
+    const open = el('button', 'md-add', '+ Ловушка');
+    const row = el('div', 'md-adder'), inp = input('', 'Неверный вариант'), btn = el('button', '', 'Добавить'), err = el('div', 'md-warn');
+    err.hidden = true;
+    row.hidden = true;
+    const add = () => {
+      const text = clean(inp.value);
+      if (!text) return;
+      if (gapOrder().some(id => norm(d.gaps[id].answer) === norm(text))) { err.textContent = 'Это слово уже есть среди ответов пропусков.'; err.hidden = false; return; }
+      if (d.distractors.some(w => norm(w) === norm(text))) { err.textContent = 'Такое слово уже есть.'; err.hidden = false; return; }
+      d.distractors.push(text);
+      inp.value = '';
+      err.hidden = true;
+      save();
+      drawBank();
+      inp.focus();
+    };
+    btn.onclick = add;
+    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
+    inp.oninput = () => { err.hidden = true; };
+    open.onclick = () => { open.hidden = true; row.hidden = false; inp.focus(); };
+    row.append(inp, btn);
+    box.append(head, bankBox, open, row, err);
+    drawBank();
+    return box;
+  }
+  function drawBank() {
+    if (!bankBox || !bankBox.isConnected) return;
+    bankBox.innerHTML = '';
+    gapOrder().forEach(id => {
+      const t = el('span', 'md-tag md-auto', d.gaps[id].answer || '?');
+      t.title = 'Ответ пропуска: меняется в самом пропуске';
+      bankBox.append(t);
+    });
+    d.distractors.forEach((w, i) => bankBox.append(tag(w, () => { d.distractors.splice(i, 1); save(); drawBank(); })));
+  }
+
   // ---- Файл упражнения ----
   const cleanParts = parts => parts.map((p, k) => {
     if (isGap(p)) return p;
@@ -454,7 +520,7 @@ const MiniDialoguesEditor = (() => {
       const g = draft.gaps[p.gap];
       gaps[p.gap] = { answer: clean(g.answer), alternatives: (g.alternatives || []).map(clean).filter(Boolean), hint: clean(g.hint) };
     })));
-    return { module: 'mini_dialogues', format: 1, mode: 'typing', speakers, dialogues, gaps };
+    return { module: 'mini_dialogues', format: 1, mode: ['word_bank', 'dropdown', 'typing'].includes(draft.mode) ? draft.mode : 'typing', speakers, dialogues, gaps, distractors: (draft.distractors || []).map(clean).filter(Boolean) };
   }
 
   // Число пропусков — для «авто» числа проверок (3 при 1–5, 5 при 6 и больше)
@@ -486,6 +552,16 @@ const MiniDialoguesEditor = (() => {
     });
     if (draft.dialogues.length && !gapTotal) errors.push('Нет ни одного пропуска.');
     if (gapTotal > MAX_GAPS) errors.push(`Пропусков больше ${MAX_GAPS}. Разделите упражнение на два.`);
+    const ex = exportData(draft), ids = Object.keys(ex.gaps);
+    if (ex.mode === 'dropdown' && ids.length) {
+      const pool = new Set([...ids.flatMap(id => [ex.gaps[id].answer, ...ex.gaps[id].alternatives]), ...ex.distractors].map(norm).filter(Boolean));
+      ids.forEach((id, n) => {
+        const right = new Set([ex.gaps[id].answer, ...ex.gaps[id].alternatives].map(norm));
+        if (![...pool].some(w => !right.has(w))) errors.push(`Пропуск ${n + 1}: в выпадающем списке нет неверного варианта. Добавьте слово-ловушку.`);
+      });
+      if (pool.size > 8) warnings.push(`В выпадающем списке ${pool.size} вариантов. Обычно хватает 3–5.`);
+    }
+    if (ex.mode === 'word_bank' && ex.distractors.length > 6) warnings.push('В банке много слов-ловушек: на телефоне банк станет длинным.');
     const used = new Set(draft.dialogues.flatMap(x => x.lines.map(l => l.speaker)));
     draft.speakers.forEach((s, i) => { if (clean(s.name) && !used.has(s.id)) warnings.push(`Говорящий «${clean(s.name)}» не произносит ни одной реплики.`); });
     return { errors, warnings };
@@ -508,7 +584,7 @@ const MiniDialoguesEditor = (() => {
       });
       return { id: String(x.id || 'd' + (di + 1)), title: String(x.title || ''), lines };
     });
-    return { ...create(), speakers, dialogues: dialogues.length ? dialogues : create().dialogues, gaps };
+    return { ...create(), mode: ['word_bank', 'dropdown', 'typing'].includes(file.mode) ? file.mode : 'typing', distractors: Array.isArray(file.distractors) ? file.distractors.map(String) : [], speakers, dialogues: dialogues.length ? dialogues : create().dialogues, gaps };
   }
 
   return { create, demo, render, load, exportData, validate, unitCount };

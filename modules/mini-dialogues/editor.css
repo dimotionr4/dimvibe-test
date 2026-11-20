@@ -50,3 +50,12 @@
 .md-tag-x { border:none; background:transparent; color:var(--muted); min-height:22px; padding:0 4px; }
 .md-adder { display:flex; gap:6px; margin-bottom:6px; }
 .md-adder input { flex:1; min-width:0; }
+
+/* Способ ответа и банк слов (этап 2) */
+.md-tools { display:grid; grid-template-columns:1fr auto 1fr; gap:10px; }
+.md-tools > :last-child { justify-self:end; }
+.md-modes { display:inline-flex; gap:6px; justify-self:center; }
+.md-modes button { width:64px; min-height:36px; height:36px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:9px; }
+.md-modes button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.md-ico { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.md-auto { background:var(--bg); border:1px solid var(--line); padding-right:10px; }
