@@ -9,7 +9,7 @@ html[data-theme="light"].skin-soft {
   --sf-in:inset 3px 3px 7px var(--sf-d), inset -3px -3px 7px var(--sf-l);
   --shadow-1:var(--sf-out-s); --shadow-2:var(--sf-out-s);
 }
-html[data-theme="light"].skin-soft :is(button, .btn, .icon-btn, .side-btn, .seg button):not(.primary):not(.active):not([aria-pressed="true"]):not(.kind):not(.selbar button):not(.mb-rep):not(.mb-x):not(.mb-play):not(.mb-add) { background:var(--bg); border:0; box-shadow:var(--sf-out-s); border-radius:999px; }
+html[data-theme="light"].skin-soft :is(button, .btn, .icon-btn, .side-btn, .seg button):not(.primary):not(.active):not([aria-pressed="true"]):not(.kind):not(.selbar button):not(.mb-rep):not(.mb-x):not(.mb-play):not(.mb-add):not([role="radio"]):not([role="checkbox"]):not([aria-checked]) { background:var(--bg); border:0; box-shadow:var(--sf-out-s); border-radius:999px; }
 html[data-theme="light"].skin-soft :is(button, .icon-btn, .side-btn):not(:disabled):not(.kind):not(.selbar button):active { box-shadow:var(--sf-in); }
 html[data-theme="light"].skin-soft :is(.icon-btn.active, .icon-btn[aria-pressed="true"], .seg button.active) { box-shadow:var(--sf-in); background:var(--bg); color:var(--accent); border-color:transparent; }
 html[data-theme="light"].skin-soft button.primary, html[data-theme="light"].skin-soft #side .side-btn.primary { border:0; border-radius:999px; box-shadow:4px 4px 10px rgba(2,156,145,.35), -3px -3px 8px var(--sf-l); }
@@ -32,7 +32,7 @@ html[data-theme="light"].skin-fancy body {
     radial-gradient(55% 45% at 96% 18%, rgba(143,214,207,.3), transparent 70%),
     radial-gradient(60% 50% at 70% 100%, rgba(201,184,238,.3), transparent 70%);
   background-attachment:fixed; }
-html[data-theme="light"].skin-fancy :is(button, .btn, .icon-btn, .side-btn, .seg button):not(.primary):not(.active):not([aria-pressed="true"]):not(.kind):not(.selbar button):not(.mb-rep):not(.mb-x):not(.mb-play):not(.mb-add) { background:#fff; border:0; border-radius:999px; box-shadow:var(--shadow-1); }
+html[data-theme="light"].skin-fancy :is(button, .btn, .icon-btn, .side-btn, .seg button):not(.primary):not(.active):not([aria-pressed="true"]):not(.kind):not(.selbar button):not(.mb-rep):not(.mb-x):not(.mb-play):not(.mb-add):not([role="radio"]):not([role="checkbox"]):not([aria-checked]) { background:#fff; border:0; border-radius:999px; box-shadow:var(--shadow-1); }
 html[data-theme="light"].skin-fancy :is(.icon-btn.active, .icon-btn[aria-pressed="true"], .seg button.active) { background:var(--accent); color:#fff; border-color:transparent; }
 html[data-theme="light"].skin-fancy button.primary, html[data-theme="light"].skin-fancy #side .side-btn.primary { border:0; border-radius:999px; background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 80%, #fff), var(--accent)); }
 html[data-theme="light"].skin-fancy :is(input, select, textarea, .rt-edit) { background:#fff; border:0; border-radius:var(--r-s); box-shadow:inset 0 0 0 1px #e3e5ec; }
@@ -46,3 +46,8 @@ html[data-theme="light"].skin-fancy #previewFrame { border:0; border-radius:var(
 html[data-theme="light"].skin-soft { --muted:#636782; }
 html[data-theme="light"].skin-fancy { --muted:#5f6378; }
 html[data-theme="light"]:is(.skin-soft, .skin-fancy) :is(button.primary, #side .side-btn.primary) { background-color:var(--accent); color:#fff; }
+
+/* Круглые отметки в редакторах модулей (лишний элемент, верный ответ и т. п.): пустая — вдавленная, выбранная — зелёная с белой галочкой */
+html[data-theme="light"].skin-soft :is(.oo-mark, button[role="radio"], button[role="checkbox"], button[aria-checked]):not([aria-checked="true"]) { background:var(--bg); border:0; box-shadow:var(--sf-in); }
+html[data-theme="light"].skin-soft :is(.oo-mark, button[role="radio"], button[role="checkbox"], button[aria-checked])[aria-checked="true"] { box-shadow:3px 3px 7px rgba(31,157,85,.35), -2px -2px 6px var(--sf-l); }
+html[data-theme="light"].skin-fancy :is(.oo-mark, button[role="radio"], button[role="checkbox"], button[aria-checked]):not([aria-checked="true"]) { background:#fff; border:0; box-shadow:inset 0 0 0 2px #cfd2de; }
