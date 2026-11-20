@@ -1,5 +1,5 @@
 // Плеер модуля Mini Dialogues (мини-диалоги): реплики-«пузыри» с пропусками, ответ вводится с клавиатуры.
-// Этап 1 (2026-11-21): только текст. Этап 3 (начат 2026-11-21): у говорящего может быть картинка-аватар. Общая часть прохождения — шапка, инструкция, проверки, закрепление, результат, сброс —
+// Этап 1 (2026-11-21): только текст. Этап 3 (2026-11-21): у говорящего может быть картинка-аватар; у реплики и диалога — звук (кнопки «Слушать»; «только после завершения» — до конца кнопки нет совсем, ни в разметке, ни в адресах). Общая часть прохождения — шапка, инструкция, проверки, закрепление, результат, сброс —
 // живёт в index.html и работает с теми же переменными (data, gaps, finished, note, checksUsed) и функцией render().
 // Пропуск рисует общая makeGap(idx) из index.html (форма, ширина и нумерация — из вкладки «Дизайн»), подсказку — hintButton(idx).
 // Каждый пропуск — единица ответа общего хода; одна общая проверка на все диалоги.
@@ -35,13 +35,22 @@ const MiniDialoguesPlayer = (() => {
     return i % 2 === 0 ? 'left' : 'right';
   }
 
+  // Звук доступен сразу или (если автор так выбрал) только после конца прохождения: до этого кнопки нет вообще
+  const audioUrl = o => (o && o.audio && (!o.late || finished) ? mediaSrc(o.audio) : null);
+
   function render(root) {
     let gi = 0;
     data.dialogues.forEach((dlg, di) => {
       const card = el('div', 'card md-card');
       card.setAttribute('role', 'group');
       card.setAttribute('aria-label', dlg.title || `Диалог ${di + 1}`);
-      if (dlg.title) card.append(el('h3', 'md-dtitle', dlg.title));
+      const dUrl = audioUrl(dlg);
+      if (dlg.title || dUrl) {
+        const head = el('div', 'md-dhead');
+        if (dlg.title) head.append(el('h3', 'md-dtitle', dlg.title));
+        if (dUrl) head.append(audioButton(dUrl, 'd' + dlg.id, 'md-listen', '🔊', 'Прослушать весь диалог', 'Слушать диалог'));
+        card.append(head);
+      }
       dlg.lines.forEach(line => {
         const si = Math.max(0, speakers().findIndex(s => s.id === line.speaker)), sp = speakers()[si];
         const who = nameOf(sp, si);
@@ -62,7 +71,10 @@ const MiniDialoguesPlayer = (() => {
           img.onerror = () => { img.remove(); ava.textContent = ava.dataset.letter; ava.classList.remove('md-pic'); };
         }
         const main = el('div', 'md-main');
-        main.append(el('div', 'md-name', who));
+        const nameRow = el('div', 'md-name', who);
+        const lUrl = audioUrl(line);
+        if (lUrl) nameRow.append(audioButton(lUrl, 'l' + line.id, 'md-sound', '🔊', `Прослушать реплику: ${who}`));
+        main.append(nameRow);
         const bubble = el('div', 'md-bubble');
         bubble.setAttribute('aria-label', `${who}:`);
         line.parts.forEach(p => {

@@ -1,6 +1,7 @@
 // Редактор модуля Mini Dialogues (мини-диалоги): говорящие, диалоги, реплики и пропуски внутри реплик.
 // Этап 1 (2026-11-21): только текст, ввод с клавиатуры. Этап 2 (2026-11-21): способ ответа на всё упражнение — ввод, банк слов или выпадающий список, слова-ловушки.
-// Этап 3 (начат 2026-11-21): картинка-аватар говорящего (общий MediaUI.imageControl из core/mediabar.js). Звук реплики и диалога — дальше.
+// Этап 3 (2026-11-21): картинка-аватар говорящего (общий MediaUI.imageControl из core/mediabar.js); звук реплики и всего диалога
+// (общий MediaUI.picker), у звука выключатель «Только после завершения» — до конца ученик его не видит и не слышит.
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Разметка пропусков в репликах — общий движок (core/gap-engine.js). Реплика хранится как parts: строки и пропуски {gap: ID}.
 const MiniDialoguesEditor = (() => {
@@ -30,6 +31,7 @@ const MiniDialoguesEditor = (() => {
     const url = safeImageUrl(im.url);
     return url ? { url } : null;
   };
+  const audioOut = path => { const m = window.safeMediaPath && safeMediaPath(path); return m ? { media: m } : null; };
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
 
   function el(tag, cls, text) {
@@ -43,7 +45,7 @@ const MiniDialoguesEditor = (() => {
     return {
       module: 'mini_dialogues', format: 1, mode: 'typing', distractors: [],
       speakers: [{ id: 'sp1', name: '', side: 'auto', avatar: emptyImage() }, { id: 'sp2', name: '', side: 'auto', avatar: emptyImage() }],
-      dialogues: [{ id: 'd1', title: '', lines: [{ id: 'l1', speaker: 'sp1', parts: [''] }, { id: 'l2', speaker: 'sp2', parts: [''] }] }],
+      dialogues: [{ id: 'd1', title: '', audio: '', audioLate: false, lines: [{ id: 'l1', speaker: 'sp1', parts: [''], audio: '', audioLate: false }, { id: 'l2', speaker: 'sp2', parts: [''], audio: '', audioLate: false }] }],
       gaps: {},
     };
   }
@@ -57,12 +59,12 @@ const MiniDialoguesEditor = (() => {
       speakers: [{ id: 'sp1', name: 'Anna', side: 'left', avatar: DimDemo.img('one') }, { id: 'sp2', name: 'Tom', side: 'right', avatar: emptyImage() }, { id: 'sp3', name: 'Waiter', side: 'left', avatar: emptyImage() }],
       dialogues: [
         { id: 'd1', title: 'At the café', lines: [
-          { id: 'l1', speaker: 'sp3', parts: ['Good morning! What would you ', { gap: 'g1' }, '?'] },
+          { id: 'l1', speaker: 'sp3', parts: ['Good morning! What would you ', { gap: 'g1' }, '?'], audio: DimDemo.AUD.a, audioLate: true },
           { id: 'l2', speaker: 'sp1', parts: ['A cup of ', { gap: 'g2' }, ', please.'] },
           { id: 'l3', speaker: 'sp2', parts: ['And I would like a ', { gap: 'g3' }, ' of orange juice.'] },
           { id: 'l4', speaker: 'sp3', parts: ['Of course. Anything ', { gap: 'g4' }, '?'] },
         ] },
-        { id: 'd2', title: 'After school', lines: [
+        { id: 'd2', title: 'After school', audio: DimDemo.AUD.b, audioLate: true, lines: [
           { id: 'l5', speaker: 'sp1', parts: ['What do you usually ', { gap: 'g5' }, ' after school?'] },
           { id: 'l6', speaker: 'sp2', parts: ['I play football with my friends.'] },
         ] },
@@ -205,13 +207,15 @@ const MiniDialoguesEditor = (() => {
     title.placeholder = 'Название или сцена (необязательно)';
     title.oninput = () => { dlg.title = title.value; save(); };
     head.append(title);
+    const dAud = audioBox(dlg, 'Звук всего диалога');
+    head.append(soundButton(dlg, dAud, 'Звук всего диалога'));
     if (d.dialogues.length > 1) {
       const del = el('button', 'md-icon', '×');
       del.title = 'Удалить диалог';
       del.onclick = () => removeDialogue(dlg);
       head.append(del);
     }
-    card.append(head);
+    card.append(head, dAud);
     dlg.lines.forEach((line, li) => card.append(lineRow(dlg, line, li)));
     const add = el('button', 'md-add', '+ Реплика');
     add.onclick = () => addLine(dlg, dlg.lines.length);
@@ -259,13 +263,42 @@ const MiniDialoguesEditor = (() => {
       drawPanel();
     };
     row.append(el('span', 'md-num', `${li + 1}.`), sel, ed);
+    const aud = audioBox(line, 'Звук реплики');
+    row.append(soundButton(line, aud, 'Звук реплики'));
     if (dlg.lines.length > 2) {
       const del = el('button', 'md-icon', '×');
       del.title = 'Удалить реплику';
       del.onclick = () => removeLine(dlg, line);
       row.append(del);
     }
+    row.append(aud);
     return row;
+  }
+
+  // Звук реплики или диалога: значок динамика открывает панель с загрузкой и выключателем «Только после завершения»
+  // (серый значок — звука нет, цветной — есть)
+  function audioBox(obj, title) {
+    const box = el('div', 'md-aud');
+    box.hidden = !obj.audio;
+    if (typeof MediaUI !== 'undefined') box.append(MediaUI.picker('audio', () => obj.audio || '', v => { obj.audio = v; if (box.btn) box.btn.classList.toggle('has', !!v); save(); }, 'Загрузить: ' + title.toLowerCase()));
+    const late = el('label', 'md-late');
+    const cb = el('input');
+    cb.type = 'checkbox';
+    cb.checked = !!obj.audioLate;
+    cb.onchange = () => { obj.audioLate = cb.checked; save(); };
+    late.append(cb, document.createTextNode(' Только после завершения'));
+    late.append(help('До последней проверки ученик не увидит кнопку звука. Нужно, если запись произносит ответы: иначе она подскажет пропуски. Без галочки звук доступен всегда.'));
+    box.append(late);
+    return box;
+  }
+  function soundButton(obj, box, title) {
+    const b = el('button', 'md-icon md-sound', '🔊');
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.classList.toggle('has', !!obj.audio);
+    box.btn = b;
+    b.onclick = () => { box.hidden = !box.hidden; };
+    return b;
   }
 
   function fillDom(ed, parts) {
@@ -298,7 +331,7 @@ const MiniDialoguesEditor = (() => {
 
   function addLine(dlg, index) {
     const id = nextId('l', allLines().map(l => l.id));
-    dlg.lines.splice(index, 0, { id, speaker: nextSpeaker(dlg, index), parts: [''] });
+    dlg.lines.splice(index, 0, { id, speaker: nextSpeaker(dlg, index), parts: [''], audio: '', audioLate: false });
     save();
     draw();
     const ed = root.querySelector(`[data-item="${id}"]`);
@@ -318,7 +351,7 @@ const MiniDialoguesEditor = (() => {
   function addDialogue() {
     const lineIds = allLines().map(l => l.id), sp = d.speakers.map(s => s.id);
     const a = nextId('l', lineIds), b = nextId('l', [...lineIds, a]);
-    d.dialogues.push({ id: nextId('d', d.dialogues.map(x => x.id)), title: '', lines: [{ id: a, speaker: sp[0] || '', parts: [''] }, { id: b, speaker: sp[1] || sp[0] || '', parts: [''] }] });
+    d.dialogues.push({ id: nextId('d', d.dialogues.map(x => x.id)), title: '', audio: '', audioLate: false, lines: [{ id: a, speaker: sp[0] || '', parts: [''], audio: '', audioLate: false }, { id: b, speaker: sp[1] || sp[0] || '', parts: [''], audio: '', audioLate: false }] });
     save();
     draw();
   }
@@ -522,6 +555,9 @@ const MiniDialoguesEditor = (() => {
   }).filter(p => p !== '');
   const isEmptyLine = l => !cleanParts(l.parts).length;
 
+  // Звук реплики или диалога для файла: {audio:{media}} и late:true, если звук только после завершения
+  const soundOut = o => { const a = audioOut(o.audio); return a ? (o.audioLate ? { audio: a, late: true } : { audio: a }) : {}; };
+
   // Данные для файла: без пустых реплик и говорящих без имени-ссылок, пробелы убраны, стёртые из текста пропуски не попадают
   function exportData(draft) {
     const speakers = draft.speakers.map(s => {
@@ -529,7 +565,7 @@ const MiniDialoguesEditor = (() => {
       return av ? { id: s.id, name: clean(s.name), side: s.side, avatar: av } : { id: s.id, name: clean(s.name), side: s.side };
     });
     const dialogues = draft.dialogues
-      .map(x => ({ id: x.id, title: clean(x.title), lines: x.lines.filter(l => !isEmptyLine(l)).map(l => ({ id: l.id, speaker: l.speaker, parts: cleanParts(l.parts) })) }))
+      .map(x => ({ id: x.id, title: clean(x.title), ...soundOut(x), lines: x.lines.filter(l => !isEmptyLine(l)).map(l => ({ id: l.id, speaker: l.speaker, parts: cleanParts(l.parts), ...soundOut(l) })) }))
       .filter(x => x.lines.length);
     const gaps = {};
     dialogues.forEach(x => x.lines.forEach(l => l.parts.filter(isGap).forEach(p => {
@@ -558,10 +594,12 @@ const MiniDialoguesEditor = (() => {
     draft.dialogues.forEach((x, di) => {
       const lines = x.lines;
       if (lines.length < 2) errors.push(`Диалог ${di + 1}: нужно не меньше двух реплик.`);
+      if (audioOut(x.audio) && !x.audioLate && lines.some(l => cleanParts(l.parts).some(isGap))) warnings.push(`Диалог ${di + 1}: звук всего диалога доступен сразу и может подсказать ответы. Включите «Только после завершения».`);
       lines.forEach((l, li) => {
         const where = `Диалог ${di + 1}, реплика ${li + 1}`;
         if (!l.speaker || !sIds.has(l.speaker)) errors.push(`${where}: не выбран говорящий.`);
         if (isEmptyLine(l)) errors.push(`${where}: пустая реплика.`);
+        if (audioOut(l.audio) && !l.audioLate && cleanParts(l.parts).some(isGap)) warnings.push(`${where}: звук доступен сразу и может подсказать ответ. Включите «Только после завершения».`);
         const text = cleanParts(l.parts).map(p => (isGap(p) ? (draft.gaps[p.gap].answer || '') : p)).join('');
         if (text.length > LONG_LINE) warnings.push(`${where}: очень длинная реплика. Лучше разделить её на две.`);
         cleanParts(l.parts).filter(isGap).forEach(p => {
@@ -601,9 +639,9 @@ const MiniDialoguesEditor = (() => {
     const dialogues = file.dialogues.map((x, di) => {
       const lines = (Array.isArray(x.lines) ? x.lines : []).map(l => {
         const parts = (Array.isArray(l.parts) ? l.parts : []).filter(p => typeof p === 'string' || (p && gaps[p.gap]));
-        return { id: String(l.id || 'l' + (++ln)), speaker: String(l.speaker || ''), parts: parts.length ? parts : [''] };
+        return { id: String(l.id || 'l' + (++ln)), speaker: String(l.speaker || ''), parts: parts.length ? parts : [''], audio: (l.audio && safeMediaPath(l.audio.media)) || '', audioLate: !!l.late };
       });
-      return { id: String(x.id || 'd' + (di + 1)), title: String(x.title || ''), lines };
+      return { id: String(x.id || 'd' + (di + 1)), title: String(x.title || ''), audio: (x.audio && safeMediaPath(x.audio.media)) || '', audioLate: !!x.late, lines };
     });
     return { ...create(), mode: ['word_bank', 'dropdown', 'typing'].includes(file.mode) ? file.mode : 'typing', distractors: Array.isArray(file.distractors) ? file.distractors.map(String) : [], speakers, dialogues: dialogues.length ? dialogues : create().dialogues, gaps };
   }

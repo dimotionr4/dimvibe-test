@@ -64,3 +64,13 @@
 .md-spk { align-items:center; }
 .md-spk .mb-img { flex:none; width:auto; }
 .md-spk .mb-bar { padding:0; justify-content:flex-start; }
+
+/* Звук реплики и диалога (этап 3) */
+.md-sound { font-size:1rem; opacity:.45; }
+.md-sound:hover { color:var(--accent); opacity:1; }
+.md-sound.has { opacity:1; }
+.md-aud { flex-basis:100%; display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:4px 0 6px 2.4em; }
+.md-aud[hidden] { display:none; }
+.md-late { display:inline-flex; align-items:center; gap:4px; color:var(--muted); font-size:.9rem; }
+.md-line { flex-wrap:wrap; }
+.md-head + .md-aud { padding-left:0; }
