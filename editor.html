@@ -334,15 +334,21 @@
   .nk-act { display:flex; gap:8px; flex-wrap:wrap; }
   .nk-act button { min-height:0; padding:6px 12px; font-size:.9rem; }
   .nk-group { margin-bottom:12px; }
-  .kind span { display:none; }
-  .modal-box.choose.locked { width:min(420px, 100%); margin-top:12vh; }
+  .kind .k-ic, .kind span { display:none; }
+  .kind em { font-style:normal; }
+  .modal-box.choose.locked { width:min(440px, 100%); margin-top:12vh; }
   .modal-box.choose.locked .nk-sel, .modal-box.choose.locked #kindCancel, .modal-box.choose.locked .demo-note { display:none; }
-  .modal-box.choose.locked .nk-foot { padding:14px 20px 18px; }
-  .modal-box.choose.locked .nk-act { flex-direction:column; width:100%; }
-  .modal-box.choose.locked .kind { text-align:left; padding:10px 14px; font-size:.95rem; }
-  .modal-box.choose.locked .kind span { display:block; font-weight:400; font-size:.8rem; opacity:.85; }
+  .modal-box.choose.locked .nk-foot { padding:14px 20px 18px; border-top:0; }
   .modal-box.choose.locked .nk-body { display:none; }
-  .modal-box.choose.locked .nk-foot { border-top:0; }
+  .modal-box.choose.locked .nk-act { flex-direction:column; width:100%; gap:10px; }
+  .modal-box.choose.locked .kind { display:flex; align-items:center; gap:14px; text-align:left; padding:14px 16px; border-radius:12px; background:var(--bg); color:inherit; border:1.5px solid var(--line); font-weight:400; transition:border-color .2s, background .2s, transform .2s; }
+  .modal-box.choose.locked .kind[hidden] { display:none; }
+  .modal-box.choose.locked .kind:hover { border-color:var(--accent); background:var(--accent-soft); }
+  .modal-box.choose.locked .kind:active { transform:scale(.98); }
+  .modal-box.choose.locked .kind .k-ic { display:grid; place-items:center; flex:none; width:44px; height:44px; border-radius:10px; background:var(--accent-soft); color:var(--accent); }
+  .modal-box.choose.locked .kind .k-ic svg { width:24px; height:24px; }
+  .modal-box.choose.locked .kind b { display:block; font-size:1rem; }
+  .modal-box.choose.locked .kind span { display:block; margin-top:2px; font-size:.82rem; color:var(--muted); }
   .kind { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
   .kind[hidden] { display:none; }
   .demo-note { margin:0 0 12px; padding:6px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-size:.85rem; }
@@ -536,8 +542,8 @@
       <div class="nk-sel"><b id="nkName"></b><span id="nkDesc"></span><small id="kindNote">Вид текста выбирается один раз и потом не меняется.</small></div>
       <div class="nk-act">
         <button id="kindCancel">Отмена</button>
-        <button class="kind" data-kind="sentences" title="Каждое предложение — своё задание с пропусками">Отдельные предложения<span>Каждое предложение — своё задание</span></button>
-        <button class="kind" data-kind="text" title="Один текст из нескольких абзацев с пропусками">Связный текст<span>Один текст из нескольких абзацев</span></button>
+        <button class="kind" data-kind="sentences" title="Каждое предложение — своё задание с пропусками"><i class="k-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg></i><em><b>Отдельные предложения</b><span>Каждое предложение — своё задание с пропусками</span></em></button>
+        <button class="kind" data-kind="text" title="Один текст из нескольких абзацев с пропусками"><i class="k-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16M4 9h16M4 13h10"/><path d="M4 18h6M13 18h2M17 18h3"/></svg></i><em><b>Связный текст</b><span>Один текст из нескольких абзацев с пропусками</span></em></button>
         <button class="kind" id="kindGo" data-kind="statements" hidden>Создать упражнение</button>
       </div>
     </footer>
