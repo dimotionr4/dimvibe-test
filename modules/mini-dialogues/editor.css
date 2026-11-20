@@ -1,0 +1,52 @@
+/* Редактор модуля Mini Dialogues. Цвета берутся из переменных ядра (editor.html) */
+.md-wrap { position:relative; }
+.md-tools { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.md-muted { color:var(--muted); }
+.md-limit { color:var(--bad); font-weight:600; }
+.md-msg { background:var(--accent-soft); border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+.md-msg[hidden] { display:none; }
+.md-body { display:flex; flex-direction:column; gap:12px; }
+.md-card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.md-card:focus-within { border-color:var(--accent); }
+.md-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.md-head h3 { margin:0; font-size:1rem; white-space:nowrap; }
+.md-title { flex:1; min-width:0; }
+
+/* Говорящие: значок с буквой, имя, сторона */
+.md-spk { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.md-spk input { flex:1; min-width:0; }
+.md-side { width:auto; }
+.md-dot { flex:none; width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem; color:#fff; }
+.md-c0 { background:#4f7be8; } .md-c1 { background:#e0713a; } .md-c2 { background:#3aa56b; }
+.md-c3 { background:#a05bd6; } .md-c4 { background:#d4a017; } .md-c5 { background:#d44a7a; }
+
+/* Реплики */
+.md-line { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; }
+.md-num { color:var(--muted); min-width:1.6em; padding-top:8px; }
+.md-spk-sel { flex:none; max-width:40%; min-height:36px; }
+.md-spk-sel.md-none { border-color:var(--bad); color:var(--bad); }
+.md-edit { flex:1; min-width:0; min-height:36px; padding:4px 8px; outline:none; white-space:pre-wrap; line-height:2.1; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
+.md-edit:focus { border-color:var(--accent); }
+.md-edit.empty::before { content:attr(data-placeholder); color:var(--muted); pointer-events:none; }
+.md-chip { display:inline-block; padding:0 10px; margin:0 2px; border-radius:6px; background:var(--accent-soft); border-bottom:2px solid var(--accent); line-height:1.6; cursor:pointer; user-select:none; }
+.md-chip.open { background:var(--accent); color:#fff; }
+.md-icon { border:none; background:transparent; color:var(--muted); padding:0 6px; min-height:28px; font-size:1.1rem; }
+.md-icon:hover { color:var(--bad); }
+.md-add { margin:4px 0 0; }
+
+/* Панель пропуска стоит рядом с самим пропуском */
+.md-panel-box { position:absolute; z-index:8; box-shadow:0 8px 28px rgba(0,0,0,.28); border-radius:12px; }
+.md-panel-box[hidden] { display:none; }
+.md-panel { background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:12px; }
+.md-panel > input { width:100%; margin-bottom:6px; }
+.md-panel-tools { display:inline-flex; gap:2px; align-items:center; }
+.md-panel .md-head { justify-content:space-between; }
+.md-label { font-size:.9rem; color:var(--muted); margin-bottom:4px; }
+.md-labelrow { display:flex; align-items:center; gap:6px; }
+.md-warn { color:var(--bad); font-size:.85rem; margin:-4px 0 8px; }
+.md-warn[hidden] { display:none; }
+.md-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+.md-tag { display:inline-flex; align-items:center; gap:4px; background:var(--accent-soft); border-radius:999px; padding:2px 4px 2px 10px; }
+.md-tag-x { border:none; background:transparent; color:var(--muted); min-height:22px; padding:0 4px; }
+.md-adder { display:flex; gap:6px; margin-bottom:6px; }
+.md-adder input { flex:1; min-width:0; }

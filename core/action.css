@@ -131,6 +131,10 @@ html.style-action:root .chip.ld-chip:not(.ld-slot) { background-color:var(--ax-t
 html.style-action:root .chip.ld-chip.selected { background-color:var(--accent); color:#000; box-shadow:none; }
 html.style-action .ld-dot { border-color:#000; }
 
+/* Mini Dialogues: пузыри с прямыми углами и жёсткой тенью, значок говорящего — квадрат */
+html.style-action .md-bubble { border-radius:0 !important; box-shadow:3px 3px 0 var(--ax-shadow-c); }
+html.style-action .md-ava { border-radius:0; }
+
 /* Модули: фиксированные скругления (овалы и т. п.) заменены прямыми углами; скругления через --r-s / --r-m / --r-l уже обнулены выше.
    Круглые значки (50 %: точки, номера, метки) остаются круглыми. Список собран по modules/*/player.css */
 html.style-action .cc-chip,

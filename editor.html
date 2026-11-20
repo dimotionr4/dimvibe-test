@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="core/gap.css?v=8">
 <link rel="stylesheet" href="core/check.css?v=3">
 <link rel="stylesheet" href="core/comic.css?v=14">
-<link rel="stylesheet" href="core/action.css?v=14">
+<link rel="stylesheet" href="core/action.css?v=15">
 <link rel="stylesheet" href="core/soft.css?v=8">
 <link rel="stylesheet" href="core/fancy.css?v=8">
 <link rel="stylesheet" href="core/fonts.css?v=1">
@@ -423,6 +423,7 @@
 <link rel="stylesheet" href="modules/label-diagram/editor.css?v=12">
 <link rel="stylesheet" href="modules/text-to-image/editor.css?v=1">
 <link rel="stylesheet" href="modules/word-search/editor.css?v=1">
+<link rel="stylesheet" href="modules/mini-dialogues/editor.css?v=1">
 <link rel="stylesheet" href="modules/vocabulary/editor.css?v=2">
 <link rel="stylesheet" href="modules/flashcards/editor.css?v=3">
 <link rel="stylesheet" href="modules/splice/editor.css?v=4">
@@ -539,6 +540,7 @@
         <button data-mod="mistake_mode" aria-pressed="false"><b>Mistake Mode</b><span>Найти ошибки в тексте</span></button>
         <button data-mod="color_coding" aria-pressed="false"><b>Color Coding</b><span>Раскрасить слова по категориям</span></button>
         <button data-mod="essay_writing" aria-pressed="false"><b>Essay Writing</b><span>Написать текст по заданию</span></button>
+        <button data-mod="mini_dialogues" aria-pressed="false"><b>Mini Dialogues</b><span>Диалог с пропусками в репликах</span></button>
       </div></section>
       <section class="nk-group"><h4>Картинки и схемы</h4><div class="modpick">
         <button data-mod="hotspot" aria-pressed="false"><b>Hotspot</b><span>Найти место на картинке</span></button>
@@ -595,6 +597,7 @@
 <script src="modules/label-diagram/editor.js?v=7"></script>
 <script src="modules/text-to-image/editor.js?v=2"></script>
 <script src="modules/word-search/editor.js?v=2"></script>
+<script src="modules/mini-dialogues/editor.js?v=1"></script>
 <script src="modules/vocabulary/editor.js?v=5"></script>
 <script src="modules/flashcards/editor.js?v=4"></script>
 <script src="modules/splice/tokens.js?v=1"></script>
@@ -604,11 +607,11 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 135;
+const ASSET_V = 137;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
-const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor, splice: SpliceEditor, essay_writing: EssayWritingEditor, prepositions: PrepositionsEditor, hotspot: HotspotEditor, label_diagram: LabelDiagramEditor, vocabulary: VocabularyEditor, flashcards: FlashcardsEditor,text_to_image: TextToImageEditor, word_search: WordSearchEditor };
+const MODULES = { fill_blanks: FillBlanksEditor, image_to_gaps: ImageToGapsEditor, true_false: TrueFalseEditor, multiple_choice: MultipleChoiceEditor, matching: MatchingEditor, mistake_mode: MistakeModeEditor, color_coding: ColorCodingEditor, select_title: SelectTitleEditor, ordering: OrderingEditor, timeline: TimelineEditor, word_scramble: WordScrambleEditor, categories: CategoriesEditor, odd_one_out: OddOneOutEditor, splice: SpliceEditor, essay_writing: EssayWritingEditor, prepositions: PrepositionsEditor, hotspot: HotspotEditor, label_diagram: LabelDiagramEditor, vocabulary: VocabularyEditor, flashcards: FlashcardsEditor,text_to_image: TextToImageEditor, word_search: WordSearchEditor, mini_dialogues: MiniDialoguesEditor };
 let drafts = {}, current = null, tab = 'content', savedTimer = null;
 let previewTimer = null, refreshTimer = null, previewLoaded = false, previewReady = false;
 
@@ -1813,7 +1816,7 @@ setPreviewOpen(!narrow()); // на широком экране предпрос�
   history.replaceState(null, '', location.pathname);
   if (!MODULES[mod]) return;
   pickModule(mod);
-  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'splice' || mod === 'essay_writing' || mod === 'hotspot' || mod === 'label_diagram' || mod === 'vocabulary' || mod === 'flashcards' || mod === 'text_to_image' || mod === 'word_search') createDraft('statements', mod);
+  if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'splice' || mod === 'essay_writing' || mod === 'hotspot' || mod === 'label_diagram' || mod === 'vocabulary' || mod === 'flashcards' || mod === 'text_to_image' || mod === 'word_search' || mod === 'mini_dialogues') createDraft('statements', mod);
   else askKind(mod);
 })();
 </script>
