@@ -1,5 +1,5 @@
 // Плеер модуля Mini Dialogues (мини-диалоги): реплики-«пузыри» с пропусками, ответ вводится с клавиатуры.
-// Этап 1 (2026-11-21): только текст. Общая часть прохождения — шапка, инструкция, проверки, закрепление, результат, сброс —
+// Этап 1 (2026-11-21): только текст. Этап 3 (начат 2026-11-21): у говорящего может быть картинка-аватар. Общая часть прохождения — шапка, инструкция, проверки, закрепление, результат, сброс —
 // живёт в index.html и работает с теми же переменными (data, gaps, finished, note, checksUsed) и функцией render().
 // Пропуск рисует общая makeGap(idx) из index.html (форма, ширина и нумерация — из вкладки «Дизайн»), подсказку — hintButton(idx).
 // Каждый пропуск — единица ответа общего хода; одна общая проверка на все диалоги.
@@ -48,6 +48,19 @@ const MiniDialoguesPlayer = (() => {
         const row = el('div', `md-line md-${sideOf(sp, si)} md-c${si % 6}`);
         const ava = el('span', 'md-ava', (who[0] || '?').toUpperCase());
         ava.setAttribute('aria-hidden', 'true');
+        // Аватар: картинка вместо буквы; если она не загрузилась, остаётся буква
+        const src = sp && sp.avatar ? mediaSrc(sp.avatar) : null;
+        if (src) {
+          const img = document.createElement('img');
+          img.alt = '';
+          img.src = src;
+          img.onerror = () => img.remove();
+          ava.textContent = '';
+          ava.append(img);
+          ava.classList.add('md-pic');
+          ava.dataset.letter = (who[0] || '?').toUpperCase();
+          img.onerror = () => { img.remove(); ava.textContent = ava.dataset.letter; ava.classList.remove('md-pic'); };
+        }
         const main = el('div', 'md-main');
         main.append(el('div', 'md-name', who));
         const bubble = el('div', 'md-bubble');

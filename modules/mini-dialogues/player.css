@@ -10,6 +10,8 @@
 .md-ava { flex:none; width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--md-c); color:#fff; font-weight:700; font-size:.9rem; }
 .md-main { min-width:0; max-width:min(100%, 640px); display:flex; flex-direction:column; gap:2px; }
 .md-right .md-main { align-items:flex-end; }
+.md-ava.md-pic { width:44px; height:44px; background:var(--card); overflow:hidden; border:2px solid var(--md-c); box-sizing:border-box; }
+.md-ava img { width:100%; height:100%; object-fit:cover; display:block; }
 .md-name { font-size:.8rem; font-weight:600; color:var(--md-c); padding:0 6px; }
 .md-bubble { line-height:2.7; padding:2px 14px; border:1.5px solid color-mix(in srgb, var(--md-c) 45%, var(--line)); border-radius:18px 18px 18px 4px; background:color-mix(in srgb, var(--md-c) 12%, var(--card)); overflow-wrap:anywhere; }
 .md-right .md-bubble { border-radius:18px 18px 4px 18px; }

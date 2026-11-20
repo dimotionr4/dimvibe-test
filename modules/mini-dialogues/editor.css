@@ -14,7 +14,7 @@
 
 /* Говорящие: значок с буквой, имя, сторона */
 .md-spk { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-.md-spk input { flex:1; min-width:0; }
+.md-spk > input { flex:1; min-width:0; }
 .md-side { width:auto; }
 .md-dot { flex:none; width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem; color:#fff; }
 .md-c0 { background:#4f7be8; } .md-c1 { background:#e0713a; } .md-c2 { background:#3aa56b; }
@@ -59,3 +59,8 @@
 .md-modes button.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
 .md-ico { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .md-auto { background:var(--bg); border:1px solid var(--line); padding-right:10px; }
+
+/* Аватар говорящего (этап 3): общая плитка картинки, строка выровнена по центру */
+.md-spk { align-items:center; }
+.md-spk .mb-img { flex:none; width:auto; }
+.md-spk .mb-bar { padding:0; justify-content:flex-start; }

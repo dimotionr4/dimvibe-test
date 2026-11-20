@@ -1,6 +1,6 @@
 // Редактор модуля Mini Dialogues (мини-диалоги): говорящие, диалоги, реплики и пропуски внутри реплик.
 // Этап 1 (2026-11-21): только текст, ввод с клавиатуры. Этап 2 (2026-11-21): способ ответа на всё упражнение — ввод, банк слов или выпадающий список, слова-ловушки.
-// Картинки и звук — следующие этапы.
+// Этап 3 (начат 2026-11-21): картинка-аватар говорящего (общий MediaUI.imageControl из core/mediabar.js). Звук реплики и диалога — дальше.
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Разметка пропусков в репликах — общий движок (core/gap-engine.js). Реплика хранится как parts: строки и пропуски {gap: ID}.
 const MiniDialoguesEditor = (() => {
@@ -21,6 +21,15 @@ const MiniDialoguesEditor = (() => {
   const allLines = () => d.dialogues.flatMap(x => x.lines);
   const gapOrder = () => GapEngine.gapOrder(allLines());
   const clean = s => String(s || '').trim().replace(/\s+/g, ' ');
+  const emptyImage = () => ({ media: '', url: '', alt: '' });
+  const hasPic = im => !!(im && (safeMediaPath(im.media) || safeImageUrl(im.url)));
+  const imageOut = im => {
+    if (!im) return null;
+    const media = safeMediaPath(im.media);
+    if (media) return { media };
+    const url = safeImageUrl(im.url);
+    return url ? { url } : null;
+  };
   const help = text => (window.helpIcon ? window.helpIcon(text) : document.createTextNode(''));
 
   function el(tag, cls, text) {
@@ -33,7 +42,7 @@ const MiniDialoguesEditor = (() => {
   function create() {
     return {
       module: 'mini_dialogues', format: 1, mode: 'typing', distractors: [],
-      speakers: [{ id: 'sp1', name: '', side: 'auto' }, { id: 'sp2', name: '', side: 'auto' }],
+      speakers: [{ id: 'sp1', name: '', side: 'auto', avatar: emptyImage() }, { id: 'sp2', name: '', side: 'auto', avatar: emptyImage() }],
       dialogues: [{ id: 'd1', title: '', lines: [{ id: 'l1', speaker: 'sp1', parts: [''] }, { id: 'l2', speaker: 'sp2', parts: [''] }] }],
       gaps: {},
     };
@@ -45,7 +54,7 @@ const MiniDialoguesEditor = (() => {
       ...create(),
       mode: 'word_bank', distractors: ['wants', 'cup'],
       instruction: DimDemo.instruction('Вставьте слова из банка в пропуски диалогов.'),
-      speakers: [{ id: 'sp1', name: 'Anna', side: 'left' }, { id: 'sp2', name: 'Tom', side: 'right' }, { id: 'sp3', name: 'Waiter', side: 'left' }],
+      speakers: [{ id: 'sp1', name: 'Anna', side: 'left', avatar: DimDemo.img('one') }, { id: 'sp2', name: 'Tom', side: 'right', avatar: emptyImage() }, { id: 'sp3', name: 'Waiter', side: 'left', avatar: emptyImage() }],
       dialogues: [
         { id: 'd1', title: 'At the café', lines: [
           { id: 'l1', speaker: 'sp3', parts: ['Good morning! What would you ', { gap: 'g1' }, '?'] },
@@ -137,7 +146,11 @@ const MiniDialoguesEditor = (() => {
     card.append(head);
     d.speakers.forEach((sp, i) => {
       const row = el('div', 'md-spk');
+      if (!sp.avatar) sp.avatar = emptyImage();
       const dot = el('span', 'md-dot md-c' + (i % 6), (clean(sp.name)[0] || String(i + 1)).toUpperCase());
+      dot.title = 'Цвет и буква говорящего (без картинки)';
+      // Картинка-аватар: общая плитка «+» (core/mediabar.js); у ученика вместо буквы показывается она
+      const pic = MediaUI.imageControl(sp.avatar, { save });
       const name = el('input');
       name.value = sp.name;
       name.placeholder = `Имя говорящего ${i + 1}`;
@@ -152,7 +165,7 @@ const MiniDialoguesEditor = (() => {
       side.value = sp.side;
       side.setAttribute('aria-label', 'Сторона');
       side.onchange = () => { sp.side = side.value; save(); };
-      row.append(dot, name, side);
+      row.append(dot, pic, name, side);
       if (d.speakers.length > 2) {
         const del = el('button', 'md-icon', '×');
         del.title = 'Удалить говорящего';
@@ -164,7 +177,7 @@ const MiniDialoguesEditor = (() => {
     if (d.speakers.length < MAX_SPEAKERS) {
       const add = el('button', 'md-add', '+ Говорящий');
       add.onclick = () => {
-        d.speakers.push({ id: nextId('sp', d.speakers.map(s => s.id)), name: '', side: 'auto' });
+        d.speakers.push({ id: nextId('sp', d.speakers.map(s => s.id)), name: '', side: 'auto', avatar: emptyImage() });
         save();
         draw();
       };
@@ -511,7 +524,10 @@ const MiniDialoguesEditor = (() => {
 
   // Данные для файла: без пустых реплик и говорящих без имени-ссылок, пробелы убраны, стёртые из текста пропуски не попадают
   function exportData(draft) {
-    const speakers = draft.speakers.map(s => ({ id: s.id, name: clean(s.name), side: s.side }));
+    const speakers = draft.speakers.map(s => {
+      const av = imageOut(s.avatar);
+      return av ? { id: s.id, name: clean(s.name), side: s.side, avatar: av } : { id: s.id, name: clean(s.name), side: s.side };
+    });
     const dialogues = draft.dialogues
       .map(x => ({ id: x.id, title: clean(x.title), lines: x.lines.filter(l => !isEmptyLine(l)).map(l => ({ id: l.id, speaker: l.speaker, parts: cleanParts(l.parts) })) }))
       .filter(x => x.lines.length);
@@ -530,7 +546,11 @@ const MiniDialoguesEditor = (() => {
   function validate(draft) {
     const errors = [], warnings = [];
     const sIds = new Set(draft.speakers.map(s => s.id));
-    draft.speakers.forEach((s, i) => { if (!clean(s.name)) errors.push(`Говорящий ${i + 1}: нет имени.`); });
+    draft.speakers.forEach((s, i) => {
+      if (!clean(s.name)) errors.push(`Говорящий ${i + 1}: нет имени.`);
+      const im = s.avatar;
+      if (im && !safeMediaPath(im.media) && String(im.url || '').trim() && !safeImageUrl(im.url)) errors.push(`Говорящий ${i + 1}: ссылка на картинку должна быть полным адресом с https://.`);
+    });
     const names = draft.speakers.map(s => norm(s.name)).filter(Boolean);
     if (new Set(names).size < names.length) warnings.push('Есть говорящие с одинаковыми именами: ученик не отличит их.');
     if (!draft.dialogues.length) errors.push('Нет ни одного диалога.');
@@ -574,8 +594,9 @@ const MiniDialoguesEditor = (() => {
     Object.entries(file.gaps || {}).forEach(([id, g]) => {
       gaps[id] = { answer: String(g.answer || ''), alternatives: Array.isArray(g.alternatives) ? g.alternatives.map(String) : [], hint: String(g.hint || '') };
     });
-    const speakers = (Array.isArray(file.speakers) ? file.speakers : []).map((s, k) => ({ id: String(s.id || 'sp' + (k + 1)), name: String(s.name || ''), side: ['left', 'right'].includes(s.side) ? s.side : 'auto' }));
-    while (speakers.length < 2) speakers.push({ id: 'sp' + (speakers.length + 1), name: '', side: 'auto' });
+    const img = im => ({ media: (im && safeMediaPath(im.media)) || '', url: (im && typeof im.url === 'string' && im.url) || '', alt: '' });
+    const speakers = (Array.isArray(file.speakers) ? file.speakers : []).map((s, k) => ({ id: String(s.id || 'sp' + (k + 1)), name: String(s.name || ''), side: ['left', 'right'].includes(s.side) ? s.side : 'auto', avatar: img(s.avatar) }));
+    while (speakers.length < 2) speakers.push({ id: 'sp' + (speakers.length + 1), name: '', side: 'auto', avatar: emptyImage() });
     let ln = 0;
     const dialogues = file.dialogues.map((x, di) => {
       const lines = (Array.isArray(x.lines) ? x.lines : []).map(l => {
