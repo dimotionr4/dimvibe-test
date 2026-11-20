@@ -263,7 +263,7 @@ function applyLook() {
   else if (!bankTop && bk.parentNode !== document.querySelector('footer')) document.querySelector('footer').insertBefore(bk, document.querySelector('footer').firstChild);
   document.documentElement.classList.toggle('style-comic', (q('style') || dz.style) === 'comic');
   document.documentElement.classList.toggle('style-action', (q('style') || dz.style) === 'action'); // стиль «Экшен» — core/action.css
-  document.documentElement.classList.toggle('action-light', (q('style') || dz.style) === 'action' && (q('theme') || dz.actionTheme) === 'light');
+  document.documentElement.classList.toggle('action-light', (q('style') || dz.style) === 'action' && (params.has('preview') ? document.documentElement.dataset.theme === 'light' : (q('theme') || dz.actionTheme) === 'light')); // в предпросмотре редактора Экшен следует за темой предпросмотра
   document.documentElement.classList.toggle('line-black', (q('line') || dz.comicLine) === 'black');
   // Толщина линии Comic: тонкая, обычная (по умолчанию), толстая
   document.documentElement.classList.toggle('lw-thin', (q('lw') || dz.comicWidth) === 'thin');
@@ -871,7 +871,7 @@ if (params.has('preview')) {
   };
   addEventListener('message', e => {
     if (e.origin !== location.origin || e.source !== parent || !e.data) return;
-    if (e.data.type === 'dimvibe-theme') { setTheme(e.data.theme); return; }
+    if (e.data.type === 'dimvibe-theme') { setTheme(e.data.theme); if (data) applyLook(); return; }
     if (e.data.type !== 'dimvibe-preview') return;
     setTheme(e.data.theme);
     data = e.data.exercise; build(); render();

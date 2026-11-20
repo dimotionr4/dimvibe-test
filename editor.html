@@ -593,7 +593,7 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 109;
+const ASSET_V = 110;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -1272,7 +1272,7 @@ function renderDesign() {
       (ins.image || (ins.image = { url: '', alt: '', size: 'medium', align: 'center' }))[f] = v;
       touch();
       renderDesign();
-    } else if (g === 'style') setDesign({ [f]: v });
+    } else if (g === 'style') { if (f === 'actionTheme') previewTheme = v; setDesign({ [f]: v }); }
     else if (g === 'gap' && f === 'shape' && v === gd.shape && (gd.shape === 'line' || gd.shape === 'frame')) patchDesign('gap', { ...gdRaw, dashed: !gdRaw.dashed });
     else patchDesign(g, g === 'gap' ? { ...gdRaw, [f]: v } : { [f]: v });
   };
