@@ -12,6 +12,7 @@ const MiniDialoguesEditor = (() => {
   const LABELS = { name: 'С именем', hidden: 'Без имени' };
   const ALIGNS = { sides: 'По сторонам', left: 'Всё слева' };
   const BLOCKS = { card: 'Карточки', simple: 'Без карточек' };
+  const AVSIZES = { s: 'Маленький', m: 'Средний', l: 'Большой' };
   const pick = (set, v, def) => (set[v] ? v : def);
   // Способ ответа — один на всё упражнение. Значки: банк слов, выпадающий список, ввод вручную
   const MODES = [
@@ -50,7 +51,7 @@ const MiniDialoguesEditor = (() => {
 
   function create() {
     return {
-      module: 'mini_dialogues', format: 1, mode: 'typing', distractors: [], bubble: 'rounded', label: 'name', align: 'sides', blocks: 'card',
+      module: 'mini_dialogues', format: 1, mode: 'typing', distractors: [], bubble: 'rounded', label: 'name', align: 'sides', blocks: 'card', avatarSize: 'm',
       speakers: [{ id: 'sp1', name: '', side: 'auto', avatar: emptyImage() }, { id: 'sp2', name: '', side: 'auto', avatar: emptyImage() }],
       dialogues: [{ id: 'd1', title: '', audio: '', audioLate: false, lines: [{ id: 'l1', speaker: 'sp1', parts: [''], audio: '', audioLate: false }, { id: 'l2', speaker: 'sp2', parts: [''], audio: '', audioLate: false }] }],
       gaps: {},
@@ -579,7 +580,7 @@ const MiniDialoguesEditor = (() => {
       const g = draft.gaps[p.gap];
       gaps[p.gap] = { answer: clean(g.answer), alternatives: (g.alternatives || []).map(clean).filter(Boolean), hint: clean(g.hint) };
     })));
-    return { module: 'mini_dialogues', format: 1, mode: ['word_bank', 'dropdown', 'typing'].includes(draft.mode) ? draft.mode : 'typing', bubble: pick(BUBBLES, draft.bubble, 'rounded'), label: pick(LABELS, draft.label, 'name'), align: pick(ALIGNS, draft.align, 'sides'), blocks: pick(BLOCKS, draft.blocks, 'card'), speakers, dialogues, gaps, distractors: (draft.distractors || []).map(clean).filter(Boolean) };
+    return { module: 'mini_dialogues', format: 1, mode: ['word_bank', 'dropdown', 'typing'].includes(draft.mode) ? draft.mode : 'typing', bubble: pick(BUBBLES, draft.bubble, 'rounded'), label: pick(LABELS, draft.label, 'name'), align: pick(ALIGNS, draft.align, 'sides'), blocks: pick(BLOCKS, draft.blocks, 'card'), avatarSize: pick(AVSIZES, draft.avatarSize, 'm'), speakers, dialogues, gaps, distractors: (draft.distractors || []).map(clean).filter(Boolean) };
   }
 
   // Число пропусков — для «авто» числа проверок (3 при 1–5, 5 при 6 и больше)
@@ -651,13 +652,17 @@ const MiniDialoguesEditor = (() => {
       });
       return { id: String(x.id || 'd' + (di + 1)), title: String(x.title || ''), audio: (x.audio && safeMediaPath(x.audio.media)) || '', audioLate: !!x.late, lines };
     });
-    return { ...create(), bubble: pick(BUBBLES, file.bubble, 'rounded'), label: pick(LABELS, file.label, 'name'), align: pick(ALIGNS, file.align, 'sides'), blocks: pick(BLOCKS, file.blocks, 'card'), mode: ['word_bank', 'dropdown', 'typing'].includes(file.mode) ? file.mode : 'typing', distractors: Array.isArray(file.distractors) ? file.distractors.map(String) : [], speakers, dialogues: dialogues.length ? dialogues : create().dialogues, gaps };
+    return { ...create(), bubble: pick(BUBBLES, file.bubble, 'rounded'), label: pick(LABELS, file.label, 'name'), align: pick(ALIGNS, file.align, 'sides'), blocks: pick(BLOCKS, file.blocks, 'card'), avatarSize: pick(AVSIZES, file.avatarSize, 'm'), mode: ['word_bank', 'dropdown', 'typing'].includes(file.mode) ? file.mode : 'typing', distractors: Array.isArray(file.distractors) ? file.distractors.map(String) : [], speakers, dialogues: dialogues.length ? dialogues : create().dialogues, gaps };
   }
 
   // Настройки во вкладке «Дизайн» (рисует ядро); значения лежат в черновике. Банк слов и «Положение» — общие карточки ядра
   const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
   function designOptions(draft) {
+    // Размер аватара — только если хоть у одного говорящего есть картинка
+    const size = draft.speakers.some(s => hasPic(s.avatar))
+      ? [{ field: 'avatarSize', label: 'Размер аватара', value: pick(AVSIZES, draft.avatarSize, 'm'), names: AVSIZES, icons: { s: '<b class="sz">S</b>', m: '<b class="sz">M</b>', l: '<b class="sz">L</b>' } }] : [];
     return [
+      ...size,
       { field: 'bubble', label: 'Пузырь', value: pick(BUBBLES, draft.bubble, 'rounded'), names: BUBBLES, icons: {
         rounded: sq('<rect x="3" y="6" width="18" height="11" rx="6"/>'),
         soft: sq('<rect x="3" y="6" width="18" height="11" rx="6" fill="currentColor" fill-opacity=".28" stroke="none"/>'),

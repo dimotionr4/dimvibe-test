@@ -42,7 +42,7 @@ const MiniDialoguesPlayer = (() => {
   function render(root) {
     let gi = 0;
     data.dialogues.forEach((dlg, di) => {
-      const card = el('div', 'card md-card' + (data.bubble === 'soft' ? ' md-b-soft' : data.bubble === 'compact' ? ' md-b-compact' : '') + (data.label === 'hidden' ? ' md-nolabel' : '') + (data.blocks === 'simple' ? ' md-simple' : ''));
+      const card = el('div', 'card md-card' + (data.bubble === 'soft' ? ' md-b-soft' : data.bubble === 'compact' ? ' md-b-compact' : '') + (data.label === 'hidden' ? ' md-nolabel' : '') + (data.blocks === 'simple' ? ' md-simple' : '') + (data.avatarSize === 's' ? ' md-av-s' : data.avatarSize === 'l' ? ' md-av-l' : ''));
       card.setAttribute('role', 'group');
       card.setAttribute('aria-label', dlg.title || `Диалог ${di + 1}`);
       const dUrl = audioUrl(dlg);
@@ -56,20 +56,32 @@ const MiniDialoguesPlayer = (() => {
         const si = Math.max(0, speakers().findIndex(s => s.id === line.speaker)), sp = speakers()[si];
         const who = nameOf(sp, si);
         const row = el('div', `md-line md-${sideOf(sp, si)} md-c${si % 6}`);
-        const ava = el('span', 'md-ava', (who[0] || '?').toUpperCase());
-        ava.setAttribute('aria-hidden', 'true');
-        // Аватар: картинка вместо буквы; если она не загрузилась, остаётся буква
+        // Аватар: картинка вместо буквы; нажатие открывает её крупно (общий просмотр core/mediaviewer.js).
+        // Если картинка не загрузилась, остаётся буква
+        const letter = (who[0] || '?').toUpperCase();
         const src = sp && sp.avatar ? mediaSrc(sp.avatar) : null;
+        let ava;
         if (src) {
+          ava = el('button', 'md-ava md-pic');
+          ava.type = 'button';
+          ava.setAttribute('aria-label', `Увеличить картинку: ${who}`);
+          ava.title = 'Увеличить';
           const img = document.createElement('img');
           img.alt = '';
           img.src = src;
-          img.onerror = () => img.remove();
-          ava.textContent = '';
+          img.onerror = () => {
+            img.remove();
+            ava.textContent = letter;
+            ava.classList.remove('md-pic');
+            ava.onclick = null;
+            ava.disabled = true;
+            ava.setAttribute('aria-hidden', 'true');
+          };
           ava.append(img);
-          ava.classList.add('md-pic');
-          ava.dataset.letter = (who[0] || '?').toUpperCase();
-          img.onerror = () => { img.remove(); ava.textContent = ava.dataset.letter; ava.classList.remove('md-pic'); };
+          ava.onclick = () => { if (window.openMediaViewer) openMediaViewer(src, who); };
+        } else {
+          ava = el('span', 'md-ava', letter);
+          ava.setAttribute('aria-hidden', 'true');
         }
         const main = el('div', 'md-main');
         const nameRow = el('div', 'md-name');
