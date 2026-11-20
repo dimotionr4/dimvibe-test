@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Макет: стиль Soft (Fill Blanks)</title>
+<style>
+  :root { --bg:#eef0f8; --text:#3d4059; --muted:#8a8da6; --accent:#6c6fe0; --ok:#3dae7c; --bad:#d9576b;
+    --light:#fff; --dark:#c9cde0;
+    --out:6px 6px 14px var(--dark), -6px -6px 14px var(--light);
+    --out-s:3px 3px 8px var(--dark), -3px -3px 8px var(--light);
+    --in:inset 4px 4px 9px var(--dark), inset -4px -4px 9px var(--light);
+    font-family:'Nunito','Segoe UI',system-ui,sans-serif; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:400 17px/1.7 var(--font,inherit); padding:24px 16px 48px; }
+  .wrap { max-width:760px; margin:0 auto; display:grid; gap:22px; }
+  h2 { font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0; }
+  .top { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .title { font-size:1.6rem; font-weight:800; }
+  .pill { background:var(--bg); box-shadow:var(--out-s); border-radius:999px; padding:6px 16px; font-size:.9rem; color:var(--muted); }
+  .pill b { color:var(--accent); }
+  .card { background:var(--bg); box-shadow:var(--out); border-radius:24px; padding:20px 22px; }
+  .instr { font-size:.95rem; color:var(--muted); }
+  .text { line-height:2.7; font-size:1.08rem; }
+  .gap { display:inline-block; min-width:130px; min-height:44px; margin:0 4px; vertical-align:middle; padding:0 16px; text-align:center;
+    border:0; outline:0; border-radius:16px; background:var(--bg); box-shadow:var(--in); color:var(--text); font:600 1rem/44px inherit; position:relative; }
+  .gap::placeholder { color:var(--muted); font-size:.85rem; }
+  .gap:focus { box-shadow:var(--in), 0 0 0 2px var(--accent); }
+  .gap.ok { background:#dff3ea; color:#1f6f4d; box-shadow:var(--in); }
+  .gap.ok::after { content:'✓'; position:absolute; right:10px; }
+  .gap.bad { background:#f9e1e5; color:#9b3043; box-shadow:var(--in); }
+  .gap.bad::after { content:'✕'; position:absolute; right:10px; }
+  .bank { display:flex; flex-wrap:wrap; gap:14px; }
+  .chip { border:0; cursor:grab; min-height:44px; padding:0 22px; border-radius:999px; background:var(--bg); box-shadow:var(--out-s); color:var(--text); font:600 1rem inherit; }
+  .chip:active { box-shadow:var(--in); }
+  .chip.used { box-shadow:var(--in); color:var(--muted); }
+  .opt { display:flex; align-items:center; gap:14px; min-height:56px; padding:0 18px; border-radius:20px; background:var(--bg); box-shadow:var(--out-s); }
+  .opt .dot { width:26px; height:26px; border-radius:50%; box-shadow:var(--in); display:grid; place-items:center; }
+  .opt.sel .dot::after { content:''; width:12px; height:12px; border-radius:50%; background:var(--accent); }
+  .opt.sel { box-shadow:var(--in); }
+  .btns { display:flex; gap:16px; flex-wrap:wrap; }
+  .btn { border:0; cursor:pointer; min-height:48px; padding:0 30px; border-radius:999px; background:var(--bg); box-shadow:var(--out-s); color:var(--accent); font:700 1rem inherit; }
+  .btn:active { box-shadow:var(--in); }
+  .btn.main { background:var(--accent); color:#fff; box-shadow:4px 4px 12px rgba(108,111,224,.45), -4px -4px 10px var(--light); }
+  .btn.off { color:var(--muted); box-shadow:none; cursor:not-allowed; }
+  .prog { height:10px; border-radius:99px; box-shadow:var(--in); overflow:hidden; }
+  .prog i { display:block; height:100%; width:40%; background:var(--accent); border-radius:99px; }
+</style>
+</head>
+<body><div class="wrap">
+  <h2>Макет · стиль «Soft» · Fill Blanks, Multiple Choice</h2>
+  <div class="top"><div class="title">Present Simple</div><div class="pill">Проверки <b>3 / 5</b></div></div>
+  <div class="prog"><i></i></div>
+  <div class="card instr">Вставьте слова в пропуски. Можно нажать на слово в банке.</div>
+  <div class="card text">She <input class="gap ok" value="goes"> to school and he <input class="gap bad" value="go"> to work. They <input class="gap" placeholder="ответ"> tea every day.</div>
+  <div class="bank"><button class="chip">drink</button><button class="chip used">goes</button><button class="chip">play</button><button class="chip">works</button></div>
+  <div class="opt sel"><span class="dot"></span>Вариант A (выбран)</div>
+  <div class="opt"><span class="dot"></span>Вариант B</div>
+  <div class="btns"><button class="btn main">Проверить</button><button class="btn">Начать заново</button><button class="btn off">Далее</button></div>
+</div></body></html>
