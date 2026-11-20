@@ -102,3 +102,7 @@ html.style-soft:root :is(.chip, .card, .tf-ans, .mc-opt).ok:not(.gap) { backgrou
 html.style-soft:root :is(.chip, .card).bad:not(.gap) { background-color:var(--sf-bad-bg); color:#9b3043; box-shadow:var(--sf-in); }
 
 @media (prefers-reduced-motion:reduce) { html.style-soft * { transition:none !important; animation:none !important; } }
+
+/* Банк слов: у него overflow:auto, поэтому тени ярлыков срезались по краям. Запас под тень (отрицательные поля сохраняют положение) */
+html.style-soft:root footer > .bank { box-sizing:content-box; padding:12px 16px; margin:-8px auto 0; gap:12px; }
+html.style-soft:root main > .bank { box-sizing:content-box; padding:12px 16px; margin:0 auto 10px; gap:12px; border-bottom:0; }
