@@ -12,19 +12,19 @@ html.style-action:root {
   --ax-cut:10px; --ax-shadow:3px 3px 0 #000;
   --ax-head:"Impact", "Arial Narrow", "DV Noto Sans", sans-serif;
   /* поле ввода, наклейка (белая / чёрная), текст на наклейке, растр, подсказка в поле */
-  --ax-field:#000; --ax-field-on:#111; --ax-tag:#fff; --ax-tag-ink:#000; --ax-dots:rgba(255,255,255,.08); --ax-edge:#000;
+  --ax-shadow-c:#2a2a31; --ax-field:#000; --ax-field-on:#111; --ax-tag:#fff; --ax-tag-ink:#000; --ax-dots:rgba(255,255,255,.08); --ax-edge:#000;
 }
 html.style-action.action-light:root {
   color-scheme:light;
   --bg:#efece4; --card:#fff; --text:#0b0b0d; --muted:#5a5a63; --line:#0b0b0d;
   --ok:#17a85a; --bad:#e02020;
   --ax-shadow:3px 3px 0 #0b0b0d;
-  --ax-field:#fff; --ax-field-on:#fff8cc; --ax-tag:#0b0b0d; --ax-tag-ink:#fff; --ax-dots:rgba(0,0,0,.07); --ax-edge:#0b0b0d;
+  --ax-shadow-c:#0b0b0d; --ax-field:#fff; --ax-field-on:#fff8cc; --ax-tag:#0b0b0d; --ax-tag-ink:#fff; --ax-dots:rgba(0,0,0,.07); --ax-edge:#0b0b0d;
 }
 html.style-action body { background:var(--bg); color:var(--text); }
 
-/* Скос: срезаны два противоположных угла */
-html.style-action :is(.card, .instr, .chip, .check-btn, .gap.shape-frame, .gap.shape-pill, .gap.shape-free, .tf-ans, .mc-opt) {
+/* Скос: срезаны два противоположных угла — только у залитых элементов без рамки (ярлыки, кнопка). Элементы с рамкой скосом не режем: он обрывает линию рамки */
+html.style-action :is(.chip, .check-btn) {
   border-radius:0;
   clip-path:polygon(0 0, calc(100% - var(--ax-cut)) 0, 100% var(--ax-cut), 100% 100%, var(--ax-cut) 100%, 0 calc(100% - var(--ax-cut)));
 }
@@ -34,8 +34,13 @@ html.style-action h1#title { display:inline-block; background:var(--ax-tag); col
   padding:12px 34px 12px 16px; transform:rotate(-1deg); clip-path:polygon(0 0,100% 0,calc(100% - 20px) 100%,0 100%,6px 50%); }
 html.style-action h1#title:empty { display:none; }
 
+/* Рамки: прямые углы, жёсткая тень без размытия, у карточки жёлтая верхняя планка (как у страницы комикса) */
+html.style-action :is(.card, .instr, .gap.shape-frame, .gap.shape-pill, .gap.shape-free, .tf-ans, .mc-opt) { border-radius:0; }
+html.style-action:root :is(.card, .instr) { box-shadow:5px 5px 0 var(--ax-shadow-c); }
+html.style-action :is(.tf-ans, .mc-opt, .gap.shape-frame, .gap.shape-pill, .gap.shape-free) { box-shadow:3px 3px 0 var(--ax-shadow-c); }
+
 /* Карточка и инструкция: панели с растром, у инструкции жёлтая полоса слева */
-html.style-action .card { border:2px solid var(--line); background-color:var(--card); background-image:radial-gradient(var(--ax-dots) 1px, transparent 1.5px); background-size:4px 4px; }
+html.style-action:root .card { border:2px solid var(--line); border-top:5px solid var(--accent); background-color:var(--card); background-image:radial-gradient(var(--ax-dots) 1px, transparent 1.5px); background-size:4px 4px; }
 html.style-action .instr { border:0; border-left:4px solid var(--accent); background-color:var(--card); background-image:radial-gradient(var(--ax-dots) 1px, transparent 1.5px); background-size:4px 4px; }
 html.style-action .instr-head { font-family:var(--ax-head); text-transform:uppercase; letter-spacing:.08em; }
 
