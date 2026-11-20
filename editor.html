@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="core/check.css?v=3">
 <link rel="stylesheet" href="core/comic.css?v=14">
 <link rel="stylesheet" href="core/action.css?v=11">
+<link rel="stylesheet" href="core/soft.css?v=3">
 <link rel="stylesheet" href="core/fonts.css?v=1">
 <link rel="stylesheet" href="core/ui.css?v=1">
 <style>
@@ -553,7 +554,7 @@
 </div>
 
 <script src="core/icons.js?v=3"></script>
-<script src="core/design.js?v=15"></script>
+<script src="core/design.js?v=16"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
@@ -593,7 +594,7 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 116;
+const ASSET_V = 119;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -1034,6 +1035,7 @@ const OPT_ICONS = {
     classic: O('<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M8 10h8M8 14h5"/>'),
     comic: O('<path d="M5 7c4-2.4 10-2.4 14 0 2 3 2 6 0 8.4-2 1.4-5 2-7 1.8L8 20.5v-3.6C6.2 16.4 5 15.4 4.4 14 3.4 11.4 3.6 8.8 5 7z"/><path d="M9 11.2c1-.8 2-.8 3 0s2 .8 3 0"/>'),
     action: O('<path d="M13 3L5 13.5h6L9.5 21 19 9.5h-6.2z"/>'),
+    soft: O('<circle cx="12" cy="12" r="7.5"/><path d="M8.5 12h7" stroke-opacity=".5"/>'),
   },
   width: { thin: O('<path d="M4 12h16" stroke-width="1.5"/>'), normal: O('<path d="M4 12h16" stroke-width="3"/>'), thick: O('<path d="M4 12h16" stroke-width="5"/>') },
   shape: {
@@ -1203,7 +1205,7 @@ function designMock(c) {
   const colBtn = `<g class="rg" data-colbtn="1" role="button" tabindex="0" aria-label="Цвет упражнения" aria-expanded="${dzColorOpen}"><title>Цвет упражнения</title><circle class="hit" cx="34" cy="24" r="16"/><circle cx="34" cy="24" r="11" fill="var(--card)" stroke="${dzColorOpen ? 'var(--accent)' : 'var(--line)'}" stroke-width="1.5"/><circle cx="34" cy="24" r="7" fill="${ac}"/></g>`;
   const colDrop = dzColorOpen ? `<g><rect x="20" y="42" width="${36 + Object.keys(ACCENTS).length * 26}" height="36" rx="11" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/>${Object.entries(ACCENTS).map(([k, a], i) => `<g class="rg" data-col="${k}" role="button" tabindex="0" aria-label="${esc(a.label)}"><title>${esc(a.label)}</title><circle cx="${38 + i * 26}" cy="60" r="10" fill="${shade(a)}" stroke="${k === chosen ? 'var(--text)' : 'none'}" stroke-width="2.5"/></g>`).join('')}</g>` : '';
   const stBtn = (k, x, title) => `<g class="rg stbtn${st.style === k ? ' active' : ''}" data-st="${k}" role="button" tabindex="0" aria-pressed="${st.style === k}" aria-label="${title}"><title>${title}</title><rect class="stb" x="${x - 14}" y="11" width="28" height="26" rx="8"/>${nest(OPT_ICONS.style[k], x - 9, 15, 18)}</g>`;
-  const styleBar = stBtn('classic', W / 2 - 34, 'Classic: строгий вид') + stBtn('comic', W / 2, 'Comic: нарисованный от руки') + stBtn('action', W / 2 + 34, 'Экшен: тёмный, со скосами');
+  const styleBar = stBtn('classic', W / 2 - 51, 'Classic: строгий вид') + stBtn('comic', W / 2 - 17, 'Comic: нарисованный от руки') + stBtn('action', W / 2 + 17, 'Экшен: тёмный, со скосами') + stBtn('soft', W / 2 + 51, 'Soft: мягкие объёмные элементы');
   const o0 = W - 26 - (5 * PITCH + 12 - 4);
   const outline = comic
     ? [['accent', 'Контур: цвет упражнения', dotIc(ac)], ['black', 'Контур: чёрный', dotIc('#000')]].map(([k, n, ic], i) => chip(o0 + i * PITCH, 12, `style|comicLine|${k}`, ic, n, st.comicLine === k)).join('')

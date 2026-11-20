@@ -1,0 +1,104 @@
+/* Стиль Soft (решение владельца 2026-11-20; правила и макет — docs/STYLE_SOFT.md, docs/mockup-soft.html).
+   Класс html.style-soft ставит index.html (applyLook). Всегда светлый, не зависит от темы устройства.
+   Объём — только мягкие двойные тени; рамок нет. Подгонка по модулям: пока Fill Blanks, True / False, Multiple Choice. */
+html.style-soft:root {
+  color-scheme:light;
+  --bg:#eef0f8; --card:#eef0f8; --text:#3d4059; --muted:#8a8da6; --line:transparent;
+  --accent:#6c6fe0; --on-accent:#fff; --ok:#3dae7c; --bad:#d9576b;
+  --r-s:14px; --r-m:18px; --r-l:24px;
+  --sf-l:#fff; --sf-d:#c9cde0;
+  --sf-out:6px 6px 14px var(--sf-d), -6px -6px 14px var(--sf-l);
+  --sf-out-s:3px 3px 8px var(--sf-d), -3px -3px 8px var(--sf-l);
+  --sf-in:inset 4px 4px 9px var(--sf-d), inset -4px -4px 9px var(--sf-l);
+  --sf-ok-bg:#dff3ea; --sf-bad-bg:#f9e1e5;
+  --shadow-1:var(--sf-out); --shadow-2:var(--sf-out-s);
+}
+html.style-soft body { background:var(--bg); color:var(--text); }
+html.style-soft h1#title { font-weight:800; }
+
+/* Карточки и инструкция: выпуклые */
+html.style-soft:root .card { background:var(--bg); border:0; border-radius:var(--r-l); box-shadow:var(--sf-out); }
+html.style-soft:root .instr { background:var(--bg); border:0; border-radius:var(--r-l); box-shadow:var(--sf-out-s); color:var(--muted); }
+
+/* Пропуски: вдавленные поля */
+html.style-soft .gap:is(.shape-frame, .shape-pill, .shape-free) { border:0; border-radius:16px; background:var(--bg); box-shadow:var(--sf-in); }
+html.style-soft .gap.shape-line { border-bottom:0; border-radius:16px; background:var(--bg); box-shadow:var(--sf-in); }
+html.style-soft .gap:focus-within, html.style-soft .gap.sel, html.style-soft .gap.active { box-shadow:var(--sf-in), 0 0 0 2px var(--accent); }
+html.style-soft .gap input::placeholder { color:var(--muted); }
+html.style-soft .gap.ok:is(.shape-frame, .shape-pill, .shape-free, .shape-line) { background:var(--sf-ok-bg); color:#1f6f4d; }
+html.style-soft .gap.bad:is(.shape-frame, .shape-pill, .shape-free, .shape-line) { background:var(--sf-bad-bg); color:#9b3043; }
+html.style-soft .gap-num { background:var(--accent); color:#fff; border:0; }
+
+/* Банк слов: выпуклые таблетки */
+html.style-soft:root .chip { background:var(--bg); color:var(--text); border:0; border-radius:999px; box-shadow:var(--sf-out-s); font-weight:600; }
+html.style-soft:root .chip:not(.used):hover { box-shadow:var(--sf-out-s); }
+html.style-soft:root .chip.selected { box-shadow:var(--sf-in); color:var(--accent); }
+html.style-soft:root .chip.used { box-shadow:var(--sf-in); color:var(--muted); opacity:1; }
+
+/* Нижняя панель и кнопки */
+html.style-soft:root footer { background:var(--bg); border-top:0; box-shadow:0 -6px 18px rgba(201,205,224,.5); }
+html.style-soft:root .check-btn { background:var(--accent); color:#fff; border:0; border-radius:999px; box-shadow:4px 4px 12px rgba(108,111,224,.45), -4px -4px 10px var(--sf-l); font-weight:700; }
+html.style-soft:root .check-btn:disabled { background:var(--bg); color:var(--muted); box-shadow:none; }
+html.style-soft:root .check-btn:active:not(:disabled) { box-shadow:inset 3px 3px 8px rgba(0,0,0,.2); }
+html.style-soft:root .score.result { background:var(--bg); color:var(--text); border:0; border-radius:999px; box-shadow:var(--sf-in); }
+
+/* True / False и Multiple Choice: ответы и варианты */
+html.style-soft:root :is(.tf-ans, .mc-opt) { background:var(--bg); color:var(--text); border:0; border-radius:20px; box-shadow:var(--sf-out-s); font-weight:600; position:relative; }
+html.style-soft:root :is(.tf-ans.active, .mc-opt.on) { box-shadow:var(--sf-in); color:var(--accent); }
+html.style-soft:root :is(.tf-ans.ok, .mc-opt.ok, .mc-opt.right, .tf-ans.active.ok) { background:var(--sf-ok-bg); color:#1f6f4d; box-shadow:var(--sf-in); }
+html.style-soft:root :is(.tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad) { background:var(--sf-bad-bg); color:#9b3043; box-shadow:var(--sf-in); }
+html.style-soft :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { content:"✓"; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:700; }
+html.style-soft :is(.tf-ans.bad, .mc-opt.bad)::after { content:"✕"; }
+html.style-soft .mc-verdict.ok { color:var(--ok); } html.style-soft .mc-verdict.bad { color:var(--bad); }
+
+/* Переключатель вопросов */
+html.style-soft:root .tf-dot { background:var(--bg); color:var(--text); border:0; box-shadow:var(--sf-out-s); font-weight:700; }
+html.style-soft:root .tf-dot.answered:not(.active) { color:var(--accent); }
+html.style-soft:root .tf-dot.ok:not(.active) { background:var(--sf-ok-bg); color:#1f6f4d; box-shadow:var(--sf-in); }
+html.style-soft:root .tf-dot.bad:not(.active) { background:var(--sf-bad-bg); color:#9b3043; box-shadow:var(--sf-in); }
+html.style-soft:root .tf-dot.missing:not(.active) { color:var(--bad); box-shadow:var(--sf-in); }
+html.style-soft:root .tf-dot.active { background:var(--accent); color:#fff; box-shadow:4px 4px 10px rgba(108,111,224,.4); }
+html.style-soft:root .tf-pager button { background:var(--bg); color:var(--accent); border:0; border-radius:999px; box-shadow:var(--sf-out-s); font-weight:700; }
+html.style-soft .tf-count { color:var(--muted); }
+html.style-soft :is(.card, .tf-card, .mc-card).missing { box-shadow:var(--sf-out), 0 0 0 2px var(--bad); }
+
+/* ===== Остальные модули (2026-11-20). --line прозрачный, поэтому рамки на var(--line) исчезают; объём дают тени ===== */
+/* Вдавленные: поля ввода, зоны, окошки, дорожки */
+html.style-soft:root :is(.ew-text, .vc-search, .mm-fixin input, .sp-zone, .ws-zone, .sp-slot) { background:var(--bg); border:0; border-radius:var(--r-m); box-shadow:var(--sf-in); color:var(--text); }
+html.style-soft :is(.ew-text, .vc-search, .mm-fixin input):focus { outline:0; box-shadow:var(--sf-in), 0 0 0 2px var(--accent); }
+html.style-soft :is(.sp-zone, .ws-zone, .sp-slot).over, html.style-soft .sp-slot.drop { box-shadow:var(--sf-in), 0 0 0 2px var(--accent); }
+
+/* Выпуклые карточки-элементы и ярлыки (одиночные карточки, пары, подписи, переключатели видов) */
+html.style-soft:root :is(.chip.ld-chip, .chip.ld-slot, .chip.ti-chip, .chip.oo-item, .card.oo-item, .chip.cs-chip, .card.cs-chip, .itg-card, .ws-chips .ws-tok, .fc-tab, .vc-tab, .vc-chip) {
+  background:var(--bg); color:var(--text); border:0; box-shadow:var(--sf-out-s); }
+html.style-soft:root :is(.fc-tab, .vc-tab).active, html.style-soft:root :is(.fc-tab, .vc-tab)[aria-pressed="true"], html.style-soft:root .vc-chip.on { background:var(--bg); color:var(--accent); box-shadow:var(--sf-in); }
+html.style-soft:root .chip.oo-item.right, html.style-soft:root .card.oo-item.right { border:0; box-shadow:var(--sf-in); background:var(--sf-ok-bg); }
+
+/* Карточки-варианты и строки модулей: Matching, Select Title, Ordering, Timeline, Vocabulary */
+html.style-soft:root :is(.mt-card, .st-opt, .or-item, .tl-item, .vc-item) { background:var(--bg); color:var(--text); border:0; border-radius:var(--r-m); box-shadow:var(--sf-out-s); }
+html.style-soft:root :is(.mt-card.sel, .mt-card.drop, .st-opt.on, .vc-item.active) { background:var(--bg); box-shadow:var(--sf-in), 0 0 0 2px var(--accent); color:var(--accent); }
+html.style-soft:root .mt-card.linked { background:color-mix(in srgb, var(--mt-c) 14%, var(--bg)); box-shadow:var(--sf-in); }
+html.style-soft:root :is(.st-opt.ok, .or-item.ok, .mt-lines .mt-card.ok) { background:var(--sf-ok-bg); color:#1f6f4d; box-shadow:var(--sf-in); }
+html.style-soft:root :is(.st-opt.bad, .or-item.bad, .mt-card.bad) { background:var(--sf-bad-bg); color:#9b3043; box-shadow:var(--sf-in); }
+html.style-soft:root :is(.mt-card, .st-opt, .or-item, .tl-item).missing { box-shadow:var(--sf-in), 0 0 0 2px var(--bad); }
+html.style-soft:root :is(.or-item, .tl-item).or-dragging { box-shadow:8px 8px 18px var(--sf-d), -4px -4px 12px var(--sf-l); }
+
+/* Маленькие значки и метки: плоские, акцентные */
+html.style-soft :is(.ld-help, .ti-help, .ws-dot) { background:var(--bg); border:0; box-shadow:var(--sf-out-s); color:var(--accent); }
+html.style-soft :is(.mt-tag, .ld-no, .or-num, .vc-pos) { background:var(--bg); color:var(--accent); box-shadow:var(--sf-out-s); border:0; }
+html.style-soft :is(.mc-mark, .st-mark) { border:0; background:var(--bg); box-shadow:var(--sf-in); }
+html.style-soft :is(.mc-opt.on, .st-opt.on) :is(.mc-mark, .st-mark) { background:var(--accent); box-shadow:none; }
+
+/* Слова в тексте (Mistake Mode, Color Coding): мягкое выделение вместо рамок */
+html.style-soft:root .mm-w:is(.on, .ok, .bad, .half) { box-shadow:var(--sf-in); }
+html.style-soft:root .mm-w.ok { background:var(--sf-ok-bg); } html.style-soft:root .mm-w.bad { background:var(--sf-bad-bg); }
+html.style-soft .sp-paper .sp-tok { background:var(--bg); color:var(--text); border:0; box-shadow:var(--sf-out-s); transform:none !important; border-radius:14px !important; }
+
+/* Точки и дорожки на картинках и линиях: акцент */
+html.style-soft :is(.ld-dot, .hs-vtx, .hs-badge, .hs-mark) { box-shadow:var(--sf-out-s); }
+
+/* Верно / неверно у модулей: общая заливка бледным цветом и значок уже заданы выше для .ok / .bad там, где у модуля свои классы */
+html.style-soft:root :is(.chip, .card, .tf-ans, .mc-opt).ok:not(.gap) { background-color:var(--sf-ok-bg); color:#1f6f4d; box-shadow:var(--sf-in); }
+html.style-soft:root :is(.chip, .card).bad:not(.gap) { background-color:var(--sf-bad-bg); color:#9b3043; box-shadow:var(--sf-in); }
+
+@media (prefers-reduced-motion:reduce) { html.style-soft * { transition:none !important; animation:none !important; } }
