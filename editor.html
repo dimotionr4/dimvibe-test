@@ -187,7 +187,13 @@
   .pv-bar { flex:none; display:flex; align-items:center; gap:4px; height:48px; padding:0 10px; border-bottom:1px solid var(--line); }
   .pv-bar b { margin-right:8px; }
   .pv-body { flex:1; min-height:0; overflow:auto; padding:12px; }
-  .pv-note { margin:10px 0 0; font-size:.8rem; }
+  .pv-note { margin:2px 0 0; font-size:.72rem; line-height:1.3; }
+  /* Ручка под окном предпросмотра: тянем вверх и вниз, высота окна запоминается (по просьбе владельца 2026-11-21) */
+  .pv-resize { height:16px; margin:2px auto 0; width:100%; cursor:row-resize; touch-action:none; display:flex; align-items:center; justify-content:center; }
+  .pv-resize::before { content:""; width:56px; height:5px; border-radius:99px; background:var(--line); }
+  .pv-resize:hover::before, .pv-resize:focus-visible::before, body.pv-dragging .pv-resize::before { background:var(--accent); }
+  body.pv-dragging { cursor:row-resize; user-select:none; }
+  body.pv-dragging #previewFrame { pointer-events:none; }
   .dot-i { width:16px; height:16px; border-radius:50%; background:var(--c); box-shadow:0 0 0 1px var(--line); display:block; }
   .dz-top { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:8px 12px; margin-bottom:12px; background:var(--card); border:1px solid var(--line); border-radius:14px; }
   .chip { color:var(--muted); }
@@ -359,7 +365,7 @@
   .demo-note[hidden] { display:none; }
   @media (max-width:560px) { .modal { padding:0; } .modal-box.choose { margin:0; max-height:100vh; height:100vh; border-radius:0; } .modpick { grid-template-columns:1fr 1fr; } .nk-act { width:100%; } .nk-act button { flex:1; } }
   .stage { display:flex; justify-content:center; }
-  #previewFrame { width:100%; height:600px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+  #previewFrame { width:100%; height:var(--pvh, 600px); border:1px solid var(--line); border-radius:8px; background:var(--bg); }
   .stage.phone #previewFrame { width:375px; max-width:100%; }
   /* Пустой экран и предпросмотр в современном виде (2026-10-30) */
   #empty:not([hidden]) { display:flex; flex-direction:column; align-items:center; text-align:center; max-width:440px; margin:8vh auto 0; padding:var(--sp-5) var(--sp-5) 28px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-l); box-shadow:var(--shadow-1); }
@@ -373,7 +379,7 @@
   .pv-bar .icon-btn { border-radius:var(--r-s); }
   .pv-body { padding:var(--sp-4); }
   #previewFrame { border-radius:var(--r-m); box-shadow:var(--shadow-2); }
-  .pv-note { margin:var(--sp-3) 2px 0; line-height:1.45; }
+  .pv-note { margin:2px 2px 0; line-height:1.3; }
   /* Вкладки, поля и кнопки в современном виде (2026-10-30) */
   .tabs { gap:var(--sp-1); margin-bottom:var(--sp-4); }
   .tabs button { min-height:var(--tap); padding:6px 14px; border-bottom-width:3px; color:var(--muted); font-weight:500; transition:color .12s, background .12s; }
@@ -484,6 +490,7 @@
   <div class="pv-body">
     <div id="previewMsg" class="warn" hidden></div>
     <div class="stage" id="stage"><iframe id="previewFrame" title="Предпросмотр"></iframe></div>
+    <div class="pv-resize" id="pvResize" role="separator" aria-orientation="horizontal" tabindex="0" title="Потяните, чтобы изменить высоту окна (двойное нажатие — по умолчанию)" aria-label="Высота окна предпросмотра"></div>
     <p class="muted pv-note" id="pvNote">Так увидит ученик. Ответы здесь никуда не сохраняются. Предпросмотр обновляется сам при правках.</p>
     <p class="muted" id="pvEmpty" hidden>Создайте или откройте упражнение, чтобы увидеть предпросмотр.</p>
   </div>
@@ -595,7 +602,7 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 125;
+const ASSET_V = 126;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -1630,6 +1637,24 @@ $('divider').onkeydown = e => {
   e.preventDefault();
   setSplit(parseFloat($('main').style.getPropertyValue('--ws')) + (e.key === 'ArrowLeft' ? -5 : 5), true);
 };
+
+// Высота окна предпросмотра: потянуть за ручку под ним (200–1600 px), запоминается в браузере
+(() => {
+  const KEY = 'dimvibe.pvh', pv = $('previewFrame'), h = $('pvResize');
+  const set = (px, save) => {
+    px = Math.max(200, Math.min(1600, Math.round(px)));
+    $('pv').style.setProperty('--pvh', px + 'px');
+    if (save) try { localStorage.setItem(KEY, px); } catch (e) {}
+  };
+  const reset = () => { $('pv').style.removeProperty('--pvh'); try { localStorage.removeItem(KEY); } catch (e) {} };
+  try { const v = parseFloat(localStorage.getItem(KEY)); if (v > 0) set(v, false); } catch (e) {}
+  let y0 = 0, h0 = 0;
+  h.onpointerdown = e => { h.setPointerCapture(e.pointerId); document.body.classList.add('pv-dragging'); y0 = e.clientY; h0 = pv.getBoundingClientRect().height; };
+  h.onpointermove = e => { if (document.body.classList.contains('pv-dragging')) set(h0 + e.clientY - y0, false); };
+  h.onpointerup = h.onpointercancel = () => { document.body.classList.remove('pv-dragging'); set(pv.getBoundingClientRect().height, true); };
+  h.ondblclick = reset;
+  h.onkeydown = e => { if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return; e.preventDefault(); set(pv.getBoundingClientRect().height + (e.key === 'ArrowUp' ? -40 : 40), true); };
+})();
 
 document.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-size]').forEach(x => x.classList.toggle('active', x === b));
