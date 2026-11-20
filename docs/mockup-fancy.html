@@ -1,0 +1,23 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Макет: стиль Fancy</title>
+<style>
+:root{--ac:#029C91;--bg:#f4f5f7;--tint:color-mix(in srgb,var(--ac) 20%,#fff);--tint2:color-mix(in srgb,var(--ac) 32%,#fff);--ink:#1d2030;--muted:#6f7386;--ok:#cdeedd;--bad:#f8d3dc;font-family:'Poppins','Nunito','Segoe UI',sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);padding:24px 16px 48px;font-size:17px}
+.wrap{max-width:720px;margin:0 auto;display:grid;gap:16px}h1{font-size:2rem;line-height:1.15;margin:0}
+.card{background:var(--tint);border-radius:30px;padding:22px 24px;position:relative}
+.ic{width:44px;height:44px;border-radius:50%;background:#fff;display:inline-grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.gap{display:inline-block;min-width:120px;min-height:44px;margin:0 4px;border-radius:999px;background:#fff;padding:0 16px;font:600 1rem/44px inherit;text-align:center;border:0;position:relative}
+.gap.ok{background:var(--ok)}.gap.ok::after{content:'✓';margin-left:6px}.gap.bad{background:var(--bad)}.gap.bad::after{content:'✕';margin-left:6px}
+.chip{border:0;min-height:44px;padding:0 22px;border-radius:999px;background:#fff;font:600 1rem inherit}
+.opt{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;border-radius:22px;background:#fff;margin-top:10px}
+.opt.sel{outline:2px solid var(--ac)}
+.btn{border:0;min-height:52px;padding:0 34px;border-radius:999px;background:#1d2030;color:#fff;font:600 1rem inherit}
+.btn.alt{background:#fff;color:var(--ink)}
+.tabs{display:flex;background:#fff;border-radius:999px;padding:4px;width:max-content}.tabs b{padding:8px 20px;border-radius:999px;font-weight:600;font-size:.9rem}.tabs b:first-child{background:#1d2030;color:#fff}
+</style></head><body><div class="wrap">
+<h1>Present Simple</h1><div class="tabs"><b>1</b><b>2</b><b>3</b></div>
+<div class="card"><span class="ic">ℹ</span><p style="color:var(--muted)">Вставьте слова в пропуски.</p></div>
+<div class="card">She <span class="gap ok">goes</span> to school and he <span class="gap bad">go</span> to work. They <span class="gap">&nbsp;</span> tea.</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="chip">drink</button><button class="chip">play</button><button class="chip">works</button></div>
+<div class="card"><div class="opt sel">Вариант A</div><div class="opt">Вариант B</div></div>
+<div style="display:flex;gap:12px"><button class="btn">Проверить</button><button class="btn alt">Начать заново</button></div>
+</div></body></html>

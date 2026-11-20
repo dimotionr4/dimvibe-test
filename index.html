@@ -14,6 +14,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="core/comic.css?v=14">
 <link rel="stylesheet" href="core/action.css?v=12">
 <link rel="stylesheet" href="core/soft.css?v=3">
+<link rel="stylesheet" href="core/fancy.css?v=2">
 <link rel="stylesheet" href="core/fonts.css?v=1">
 <link rel="stylesheet" href="core/motion.css?v=4">
 <link rel="stylesheet" href="modules/image-to-gaps/player.css?v=4">
@@ -186,7 +187,7 @@ setTimeout(function(){h.classList.remove('mo-intro');},8000);
 document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#check'))T('mo-check',700);
 var d=e.target.closest&&e.target.closest('.tf-pager button,.tf-dot');if(d&&!d.disabled){var dir;if(d.classList.contains('tf-dot')){var a=document.querySelector('.tf-dot.active'),all=[].slice.call(d.parentNode.children);dir=a&&all.indexOf(d)<all.indexOf(a)?'mo-prev':'mo-next';}else dir=d.parentNode.firstElementChild===d?'mo-prev':'mo-next';h.classList.remove('mo-next','mo-prev');T(dir,500);}},true);})();
 </script>
-<script src="core/design.js?v=16"></script>
+<script src="core/design.js?v=17"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/mediaviewer.js?v=3"></script>
 <script src="core/richtext.js?v=6"></script>
@@ -266,6 +267,7 @@ function applyLook() {
   document.documentElement.classList.toggle('style-action', (q('style') || dz.style) === 'action'); // стиль «Экшен» — core/action.css
   document.documentElement.classList.toggle('action-light', (q('style') || dz.style) === 'action' && (params.has('preview') ? document.documentElement.dataset.theme === 'light' : (q('theme') || dz.actionTheme) === 'light')); // в предпросмотре редактора Экшен следует за темой предпросмотра
   document.documentElement.classList.toggle('style-soft', (q('style') || dz.style) === 'soft'); // стиль Soft — core/soft.css
+  document.documentElement.classList.toggle('style-fancy', (q('style') || dz.style) === 'fancy'); // стиль Fancy — core/fancy.css
   document.documentElement.classList.toggle('line-black', (q('line') || dz.comicLine) === 'black');
   // Толщина линии Comic: тонкая, обычная (по умолчанию), толстая
   document.documentElement.classList.toggle('lw-thin', (q('lw') || dz.comicWidth) === 'thin');

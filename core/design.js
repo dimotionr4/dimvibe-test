@@ -119,6 +119,12 @@ const FONTS = {
     noto: { label: 'Noto Sans', stack: '"DV Noto Sans", ' + FONT_TAIL },
     system: { label: 'Системный', stack: FONT_TAIL },
   },
+  // Fancy (2026-11-21)
+  fancy: {
+    nunito: { label: 'Nunito', stack: '"DV Nunito", ' + FONT_TAIL },
+    noto: { label: 'Noto Sans', stack: '"DV Noto Sans", ' + FONT_TAIL },
+    system: { label: 'Системный', stack: FONT_TAIL },
+  },
 };
 const fontKey = (style, key) => (FONTS[style][key] ? key : Object.keys(FONTS[style])[0]);
 
@@ -132,13 +138,14 @@ const OUTLINE_CLASSES = ['ol-wobbly', 'ol-double', 'ol-angular'];
 function normalizeStyle(d) {
   d = d || {};
   return {
-    style: d.style === 'comic' || d.style === 'action' || d.style === 'soft' ? d.style : 'classic',
+    style: d.style === 'comic' || d.style === 'action' || d.style === 'soft' || d.style === 'fancy' ? d.style : 'classic',
     comicLine: d.comicLine === 'black' ? 'black' : 'accent',
     comicWidth: d.comicWidth === 'thin' || d.comicWidth === 'thick' ? d.comicWidth : 'normal',
     classicFont: fontKey('classic', d.classicFont),
     comicFont: fontKey('comic', d.comicFont),
     actionFont: fontKey('action', d.actionFont),
     softFont: fontKey('soft', d.softFont),
+    fancyFont: fontKey('fancy', d.fancyFont),
     actionTheme: d.actionTheme === 'light' ? 'light' : 'dark',
     comicOutline: COMIC_OUTLINES[d.comicOutline] ? d.comicOutline : 'neat',
   };
@@ -152,7 +159,7 @@ const fontStack = s => FONTS[s.style][s[fontField(s.style)]].stack;
 const styleClasses = s => s.style === 'comic'
   ? `style-comic${s.comicLine === 'black' ? ' line-black' : ''}${s.comicWidth === 'thin' ? ' lw-thin' : s.comicWidth === 'thick' ? ' lw-thick' : ''}${s.comicOutline !== 'neat' ? ' ol-' + s.comicOutline : ''}`
   : s.style === 'action' ? 'style-action' + (s.actionTheme === 'light' ? ' action-light' : '')
-  : s.style === 'soft' ? 'style-soft' : '';
+  : s.style === 'soft' ? 'style-soft' : s.style === 'fancy' ? 'style-fancy' : '';
 // Экшен: тёмный (по умолчанию) или светлый вариант (2026-11-20); оба — всегда сами по себе, не зависят от темы устройства
 const ACTION_THEMES = { dark: 'Тёмный', light: 'Светлый' };
 

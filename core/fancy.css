@@ -1,0 +1,78 @@
+/* Стиль Fancy (решение владельца 2026-11-21; правила и макет — docs/STYLE_FANCY.md, docs/mockup-fancy.html).
+   Класс html.style-fancy ставит index.html (applyLook). Всегда светлый. Пастель считается от цвета упражнения (--accent).
+   Рамок и теней нет: карточки цветные, поля и ярлыки белые, кнопка «Проверить» тёмная. */
+html.style-fancy:root {
+  color-scheme:light;
+  --bg:#f4f5f7; --text:#1d2030; --muted:#6f7386; --line:transparent;
+  --fx-tint:color-mix(in srgb, var(--accent) 20%, #fff);
+  --fx-tint2:color-mix(in srgb, var(--accent) 32%, #fff);
+  --card:var(--fx-tint);
+  --fx-ink:#1d2030; --fx-ok:#cdeedd; --fx-bad:#f8d3dc; --fx-ok-t:#1f6f4d; --fx-bad-t:#9b3043;
+  --ok:#2f9e6b; --bad:#d9576b;
+  --r-s:20px; --r-m:28px; --r-l:36px; --shadow-1:none; --shadow-2:none;
+}
+html.style-fancy body { background:var(--bg); color:var(--text); }
+html.style-fancy h1#title { font-weight:800; font-size:1.9rem; line-height:1.15; }
+
+html.style-fancy:root .card { background:var(--fx-tint); border:0; border-radius:var(--r-l); box-shadow:none; }
+html.style-fancy:root .instr { background:var(--fx-tint); border:0; border-radius:var(--r-l); box-shadow:none; color:var(--muted); }
+
+/* Пропуски: белые таблетки */
+html.style-fancy .gap:is(.shape-frame, .shape-pill, .shape-free, .shape-line) { border:0; border-radius:999px; background:#fff; box-shadow:none; }
+html.style-fancy .gap:focus-within, html.style-fancy .gap.sel, html.style-fancy .gap.active { box-shadow:0 0 0 2px var(--accent); }
+html.style-fancy .gap input::placeholder { color:var(--muted); }
+html.style-fancy .gap.ok:is(.shape-frame, .shape-pill, .shape-free, .shape-line) { background:var(--fx-ok); color:var(--fx-ok-t); }
+html.style-fancy .gap.bad:is(.shape-frame, .shape-pill, .shape-free, .shape-line) { background:var(--fx-bad); color:var(--fx-bad-t); }
+html.style-fancy .gap-num { background:#fff; color:var(--accent); border:0; }
+
+/* Банк слов и ярлыки */
+html.style-fancy:root .chip { background:#fff; color:var(--text); border:0; border-radius:999px; box-shadow:none; font-weight:600; }
+html.style-fancy:root .chip:not(.used):hover { box-shadow:0 0 0 2px var(--accent); }
+html.style-fancy:root .chip.selected { box-shadow:0 0 0 2px var(--accent); }
+html.style-fancy:root .chip.used { opacity:.45; }
+
+/* Нижняя панель и кнопки */
+html.style-fancy:root footer { background:var(--bg); border-top:0; box-shadow:none; }
+html.style-fancy:root .check-btn { background:var(--accent); color:var(--on-accent); border:0; border-radius:999px; box-shadow:none; font-weight:600; }
+html.style-fancy:root .check-btn:disabled { background:#d9dbe3; color:#9a9db0; }
+html.style-fancy:root .score.result { background:#fff; color:var(--text); border:0; border-radius:999px; box-shadow:none; }
+
+/* True / False, Multiple Choice, Select Title: белые варианты в цветной карточке */
+html.style-fancy:root :is(.tf-ans, .mc-opt, .st-opt, .mt-card, .or-item, .tl-item, .vc-item) { background:#fff; color:var(--text); border:0; border-radius:var(--r-m); box-shadow:none; font-weight:600; position:relative; }
+html.style-fancy:root :is(.tf-ans.active, .mc-opt.on, .st-opt.on, .mt-card.sel, .mt-card.drop, .vc-item.active) { box-shadow:0 0 0 2px var(--accent); color:var(--text); background:#fff; }
+html.style-fancy:root .mt-card.linked { background:color-mix(in srgb, var(--mt-c) 18%, #fff); }
+html.style-fancy:root :is(.tf-ans.ok, .mc-opt.ok, .mc-opt.right, .tf-ans.active.ok, .st-opt.ok, .or-item.ok, .mt-lines .mt-card.ok) { background:var(--fx-ok); color:var(--fx-ok-t); box-shadow:none; }
+html.style-fancy:root :is(.tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad, .st-opt.bad, .or-item.bad, .mt-card.bad) { background:var(--fx-bad); color:var(--fx-bad-t); box-shadow:none; }
+html.style-fancy :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { content:"✓"; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:700; }
+html.style-fancy :is(.tf-ans.bad, .mc-opt.bad)::after { content:"✕"; }
+html.style-fancy .mc-verdict.ok { color:var(--ok); } html.style-fancy .mc-verdict.bad { color:var(--bad); }
+html.style-fancy:root :is(.mt-card, .st-opt, .or-item, .tl-item, .card, .tf-card, .mc-card).missing { box-shadow:0 0 0 2px var(--bad); }
+html.style-fancy:root .or-item.or-dragging { box-shadow:0 8px 20px rgba(29,32,48,.15); }
+
+/* Переключатель вопросов */
+html.style-fancy:root .tf-dot { background:#fff; color:var(--text); border:0; box-shadow:none; font-weight:700; }
+html.style-fancy:root .tf-dot.answered:not(.active) { color:var(--accent); }
+html.style-fancy:root .tf-dot.ok:not(.active) { background:var(--fx-ok); color:var(--fx-ok-t); }
+html.style-fancy:root .tf-dot.bad:not(.active) { background:var(--fx-bad); color:var(--fx-bad-t); }
+html.style-fancy:root .tf-dot.missing:not(.active) { color:var(--bad); box-shadow:0 0 0 2px var(--bad); }
+html.style-fancy:root .tf-dot.active { background:var(--accent); color:var(--on-accent); }
+html.style-fancy:root .tf-pager button { background:#fff; color:var(--text); border:0; border-radius:999px; box-shadow:none; font-weight:600; }
+html.style-fancy .tf-count { color:var(--muted); }
+
+/* Остальные модули: поля и зоны, ярлыки, метки, слова в тексте */
+html.style-fancy:root :is(.ew-text, .vc-search, .mm-fixin input, .sp-zone, .ws-zone, .sp-slot) { background:#fff; border:0; border-radius:var(--r-m); box-shadow:none; color:var(--text); }
+html.style-fancy :is(.ew-text, .vc-search, .mm-fixin input):focus { outline:0; box-shadow:0 0 0 2px var(--accent); }
+html.style-fancy :is(.sp-zone, .ws-zone, .sp-slot).over, html.style-fancy .sp-slot.drop { box-shadow:0 0 0 2px var(--accent); }
+html.style-fancy:root :is(.chip.ld-chip, .chip.ld-slot, .chip.ti-chip, .chip.oo-item, .card.oo-item, .chip.cs-chip, .card.cs-chip, .itg-card, .ws-chips .ws-tok, .fc-tab, .vc-tab, .vc-chip) { background:#fff; color:var(--text); border:0; box-shadow:none; }
+html.style-fancy:root :is(.fc-tab, .vc-tab).active, html.style-fancy:root :is(.fc-tab, .vc-tab)[aria-pressed="true"], html.style-fancy:root .vc-chip.on { background:var(--accent); color:var(--on-accent); }
+html.style-fancy:root :is(.chip.oo-item.right, .card.oo-item.right) { border:0; background:var(--fx-ok); }
+html.style-fancy :is(.ld-help, .ti-help, .ws-dot, .mt-tag, .ld-no, .or-num, .vc-pos) { background:#fff; color:var(--accent); border:0; box-shadow:none; }
+html.style-fancy :is(.mc-mark, .st-mark) { border:0; background:var(--bg); }
+html.style-fancy :is(.mc-opt.on, .st-opt.on) :is(.mc-mark, .st-mark) { background:var(--accent); }
+html.style-fancy:root .mm-w:is(.on, .ok, .bad, .half) { box-shadow:none; background:var(--fx-tint2); }
+html.style-fancy:root .mm-w.ok { background:var(--fx-ok); } html.style-fancy:root .mm-w.bad { background:var(--fx-bad); }
+html.style-fancy .sp-paper .sp-tok { background:#fff; color:var(--text); border:0; box-shadow:none; transform:none !important; border-radius:var(--r-s) !important; }
+html.style-fancy:root :is(.chip, .card).ok:not(.gap) { background-color:var(--fx-ok); color:var(--fx-ok-t); }
+html.style-fancy:root :is(.chip, .card).bad:not(.gap) { background-color:var(--fx-bad); color:var(--fx-bad-t); }
+
+@media (prefers-reduced-motion:reduce) { html.style-fancy * { transition:none !important; animation:none !important; } }
