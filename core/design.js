@@ -108,6 +108,11 @@ const FONTS = {
     pangolin: { label: 'Pangolin', stack: '"DV Pangolin", ' + FONT_TAIL },
     neucha: { label: 'Neucha', stack: '"DV Neucha", ' + FONT_TAIL },
   },
+  // Экшен (2026-11-20): пока на уже подключённых шрифтах; Oswald и подобные добавим после согласования загрузки файлов
+  action: {
+    noto: { label: 'Noto Sans', stack: '"DV Noto Sans", ' + FONT_TAIL },
+    nunito: { label: 'Nunito', stack: '"DV Nunito", ' + FONT_TAIL },
+  },
 };
 const fontKey = (style, key) => (FONTS[style][key] ? key : Object.keys(FONTS[style])[0]);
 
@@ -121,22 +126,27 @@ const OUTLINE_CLASSES = ['ol-wobbly', 'ol-double', 'ol-angular'];
 function normalizeStyle(d) {
   d = d || {};
   return {
-    style: d.style === 'comic' ? 'comic' : 'classic',
+    style: d.style === 'comic' || d.style === 'action' ? d.style : 'classic',
     comicLine: d.comicLine === 'black' ? 'black' : 'accent',
     comicWidth: d.comicWidth === 'thin' || d.comicWidth === 'thick' ? d.comicWidth : 'normal',
     classicFont: fontKey('classic', d.classicFont),
     comicFont: fontKey('comic', d.comicFont),
+    actionFont: fontKey('action', d.actionFont),
+    actionTheme: d.actionTheme === 'light' ? 'light' : 'dark',
     comicOutline: COMIC_OUTLINES[d.comicOutline] ? d.comicOutline : 'neat',
   };
 }
 
 // Набор шрифтов (font-family) для выбранного стиля; страница ставит его в переменную --ex-font
-const fontStack = s => FONTS[s.style][s.style === 'comic' ? s.comicFont : s.classicFont].stack;
+const fontField = style => (style === 'comic' ? 'comicFont' : style === 'action' ? 'actionFont' : 'classicFont');
+const fontStack = s => FONTS[s.style][s.style === 'comic' ? s.comicFont : s.style === 'action' ? s.actionFont : s.classicFont].stack;
 
 // Классы для страницы или образца (стили — core/comic.css); для Classic пусто
 const styleClasses = s => s.style === 'comic'
   ? `style-comic${s.comicLine === 'black' ? ' line-black' : ''}${s.comicWidth === 'thin' ? ' lw-thin' : s.comicWidth === 'thick' ? ' lw-thick' : ''}${s.comicOutline !== 'neat' ? ' ol-' + s.comicOutline : ''}`
-  : '';
+  : s.style === 'action' ? 'style-action' + (s.actionTheme === 'light' ? ' action-light' : '') : '';
+// Экшен: тёмный (по умолчанию) или светлый вариант (2026-11-20); оба — всегда сами по себе, не зависят от темы устройства
+const ACTION_THEMES = { dark: 'Тёмный', light: 'Светлый' };
 
 // Страница берёт из переменных --accent-l и --accent-d нужный оттенок в зависимости от темы
 function applyAccent(root, name) {

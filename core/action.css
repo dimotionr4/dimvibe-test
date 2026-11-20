@@ -1,0 +1,80 @@
+/* Стиль «Экшен» (решение владельца 2026-11-20; правила и макет — docs/STYLE_ACTION.md, docs/mockup-action.html).
+   Класс html.style-action ставит index.html (applyLook); html.action-light — светлый вариант (design.actionTheme).
+   Оба варианта не зависят от темы устройства. Тёмный: чёрные панели, белые наклейки. Светлый: бумажный фон, белые панели
+   с чёрной обводкой, чёрные наклейки с белым текстом. Жёлтый акцент и красно-зелёный результат общие.
+   Модули подгоняем по одному; общая форма — скос двух углов, жёсткие тени, наклейки. В анимациях только transform и opacity. */
+
+html.style-action:root {
+  color-scheme:dark;
+  --bg:#0b0b0d; --card:#16161a; --text:#f2f2f2; --muted:#9a9aa3; --line:#3a3a42;
+  --accent:#ffd400; --on-accent:#000; --ok:#2ecc71; --bad:#ff3b3b;
+  --r-s:0; --r-m:0; --r-l:0; --shadow-1:none; --shadow-2:none;
+  --ax-cut:10px; --ax-shadow:3px 3px 0 #000;
+  --ax-head:"Impact", "Arial Narrow", "DV Noto Sans", sans-serif;
+  /* поле ввода, наклейка (белая / чёрная), текст на наклейке, растр, подсказка в поле */
+  --ax-field:#000; --ax-field-on:#111; --ax-tag:#fff; --ax-tag-ink:#000; --ax-dots:rgba(255,255,255,.08); --ax-edge:#000;
+}
+html.style-action.action-light:root {
+  color-scheme:light;
+  --bg:#efece4; --card:#fff; --text:#0b0b0d; --muted:#5a5a63; --line:#0b0b0d;
+  --ok:#17a85a; --bad:#e02020;
+  --ax-shadow:3px 3px 0 #0b0b0d;
+  --ax-field:#fff; --ax-field-on:#fff8cc; --ax-tag:#0b0b0d; --ax-tag-ink:#fff; --ax-dots:rgba(0,0,0,.07); --ax-edge:#0b0b0d;
+}
+html.style-action body { background:var(--bg); color:var(--text); }
+
+/* Скос: срезаны два противоположных угла */
+html.style-action :is(.card, .instr, .chip, .check-btn, .gap.shape-frame, .gap.shape-pill, .gap.shape-free, .tf-ans, .mc-opt) {
+  border-radius:0;
+  clip-path:polygon(0 0, calc(100% - var(--ax-cut)) 0, 100% var(--ax-cut), 100% 100%, var(--ax-cut) 100%, 0 calc(100% - var(--ax-cut)));
+}
+
+/* Заголовок: наклейка с жёлтой полоской (тёмный вариант — белая, светлый — чёрная) */
+html.style-action h1#title { display:inline-block; background:var(--ax-tag); color:var(--ax-tag-ink); font:700 1.5rem/1.1 var(--ax-head); text-transform:uppercase; letter-spacing:.06em;
+  padding:12px 34px 12px 16px; transform:rotate(-1deg); clip-path:polygon(0 0,100% 0,calc(100% - 20px) 100%,0 100%,6px 50%); }
+html.style-action h1#title:empty { display:none; }
+
+/* Карточка и инструкция: панели с растром, у инструкции жёлтая полоса слева */
+html.style-action .card { border:2px solid var(--line); background-color:var(--card); background-image:radial-gradient(var(--ax-dots) 1px, transparent 1.5px); background-size:4px 4px; }
+html.style-action .instr { border:0; border-left:4px solid var(--accent); background-color:var(--card); background-image:radial-gradient(var(--ax-dots) 1px, transparent 1.5px); background-size:4px 4px; }
+html.style-action .instr-head { font-family:var(--ax-head); text-transform:uppercase; letter-spacing:.08em; }
+
+/* Пропуск: плашка поля, жёлтая полоска снизу; фокус и выбор — жёлтая обводка */
+html.style-action .gap:not(.ok):not(.bad):not(.missing) { --gap-c:var(--accent); }
+html.style-action .gap:is(.shape-frame, .shape-pill, .shape-free) { border:2px solid var(--line); border-bottom:3px solid var(--gap-c); background:var(--ax-field); padding:0 12px; }
+html.style-action .gap.shape-line { border-bottom:3px solid var(--gap-c); }
+html.style-action .gap:focus-within, html.style-action .gap.sel, html.style-action .gap.active { border-color:var(--accent); background:var(--ax-field-on); }
+html.style-action .gap.ok { color:var(--ok); } html.style-action .gap.bad { color:var(--bad); }
+html.style-action .gap.ok:is(.shape-frame, .shape-pill, .shape-free) { background:var(--ok); border-color:var(--ok); color:#000; }
+html.style-action .gap.bad:is(.shape-frame, .shape-pill, .shape-free) { background:var(--bad); border-color:var(--bad); color:#fff; }
+html.style-action .gap.ok::after, html.style-action .gap.bad::after { border-radius:0; left:auto; right:-4px; bottom:auto; top:-14px; width:22px; height:22px; font-size:.85rem; color:#000; }
+html.style-action .gap.bad::after { color:#fff; }
+html.style-action .gap-num { border-radius:0; background:var(--accent); color:#000; border:0; }
+html.style-action .gap input, html.style-action .gap select { color:inherit; }
+html.style-action .gap input::placeholder { color:var(--muted); }
+
+/* Ярлыки банка слов: наклейки, лёгкий поворот */
+html.style-action .chip { background-color:var(--ax-tag); color:var(--ax-tag-ink); border:0; font-weight:700; text-transform:uppercase; letter-spacing:.03em; box-shadow:none; }
+html.style-action .chip:nth-child(odd) { transform:rotate(-1deg); } html.style-action .chip:nth-child(even) { transform:rotate(1deg); }
+html.style-action .chip.selected { background:var(--accent); color:#000; }
+html.style-action .chip.used { opacity:.3; }
+html.style-action .chip.dg-ghost { box-shadow:var(--ax-shadow); border:0; }
+
+/* Нижняя панель и кнопки: жёлтая «Проверить», нажатие сдвигает на 2 px */
+html.style-action:root footer { background:var(--card); border-top:3px solid var(--accent); box-shadow:none; }
+html.style-action .score.result { border-radius:0; border:2px solid var(--line); }
+html.style-action :is(.tf-pager, .mc-pager) button, html.style-action :is(.tf-dot, .mc-dot) { border-radius:0; }
+html.style-action .check-btn { background:var(--accent); color:#000; border:0; font-family:var(--ax-head); text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+html.style-action .check-btn:disabled { background:#555; color:#aaa; }
+html.style-action .check-btn:active:not(:disabled) { transform:translate(2px,2px); }
+html.style-action main button:not(.chip):not(.check-btn):not(.instr-head):not(.tf-ans):not(.mc-opt) { border-radius:0; }
+
+/* True / False и Multiple Choice: ответы и варианты; выбранный — жёлтая обводка, верно и неверно — заливкой */
+html.style-action :is(.tf-ans, .mc-opt) { background:var(--ax-field); color:var(--text); border:2px solid var(--line); font-weight:700; }
+html.style-action :is(.tf-ans.active, .mc-opt.on) { border-color:var(--accent); background:var(--ax-field-on); color:var(--text); box-shadow:inset 0 -4px 0 var(--accent); }
+html.style-action :is(.tf-ans.ok, .mc-opt.ok, .mc-opt.right, .tf-ans.active.ok) { background:var(--ok); border-color:var(--ok); color:#000; box-shadow:none; }
+html.style-action :is(.tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad) { background:var(--bad); border-color:var(--bad); color:#fff; box-shadow:none; }
+html.style-action .mc-verdict.ok { color:var(--ok); } html.style-action .mc-verdict.bad { color:var(--bad); }
+html.style-action :is(.card, .tf-card, .mc-card).missing { border-color:var(--bad); }
+
+@media (prefers-reduced-motion:reduce) { html.style-action * { transition:none !important; } }
