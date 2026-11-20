@@ -56,32 +56,19 @@ const MiniDialoguesPlayer = (() => {
         const si = Math.max(0, speakers().findIndex(s => s.id === line.speaker)), sp = speakers()[si];
         const who = nameOf(sp, si);
         const row = el('div', `md-line md-${sideOf(sp, si)} md-c${si % 6}`);
-        // Аватар: картинка вместо буквы; нажатие открывает её крупно (общий просмотр core/mediaviewer.js).
-        // Если картинка не загрузилась, остаётся буква
+        // Аватар: картинка вместо буквы; размер — из «Дизайна» (avatarSize). Если картинка не загрузилась, остаётся буква
         const letter = (who[0] || '?').toUpperCase();
         const src = sp && sp.avatar ? mediaSrc(sp.avatar) : null;
-        let ava;
+        const ava = el('span', 'md-ava', letter);
+        ava.setAttribute('aria-hidden', 'true');
         if (src) {
-          ava = el('button', 'md-ava md-pic');
-          ava.type = 'button';
-          ava.setAttribute('aria-label', `Увеличить картинку: ${who}`);
-          ava.title = 'Увеличить';
           const img = document.createElement('img');
           img.alt = '';
           img.src = src;
-          img.onerror = () => {
-            img.remove();
-            ava.textContent = letter;
-            ava.classList.remove('md-pic');
-            ava.onclick = null;
-            ava.disabled = true;
-            ava.setAttribute('aria-hidden', 'true');
-          };
+          img.onerror = () => { img.remove(); ava.textContent = letter; ava.classList.remove('md-pic'); };
+          ava.textContent = '';
           ava.append(img);
-          ava.onclick = () => { if (window.openMediaViewer) openMediaViewer(src, who); };
-        } else {
-          ava = el('span', 'md-ava', letter);
-          ava.setAttribute('aria-hidden', 'true');
+          ava.classList.add('md-pic');
         }
         const main = el('div', 'md-main');
         const nameRow = el('div', 'md-name');

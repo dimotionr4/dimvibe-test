@@ -48,8 +48,7 @@
 html.style-action:root .card.md-card.md-simple { background:transparent; border:0; border-top:0; box-shadow:none; }
 html.style-action:root .card.md-card.md-simple + .card.md-card.md-simple { border-top:2px solid var(--line); }
 
-/* Аватар-картинка: нажимается (увеличение), размер — из «Дизайна» (по умолчанию 44 px) */
-.md-ava.md-pic { padding:0; cursor:zoom-in; }
+/* Аватар-картинка: размер — из «Дизайна» (по умолчанию 44 px) */
 .md-av-s .md-ava.md-pic { width:32px; height:32px; }
 .md-av-l .md-ava.md-pic { width:72px; height:72px; }
 .md-av-l .md-line { align-items:flex-end; }
