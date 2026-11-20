@@ -312,19 +312,33 @@
   /* Предпросмотр: настоящий плеер в рамке высотой 600 px, как в LearnWorlds */
   .modal { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; z-index:40; }
   .modal[hidden] { display:none; }
-  .modal-box { background:var(--bg); border-radius:12px; padding:12px; width:min(1000px, 100%); }  .modal-box.choose { width:min(760px, 100%); margin-top:6vh; }
-  .kind { display:block; width:100%; text-align:left; margin-bottom:8px; padding:10px 12px; }
-  .demo-note { margin:0 0 10px; padding:6px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-size:.85rem; }
-  .demo-note[hidden] { display:none; }
-  .kind[hidden] { display:none; }
-  .kind b, .kind span { display:block; }
-  .kind span { color:var(--muted); font-size:.9rem; }
-  /* Модулей больше двадцати: кнопки переносятся в сетку, на телефоне — в два столбца */
-  .modpick { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:12px; }
-  .modpick button { min-width:0; text-align:left; padding:8px 12px; }
+  .modal-box { background:var(--bg); border-radius:12px; padding:12px; width:min(1000px, 100%); }
+  .modal-box.choose { width:min(820px, 100%); margin:4vh auto 0; padding:0; display:flex; flex-direction:column; max-height:90vh; overflow:hidden; }
+  .nk-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; border-bottom:1px solid var(--line); }
+  .nk-head h3 { margin:0; font-size:1.15rem; }
+  .nk-x { width:36px; height:36px; padding:0; font-size:1.4rem; line-height:1; border-radius:50%; }
+  .nk-body { overflow:auto; padding:14px 20px; flex:1; }
+  .nk-group { margin-bottom:18px; }
+  .nk-group h4 { margin:0 0 8px; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .modpick { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:8px; }
+  .modpick button { min-width:0; min-height:56px; text-align:left; padding:10px 12px; border-radius:10px; cursor:pointer; }
   .modpick button b, .modpick button span { display:block; }
-  .modpick button span { color:var(--muted); font-size:.85rem; }
-  .modpick button.active { background:var(--accent-soft); border-color:var(--accent); }
+  .modpick button span { color:var(--muted); font-size:.82rem; margin-top:2px; }
+  .modpick button:hover { border-color:var(--accent); }
+  .modpick button.active { background:var(--accent-soft); border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  .nk-foot { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:12px 20px; border-top:1px solid var(--line); background:var(--bg); }
+  .nk-sel { min-width:0; flex:1 1 220px; }
+  .nk-sel b, .nk-sel span, .nk-sel small { display:block; }
+  .nk-sel span { color:var(--muted); font-size:.88rem; }
+  .nk-sel small { color:var(--muted); font-size:.78rem; margin-top:2px; }
+  .nk-sel small[hidden] { display:none; }
+  .nk-act { display:flex; gap:8px; flex-wrap:wrap; }
+  .nk-act button { min-height:40px; }
+  .kind { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+  .kind[hidden] { display:none; }
+  .demo-note { margin:0 0 12px; padding:6px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-size:.85rem; }
+  .demo-note[hidden] { display:none; }
+  @media (max-width:560px) { .modal { padding:0; } .modal-box.choose { margin:0; max-height:100vh; height:100vh; border-radius:0; } .modpick { grid-template-columns:1fr 1fr; } .nk-act { width:100%; } .nk-act button { flex:1; } }
   .stage { display:flex; justify-content:center; }
   #previewFrame { width:100%; height:600px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
   .stage.phone #previewFrame { width:375px; max-width:100%; }
@@ -467,38 +481,57 @@
 </div>
 
 <div id="kindDialog" class="modal" hidden>
-  <div class="modal-box choose">
-    <h3 style="margin:0 0 8px">Какое упражнение создать?</h3>
-    <p class="demo-note" id="demoNote" hidden>Включён демо-режим: упражнение будет заполнено примером. Выключается в «Настройках».</p>
-    <div class="modpick" id="modPick" role="group" aria-label="Модуль">
-      <button class="active" data-mod="fill_blanks" aria-pressed="true"><b>Fill Blanks</b><span>В пропуски — слова</span></button>
-      <button data-mod="image_to_gaps" aria-pressed="false"><b>Image to Gaps</b><span>В пропуски — картинки</span></button>
-      <button data-mod="true_false" aria-pressed="false"><b>True / False</b><span>Верно или неверно</span></button>
-      <button data-mod="multiple_choice" aria-pressed="false"><b>Multiple Choice</b><span>Выбор из вариантов</span></button>
-      <button data-mod="matching" aria-pressed="false"><b>Matching</b><span>Соединить пары</span></button>
-      <button data-mod="mistake_mode" aria-pressed="false"><b>Mistake Mode</b><span>Найти ошибки в тексте</span></button>
-      <button data-mod="color_coding" aria-pressed="false"><b>Color Coding</b><span>Раскрасить слова по категориям</span></button>
-      <button data-mod="select_title" aria-pressed="false"><b>Select Title</b><span>Выбрать заголовок к тексту</span></button>
-      <button data-mod="ordering" aria-pressed="false"><b>Ordering</b><span>Расставить по порядку</span></button>
-      <button data-mod="timeline" aria-pressed="false"><b>Timeline</b><span>Расставить события по времени</span></button>
-      <button data-mod="word_scramble" aria-pressed="false"><b>Word Scramble</b><span>Собрать слово или фразу из кусочков</span></button>
-      <button data-mod="categories" aria-pressed="false"><b>Categories</b><span>Разложить карточки по категориям</span></button>
-      <button data-mod="odd_one_out" aria-pressed="false"><b>Odd One Out</b><span>Найти лишнее в группе</span></button>
-      <button data-mod="hotspot" aria-pressed="false"><b>Hotspot</b><span>Найти место на картинке</span></button>
-      <button data-mod="label_diagram" aria-pressed="false"><b>Label the Diagram</b><span>Подписать схему</span></button>
-      <button data-mod="text_to_image" aria-pressed="false"><b>Text to Image</b><span>Подписать картинки словами</span></button>
-      <button data-mod="word_search" aria-pressed="false"><b>Word Search</b><span>Найти слова в сетке букв</span></button>
-      <button data-mod="vocabulary" aria-pressed="false"><b>Vocabulary</b><span>Словарь слов с переводами</span></button>
-      <button data-mod="flashcards" aria-pressed="false"><b>Flashcards</b><span>Карточки с двумя сторонами</span></button>
-      <button data-mod="splice" aria-pressed="false"><b>Splice</b><span>Собрать слова из частей</span></button>
-      <button data-mod="prepositions" aria-pressed="false"><b>Prepositions</b><span>В пропуски — предлоги</span></button>
-      <button data-mod="essay_writing" aria-pressed="false"><b>Essay Writing</b><span>Написать текст по заданию</span></button>
+  <div class="modal-box choose" role="dialog" aria-modal="true" aria-labelledby="kindTitle">
+    <header class="nk-head">
+      <h3 id="kindTitle">Какое упражнение создать?</h3>
+      <button class="nk-x" id="kindX" aria-label="Закрыть">×</button>
+    </header>
+    <div class="nk-body" id="modPick">
+      <p class="demo-note" id="demoNote" hidden>Включён демо-режим: упражнение будет заполнено примером. Выключается в «Настройках».</p>
+      <section class="nk-group"><h4>Пропуски в тексте</h4><div class="modpick">
+        <button data-mod="fill_blanks" aria-pressed="false"><b>Fill Blanks</b><span>В пропуски — слова</span></button>
+        <button data-mod="image_to_gaps" aria-pressed="false"><b>Image to Gaps</b><span>В пропуски — картинки</span></button>
+        <button data-mod="prepositions" aria-pressed="false"><b>Prepositions</b><span>В пропуски — предлоги</span></button>
+      </div></section>
+      <section class="nk-group"><h4>Выбор ответа</h4><div class="modpick">
+        <button data-mod="true_false" aria-pressed="false"><b>True / False</b><span>Верно или неверно</span></button>
+        <button data-mod="multiple_choice" aria-pressed="false"><b>Multiple Choice</b><span>Выбор из вариантов</span></button>
+        <button data-mod="select_title" aria-pressed="false"><b>Select Title</b><span>Выбрать заголовок к тексту</span></button>
+        <button data-mod="odd_one_out" aria-pressed="false"><b>Odd One Out</b><span>Найти лишнее в группе</span></button>
+      </div></section>
+      <section class="nk-group"><h4>Порядок и сортировка</h4><div class="modpick">
+        <button data-mod="matching" aria-pressed="false"><b>Matching</b><span>Соединить пары</span></button>
+        <button data-mod="ordering" aria-pressed="false"><b>Ordering</b><span>Расставить по порядку</span></button>
+        <button data-mod="timeline" aria-pressed="false"><b>Timeline</b><span>Расставить события по времени</span></button>
+        <button data-mod="categories" aria-pressed="false"><b>Categories</b><span>Разложить карточки по категориям</span></button>
+        <button data-mod="word_scramble" aria-pressed="false"><b>Word Scramble</b><span>Собрать слово или фразу из кусочков</span></button>
+        <button data-mod="splice" aria-pressed="false"><b>Splice</b><span>Собрать слова из частей</span></button>
+      </div></section>
+      <section class="nk-group"><h4>Работа с текстом</h4><div class="modpick">
+        <button data-mod="mistake_mode" aria-pressed="false"><b>Mistake Mode</b><span>Найти ошибки в тексте</span></button>
+        <button data-mod="color_coding" aria-pressed="false"><b>Color Coding</b><span>Раскрасить слова по категориям</span></button>
+        <button data-mod="essay_writing" aria-pressed="false"><b>Essay Writing</b><span>Написать текст по заданию</span></button>
+      </div></section>
+      <section class="nk-group"><h4>Картинки и схемы</h4><div class="modpick">
+        <button data-mod="hotspot" aria-pressed="false"><b>Hotspot</b><span>Найти место на картинке</span></button>
+        <button data-mod="label_diagram" aria-pressed="false"><b>Label the Diagram</b><span>Подписать схему</span></button>
+        <button data-mod="text_to_image" aria-pressed="false"><b>Text to Image</b><span>Подписать картинки словами</span></button>
+      </div></section>
+      <section class="nk-group"><h4>Слова и справочники</h4><div class="modpick">
+        <button data-mod="word_search" aria-pressed="false"><b>Word Search</b><span>Найти слова в сетке букв</span></button>
+        <button data-mod="vocabulary" aria-pressed="false"><b>Vocabulary</b><span>Словарь слов с переводами</span></button>
+        <button data-mod="flashcards" aria-pressed="false"><b>Flashcards</b><span>Карточки с двумя сторонами</span></button>
+      </div></section>
     </div>
-    <p class="muted" style="margin:0 0 12px" id="kindNote">Вид текста выбирается один раз и потом не меняется.</p>
-    <button class="kind" data-kind="sentences"><b>Отдельные предложения</b><span>Каждое предложение — своё задание с пропусками.</span></button>
-    <button class="kind" data-kind="text"><b>Связный текст</b><span>Один текст из нескольких абзацев с пропусками.</span></button>
-    <button class="kind" id="kindGo" data-kind="statements" hidden><b>Создать упражнение</b><span>Список готовых заданий: утверждения или вопросы.</span></button>
-    <button id="kindCancel" style="margin-top:10px">Отмена</button>
+    <footer class="nk-foot">
+      <div class="nk-sel"><b id="nkName"></b><span id="nkDesc"></span><small id="kindNote">Вид текста выбирается один раз и потом не меняется.</small></div>
+      <div class="nk-act">
+        <button id="kindCancel">Отмена</button>
+        <button class="kind" data-kind="sentences" title="Каждое предложение — своё задание с пропусками">Отдельные предложения</button>
+        <button class="kind" data-kind="text" title="Один текст из нескольких абзацев с пропусками">Связный текст</button>
+        <button class="kind" id="kindGo" data-kind="statements" hidden>Создать упражнение</button>
+      </div>
+    </footer>
   </div>
 </div>
 
@@ -1635,22 +1668,29 @@ $('fileInput').onchange = () => {
 };
 
 // Вид текста выбирается при создании: сначала спрашиваем, потом создаём черновик
-const askKind = () => { $('demoNote').hidden = !DimDemo.on(); $('kindDialog').hidden = false; };
+const askKind = () => { $('demoNote').hidden = !DimDemo.on(); $('kindDialog').hidden = false; pickModule(newModule); };
 const closeKind = () => { $('kindDialog').hidden = true; };
 $('new').onclick = askKind;
 $('new2').onclick = askKind;
 $('kindCancel').onclick = closeKind;
+$('kindX').onclick = closeKind;
 $('kindDialog').onclick = e => { if (e.target === $('kindDialog')) closeKind(); };
 // Какой модуль создавать; выбор запоминается до следующего окна
 let newModule = 'fill_blanks';
-const pickModule = mod => {
+// Только у этих модулей есть выбор вида текста; у остальных одна кнопка «Создать»
+const KIND_MODS = ['fill_blanks', 'image_to_gaps', 'prepositions'];
+function pickModule(mod) {
   newModule = mod;
-  document.querySelectorAll('#modPick [data-mod]').forEach(x => { const on = x.dataset.mod === mod; x.classList.toggle('active', on); x.setAttribute('aria-pressed', String(on)); });
-  // У True / False нет вида текста: вместо двух вариантов одна кнопка «Создать»
-  const st = newModule === 'true_false' || newModule === 'multiple_choice' || newModule === 'matching' || newModule === 'mistake_mode' || newModule === 'color_coding' || newModule === 'select_title' || newModule === 'ordering' || newModule === 'timeline' || newModule === 'word_scramble' || newModule === 'categories' || newModule === 'odd_one_out' || newModule === 'splice' || newModule === 'essay_writing' || newModule === 'hotspot' || newModule === 'label_diagram' || newModule === 'vocabulary' || newModule === 'flashcards' || newModule === 'text_to_image' || newModule === 'word_search';
+  document.querySelectorAll('#modPick [data-mod]').forEach(x => {
+    const on = x.dataset.mod === mod;
+    x.classList.toggle('active', on);
+    x.setAttribute('aria-pressed', String(on));
+    if (on) { $('nkName').textContent = x.querySelector('b').textContent; $('nkDesc').textContent = x.querySelector('span').textContent; }
+  });
+  const st = !KIND_MODS.includes(mod);
   document.querySelectorAll('#kindDialog .kind').forEach(k => { k.hidden = st ? k.id !== 'kindGo' : k.id === 'kindGo'; });
   $('kindNote').hidden = st;
-};
+}
 document.querySelectorAll('#modPick [data-mod]').forEach(b => b.onclick = () => pickModule(b.dataset.mod));
 document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { closeKind(); createDraft(b.dataset.kind, newModule); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('kindDialog').hidden) closeKind(); });
