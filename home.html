@@ -142,6 +142,51 @@
     .tools-r { margin-left:auto; }
   }
   .tools-r { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  /* Оформление каталога: плоские карточки с тонкой линией, без теней и цветных плиток; номер, стрелка и заливка при наведении */
+  main { padding-top:var(--sp-6); }
+  h1 { font-size:clamp(1.9rem, 4vw, 2.6rem); font-weight:700; letter-spacing:-.025em; line-height:1.1; margin:0 0 var(--sp-2); }
+  .lead { font-size:1.05rem; max-width:46ch; margin-bottom:var(--sp-5); }
+  h2 { display:flex; align-items:center; gap:var(--sp-3); font-size:.78rem; letter-spacing:.1em; margin:var(--sp-6) 0 var(--sp-4); }
+  h2::after { content:""; flex:1; height:1px; background:var(--line); }
+  #ready, #soon { counter-reset:mod; }
+  .grp { margin-bottom:var(--sp-5); }
+  .grp h3 { display:flex; align-items:baseline; gap:var(--sp-2); margin:0 0 var(--sp-3); font-size:1.05rem; font-weight:650; letter-spacing:-.01em; }
+  .grp h3 small { font:500 .72rem/1 ui-monospace, "Cascadia Mono", Consolas, monospace; color:var(--muted); }
+  .mod { counter-increment:mod; border-radius:10px; border:1px solid var(--line); background:var(--card); box-shadow:none; overflow:hidden; transition:border-color .2s, background-color .2s, transform .2s cubic-bezier(.2,.7,.3,1); }
+  .mod .main { padding:20px 20px 18px; gap:var(--sp-3); border-radius:0; }
+  .mod .main::before { content:counter(mod, decimal-leading-zero); position:absolute; top:16px; right:18px; font:500 .72rem/1 ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing:.06em; color:var(--muted); transition:opacity .15s; }
+  .mod:hover .main::before, .mod:focus-within .main::before { opacity:0; }
+  .ic { width:auto; height:auto; background:none; border-radius:0; justify-content:flex-start; }
+  .ic svg { width:30px; height:30px; stroke-width:1.5; }
+  .mod b { font-size:1.02rem; font-weight:650; letter-spacing:-.01em; }
+  .mod p { font-size:.88rem; line-height:1.45; }
+  .go { position:absolute; right:16px; bottom:14px; display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:var(--text); color:var(--bg); opacity:0; transform:translateX(-6px); transition:opacity .2s, transform .2s cubic-bezier(.2,.7,.3,1); }
+  .go svg { width:15px; height:15px; stroke-width:2; }
+  .mod .main { position:relative; }
+  .mod .txt p { padding-right:34px; }
+  @media (hover:hover) {
+    .mod:not(.soon):not(.dragging):hover { border-color:var(--text); background:var(--card); box-shadow:none; transform:none; }
+    .mod:not(.soon):hover .go { opacity:1; transform:none; }
+    .mod:not(.soon):not(.dragging):hover .ic { transform:none; }
+    .mod:not(.soon):hover .ic svg { stroke:var(--accent); }
+  }
+  .mod a.main:focus-visible { box-shadow:inset 0 0 0 2px var(--accent); }
+  .mod a.main:hover { box-shadow:none; }
+  @media (hover:none) { .go { opacity:1; transform:none; } .mod .main::before { display:none; } }
+  .mod.soon { border-style:dashed; opacity:.6; }
+  .acts { top:10px; right:10px; }
+  /* Список: строки с разделителями */
+  .grid.v-list { gap:0; border-top:1px solid var(--line); --gap:0; }
+  .v-list .mod { border-radius:0; border-width:0 0 1px; background:transparent; }
+  .v-list .mod .main { padding:14px 96px 14px 4px; }
+  .v-list .mod .main::before { top:50%; right:96px; transform:translateY(-50%); }
+  .v-list .go { position:static; flex:none; opacity:0; }
+  .v-list .ic svg { width:24px; height:24px; }
+  .v-list .mod:hover { background:var(--accent-soft); }
+  /* Значки */
+  .v-icons .mod { border-radius:12px; }
+  .v-icons .mod .main::before, .v-icons .go { display:none; }
+  .v-icons .ic svg { width:28px; height:28px; }
 </style>
 </head>
 <body>
@@ -157,8 +202,8 @@
 </header>
 <div id="shell">
 <main>
-  <h1>Какое упражнение создать?</h1>
-  <p class="lead">Выберите тип упражнения: откроется редактор с новым черновиком.</p>
+  <h1>Новое упражнение</h1>
+  <p class="lead">Выберите тип. Откроется редактор с чистым черновиком.</p>
   <div id="tools">
     <div class="search" id="searchBox">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
@@ -264,6 +309,15 @@ const MODS = [
   { id: 'splice', name: 'Splice', desc: 'Собрать слова из частей: одно слово или мозаика.', ready: true },
   { id: 'essay_writing', name: 'Essay Writing', desc: 'Написать текст по заданию: счётчики и условия без оценки.', ready: true }
 ];
+// Темы для группировки готовых модулей (как в окне создания упражнения в редакторе)
+const GROUPS = [
+  ['Пропуски в тексте', ['fill_blanks', 'image_to_gaps', 'prepositions', 'mini_dialogues']],
+  ['Выбор ответа', ['true_false', 'multiple_choice', 'select_title', 'odd_one_out']],
+  ['Порядок и сортировка', ['matching', 'ordering', 'timeline', 'categories', 'word_scramble', 'splice']],
+  ['Работа с текстом', ['mistake_mode', 'color_coding', 'essay_writing']],
+  ['Картинки и схемы', ['hotspot', 'label_diagram', 'text_to_image']],
+  ['Слова и справочники', ['word_search', 'vocabulary', 'flashcards']]
+];
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
@@ -306,7 +360,7 @@ function shiftMod(id, dir) { // на одно место влево или вп�
 
 function cardHtml(m) {
   const fav = st.fav.includes(m.id), hid = st.hid.includes(m.id);
-  const body = `<span class="ic">${svg(ICON[m.id] || ICON.generic)}</span><span class="txt"><b>${esc(m.name)}${m.ready ? '' : '<span class="soonb">Скоро</span>'}</b><p>${esc(m.desc || '')}</p></span>${m.ready ? '<span class="go">Создать →</span>' : ''}`;
+  const body = `<span class="ic">${svg(ICON[m.id] || ICON.generic)}</span><span class="txt"><b>${esc(m.name)}${m.ready ? '' : '<span class="soonb">Скоро</span>'}</b><p>${esc(m.desc || '')}</p></span>${m.ready ? '<span class="go" aria-hidden="true">' + svg('<path d="M5 12h14M13 6l6 6-6 6"/>') + '</span>' : ''}`;
   const main = m.ready ? `<a class="main" href="editor.html?new=${m.id}">${body}</a>` : `<div class="main">${body}</div>`;
   const acts = `<span class="acts">
     <button class="act tip-end ${fav ? 'on' : ''}" data-act="fav" data-id="${m.id}" aria-pressed="${fav}" data-tip="${fav ? 'Убрать из избранного' : 'В избранное'}" aria-label="${fav ? 'Убрать из избранного' : 'В избранное'}">${svg(STAR)}</button>
@@ -327,8 +381,17 @@ function render() {
   for (const [id, ready] of [['ready', true], ['soon', false]]) {
     const items = sortMods(list.filter(m => !!m.ready === ready));
     const g = $(id);
-    g.className = 'grid v-' + st.view + (st.view === 'cards' && st.cols ? ' manual' : '');
-    g.innerHTML = items.map(cardHtml).join('');
+    const gcls = 'grid v-' + st.view + (st.view === 'cards' && st.cols ? ' manual' : '');
+    if (ready && st.sort === 'catalog') { // по умолчанию готовые модули сгруппированы по темам; «По алфавиту» и «Свой» — общий список
+      g.className = 'groups';
+      g.innerHTML = GROUPS.map(([title, ids]) => {
+        const part = items.filter(m => ids.includes(m.id));
+        return part.length ? `<div class="grp"><h3>${title}<small>${part.length}</small></h3><div class="${gcls}">${part.map(cardHtml).join('')}</div></div>` : '';
+      }).join('') + (() => { const rest = items.filter(m => !GROUPS.some(x => x[1].includes(m.id))); return rest.length ? `<div class="grp"><h3>Другое<small>${rest.length}</small></h3><div class="${gcls}">${rest.map(cardHtml).join('')}</div></div>` : ''; })();
+    } else {
+      g.className = gcls;
+      g.innerHTML = items.map(cardHtml).join('');
+    }
     $(id === 'ready' ? 'secReady' : 'secSoon').hidden = !items.length;
   }
   $('none').hidden = list.length > 0;
