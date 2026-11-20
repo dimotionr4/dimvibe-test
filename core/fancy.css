@@ -58,8 +58,8 @@ html.style-fancy:root :is(.tf-ans.active, .mc-opt.on, .st-opt.on, .mt-card.sel, 
 html.style-fancy:root .mt-card.linked { background:color-mix(in srgb, var(--mt-c) 18%, #fff); }
 html.style-fancy:root :is(.tf-ans.ok, .mc-opt.ok, .mc-opt.right, .tf-ans.active.ok, .st-opt.ok, .or-item.ok, .mt-lines .mt-card.ok) { background:var(--fx-ok); color:var(--fx-ok-t); box-shadow:none; }
 html.style-fancy:root :is(.tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad, .st-opt.bad, .or-item.bad, .mt-card.bad) { background:var(--fx-bad); color:var(--fx-bad-t); box-shadow:none; }
-html.style-fancy :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { content:"✓"; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:700; }
-html.style-fancy :is(.tf-ans.bad, .mc-opt.bad)::after { content:"✕"; }
+html.style-fancy :is(.mc-opt.ok, .mc-opt.bad)::after { content:"✓"; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:700; }
+html.style-fancy .mc-opt.bad::after { content:"✕"; }
 html.style-fancy .mc-verdict.ok { color:var(--ok); } html.style-fancy .mc-verdict.bad { color:var(--bad); }
 html.style-fancy:root :is(.mt-card, .st-opt, .or-item, .tl-item, .card, .tf-card, .mc-card).missing { box-shadow:0 0 0 2px var(--bad); }
 html.style-fancy:root .or-item.or-dragging { box-shadow:0 8px 20px rgba(29,32,48,.15); }

@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>/* Тема до первой отрисовки, чтобы не было вспышки светлой/тёмной (2026-11-21): сохранённый выбор из dimvibe.theme */try{var t=localStorage.getItem("dimvibe.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <title>DimVibe — редактор</title>
 <link rel="stylesheet" href="core/gap.css?v=8">
 <link rel="stylesheet" href="core/check.css?v=3">
 <link rel="stylesheet" href="core/comic.css?v=14">
-<link rel="stylesheet" href="core/action.css?v=12">
-<link rel="stylesheet" href="core/soft.css?v=5">
-<link rel="stylesheet" href="core/fancy.css?v=6">
+<link rel="stylesheet" href="core/action.css?v=14">
+<link rel="stylesheet" href="core/soft.css?v=7">
+<link rel="stylesheet" href="core/fancy.css?v=8">
 <link rel="stylesheet" href="core/fonts.css?v=1">
 <link rel="stylesheet" href="core/ui.css?v=1">
 <style>
@@ -602,7 +603,7 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 128;
+const ASSET_V = 132;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';

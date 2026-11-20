@@ -47,8 +47,8 @@ html.style-soft:root :is(.tf-ans, .mc-opt) { background:var(--bg); color:var(--t
 html.style-soft:root :is(.tf-ans.active, .mc-opt.on) { box-shadow:var(--sf-in); color:var(--accent); }
 html.style-soft:root :is(.tf-ans.ok, .mc-opt.ok, .mc-opt.right, .tf-ans.active.ok) { background:var(--sf-ok-bg); color:#1f6f4d; box-shadow:var(--sf-in); }
 html.style-soft:root :is(.tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad) { background:var(--sf-bad-bg); color:#9b3043; box-shadow:var(--sf-in); }
-html.style-soft :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { content:"✓"; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:700; }
-html.style-soft :is(.tf-ans.bad, .mc-opt.bad)::after { content:"✕"; }
+html.style-soft :is(.mc-opt.ok, .mc-opt.bad)::after { content:"✓"; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:700; }
+html.style-soft .mc-opt.bad::after { content:"✕"; }
 html.style-soft .mc-verdict.ok { color:var(--ok); } html.style-soft .mc-verdict.bad { color:var(--bad); }
 
 /* Переключатель вопросов */
