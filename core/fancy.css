@@ -9,6 +9,7 @@ html.style-fancy:root {
   --card:var(--fx-tint);
   --fx-ink:#1d2030; --fx-ok:#cdeedd; --fx-bad:#f8d3dc; --fx-ok-t:#1f6f4d; --fx-bad-t:#9b3043;
   --ok:#2f9e6b; --bad:#d9576b;
+  --fx-shadow:0 10px 30px -8px color-mix(in srgb, var(--accent) 18%, rgba(29,32,48,.10)), 0 2px 6px rgba(29,32,48,.04);
   --r-s:20px; --r-m:28px; --r-l:36px; --shadow-1:none; --shadow-2:none;
 }
 /* Фон страницы: мягкие размытые пятна цвета упражнения и запасных пастельных оттенков, как на референсе */
@@ -23,11 +24,11 @@ html.style-fancy body {
 html.style-fancy h1#title { font-weight:800; font-size:1.9rem; line-height:1.15; }
 
 /* Карточка: диагональный градиент от светлой пастели к более насыщенной и еле заметные искры в углу */
-html.style-fancy:root .card { background-color:var(--fx-tint);
+html.style-fancy:root .card { box-shadow:var(--fx-shadow); background-color:var(--fx-tint);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23fff' fill-opacity='.45'%3E%3Cpath d='M92 14l3 9 9 3-9 3-3 9-3-9-9-3 9-3z'/%3E%3Cpath d='M104 62l2 5 5 2-5 2-2 5-2-5-5-2 5-2z'/%3E%3Cpath d='M70 36l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z'/%3E%3C/g%3E%3C/svg%3E"),
     linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, #fff) 0%, var(--fx-tint2) 100%);
-  background-repeat:no-repeat; background-position:right 8px top 4px, 0 0; background-size:120px 120px, 100% 100%; border:0; border-radius:var(--r-l); box-shadow:none; }
-html.style-fancy:root .instr { background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, #fff), var(--fx-tint2)); border:0; border-radius:var(--r-l); box-shadow:none; color:var(--muted); }
+  background-repeat:no-repeat; background-position:right 8px top 4px, 0 0; background-size:120px 120px, 100% 100%; border:0; border-radius:var(--r-l); }
+html.style-fancy:root .instr { background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, #fff), var(--fx-tint2)); border:0; border-radius:var(--r-l); box-shadow:none; color:var(--muted); box-shadow:var(--fx-shadow); }
 
 /* Пропуски: белые таблетки */
 html.style-fancy .gap:is(.shape-frame, .shape-pill, .shape-free, .shape-line) { border:0; border-radius:999px; background:#fff; box-shadow:none; }
@@ -46,7 +47,7 @@ html.style-fancy:root .chip.used { opacity:.45; }
 /* Нижняя панель и кнопки */
 html.style-fancy:root footer { background:transparent; border-top:0; box-shadow:none; }
 /* Банк слов: своя округлая пастельная панель, а не россыпь на сером поле */
-html.style-fancy:root :is(footer > .bank, main > .bank) { background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, #fff), var(--fx-tint2)); border:0; border-radius:var(--r-l); padding:14px 16px; margin-bottom:10px; gap:10px; box-shadow:none; }
+html.style-fancy:root :is(footer > .bank, main > .bank) { background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, #fff), var(--fx-tint2)); border:0; border-radius:var(--r-l); padding:14px 16px; margin-bottom:10px; gap:10px; box-shadow:var(--fx-shadow); }
 html.style-fancy:root .check-btn { background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 80%, #fff), var(--accent)); color:var(--on-accent); border:0; border-radius:999px; box-shadow:none; font-weight:600; }
 html.style-fancy:root .check-btn:disabled { background:#d9dbe3; color:#9a9db0; }
 html.style-fancy:root .score.result { background:#fff; color:var(--text); border:0; border-radius:999px; box-shadow:none; }
