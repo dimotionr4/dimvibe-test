@@ -82,6 +82,40 @@ html.style-action :is(.tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad) { background
 html.style-action .mc-verdict.ok { color:var(--ok); } html.style-action .mc-verdict.bad { color:var(--bad); }
 html.style-action :is(.card, .tf-card, .mc-card).missing { border-color:var(--bad); }
 
+/* Переключатель вопросов (True / False, Multiple Choice и др.): квадратные плашки, цвет — по состоянию */
+html.style-action .tf-dot { background:var(--ax-field); color:var(--text); border:2px solid var(--line); font-family:var(--ax-head); font-weight:700; letter-spacing:.04em; box-shadow:2px 2px 0 var(--ax-shadow-c); }
+html.style-action .tf-dot.answered:not(.active) { border-color:var(--accent); }
+html.style-action .tf-dot.ok:not(.active) { background:var(--ok); border-color:var(--ok); color:#000; }
+html.style-action .tf-dot.bad:not(.active) { background:var(--bad); border-color:var(--bad); color:#fff; }
+html.style-action .tf-dot.missing:not(.active) { border-color:var(--bad); border-style:dashed; color:var(--bad); }
+html.style-action .tf-dot.active { background:var(--accent); border-color:var(--accent); color:#000; box-shadow:2px 2px 0 var(--ax-shadow-c); }
+html.style-action .tf-pager button { border:2px solid var(--line); background:var(--ax-field); color:var(--text); font-weight:700; text-transform:uppercase; letter-spacing:.04em; box-shadow:2px 2px 0 var(--ax-shadow-c); }
+html.style-action .tf-count { font-family:var(--ax-head); letter-spacing:.1em; color:var(--muted); }
+
+/* «Верно» / «Неверно» под вопросом: наклейка */
+html.style-action .mc-verdict { display:inline-block; padding:4px 14px; font-family:var(--ax-head); text-transform:uppercase; letter-spacing:.08em; transform:rotate(-1deg); }
+html.style-action .mc-verdict.ok { background:var(--ok); color:#000; }
+html.style-action .mc-verdict.bad { background:var(--bad); color:#fff; }
+
+/* Строка результата внизу («Отвечено… Верно…»): тёмное табло с жёлтой планкой слева */
+html.style-action:root .score.result { background:#0b0b0d; color:#fff; border:2px solid #0b0b0d; border-left:6px solid var(--accent); font-weight:700; letter-spacing:.02em; box-shadow:3px 3px 0 var(--ax-shadow-c); }
+html.style-action:root .score.result.warn { color:#ff6b6b; }
+html.style-action.action-light:root .score.result { box-shadow:3px 3px 0 #0b0b0d; }
+
+/* Ответы «верно» / «неверно»: сплошная заливка, жёсткая тень, небольшой квадратный значок ✓ / ✕ в углу.
+   Без узоров и «взрывов» (владелец 2026-11-20: было слишком пёстро). Появление значка — короткое «штампование» (transform, opacity) */
+@keyframes ax-pop { 0% { transform:scale(.4); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+
+/* Пропуск: значок-квадрат над пропуском */
+html.style-action .gap.ok::after, html.style-action .gap.bad::after { animation:ax-pop .2s ease-out both; }
+
+/* Варианты ответа: жёсткая тень и значок справа */
+html.style-action :is(.mc-opt, .tf-ans) { position:relative; }
+html.style-action :is(.tf-ans.ok, .mc-opt.ok, .mc-opt.right, .tf-ans.active.ok, .tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad) { box-shadow:4px 4px 0 var(--ax-edge); }
+html.style-action :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { content:"✓"; position:absolute; right:10px; top:50%; margin-top:-13px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; background:#000; color:var(--ok); font-weight:700; animation:ax-pop .2s ease-out both; }
+html.style-action :is(.tf-ans.bad, .mc-opt.bad)::after { content:"✕"; color:var(--bad); }
+html.style-action.action-light :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { background:#0b0b0d; }
+
 /* Модули: фиксированные скругления (овалы и т. п.) заменены прямыми углами; скругления через --r-s / --r-m / --r-l уже обнулены выше.
    Круглые значки (50 %: точки, номера, метки) остаются круглыми. Список собран по modules/*/player.css */
 html.style-action .cc-chip,
@@ -112,4 +146,4 @@ html.style-action .vc-chip,
 html.style-action .vc-pos,
 html.style-action .ws-chips .ws-tok { border-radius:0 !important; }
 
-@media (prefers-reduced-motion:reduce) { html.style-action * { transition:none !important; } }
+@media (prefers-reduced-motion:reduce) { html.style-action * { transition:none !important; animation:none !important; } }
