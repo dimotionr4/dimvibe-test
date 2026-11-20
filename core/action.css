@@ -60,7 +60,7 @@ html.style-action .gap input::placeholder { color:var(--muted); }
 
 /* Ярлыки банка слов: наклейки, лёгкий поворот */
 html.style-action .chip { background-color:var(--ax-tag); color:var(--ax-tag-ink); border:0; font-weight:700; text-transform:uppercase; letter-spacing:.03em; box-shadow:none; }
-html.style-action .chip:nth-child(odd) { transform:rotate(-1deg); } html.style-action .chip:nth-child(even) { transform:rotate(1deg); }
+html.style-action .chip:not(.ld-slot):nth-child(odd) { transform:rotate(-1deg); } html.style-action .chip:not(.ld-slot):nth-child(even) { transform:rotate(1deg); } /* ячейки Label the Diagram позиционируются через transform, их не поворачиваем */
 html.style-action .chip.selected { background:var(--accent); color:#000; }
 html.style-action .chip.used { opacity:.3; }
 html.style-action .chip.dg-ghost { box-shadow:var(--ax-shadow); border:0; }
@@ -115,6 +115,21 @@ html.style-action :is(.tf-ans.ok, .mc-opt.ok, .mc-opt.right, .tf-ans.active.ok, 
 html.style-action :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { content:"✓"; position:absolute; right:10px; top:50%; margin-top:-13px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; background:#000; color:var(--ok); font-weight:700; animation:ax-pop .2s ease-out both; }
 html.style-action :is(.tf-ans.bad, .mc-opt.bad)::after { content:"✕"; color:var(--bad); }
 html.style-action.action-light :is(.tf-ans.ok, .tf-ans.bad, .mc-opt.ok, .mc-opt.right, .mc-opt.bad)::after { background:#0b0b0d; }
+
+/* Label the Diagram: ячейки на картинке и подписи в банке (ячейки — .chip.ld-slot, стоят на картинке через transform и рамки, без скоса).
+   Пустая ячейка — поле с жёлтым пунктиром; с подписью — наклейка; верно / неверно — заливка */
+html.style-action:root .chip.ld-slot { clip-path:none; background-color:var(--ax-field); color:var(--text); border:2px dashed var(--accent); box-shadow:2px 2px 0 var(--ax-shadow-c); font-weight:700; text-transform:none; letter-spacing:0; }
+html.style-action:root .chip.ld-slot.has { background-color:var(--ax-tag); color:var(--ax-tag-ink); border:2px solid var(--ax-edge); }
+html.style-action:root .chip.ld-slot.ld-target { border-style:solid; border-color:var(--accent); box-shadow:0 0 0 2px var(--accent), 2px 2px 0 2px var(--ax-shadow-c); }
+html.style-action:root .chip.ld-slot.ld-over, html.style-action:root .ld-slot.ld-over { background-color:var(--accent); color:#000; box-shadow:2px 2px 0 var(--ax-shadow-c); }
+html.style-action:root .chip.ld-slot.ok { background-color:var(--ok); color:#000; border:2px solid var(--ok); }
+html.style-action:root .chip.ld-slot.bad { background-color:var(--bad); color:#fff; border:2px solid var(--bad); }
+html.style-action .ld-no { background:var(--accent); color:#000; }
+html.style-action .ld-slot.ok .ld-no, html.style-action .ld-slot.bad .ld-no { background:#000; color:#fff; }
+html.style-action .ld-slot.ok .ld-tick, html.style-action .ld-slot.bad .ld-cross, html.style-action .ld-slot .ld-right { color:inherit; }
+html.style-action:root .chip.ld-chip:not(.ld-slot) { background-color:var(--ax-tag); color:var(--ax-tag-ink); border:0; clip-path:polygon(0 0, calc(100% - var(--ax-cut)) 0, 100% var(--ax-cut), 100% 100%, var(--ax-cut) 100%, 0 calc(100% - var(--ax-cut))); }
+html.style-action:root .chip.ld-chip.selected { background-color:var(--accent); color:#000; box-shadow:none; }
+html.style-action .ld-dot { border-color:#000; }
 
 /* Модули: фиксированные скругления (овалы и т. п.) заменены прямыми углами; скругления через --r-s / --r-m / --r-l уже обнулены выше.
    Круглые значки (50 %: точки, номера, метки) остаются круглыми. Список собран по modules/*/player.css */
