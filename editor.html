@@ -566,7 +566,7 @@
 </div>
 
 <script src="core/icons.js?v=3"></script>
-<script src="core/design.js?v=17"></script>
+<script src="core/design.js?v=18"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/medialib.js?v=4"></script>
 <script src="core/medialib-ui.js?v=6"></script>
@@ -597,7 +597,7 @@
 <script src="modules/label-diagram/editor.js?v=7"></script>
 <script src="modules/text-to-image/editor.js?v=2"></script>
 <script src="modules/word-search/editor.js?v=2"></script>
-<script src="modules/mini-dialogues/editor.js?v=5"></script>
+<script src="modules/mini-dialogues/editor.js?v=6"></script>
 <script src="modules/vocabulary/editor.js?v=5"></script>
 <script src="modules/flashcards/editor.js?v=4"></script>
 <script src="modules/splice/tokens.js?v=1"></script>
@@ -607,7 +607,7 @@
 <script src="core/shell.js?v=2"></script>
 <script src="core/demo.js?v=1"></script>
 <script>
-const ASSET_V = 143;
+const ASSET_V = 144;
 // Ядро редактора: черновики в браузере, название, вкладки, автосохранение, предпросмотр и публикация файлом.
 // Содержимое задания рисует и проверяет редактор модуля (MODULES), ядро в него не вмешивается.
 const STORE = 'dimvibe.drafts.v1', LAST = 'dimvibe.lastDraft';
@@ -1235,7 +1235,7 @@ function designMock(c) {
 }
 
 // Модули с банком слов: у них во вкладке «Дизайн» есть выбор вида ярлыков (Splice выбирает вид частей сам)
-const BANK_MODULES = ['fill_blanks', 'prepositions', 'word_scramble', 'text_to_image', 'label_diagram', 'categories'];
+const BANK_MODULES = ['fill_blanks', 'prepositions', 'word_scramble', 'text_to_image', 'label_diagram', 'categories', 'mini_dialogues'];
 
 function renderDesign() {
   if (!current || tab !== 'design') return;

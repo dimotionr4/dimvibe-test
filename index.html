@@ -27,7 +27,7 @@ if (!/[?&](id|preview)=?/.test(location.search)) location.replace('home.html');
 <link rel="stylesheet" href="modules/label-diagram/player.css?v=6">
 <link rel="stylesheet" href="modules/text-to-image/player.css?v=4">
 <link rel="stylesheet" href="modules/word-search/player.css?v=1">
-<link rel="stylesheet" href="modules/mini-dialogues/player.css?v=4">
+<link rel="stylesheet" href="modules/mini-dialogues/player.css?v=5">
 <link rel="stylesheet" href="modules/vocabulary/player.css?v=3">
 <link rel="stylesheet" href="modules/flashcards/player.css?v=3">
 <link rel="stylesheet" href="modules/color-coding/player.css?v=4">
@@ -189,7 +189,7 @@ setTimeout(function(){h.classList.remove('mo-intro');},8000);
 document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#check'))T('mo-check',700);
 var d=e.target.closest&&e.target.closest('.tf-pager button,.tf-dot');if(d&&!d.disabled){var dir;if(d.classList.contains('tf-dot')){var a=document.querySelector('.tf-dot.active'),all=[].slice.call(d.parentNode.children);dir=a&&all.indexOf(d)<all.indexOf(a)?'mo-prev':'mo-next';}else dir=d.parentNode.firstElementChild===d?'mo-prev':'mo-next';h.classList.remove('mo-next','mo-prev');T(dir,500);}},true);})();
 </script>
-<script src="core/design.js?v=17"></script>
+<script src="core/design.js?v=18"></script>
 <script src="core/media.js?v=4"></script>
 <script src="core/mediaviewer.js?v=3"></script>
 <script src="core/richtext.js?v=6"></script>
@@ -219,7 +219,7 @@ var d=e.target.closest&&e.target.closest('.tf-pager button,.tf-dot');if(d&&!d.di
 <script src="modules/label-diagram/player.js?v=5"></script>
 <script src="modules/text-to-image/player.js?v=2"></script>
 <script src="modules/word-search/player.js?v=1"></script>
-<script src="modules/mini-dialogues/player.js?v=3"></script>
+<script src="modules/mini-dialogues/player.js?v=4"></script>
 <script src="modules/vocabulary/player.js?v=2"></script>
 <script src="modules/flashcards/player.js?v=2"></script>
 <script>
@@ -263,7 +263,7 @@ function applyLook() {
   document.documentElement.classList.add(...pageClasses(page), ...checkClasses(normalizeCheck(dz.check)), ...chipClasses(normalizeChips(q('chips') || dz.chips)));
   $('root').classList.toggle('panel', page.background === 'card');
   // Банк слов Fill Blanks и Prepositions: по умолчанию в нижней панели, сверху — закреплённой полосой над упражнением
-  const bk = $('bank'), bankTop = (data.module === 'fill_blanks' || data.module === 'prepositions') && bankPos(dz, data.module) === 'top';
+  const bk = $('bank'), bankTop = (data.module === 'fill_blanks' || data.module === 'prepositions' || data.module === 'mini_dialogues') && bankPos(dz, data.module) === 'top';
   if (bankTop && bk.parentNode !== $('main')) $('main').insertBefore(bk, $('root'));
   else if (!bankTop && bk.parentNode !== document.querySelector('footer')) document.querySelector('footer').insertBefore(bk, document.querySelector('footer').firstChild);
   document.documentElement.classList.toggle('style-comic', (q('style') || dz.style) === 'comic');

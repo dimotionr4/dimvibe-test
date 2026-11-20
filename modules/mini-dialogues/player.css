@@ -30,3 +30,20 @@
 .md-name { display:flex; align-items:center; gap:4px; }
 .md-sound { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; min-width:0; min-height:0; padding:0; border:1px solid var(--line); border-radius:50%; background:var(--card); color:var(--text); font-size:.8rem; }
 .md-sound.playing { border-color:var(--accent); color:var(--accent); }
+
+/* Настройки «Дизайна» (этап 4) */
+.md-nolabel .md-who { display:none; }
+.md-nolabel .md-name:empty { display:none; }
+/* Мягкий пузырь: без рамки, спокойная заливка */
+.md-b-soft .md-bubble { border-color:transparent; background:color-mix(in srgb, var(--md-c) 20%, var(--card)); border-radius:22px 22px 22px 6px; }
+.md-b-soft.card .md-right .md-bubble { border-radius:22px 22px 6px 22px; }
+/* Компактный пузырь: меньше отступы и скругление */
+.md-b-compact .md-bubble { line-height:2.3; padding:0 10px; font-size:.95rem; border-radius:10px 10px 10px 3px; }
+.md-b-compact .md-right .md-bubble { border-radius:10px 10px 3px 10px; }
+.md-b-compact .md-ava { width:28px; height:28px; font-size:.8rem; }
+.card.md-card.md-b-compact { gap:8px; }
+/* Без карточек: блок — просто группа реплик с тонкой линией между блоками */
+.card.md-card.md-simple { background:transparent; border:0; box-shadow:none; padding:4px 0; border-radius:0; }
+.card.md-card.md-simple + .card.md-card.md-simple { border-top:1px solid var(--line); padding-top:14px; }
+html.style-action:root .card.md-card.md-simple { background:transparent; border:0; border-top:0; box-shadow:none; }
+html.style-action:root .card.md-card.md-simple + .card.md-card.md-simple { border-top:2px solid var(--line); }

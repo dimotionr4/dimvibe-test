@@ -31,6 +31,7 @@ const MiniDialoguesPlayer = (() => {
 
   // Сторона: свой выбор автора, иначе по очереди (первый слева, второй справа…)
   function sideOf(sp, i) {
+    if (data.align === 'left') return 'left'; // настройка «Всё слева»
     if (sp && (sp.side === 'left' || sp.side === 'right')) return sp.side;
     return i % 2 === 0 ? 'left' : 'right';
   }
@@ -41,7 +42,7 @@ const MiniDialoguesPlayer = (() => {
   function render(root) {
     let gi = 0;
     data.dialogues.forEach((dlg, di) => {
-      const card = el('div', 'card md-card');
+      const card = el('div', 'card md-card' + (data.bubble === 'soft' ? ' md-b-soft' : data.bubble === 'compact' ? ' md-b-compact' : '') + (data.label === 'hidden' ? ' md-nolabel' : '') + (data.blocks === 'simple' ? ' md-simple' : ''));
       card.setAttribute('role', 'group');
       card.setAttribute('aria-label', dlg.title || `Диалог ${di + 1}`);
       const dUrl = audioUrl(dlg);
@@ -71,7 +72,8 @@ const MiniDialoguesPlayer = (() => {
           img.onerror = () => { img.remove(); ava.textContent = ava.dataset.letter; ava.classList.remove('md-pic'); };
         }
         const main = el('div', 'md-main');
-        const nameRow = el('div', 'md-name', who);
+        const nameRow = el('div', 'md-name');
+        nameRow.append(el('span', 'md-who', who));
         const lUrl = audioUrl(line);
         if (lUrl) nameRow.append(audioButton(lUrl, 'l' + line.id, 'md-sound', '🔊', `Прослушать реплику: ${who}`));
         main.append(nameRow);

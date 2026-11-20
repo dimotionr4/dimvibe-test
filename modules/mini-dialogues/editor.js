@@ -2,10 +2,17 @@
 // Этап 1 (2026-11-21): только текст, ввод с клавиатуры. Этап 2 (2026-11-21): способ ответа на всё упражнение — ввод, банк слов или выпадающий список, слова-ловушки.
 // Этап 3 (2026-11-21): картинка-аватар говорящего (общий MediaUI.imageControl из core/mediabar.js); звук реплики и всего диалога
 // (общий MediaUI.picker), у звука выключатель «Только после завершения» — до конца ученик его не видит и не слышит.
+// Этап 4 (2026-11-21): вкладка «Дизайн» — вид пузыря, подпись говорящего, стороны, блоки (designOptions); банк слов — общие «Ярлыки» и «Положение».
 // Ядро (editor.html) передаёт сюда черновик и функцию сохранения; список черновиков, название и вкладки — не здесь.
 // Разметка пропусков в репликах — общий движок (core/gap-engine.js). Реплика хранится как parts: строки и пропуски {gap: ID}.
 const MiniDialoguesEditor = (() => {
   const MAX_GAPS = 20, MAX_SPEAKERS = 6, LONG_LINE = 220;
+  // Настройки вкладки «Дизайн» (рисует ядро): вид пузыря, подпись говорящего, стороны, оформление блоков
+  const BUBBLES = { rounded: 'Округлый', soft: 'Мягкий', compact: 'Компактный' };
+  const LABELS = { name: 'С именем', hidden: 'Без имени' };
+  const ALIGNS = { sides: 'По сторонам', left: 'Всё слева' };
+  const BLOCKS = { card: 'Карточки', simple: 'Без карточек' };
+  const pick = (set, v, def) => (set[v] ? v : def);
   // Способ ответа — один на всё упражнение. Значки: банк слов, выпадающий список, ввод вручную
   const MODES = [
     ['word_bank', 'Банк слов', '<rect x="2" y="5" width="9" height="5" rx="2.5"/><rect x="13" y="5" width="9" height="5" rx="2.5"/><rect x="6" y="14" width="12" height="5" rx="2.5"/>'],
@@ -43,7 +50,7 @@ const MiniDialoguesEditor = (() => {
 
   function create() {
     return {
-      module: 'mini_dialogues', format: 1, mode: 'typing', distractors: [],
+      module: 'mini_dialogues', format: 1, mode: 'typing', distractors: [], bubble: 'rounded', label: 'name', align: 'sides', blocks: 'card',
       speakers: [{ id: 'sp1', name: '', side: 'auto', avatar: emptyImage() }, { id: 'sp2', name: '', side: 'auto', avatar: emptyImage() }],
       dialogues: [{ id: 'd1', title: '', audio: '', audioLate: false, lines: [{ id: 'l1', speaker: 'sp1', parts: [''], audio: '', audioLate: false }, { id: 'l2', speaker: 'sp2', parts: [''], audio: '', audioLate: false }] }],
       gaps: {},
@@ -572,7 +579,7 @@ const MiniDialoguesEditor = (() => {
       const g = draft.gaps[p.gap];
       gaps[p.gap] = { answer: clean(g.answer), alternatives: (g.alternatives || []).map(clean).filter(Boolean), hint: clean(g.hint) };
     })));
-    return { module: 'mini_dialogues', format: 1, mode: ['word_bank', 'dropdown', 'typing'].includes(draft.mode) ? draft.mode : 'typing', speakers, dialogues, gaps, distractors: (draft.distractors || []).map(clean).filter(Boolean) };
+    return { module: 'mini_dialogues', format: 1, mode: ['word_bank', 'dropdown', 'typing'].includes(draft.mode) ? draft.mode : 'typing', bubble: pick(BUBBLES, draft.bubble, 'rounded'), label: pick(LABELS, draft.label, 'name'), align: pick(ALIGNS, draft.align, 'sides'), blocks: pick(BLOCKS, draft.blocks, 'card'), speakers, dialogues, gaps, distractors: (draft.distractors || []).map(clean).filter(Boolean) };
   }
 
   // Число пропусков — для «авто» числа проверок (3 при 1–5, 5 при 6 и больше)
@@ -620,6 +627,7 @@ const MiniDialoguesEditor = (() => {
       if (pool.size > 8) warnings.push(`В выпадающем списке ${pool.size} вариантов. Обычно хватает 3–5.`);
     }
     if (ex.mode === 'word_bank' && ex.distractors.length > 6) warnings.push('В банке много слов-ловушек: на телефоне банк станет длинным.');
+    if (pick(LABELS, draft.label, 'name') === 'hidden' && draft.speakers.length >= 3) warnings.push('Имена говорящих скрыты, а их три и больше: ученик может запутаться, кто говорит. Оставьте имена или добавьте картинки.');
     const used = new Set(draft.dialogues.flatMap(x => x.lines.map(l => l.speaker)));
     draft.speakers.forEach((s, i) => { if (clean(s.name) && !used.has(s.id)) warnings.push(`Говорящий «${clean(s.name)}» не произносит ни одной реплики.`); });
     return { errors, warnings };
@@ -643,8 +651,28 @@ const MiniDialoguesEditor = (() => {
       });
       return { id: String(x.id || 'd' + (di + 1)), title: String(x.title || ''), audio: (x.audio && safeMediaPath(x.audio.media)) || '', audioLate: !!x.late, lines };
     });
-    return { ...create(), mode: ['word_bank', 'dropdown', 'typing'].includes(file.mode) ? file.mode : 'typing', distractors: Array.isArray(file.distractors) ? file.distractors.map(String) : [], speakers, dialogues: dialogues.length ? dialogues : create().dialogues, gaps };
+    return { ...create(), bubble: pick(BUBBLES, file.bubble, 'rounded'), label: pick(LABELS, file.label, 'name'), align: pick(ALIGNS, file.align, 'sides'), blocks: pick(BLOCKS, file.blocks, 'card'), mode: ['word_bank', 'dropdown', 'typing'].includes(file.mode) ? file.mode : 'typing', distractors: Array.isArray(file.distractors) ? file.distractors.map(String) : [], speakers, dialogues: dialogues.length ? dialogues : create().dialogues, gaps };
   }
 
-  return { create, demo, render, load, exportData, validate, unitCount };
+  // Настройки во вкладке «Дизайн» (рисует ядро); значения лежат в черновике. Банк слов и «Положение» — общие карточки ядра
+  const sq = inner => `<svg viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+  function designOptions(draft) {
+    return [
+      { field: 'bubble', label: 'Пузырь', value: pick(BUBBLES, draft.bubble, 'rounded'), names: BUBBLES, icons: {
+        rounded: sq('<rect x="3" y="6" width="18" height="11" rx="6"/>'),
+        soft: sq('<rect x="3" y="6" width="18" height="11" rx="6" fill="currentColor" fill-opacity=".28" stroke="none"/>'),
+        compact: sq('<rect x="5" y="8" width="14" height="7" rx="2.5"/>') } },
+      { field: 'label', label: 'Подпись', value: pick(LABELS, draft.label, 'name'), names: LABELS, icons: {
+        name: sq('<circle cx="7" cy="12" r="3"/><path d="M13 10h8M13 14h5"/>'),
+        hidden: sq('<circle cx="7" cy="12" r="3"/><path d="M13 12h8" stroke-dasharray="2 3"/>') } },
+      { field: 'align', label: 'Стороны', value: pick(ALIGNS, draft.align, 'sides'), names: ALIGNS, icons: {
+        sides: sq('<rect x="3" y="5" width="11" height="5" rx="2"/><rect x="10" y="14" width="11" height="5" rx="2"/>'),
+        left: sq('<rect x="3" y="5" width="11" height="5" rx="2"/><rect x="3" y="14" width="11" height="5" rx="2"/>') } },
+      { field: 'blocks', label: 'Блоки', value: pick(BLOCKS, draft.blocks, 'card'), names: BLOCKS, icons: {
+        card: sq('<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/>'),
+        simple: sq('<path d="M4 8h16M4 16h16"/>') } },
+    ];
+  }
+
+  return { create, demo, render, load, exportData, validate, unitCount, designOptions };
 })();
