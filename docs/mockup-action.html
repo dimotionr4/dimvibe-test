@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Макет: стиль Экшен (Fill Blanks)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Roboto+Condensed:wght@400;700&display=swap">
+<style>
+  :root { --bg:#0b0b0d; --panel:#16161a; --white:#fff; --text:#f2f2f2; --muted:#9a9aa3; --accent:#ffd400; --ok:#2ecc71; --bad:#ff3b3b;
+    --head:'Oswald','Bebas Neue',Impact,'Arial Narrow',sans-serif; --body:'Roboto Condensed','Arial Narrow',Arial,sans-serif; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:400 17px/1.7 var(--body); padding:20px 16px 40px; }
+  .dots { background-image:radial-gradient(rgba(255,255,255,.1) 1px, transparent 1.5px); background-size:4px 4px; }
+  .wrap { max-width:760px; margin:0 auto; display:grid; gap:18px; }
+
+  /* Верхняя строка: заголовок и табло */
+  .top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .title { background:var(--white); color:#000; font:700 1.7rem/1 var(--head); text-transform:uppercase; letter-spacing:.08em; padding:14px 40px 14px 18px; transform:rotate(-1deg);
+    clip-path:polygon(0 0,100% 0,calc(100% - 22px) 100%,0 100%,6px 50%); }
+  .bar { height:4px; width:150px; background:var(--accent); margin:6px 0 0 8px; box-shadow:150px 0 0 -0px transparent; }
+  .bar::after { content:''; display:block; height:4px; width:60px; background:var(--accent); margin:6px 0 0 20px; opacity:.6; }
+  .hud { display:flex; gap:8px; }
+  .tab { background:#000; border:2px solid #2a2a30; padding:4px 14px; font:700 1rem/1.4 var(--head); letter-spacing:.06em; text-transform:uppercase;
+    clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%); }
+  .tab span { color:var(--accent); }
+
+  /* Инструкция */
+  .instr { background:var(--panel); border-left:4px solid var(--accent); padding:14px 18px; font-size:.98rem; color:#d9d9df;
+    clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%); }
+  .label { display:inline-block; background:var(--white); color:#000; font:700 .8rem/1 var(--head); letter-spacing:.1em; text-transform:uppercase; padding:5px 10px; margin-bottom:6px;
+    clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%); transform:rotate(-1.5deg); }
+
+  /* Текст с пропусками */
+  .text { background:var(--panel); padding:22px 20px; font-size:1.1rem; line-height:2.6; }
+  .gap { display:inline-block; min-width:130px; min-height:44px; vertical-align:middle; margin:0 4px; position:relative;
+    background:#000; border:2px solid #3a3a42; color:var(--text); font:500 1rem/40px var(--body); padding:0 14px; text-align:center;
+    clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px)); border-bottom:3px solid var(--accent); }
+  input.gap { outline:none; width:150px; }
+  input.gap::placeholder { color:var(--muted); font-size:.85rem; }
+  input.gap:focus, .gap.sel { border-color:var(--accent); background:#111; box-shadow:3px 3px 0 #000; }
+  .gap.ok { background:var(--ok); border-color:var(--ok); color:#000; font-weight:700; }
+  .gap.ok::after { content:'✓'; position:absolute; right:8px; top:0; font-weight:700; }
+  .gap.bad { background:var(--bad); border-color:var(--bad); color:#fff; font-weight:700; animation:shake .3s; }
+  .gap.bad::after { content:'✕'; position:absolute; right:8px; top:0; font-weight:700; }
+  @keyframes shake { 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  select.gap { appearance:none; cursor:pointer; padding-right:28px; }
+  select.gap option { background:#16161a; color:#fff; }
+  .right { display:block; margin:6px 0 0; font-size:.85rem; line-height:1.2; background:var(--white); color:#000; font-weight:700; padding:3px 8px; width:max-content; transform:rotate(-1deg); }
+
+  /* Банк слов */
+  .bank { display:flex; flex-wrap:wrap; gap:10px; }
+  .chip { background:var(--white); color:#000; font:700 1rem/1 var(--head); letter-spacing:.04em; text-transform:uppercase; padding:12px 18px; min-height:44px; border:0; cursor:grab;
+    clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px)); transition:transform .2s; }
+  .chip:nth-child(odd) { transform:rotate(-1deg); } .chip:nth-child(even) { transform:rotate(1deg); }
+  .chip:hover { transform:scale(1.04) rotate(0); }
+  .chip.used { opacity:.3; }
+
+  /* Кнопки */
+  .btns { display:flex; gap:12px; flex-wrap:wrap; }
+  .btn { font:700 1.05rem/1 var(--head); letter-spacing:.08em; text-transform:uppercase; min-height:48px; padding:0 30px; border:0; cursor:pointer;
+    clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%); transition:transform .15s; }
+  .btn:active { transform:translate(2px,2px); }
+  .main { background:var(--accent); color:#000; }
+  .second { background:#000; color:var(--accent); box-shadow:inset 0 0 0 2px var(--accent); }
+  .off { background:#333; color:#777; cursor:not-allowed; }
+  h2 { font:700 .9rem/1 var(--head); letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:14px 0 -6px; }
+  @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h2>Макет · стиль «Экшен» · Fill Blanks</h2>
+
+  <div class="top">
+    <div>
+      <div class="title">Present Simple</div>
+      <div class="bar"></div>
+    </div>
+    <div class="hud">
+      <div class="tab">Проверки <span>3/5</span></div>
+      <div class="tab">Баллы <span>0</span></div>
+    </div>
+  </div>
+
+  <div class="instr dots">
+    <span class="label">Инструкция</span><br>
+    Впишите нужную форму глагола в каждое окошко. После проверки неверные ответы подсветятся красным.
+  </div>
+
+  <h2>1. Ввод с клавиатуры</h2>
+  <div class="text dots">
+    She <input class="gap" placeholder="ввести…"> to school every day, and he
+    <input class="gap" value="play"> football on Sundays.
+  </div>
+
+  <h2>2. Банк слов</h2>
+  <div class="text dots">
+    They <span class="gap sel">перетащите сюда</span> tennis at the club, but we
+    <span class="gap">&nbsp;</span> chess at home.
+  </div>
+  <div class="bank">
+    <button class="chip">play</button><button class="chip">plays</button><button class="chip">played</button><button class="chip used">go</button>
+  </div>
+
+  <h2>3. Выпадающий список</h2>
+  <div class="text dots">
+    My brother
+    <select class="gap"><option>выберите…</option><option>live</option><option>lives</option></select>
+    in London and
+    <select class="gap"><option>выберите…</option><option>work</option><option>works</option></select>
+    in a bank.
+  </div>
+
+  <h2>4. После проверки</h2>
+  <div class="text dots">
+    She <span class="gap ok">goes</span> to school, but he
+    <span class="gap bad">play</span><span class="right">Верно: plays</span>
+    football on Sundays.
+  </div>
+
+  <h2>Кнопки</h2>
+  <div class="btns">
+    <button class="btn main">Проверить</button>
+    <button class="btn second">Начать заново</button>
+    <button class="btn off">Недоступно</button>
+  </div>
+
+</div>
+</body>
+</html>
