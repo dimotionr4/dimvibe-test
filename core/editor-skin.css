@@ -1,0 +1,43 @@
+/* Вид редактора по стилю упражнения (решение владельца 2026-11-21): только Soft и Fancy, только редактор, только светлая тема.
+   Класс skin-soft / skin-fancy на <html> ставит applySkin() в editor.html по design.style текущего упражнения.
+   Список элементов — базовые из core/ui.css и editor.html; новые элементы редактора берут цвета из переменных и подхватят вид сами. */
+html[data-theme="light"].skin-soft {
+  --bg:#eef0f8; --card:#eef0f8; --text:#3d4059; --muted:#8a8da6; --line:transparent; --accent-soft:#e1e3f4;
+  --r-s:14px; --r-m:18px; --r-l:24px;
+  --sf-l:#fff; --sf-d:#c9cde0;
+  --sf-out:5px 5px 12px var(--sf-d), -5px -5px 12px var(--sf-l); --sf-out-s:3px 3px 7px var(--sf-d), -3px -3px 7px var(--sf-l);
+  --sf-in:inset 3px 3px 7px var(--sf-d), inset -3px -3px 7px var(--sf-l);
+  --shadow-1:var(--sf-out-s); --shadow-2:var(--sf-out-s);
+}
+html[data-theme="light"].skin-soft :is(button, .btn, .icon-btn, .side-btn, .seg button):not(.primary):not(.active):not([aria-pressed="true"]) { background:var(--bg); border:0; box-shadow:var(--sf-out-s); border-radius:999px; }
+html[data-theme="light"].skin-soft :is(button, .icon-btn, .side-btn):not(:disabled):active { box-shadow:var(--sf-in); }
+html[data-theme="light"].skin-soft :is(.icon-btn.active, .icon-btn[aria-pressed="true"], .seg button.active) { box-shadow:var(--sf-in); background:var(--bg); color:var(--accent); border-color:transparent; }
+html[data-theme="light"].skin-soft button.primary, html[data-theme="light"].skin-soft #side .side-btn.primary { border:0; border-radius:999px; box-shadow:4px 4px 10px rgba(2,156,145,.35), -3px -3px 8px var(--sf-l); }
+html[data-theme="light"].skin-soft :is(input, select, textarea, .rt-edit) { background:var(--bg); border:0; border-radius:var(--r-s); box-shadow:var(--sf-in); }
+html[data-theme="light"].skin-soft :is(.dz-card, .instr-ed, .modal-box) { background:var(--bg); border:0; border-radius:var(--r-l); box-shadow:var(--sf-out); }
+html[data-theme="light"].skin-soft #side { background:var(--bg); box-shadow:var(--sf-out-s); }
+html[data-theme="light"].skin-soft .pv-bar { border-bottom:0; }
+html[data-theme="light"].skin-soft #previewFrame { border:0; border-radius:var(--r-l); box-shadow:var(--sf-out); }
+html[data-theme="light"].skin-soft #divider::before { background:var(--sf-d); }
+
+html[data-theme="light"].skin-fancy {
+  --bg:#f4f5f7; --card:#fff; --text:#1d2030; --muted:#6f7386; --line:transparent; --accent-soft:color-mix(in srgb, var(--accent) 16%, #fff);
+  --r-s:16px; --r-m:22px; --r-l:30px;
+  --fx-shadow:0 10px 30px -8px color-mix(in srgb, var(--accent) 18%, rgba(29,32,48,.10)), 0 2px 6px rgba(29,32,48,.04);
+  --shadow-1:0 2px 8px rgba(29,32,48,.06); --shadow-2:var(--fx-shadow);
+}
+html[data-theme="light"].skin-fancy body {
+  background-color:var(--bg);
+  background-image:radial-gradient(60% 45% at 8% 4%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 96% 18%, rgba(143,214,207,.3), transparent 70%),
+    radial-gradient(60% 50% at 70% 100%, rgba(201,184,238,.3), transparent 70%);
+  background-attachment:fixed; }
+html[data-theme="light"].skin-fancy :is(button, .btn, .icon-btn, .side-btn, .seg button):not(.primary):not(.active):not([aria-pressed="true"]) { background:#fff; border:0; border-radius:999px; box-shadow:var(--shadow-1); }
+html[data-theme="light"].skin-fancy :is(.icon-btn.active, .icon-btn[aria-pressed="true"], .seg button.active) { background:var(--accent); color:#fff; border-color:transparent; }
+html[data-theme="light"].skin-fancy button.primary, html[data-theme="light"].skin-fancy #side .side-btn.primary { border:0; border-radius:999px; background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 80%, #fff), var(--accent)); }
+html[data-theme="light"].skin-fancy :is(input, select, textarea, .rt-edit) { background:#fff; border:0; border-radius:var(--r-s); box-shadow:inset 0 0 0 1px #e3e5ec; }
+html[data-theme="light"].skin-fancy :is(input, select, textarea, .rt-edit):focus { box-shadow:0 0 0 2px var(--accent); outline:0; }
+html[data-theme="light"].skin-fancy :is(.dz-card, .instr-ed, .modal-box) { background:#fff; border:0; border-radius:var(--r-l); box-shadow:var(--fx-shadow); }
+html[data-theme="light"].skin-fancy #side { background:rgba(255,255,255,.7); }
+html[data-theme="light"].skin-fancy .pv-bar { border-bottom:0; }
+html[data-theme="light"].skin-fancy #previewFrame { border:0; border-radius:var(--r-l); box-shadow:var(--fx-shadow); }
