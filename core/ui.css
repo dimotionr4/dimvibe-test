@@ -1,0 +1,33 @@
+/* Общий слой интерфейса (редактор, главная, список, настройки): плавное наведение и нажатие, кольцо фокуса.
+   Плеер не затрагивает. Правила с малой «силой»: любое более точное правило страницы их перекрывает. */
+:root { --ui-ease: cubic-bezier(.2,.7,.3,1); --ui-glow: rgba(2,156,145,.28); }
+button, .btn, .tb, .act, .opt, .fchip, .icon-btn, .seg button, select, input, textarea {
+  transition: background-color .18s var(--ui-ease), border-color .18s var(--ui-ease), color .18s var(--ui-ease),
+              box-shadow .18s var(--ui-ease), transform .18s var(--ui-ease), filter .18s var(--ui-ease);
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+/* Наведение: обычные кнопки получают акцентную рамку и мягкий фон */
+@media (hover: hover) {
+  button:where(:not(:disabled, .primary, .active, .kind, [aria-pressed="true"])):hover,
+  .btn:where(:not(:disabled, .arm)):hover { border-color: var(--accent); background: var(--accent-soft); }
+  button.primary:not(:disabled):hover, .btn.primary:not(:disabled):hover {
+    filter: brightness(1.08); box-shadow: 0 4px 14px var(--ui-glow); transform: translateY(-1px);
+  }
+  input:where(:not(:disabled)):hover, select:where(:not(:disabled)):hover, textarea:where(:not(:disabled)):hover { border-color: var(--accent); }
+}
+/* Нажатие */
+button:where(:not(:disabled)):active, .btn:where(:not(:disabled)):active, .tb:active, .act:active, .fchip:active { transform: scale(.97); }
+button:disabled, .btn:disabled { cursor: not-allowed; }
+/* Фокус: хорошо видимое кольцо для клавиатуры; мышью не показывается */
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:where(input, select, textarea):focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ui-glow); outline: none; }
+/* Окна: плавное появление */
+@keyframes ui-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+.modal:not([hidden]) { animation: ui-fade .18s var(--ui-ease); }
+.modal:not([hidden]) > :is(.modal-box, .box) { animation: ui-pop .22s var(--ui-ease); }
+@media (prefers-reduced-motion: reduce) {
+  button, .btn, .tb, .act, .opt, .fchip, .icon-btn, select, input, textarea { transition: none; }
+  .modal:not([hidden]), .modal:not([hidden]) > :is(.modal-box, .box) { animation: none; }
+  button:active, .btn:active { transform: none; }
+}

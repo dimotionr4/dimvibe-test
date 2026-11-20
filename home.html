@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — главная</title>
+<link rel="stylesheet" href="core/ui.css?v=1">
 <style>
   /* Тема общая с редактором: ключ dimvibe.theme в браузере, «Авто» следует за устройством */
-  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --gap:14px; }
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --gap:16px; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --line:#41415a; }
   }
@@ -24,16 +25,16 @@
   .theme-switch .ts-sun { stroke:#fff; }
   .theme-switch[aria-checked="true"] .ts-sun { stroke:var(--muted); }
   .theme-switch[aria-checked="true"] .ts-moon { stroke:#fff; }
-  main { flex:1; min-width:0; max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+  main { flex:1; min-width:0; max-width:1100px; margin:0 auto; padding:var(--sp-5) var(--sp-4) calc(var(--sp-6) * 2); }
   #drafts { flex:0 1 auto; min-height:0; overflow-y:auto; }
   .draft { display:block; width:100%; text-align:left; border:none; background:transparent; border-radius:8px; padding:6px 8px; cursor:pointer; }
   .draft:hover { background:var(--accent-soft); }
   .draft b { display:block; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .draft small { color:var(--muted); }
   .side-none { color:var(--muted); font-size:.85rem; margin:0; padding:0 8px; }
-  h1 { font-size:1.5rem; margin:0 0 4px; }
-  h2 { font-size:.85rem; color:var(--muted); font-weight:600; margin:24px 0 10px; text-transform:uppercase; letter-spacing:.04em; }
-  .lead { color:var(--muted); margin:0 0 16px; }
+  h1 { font-size:1.5rem; line-height:1.25; margin:0 0 var(--sp-2); }
+  h2 { font-size:.85rem; color:var(--muted); font-weight:600; margin:var(--sp-5) 0 var(--sp-3); text-transform:uppercase; letter-spacing:.04em; }
+  .lead { color:var(--muted); margin:0 0 var(--sp-4); }
 
   /* Подсказки при наведении и фокусе (как в редакторе) */
   [data-tip] { position:relative; }
@@ -43,7 +44,7 @@
   @keyframes tipin { from { opacity:0; } to { opacity:1; } }
 
   /* Панель инструментов: поиск, избранное, скрытые, виды, настройки */
-  #tools { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+  #tools { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-2); }
   .search { position:relative; flex:1; min-width:0; max-width:340px; }
   .search svg { position:absolute; left:10px; top:9px; width:18px; height:18px; color:var(--muted); pointer-events:none; }
   .search input { width:100%; min-height:36px; padding:6px 32px 6px 34px; border:1px solid var(--line); background:var(--card); border-radius:8px; }
@@ -82,13 +83,16 @@
   .grid.v-icons { grid-template-columns:repeat(auto-fill, 72px); }
   .mod { position:relative; border:1px solid color-mix(in srgb, var(--line) 60%, transparent); border-radius:18px; background:var(--card); box-shadow:0 1px 3px rgba(20,20,40,.08); transition:box-shadow .15s, border-color .15s, transform .15s; }
   @media (hover:hover) { .mod:not(.soon):not(.dragging):hover { border-color:var(--accent); box-shadow:0 6px 18px rgba(20,20,40,.12); transform:translateY(-2px); } }
-  .mod .main { display:flex; flex-direction:column; gap:8px; padding:18px; height:100%; text-decoration:none; border-radius:18px; }
+  .mod .main { display:flex; flex-direction:column; gap:var(--sp-2); padding:20px; height:100%; text-decoration:none; border-radius:18px; }
   .mod a.main:hover, .mod a.main:focus-visible { box-shadow:0 0 0 1px var(--accent), 0 4px 16px rgba(2,156,145,.18); outline:none; }
   .ic { width:48px; height:48px; flex:none; border-radius:12px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; }
   .ic svg { width:28px; height:28px; stroke-width:1.8; }
   .mod b { font-size:1.05rem; }
   .mod p { margin:0; color:var(--muted); font-size:.9rem; flex:1; }
-  .go { color:var(--accent); font-weight:600; font-size:.9rem; }
+  .go { display:inline-block; color:var(--accent); font-weight:600; font-size:.9rem; transition:transform .2s cubic-bezier(.2,.7,.3,1); }
+  .ic { transition:transform .2s cubic-bezier(.2,.7,.3,1), background-color .2s; }
+  @media (hover:hover) { .mod:not(.soon):hover .go { transform:translateX(4px); } .mod:not(.soon):not(.dragging):hover .ic { transform:scale(1.06); } }
+  @media (pointer:coarse) { .tb { min-width:40px; height:40px; } .views .tb { height:34px; } .search input { min-height:44px; } .search svg { top:13px; } .search .x { top:6px; } }
   .soonb { display:inline-block; margin-left:6px; font-size:.7rem; font-weight:400; padding:0 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); vertical-align:middle; }
   .mod.soon { opacity:.65; border-style:dashed; }
   .mod.soon .ic { background:var(--bg); color:var(--muted); }

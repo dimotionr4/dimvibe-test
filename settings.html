@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — настройки</title>
+<link rel="stylesheet" href="core/ui.css?v=1">
 <style>
   /* Страница самостоятельная. Пишет настройки вида: тема (dimvibe.theme), панель (dimvibe.settings.v1), демо-режим (dimvibe.demo, core/demo.js),
      вид табло (dimvibe.home.v1: view, cols, gap, sort, order) и списка упражнений (dimvibe.exercises.v1: view, sort).
      Черновики, корзина, папки, избранное и скрытые модули здесь не трогаются. */
-  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --bad:#d64545; }
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --bad:#d64545; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --line:#41415a; --bad:#ff7070; }
   }
@@ -26,22 +27,25 @@
   [data-tip]::after { content:attr(data-tip); position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); white-space:nowrap; background:var(--text); color:var(--bg); font-size:.78rem; line-height:1.3; padding:4px 8px; border-radius:6px; pointer-events:none; z-index:40; display:none; font-weight:400; }
   [data-tip]:hover::after, [data-tip]:focus-visible::after { display:block; animation:tipin .12s .35s both; }
   @keyframes tipin { from { opacity:0; } to { opacity:1; } }
-  main { flex:1; min-width:0; max-width:760px; margin:0 auto; padding:24px 16px 48px; }
-  h1 { font-size:1.5rem; margin:0 0 16px; }
-  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:6px 16px; margin-bottom:14px; }
-  section h2 { font-size:.85rem; color:var(--muted); font-weight:600; margin:12px 0 4px; text-transform:uppercase; letter-spacing:.04em; }
-  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid var(--line); flex-wrap:wrap; }
+  main { flex:1; min-width:0; max-width:760px; margin:0 auto; padding:var(--sp-5) var(--sp-4) calc(var(--sp-6) * 2); }
+  h1 { font-size:1.5rem; line-height:1.25; margin:0 0 var(--sp-4); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:var(--sp-2) var(--sp-4); margin-bottom:var(--sp-4); box-shadow:0 1px 3px rgba(20,20,40,.06); }
+  section h2 { font-size:.85rem; color:var(--muted); font-weight:600; margin:var(--sp-3) 0 var(--sp-1); text-transform:uppercase; letter-spacing:.04em; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:var(--sp-3) 0; border-top:1px solid var(--line); flex-wrap:wrap; }
   section h2 + .row { border-top:none; }
   .row .l { flex:1 1 220px; min-width:0; }
   .row .l small { display:block; color:var(--muted); font-size:.82rem; }
-  .seg { display:flex; gap:4px; flex-wrap:wrap; }
+  .seg { display:flex; gap:var(--sp-1); flex-wrap:wrap; }
   .seg button { min-height:32px; padding:2px 12px; font-size:.88rem; border:1px solid var(--line); background:var(--card); border-radius:8px; cursor:pointer; white-space:nowrap; }
   .seg button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
-  .rng { display:flex; align-items:center; gap:10px; flex:1 1 220px; max-width:320px; }
+  .rng { display:flex; align-items:center; gap:var(--sp-3); flex:1 1 220px; max-width:320px; }
   .rng input { flex:1; accent-color:var(--accent); }
   .rng output { min-width:52px; text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); }
   .sw { position:relative; width:46px; height:26px; flex:none; border-radius:999px; border:1px solid var(--line); background:var(--bg); cursor:pointer; padding:0; }
-  .sw i { position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--muted); transition:transform .15s, background .15s; }
+  .sw i { position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--muted); transition:transform .2s cubic-bezier(.2,.7,.3,1), background .2s; }
+  .sw { transition:background-color .2s, border-color .2s, box-shadow .2s; }
+  @media (hover:hover) { .sw:hover { border-color:var(--accent); } .sw:hover i { background:var(--accent); } }
+  @media (pointer:coarse) { .tb { min-width:40px; height:40px; } .btn { min-height:44px; } .seg button { min-height:40px; } .sw { width:52px; height:30px; } .sw i { width:24px; height:24px; } .sw[aria-checked="true"] i { transform:translateX(22px); } }
   .sw[aria-checked="true"] { background:var(--accent-soft); border-color:var(--accent); }
   .sw[aria-checked="true"] i { transform:translateX(20px); background:var(--accent); }
   .btn { min-height:34px; padding:0 14px; border:1px solid var(--line); background:var(--card); border-radius:8px; cursor:pointer; }

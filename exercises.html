@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DimVibe — мои упражнения</title>
+<link rel="stylesheet" href="core/ui.css?v=1">
 <style>
   /* Страница самостоятельная: свои стили и скрипт, редактор и модули не подключены.
      Общее с ними только данные в браузере: черновики (dimvibe.drafts.v1, здесь меняются лишь название и сама запись при дублировании или переносе в корзину),
      тема (dimvibe.theme), состояние панели (dimvibe.sideCollapsed). Корзина и «недавно открытые» живут в своих ключах. */
-  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --ok:#1f9d55; --bad:#d64545; --warn:#e5a50a; --gap:12px; }
+  :root { color-scheme:light; --bg:#f7f7fb; --card:#fff; --text:#1d1d2b; --muted:#6b6b80; --accent:#029c91; --accent-soft:#dff3f1; --line:#c9c9d8; --ok:#1f9d55; --bad:#d64545; --warn:#e5a50a; --gap:16px; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) { color-scheme:dark; --bg:#16161f; --card:#20202c; --text:#f2f2f8; --muted:#a3a3b5; --accent:#029c91; --accent-soft:#10302e; --line:#41415a; --ok:#4ccf82; --bad:#ff7070; }
   }
@@ -32,19 +33,19 @@
   [data-tip]:hover::after, [data-tip]:focus-visible::after { display:block; animation:tipin .12s .35s both; }
   @keyframes tipin { from { opacity:0; } to { opacity:1; } }
 
-  main { flex:1; min-width:0; max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
-  h1 { font-size:1.5rem; margin:0 0 4px; }
-  .lead { color:var(--muted); margin:0 0 16px; }
+  main { flex:1; min-width:0; max-width:1100px; margin:0 auto; padding:var(--sp-5) var(--sp-4) calc(var(--sp-6) * 2); }
+  h1 { font-size:1.5rem; line-height:1.25; margin:0 0 var(--sp-2); }
+  .lead { color:var(--muted); margin:0 0 var(--sp-4); }
 
   /* Панель инструментов */
-  #tools { display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+  #tools { display:flex; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-3); flex-wrap:wrap; }
   .search { position:relative; flex:1; min-width:180px; max-width:340px; }
   .search svg { position:absolute; left:10px; top:9px; width:18px; height:18px; color:var(--muted); pointer-events:none; }
   .search input { width:100%; min-height:36px; padding:6px 32px 6px 34px; border:1px solid var(--line); background:var(--card); border-radius:8px; }
   .search input:focus { outline:none; border-color:var(--accent); }
   .search .x { position:absolute; right:2px; top:2px; width:32px; height:32px; border:none; background:transparent; border-radius:6px; color:var(--muted); cursor:pointer; display:none; }
   .search.has .x { display:block; }
-  .tools-r { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .tools-r { display:flex; align-items:center; gap:var(--sp-2); margin-left:auto; }
   .tb { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:4px; min-width:36px; height:36px; padding:0 8px; border:1px solid transparent; background:transparent; border-radius:8px; cursor:pointer; }
   .tb:hover { background:var(--accent-soft); }
   .tb svg { width:20px; height:20px; }
@@ -69,10 +70,12 @@
   .opt[aria-checked="true"] { color:var(--accent); font-weight:600; }
 
   /* Строки и карточки упражнений */
-  .items { display:grid; gap:8px; }
+  .items { display:grid; gap:var(--sp-3); }
   .items.cards { grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:var(--gap); }
-  .ex { position:relative; display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid color-mix(in srgb, var(--line) 60%, transparent); border-radius:16px; background:var(--card); box-shadow:0 1px 3px rgba(20,20,40,.08); transition:box-shadow .15s, border-color .15s; }
-  @media (hover:hover) { .ex:not(.dragging):hover { border-color:var(--accent); box-shadow:0 4px 14px rgba(20,20,40,.1); } }
+  .ex { position:relative; display:flex; align-items:center; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4); border:1px solid color-mix(in srgb, var(--line) 60%, transparent); border-radius:16px; background:var(--card); box-shadow:0 1px 3px rgba(20,20,40,.08); transition:box-shadow .2s, border-color .2s, transform .2s cubic-bezier(.2,.7,.3,1); }
+  @media (hover:hover) { .ex:not(.dragging):hover { border-color:var(--accent); box-shadow:0 6px 18px rgba(20,20,40,.12); transform:translateY(-2px); } .ex:not(.dragging):hover .ic { transform:scale(1.06); } }
+  .ex .ic { transition:transform .2s cubic-bezier(.2,.7,.3,1); }
+  @media (pointer:coarse) { .tb { min-width:40px; height:40px; } .views .tb { height:34px; } .act { width:40px; height:40px; } .search input { min-height:44px; } .search svg { top:13px; } .search .x { top:6px; } }
   .ex:hover { border-color:var(--accent); }
   .ex .ic { width:40px; height:40px; flex:none; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; }
   .ex .ic svg { width:22px; height:22px; stroke-width:1.8; }
@@ -89,18 +92,18 @@
   .act:hover { background:var(--accent-soft); color:var(--accent); }
   .act.danger:hover, .act.danger.arm { background:var(--bad); color:#fff; }
   .rename { width:100%; min-height:30px; padding:2px 8px; border:1px solid var(--accent); border-radius:8px; background:var(--card); font-weight:600; }
-  .cards .ex { flex-direction:column; align-items:stretch; gap:8px; }
+  .cards .ex { flex-direction:column; align-items:stretch; gap:var(--sp-2); }
   .cards .ex .head { display:flex; gap:10px; align-items:center; }
-  .cards .ex .acts { justify-content:flex-end; border-top:1px solid var(--line); padding-top:6px; }
+  .cards .ex .acts { justify-content:flex-end; border-top:1px solid var(--line); padding-top:var(--sp-2); }
   .empty { color:var(--muted); text-align:center; padding:36px 0; }
   .empty[hidden] { display:none; }
   .empty .primary { margin-top:10px; display:inline-block; padding:8px 16px; border-radius:8px; background:var(--accent); color:#fff; text-decoration:none; }
-  .banner { display:flex; align-items:center; gap:8px; padding:8px 12px; margin-bottom:10px; border:1px dashed var(--line); border-radius:10px; color:var(--muted); font-size:.88rem; }
+  .banner { display:flex; align-items:center; gap:8px; padding:var(--sp-2) var(--sp-3); margin-bottom:var(--sp-3); border:1px dashed var(--line); border-radius:10px; color:var(--muted); font-size:.88rem; }
   .banner[hidden] { display:none; }
   #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 14px; border-radius:8px; font-size:.9rem; z-index:70; }
   #toast[hidden] { display:none; }
   /* Папки: полоса над списком */
-  #folders { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  #folders { display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; margin-bottom:var(--sp-3); }
   .fchip { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:2px 10px; border:1px solid var(--line); background:var(--card); border-radius:999px; cursor:pointer; font-size:.88rem; }
   .fchip:hover { background:var(--accent-soft); }
   .fchip svg { width:16px; height:16px; color:var(--fc, var(--muted)); }
