@@ -334,7 +334,13 @@
   .nk-act { display:flex; gap:8px; flex-wrap:wrap; }
   .nk-act button { min-height:0; padding:6px 12px; font-size:.9rem; }
   .nk-group { margin-bottom:12px; }
-  .modal-box.choose.locked { width:min(460px, 100%); }
+  .kind span { display:none; }
+  .modal-box.choose.locked { width:min(420px, 100%); margin-top:12vh; }
+  .modal-box.choose.locked .nk-sel, .modal-box.choose.locked #kindCancel, .modal-box.choose.locked .demo-note { display:none; }
+  .modal-box.choose.locked .nk-foot { padding:14px 20px 18px; }
+  .modal-box.choose.locked .nk-act { flex-direction:column; width:100%; }
+  .modal-box.choose.locked .kind { text-align:left; padding:10px 14px; font-size:.95rem; }
+  .modal-box.choose.locked .kind span { display:block; font-weight:400; font-size:.8rem; opacity:.85; }
   .modal-box.choose.locked .nk-body { display:none; }
   .modal-box.choose.locked .nk-foot { border-top:0; }
   .kind { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
@@ -530,8 +536,8 @@
       <div class="nk-sel"><b id="nkName"></b><span id="nkDesc"></span><small id="kindNote">Вид текста выбирается один раз и потом не меняется.</small></div>
       <div class="nk-act">
         <button id="kindCancel">Отмена</button>
-        <button class="kind" data-kind="sentences" title="Каждое предложение — своё задание с пропусками">Отдельные предложения</button>
-        <button class="kind" data-kind="text" title="Один текст из нескольких абзацев с пропусками">Связный текст</button>
+        <button class="kind" data-kind="sentences" title="Каждое предложение — своё задание с пропусками">Отдельные предложения<span>Каждое предложение — своё задание</span></button>
+        <button class="kind" data-kind="text" title="Один текст из нескольких абзацев с пропусками">Связный текст<span>Один текст из нескольких абзацев</span></button>
         <button class="kind" id="kindGo" data-kind="statements" hidden>Создать упражнение</button>
       </div>
     </footer>
@@ -1677,7 +1683,7 @@ function askKind(mod) {
   $('kindDialog').querySelector('.modal-box').classList.toggle('locked', typeof mod === 'string');
   $('kindDialog').hidden = false;
   pickModule(typeof mod === 'string' ? mod : newModule);
-  $('kindTitle').textContent = typeof mod === 'string' ? $('nkName').textContent + ': какой вид текста?' : 'Какое упражнение создать?';
+  $('kindTitle').textContent = typeof mod === 'string' ? 'Вид текста — ' + $('nkName').textContent : 'Какое упражнение создать?';
 }
 const closeKind = () => { $('kindDialog').hidden = true; };
 $('new').onclick = () => askKind();
