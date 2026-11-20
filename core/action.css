@@ -82,4 +82,34 @@ html.style-action :is(.tf-ans.bad, .mc-opt.bad, .tf-ans.active.bad) { background
 html.style-action .mc-verdict.ok { color:var(--ok); } html.style-action .mc-verdict.bad { color:var(--bad); }
 html.style-action :is(.card, .tf-card, .mc-card).missing { border-color:var(--bad); }
 
+/* Модули: фиксированные скругления (овалы и т. п.) заменены прямыми углами; скругления через --r-s / --r-m / --r-l уже обнулены выше.
+   Круглые значки (50 %: точки, номера, метки) остаются круглыми. Список собран по modules/*/player.css */
+html.style-action .cc-chip,
+html.style-action .cc-w,
+html.style-action .fc-tab,
+html.style-action .fc-broken::before,
+html.style-action .hs-lbl,
+html.style-action .ld-no,
+html.style-action .ld-round .chip.ld-slot,
+html.style-action .mt-tag,
+html.style-action .mt-x,
+html.style-action .mm-w,
+html.style-action .mm-w.on,
+html.style-action .mm-w.ok,
+html.style-action .mm-w.bad,
+html.style-action .mm-w.half,
+html.style-action .mm-w.repl::before,
+html.style-action .mm-fixin input,
+html.style-action .mc-opt.multi .mc-mark,
+html.style-action .chip.oo-item,
+html.style-action .or-mini,
+html.style-action .sp-paper .sp-tok,
+html.style-action .sp-paper .sp-tok:nth-child(even),
+html.style-action .chip.ti-chip,
+html.style-action .tf-dot,
+html.style-action .vc-tab,
+html.style-action .vc-chip,
+html.style-action .vc-pos,
+html.style-action .ws-chips .ws-tok { border-radius:0 !important; }
+
 @media (prefers-reduced-motion:reduce) { html.style-action * { transition:none !important; } }
