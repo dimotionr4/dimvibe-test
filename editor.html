@@ -320,10 +320,9 @@
   .nk-body { overflow:auto; padding:14px 20px; flex:1; }
   .nk-group { margin-bottom:18px; }
   .nk-group h4 { margin:0 0 8px; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
-  .modpick { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:8px; }
-  .modpick button { min-width:0; min-height:56px; text-align:left; padding:10px 12px; border-radius:10px; cursor:pointer; }
-  .modpick button b, .modpick button span { display:block; }
-  .modpick button span { color:var(--muted); font-size:.82rem; margin-top:2px; }
+  .modpick { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:6px; }
+  .modpick button { min-width:0; min-height:0; text-align:left; padding:7px 10px; border-radius:8px; cursor:pointer; font-size:.88rem; }
+  .modpick button span { display:none; }
   .modpick button:hover { border-color:var(--accent); }
   .modpick button.active { background:var(--accent-soft); border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
   .nk-foot { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:12px 20px; border-top:1px solid var(--line); background:var(--bg); }
@@ -333,7 +332,11 @@
   .nk-sel small { color:var(--muted); font-size:.78rem; margin-top:2px; }
   .nk-sel small[hidden] { display:none; }
   .nk-act { display:flex; gap:8px; flex-wrap:wrap; }
-  .nk-act button { min-height:40px; }
+  .nk-act button { min-height:0; padding:6px 12px; font-size:.9rem; }
+  .nk-group { margin-bottom:12px; }
+  .modal-box.choose.locked { width:min(460px, 100%); }
+  .modal-box.choose.locked .nk-body { display:none; }
+  .modal-box.choose.locked .nk-foot { border-top:0; }
   .kind { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
   .kind[hidden] { display:none; }
   .demo-note { margin:0 0 12px; padding:6px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-size:.85rem; }
@@ -1668,10 +1671,17 @@ $('fileInput').onchange = () => {
 };
 
 // Вид текста выбирается при создании: сначала спрашиваем, потом создаём черновик
-const askKind = () => { $('demoNote').hidden = !DimDemo.on(); $('kindDialog').hidden = false; pickModule(newModule); };
+// askKind(mod): модуль уже выбран (с главной) — показываем только его, без списка остальных
+function askKind(mod) {
+  $('demoNote').hidden = !DimDemo.on();
+  $('kindDialog').querySelector('.modal-box').classList.toggle('locked', typeof mod === 'string');
+  $('kindDialog').hidden = false;
+  pickModule(typeof mod === 'string' ? mod : newModule);
+  $('kindTitle').textContent = typeof mod === 'string' ? $('nkName').textContent + ': какой вид текста?' : 'Какое упражнение создать?';
+}
 const closeKind = () => { $('kindDialog').hidden = true; };
-$('new').onclick = askKind;
-$('new2').onclick = askKind;
+$('new').onclick = () => askKind();
+$('new2').onclick = () => askKind();
 $('kindCancel').onclick = closeKind;
 $('kindX').onclick = closeKind;
 $('kindDialog').onclick = e => { if (e.target === $('kindDialog')) closeKind(); };
@@ -1751,7 +1761,7 @@ setPreviewOpen(!narrow()); // на широком экране предпрос�
   if (!MODULES[mod]) return;
   pickModule(mod);
   if (mod === 'true_false' || mod === 'multiple_choice' || mod === 'matching' || mod === 'mistake_mode' || mod === 'color_coding' || mod === 'select_title' || mod === 'ordering' || mod === 'timeline' || mod === 'word_scramble' || mod === 'categories' || mod === 'odd_one_out' || mod === 'splice' || mod === 'essay_writing' || mod === 'hotspot' || mod === 'label_diagram' || mod === 'vocabulary' || mod === 'flashcards' || mod === 'text_to_image' || mod === 'word_search') createDraft('statements', mod);
-  else askKind();
+  else askKind(mod);
 })();
 </script>
 </body>
