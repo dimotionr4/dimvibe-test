@@ -13,7 +13,7 @@ html[data-theme="light"].skin-soft :is(button, .btn, .icon-btn, .side-btn, .seg 
 html[data-theme="light"].skin-soft :is(button, .icon-btn, .side-btn):not(:disabled):not(.kind):not(.selbar button):active { box-shadow:var(--sf-in); }
 html[data-theme="light"].skin-soft :is(.icon-btn.active, .icon-btn[aria-pressed="true"], .seg button.active) { box-shadow:var(--sf-in); background:var(--bg); color:var(--accent); border-color:transparent; }
 html[data-theme="light"].skin-soft button.primary, html[data-theme="light"].skin-soft #side .side-btn.primary { border:0; border-radius:999px; box-shadow:4px 4px 10px rgba(2,156,145,.35), -3px -3px 8px var(--sf-l); }
-html[data-theme="light"].skin-soft :is(input, select, textarea, .rt-edit) { background:var(--bg); border:0; border-radius:var(--r-s); box-shadow:var(--sf-in); }
+html[data-theme="light"].skin-soft :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea, .rt-edit) { background:var(--bg); border:0; border-radius:var(--r-s); box-shadow:var(--sf-in); }
 html[data-theme="light"].skin-soft :is(.dz-card, .instr-ed, .modal-box) { background:var(--bg); border:0; border-radius:var(--r-l); box-shadow:var(--sf-out); }
 html[data-theme="light"].skin-soft #side { background:var(--bg); box-shadow:var(--sf-out-s); }
 html[data-theme="light"].skin-soft .pv-bar { border-bottom:0; }
@@ -35,8 +35,8 @@ html[data-theme="light"].skin-fancy body {
 html[data-theme="light"].skin-fancy :is(button, .btn, .icon-btn, .side-btn, .seg button):not(.primary):not(.active):not([aria-pressed="true"]):not(.kind):not(.selbar button):not(.mb-rep):not(.mb-x):not(.mb-play):not(.mb-add):not([role="radio"]):not([role="checkbox"]):not([aria-checked]) { background:#fff; border:0; border-radius:999px; box-shadow:var(--shadow-1); }
 html[data-theme="light"].skin-fancy :is(.icon-btn.active, .icon-btn[aria-pressed="true"], .seg button.active) { background:var(--accent); color:#fff; border-color:transparent; }
 html[data-theme="light"].skin-fancy button.primary, html[data-theme="light"].skin-fancy #side .side-btn.primary { border:0; border-radius:999px; background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 80%, #fff), var(--accent)); }
-html[data-theme="light"].skin-fancy :is(input, select, textarea, .rt-edit) { background:#fff; border:0; border-radius:var(--r-s); box-shadow:inset 0 0 0 1px #e3e5ec; }
-html[data-theme="light"].skin-fancy :is(input, select, textarea, .rt-edit):focus { box-shadow:0 0 0 2px var(--accent); outline:0; }
+html[data-theme="light"].skin-fancy :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea, .rt-edit) { background:#fff; border:0; border-radius:var(--r-s); box-shadow:inset 0 0 0 1px #e3e5ec; }
+html[data-theme="light"].skin-fancy :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea, .rt-edit):focus { box-shadow:0 0 0 2px var(--accent); outline:0; }
 html[data-theme="light"].skin-fancy :is(.dz-card, .instr-ed, .modal-box) { background:#fff; border:0; border-radius:var(--r-l); box-shadow:var(--fx-shadow); }
 html[data-theme="light"].skin-fancy #side { background:rgba(255,255,255,.7); }
 html[data-theme="light"].skin-fancy .pv-bar { border-bottom:0; }
@@ -51,3 +51,24 @@ html[data-theme="light"]:is(.skin-soft, .skin-fancy) :is(button.primary, #side .
 html[data-theme="light"].skin-soft :is(.oo-mark, button[role="radio"], button[role="checkbox"], button[aria-checked]):not([aria-checked="true"]) { background:var(--bg); border:0; box-shadow:var(--sf-in); }
 html[data-theme="light"].skin-soft :is(.oo-mark, button[role="radio"], button[role="checkbox"], button[aria-checked])[aria-checked="true"] { box-shadow:3px 3px 7px rgba(31,157,85,.35), -2px -2px 6px var(--sf-l); }
 html[data-theme="light"].skin-fancy :is(.oo-mark, button[role="radio"], button[role="checkbox"], button[aria-checked]):not([aria-checked="true"]) { background:#fff; border:0; box-shadow:inset 0 0 0 2px #cfd2de; }
+
+/* Отступы и исправления (2026-11-21, по скриншотам владельца) */
+/* Вкладки: между ними воздух, запас под тени (у .tabs прокрутка, иначе тени срезаются); активная — вдавленная/цветная, без линии снизу */
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) .tabs { gap:8px; padding:8px 6px 12px; border-bottom:0; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) .tabs button { border:0; border-radius:999px; min-height:40px; padding:6px 14px; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) .tabs button:hover { border-radius:999px; }
+html[data-theme="light"].skin-soft .tabs button.active { background:var(--bg); box-shadow:var(--sf-in); color:var(--accent); }
+html[data-theme="light"].skin-fancy .tabs button.active { background:var(--accent); color:#fff; box-shadow:var(--shadow-1); }
+/* Поле с кнопкой в одной строке («Неверный вариант» + «Добавить» и т. п.) */
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) :is(.md-adder, .oo-tools, .oo-grouptop) { gap:12px; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) .md-adder { margin-top:10px; }
+/* Флажок: обычный, не «вдавленная кнопка» */
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) input[type="checkbox"], html[data-theme="light"]:is(.skin-soft, .skin-fancy) input[type="radio"] { min-height:0; width:18px; height:18px; padding:0; margin:0 8px 0 4px; box-shadow:none; background:transparent; accent-color:var(--accent); vertical-align:middle; }
+/* Список упражнений слева: карточка + отдельная кнопка «×», запас под тени */
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) #list { padding:6px 10px 10px; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) .draft { gap:8px; align-items:center; margin-bottom:10px; background:transparent; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) .draft-open { border-radius:var(--r-m); padding:8px 14px; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) .draft-del { flex:none; width:32px; height:32px; min-height:0; padding:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; }
+html[data-theme="light"].skin-soft .draft.active .draft-open { box-shadow:var(--sf-in); }
+html[data-theme="light"].skin-soft .draft.active { background:transparent; }
+html[data-theme="light"].skin-fancy .draft.active .draft-open { background:var(--accent-soft); box-shadow:none; }
