@@ -305,7 +305,7 @@ function toast(t) {
   $('toast').textContent = t; $('toast').hidden = false;
   clearTimeout(toast.t); toast.t = setTimeout(() => { $('toast').hidden = true; }, 2200);
 }
-const when = iso => iso ? new Date(iso).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+const when = iso => iso ? new Date(iso).toLocaleString((window.DimI18n ? DimI18n.lang : 'ru'), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 
 // Состояние публикации. «Есть изменения» определяется по времени правки после публикации (точная проверка есть только в редакторе).
 function statusOf(d) {
@@ -346,7 +346,7 @@ function row(d, fm) {
       + btn('trash', I.trash, 'В корзину', 'danger');
   const name = view.editing === d.id
     ? `<input class="rename" data-rename="${esc(d.id)}" value="${esc(d.title || '')}" maxlength="120" aria-label="Название упражнения" placeholder="Название упражнения">`
-    : view.trash ? `<b>${esc(title)}</b>` : `<button class="open" data-act="open" data-id="${esc(d.id)}" data-tip="Открыть в редакторе"><b>${esc(title)}</b></button>`;
+    : view.trash ? `<b${d.title ? ' data-no-i18n' : ''}>${esc(title)}</b>` : `<button class="open" data-act="open" data-id="${esc(d.id)}" data-tip="Открыть в редакторе"><b${d.title ? ' data-no-i18n' : ''}>${esc(title)}</b></button>`;
   const meta = `<span class="meta"><span>${esc(m.name)}</span>${fo ? `<span class="ftag" style="--fc:${esc(fo.color)}">${ficon(fo.icon)}${esc(fo.name)}</span>` : ''}${view.trash ? `<span>В корзине с ${esc(when(d._trashedAt))}</span>` : `<span class="st ${st.key}"><i></i>${st.label}</span><span>${esc(when(d.updatedAt))}</span>`}<span>${esc(d.id)}</span></span>`;
   const ic = `<span class="ic">${svg(m.icon)}</span>`;
   const on = view.sel.has(d.id);

@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>/* Тема до первой отрисовки, чтобы не было вспышки светлой/тёмной (2026-11-21): сохранённый выбор из dimvibe.theme */try{var t=localStorage.getItem("dimvibe.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<script src="core/i18n.js?v=1"></script>
+<script src="core/lang/en.js?v=1"></script>
+<script src="core/lang/en-modules.js?v=1"></script>
 <title>DimVibe — редактор</title>
 <link rel="stylesheet" href="core/gap.css?v=8">
 <link rel="stylesheet" href="core/check.css?v=3">
@@ -617,7 +620,7 @@ let previewTimer = null, refreshTimer = null, previewLoaded = false, previewRead
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-const when = iso => new Date(iso).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const when = iso => new Date(iso).toLocaleString((window.DimI18n ? DimI18n.lang : 'ru'), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 function warn(text) { $('warn').textContent = text; $('warn').hidden = false; }
 
@@ -807,6 +810,7 @@ function renderList() {
     btn.className = 'draft-open';
     const name = document.createElement('b');
     name.textContent = dr.title || 'Без названия';
+    if (dr.title) name.setAttribute('data-no-i18n', '');
     const date = document.createElement('small');
     date.textContent = when(dr.updatedAt);
     btn.append(name, date);
@@ -984,8 +988,9 @@ function renderInstruction(box) {
   ed.classList.toggle('empty', !ed.textContent.trim());
   const summary = () => {
     const t = ins.text.replace(/[*]/g, '').trim().replace(/\s+/g, ' ');
-    const parts = [t ? (t.length > 46 ? t.slice(0, 46) + '…' : t) : '', im.url.trim() || im.media ? 'есть картинка' : '', ins.audio && ins.audio.media ? 'есть звук' : ''].filter(Boolean);
-    $('instrSum').textContent = parts.length ? parts.join(' · ') : 'не заполнено (необязательно)';
+    // текст автора — в [data-no-i18n]: перевод интерфейса его не трогает
+    const parts = [t ? '<span data-no-i18n>' + esc(t.length > 46 ? t.slice(0, 46) + '…' : t) + '</span>' : '', im.url.trim() || im.media ? 'есть картинка' : '', ins.audio && ins.audio.media ? 'есть звук' : ''].filter(Boolean);
+    $('instrSum').innerHTML = parts.length ? parts.join(' · ') : 'не заполнено (необязательно)';
   };
   summary();
   $('instrHead').onclick = () => {

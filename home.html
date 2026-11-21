@@ -503,7 +503,7 @@ function renderDrafts() {
   const list = Object.values(drafts).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   const box = $('drafts');
   if (!list.length) { box.innerHTML = '<p class="side-none">Черновиков пока нет.</p>'; return; }
-  box.innerHTML = list.map(d => `<button class="draft" data-id="${esc(d.id)}"><b>${esc(d.title || 'Без названия')}</b><small>${esc(names[d.module] || 'Fill Blanks')} · ${esc(new Date(d.updatedAt).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small></button>`).join('');
+  box.innerHTML = list.map(d => `<button class="draft" data-id="${esc(d.id)}"><b${d.title ? ' data-no-i18n' : ''}>${esc(d.title || 'Без названия')}</b><small>${esc(names[d.module] || 'Fill Blanks')} · ${esc(new Date(d.updatedAt).toLocaleString((window.DimI18n ? DimI18n.lang : 'ru'), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small></button>`).join('');
 }
 $('drafts').addEventListener('click', e => {
   const b = e.target.closest('.draft');

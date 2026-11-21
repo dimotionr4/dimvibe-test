@@ -27,25 +27,61 @@
   }
   let lang = readLang();
 
-  function add(code, entries) { dict[code] = Object.assign(dict[code] || {}, entries); }
+  // Ключи со вставками: {n} — число, {x} (любое другое имя) — любой текст (он тоже переводится). Например 'Пропуск {n}: нет ответа.'
+  const tpls = {};
+  const esc = s => s.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
+  function add(code, entries) {
+    const d = dict[code] = dict[code] || {};
+    for (const k in entries) {
+      if (/\{\w+\}/.test(k)) {
+        const names = [];
+        const src = norm(k).split(/(\{\w+\})/).map(p => { const m = /^\{(\w+)\}$/.exec(p); if (!m) return esc(p); names.push(m[1]); return m[1] === 'n' || /^n\d$/.test(m[1]) ? '(\\d+(?:[.,]\\d+)?)' : '((?:(?!\\.\\s)[\\s\\S])+?)'; }).join('');
+        (tpls[code] = tpls[code] || []).push([new RegExp('^' + src + '$'), entries[k], names]);
+      } else d[norm(k)] = entries[k];
+    }
+  }
   function rule(re, fn, code) { (rules[code || 'en'] = rules[code || 'en'] || []).push([re, fn]); }
   const fill = (s, p) => p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s;
 
   // Перевод нормализованной строки (без краёв-пробелов) или null
-  function lookup(s, code) {
+  function lookup(s, code, sameCase) {
     const d = dict[code]; if (!d) return null;
     if (Object.prototype.hasOwnProperty.call(d, s)) return d[s];
+    for (const [re, val, names] of tpls[code] || []) {
+      const m = re.exec(s); if (!m) continue;
+      return val.replace(/\{(\w+)\}/g, (x, k) => { const i = names.indexOf(k); if (i < 0) return x; const v = m[i + 1]; return CYR.test(v) ? (lookup(norm(v), code) != null ? lookup(norm(v), code) : v) : v; });
+    }
     for (const [re, fn] of rules[code] || []) { const m = re.exec(s); if (m) { const r = fn(m, s); if (r != null) return r; } }
+    // «Подпись:» с двоеточием на конце (дальше идёт вставка)
+    if (/:$/.test(s) && s.length > 2) { const r = lookup(s.slice(0, -1), code); if (r != null) return r + ':'; }
+    // несколько предложений: переводим по предложениям (так длинные пояснения собираются из коротких строк словаря)
+    const sents = s.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«"(])/);
+    if (sents.length > 1) {
+      let any = false;
+      const out = sents.map(p => { const r = CYR.test(p) ? lookup(p, code) : null; if (r != null) any = true; return r != null ? r : p; });
+      if (any) return out.join(' ');
+    }
     // составная строка: «А — Б», «А: Б», «А · Б» (и хвост «(скоро)» и т. п.)
-    for (const sep of [' — ', ': ', ' · ', ' / ']) {
-      if (s.indexOf(sep) > 0) {
-        const parts = s.split(sep); let any = false;
-        const out = parts.map(p => { const r = p && CYR.test(p) ? lookup(p, code) : null; if (r != null) any = true; return r != null ? r : p; });
-        if (any) return out.join(sep);
+    // ведущий знак («· 3 отмечено», «— пример»)
+    const lead = /^([·•—–,;:]\s+)(\S[\s\S]*)$/.exec(s);
+    if (lead) { const r = lookup(lead[2], code); if (r != null) return lead[1] + r; }
+    for (const sep of [': ', ' — ', ' · ', ' / ', ', ']) {
+      const at = s.indexOf(sep);
+      if (at > 0) {
+        const head = s.slice(0, at), tail = s.slice(at + sep.length);
+        const a = CYR.test(head) ? lookup(head, code) : null, b = CYR.test(tail) ? lookup(tail, code) : null;
+        if (a != null || b != null) return (a != null ? a : head) + sep + (b != null ? b : tail);
       }
     }
     const tail = /^(.*\S)\s+\(([^()]*)\)$/.exec(s);
     if (tail) { const a = lookup(tail[1], code), b = lookup(tail[2], code); if (a != null || b != null) return (a != null ? a : tail[1]) + ' (' + (b != null ? b : tail[2]) + ')'; }
+    // то же, но с другой первой буквой (заглавная ↔ строчная): так не нужны парные ключи
+    const c0 = s.charAt(0);
+    if (CYR.test(c0) && !sameCase) {
+      const low = c0 === c0.toLowerCase();
+      const r = lookup((low ? c0.toUpperCase() : c0.toLowerCase()) + s.slice(1), code, true);
+      if (r != null) return (low ? r.charAt(0).toLowerCase() : r.charAt(0).toUpperCase()) + r.slice(1);
+    }
     return null;
   }
 
@@ -75,7 +111,7 @@
     if (r !== v) { textOrig.set(n, { ru: v, tr: r }); n.nodeValue = r; } else textOrig.delete(n);
   }
   function doAttr(el, a) {
-    if (lang === 'ru' || skipped(el)) return;
+    if (lang === 'ru' || (el.closest && el.closest('[data-no-i18n]'))) return;
     const v = el.getAttribute(a); if (v == null) return;
     const m = attrOrig.get(el) || {}, e = m[a];
     if (e && v === e.tr) return;
@@ -98,13 +134,7 @@
       else if (n.nodeType === 1) { const m = attrOrig.get(n); if (m) { for (const a in m) if (n.getAttribute(a) === m[a].tr) n.setAttribute(a, m[a].ru); attrOrig.delete(n); } }
     }
   }
-  let titleOrig = null;
-  function doTitle() {
-    if (lang === 'ru') { if (titleOrig != null) { document.title = titleOrig; titleOrig = null; } return; }
-    const cur = document.title;
-    if (titleOrig != null && cur === tr(titleOrig)) return;
-    titleOrig = cur; document.title = tr(cur);
-  }
+  // Заголовок вкладки — обычный текстовый узел внутри <title>, поэтому переводится так же, как остальной текст.
 
   function startObserver() {
     if (obs || !window.MutationObserver) return;
@@ -114,7 +144,6 @@
         else if (m.type === 'attributes') doAttr(m.target, m.attributeName);
         else m.addedNodes.forEach(walk);
       }
-      doTitle();
     });
     obs.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
@@ -122,15 +151,15 @@
 
   function apply() {
     document.documentElement.lang = lang;
-    if (lang === 'ru') { stopObserver(); restore(document.documentElement); doTitle(); return; }
-    startObserver(); walk(document.documentElement); doTitle();
+    if (lang === 'ru') { stopObserver(); restore(document.documentElement); return; }
+    startObserver(); walk(document.documentElement);
   }
 
   function set(code) {
     if (!LANGS.some(l => l[0] === code) || code === lang) return;
     try { localStorage.setItem(KEY, code); } catch (e) {}
     const was = lang; lang = code;
-    if (was !== 'ru') { lang = 'ru'; restore(document.documentElement); doTitle(); lang = code; }
+    if (was !== 'ru') { lang = 'ru'; restore(document.documentElement); lang = code; }
     apply();
     listeners.forEach(f => { try { f(lang); } catch (e) {} });
   }
@@ -142,7 +171,7 @@
   });
 
   // Смена языка в другой вкладке
-  addEventListener('storage', e => { if (e.key === KEY) { const v = readLang(); if (v !== lang) { const was = lang; lang = was; set(v); } } });
+  addEventListener('storage', e => { if (e.key === KEY && readLang() !== lang) location.reload() });
 
   if (lang !== 'ru') {
     document.documentElement.lang = lang;

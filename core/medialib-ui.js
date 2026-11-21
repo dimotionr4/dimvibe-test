@@ -14,7 +14,7 @@ const MediaLibUI = (() => {
   mediaOnAuth(u => { user = u; if (cur) cur.auth(); });
 
   const fmtSize = n => (n >= 1048576 ? (n / 1048576).toFixed(1) + ' МБ' : Math.max(1, Math.round(n / 1024)) + ' КБ');
-  const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('ru', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+  const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString((window.DimI18n ? DimI18n.lang : 'ru'), { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
   const fmtDur = s => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}` : '');
   const ORIENT = { all: 'Любая форма', landscape: 'Горизонтальная', portrait: 'Вертикальная', square: 'Квадратная' };
   const SORTS = { new: 'Сначала новые', old: 'Сначала старые', name: 'По названию', size: 'По размеру' };
