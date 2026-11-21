@@ -1,0 +1,209 @@
+{
+  "id": "ex-zn0imh",
+  "module": "mini_dialogues",
+  "format": 1,
+  "published": true,
+  "title": "Демо — Mini Dialogues",
+  "mode": "word_bank",
+  "bubble": "rounded",
+  "label": "name",
+  "align": "sides",
+  "blocks": "card",
+  "avatarSize": "l",
+  "speakers": [
+    {
+      "id": "sp1",
+      "name": "Anna",
+      "side": "left",
+      "avatar": {
+        "media": "media/library/img-002f6271.png"
+      }
+    },
+    {
+      "id": "sp2",
+      "name": "Tom",
+      "side": "right"
+    },
+    {
+      "id": "sp3",
+      "name": "Waiter",
+      "side": "left"
+    },
+    {
+      "id": "sp4",
+      "name": "Jennifer",
+      "side": "auto",
+      "avatar": {
+        "media": "media/library/img-942cddf3.jpg"
+      }
+    }
+  ],
+  "dialogues": [
+    {
+      "id": "d1",
+      "title": "At the café",
+      "lines": [
+        {
+          "id": "l1",
+          "speaker": "sp3",
+          "parts": [
+            "Good morning! What would you ",
+            {
+              "gap": "g1"
+            },
+            "?"
+          ],
+          "audio": {
+            "media": "media/library/aud-a50607d4.wav"
+          }
+        },
+        {
+          "id": "l2",
+          "speaker": "sp1",
+          "parts": [
+            "A cup of ",
+            {
+              "gap": "g2"
+            },
+            ", please."
+          ]
+        },
+        {
+          "id": "l3",
+          "speaker": "sp2",
+          "parts": [
+            "And I would like a ",
+            {
+              "gap": "g3"
+            },
+            " of orange juice."
+          ]
+        },
+        {
+          "id": "l4",
+          "speaker": "sp3",
+          "parts": [
+            "Of course. Anything ",
+            {
+              "gap": "g4"
+            },
+            "?"
+          ]
+        },
+        {
+          "id": "l7",
+          "speaker": "sp4",
+          "parts": [
+            "hey guys"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d2",
+      "title": "After school",
+      "audio": {
+        "media": "media/ex-ugfvkv/aud-2c5eda3e.wav"
+      },
+      "late": true,
+      "lines": [
+        {
+          "id": "l5",
+          "speaker": "sp1",
+          "parts": [
+            "What do you usually ",
+            {
+              "gap": "g5"
+            },
+            " after school?"
+          ]
+        },
+        {
+          "id": "l6",
+          "speaker": "sp2",
+          "parts": [
+            "I play football with my friends."
+          ]
+        }
+      ]
+    }
+  ],
+  "gaps": {
+    "g1": {
+      "answer": "like",
+      "alternatives": [
+        "want"
+      ],
+      "hint": "Вежливый вопрос о заказе"
+    },
+    "g2": {
+      "answer": "tea",
+      "alternatives": [],
+      "hint": ""
+    },
+    "g3": {
+      "answer": "glass",
+      "alternatives": [],
+      "hint": "Ёмкость для сока"
+    },
+    "g4": {
+      "answer": "else",
+      "alternatives": [],
+      "hint": ""
+    },
+    "g5": {
+      "answer": "do",
+      "alternatives": [],
+      "hint": ""
+    }
+  },
+  "distractors": [],
+  "instruction": {
+    "title": "",
+    "text": "Вставьте слова из банка в пропуски диалогов.",
+    "audio": {
+      "media": "media/library/aud-a50607d4.wav"
+    },
+    "image": {
+      "media": "media/ex-ugfvkv/img-0133b924.jpg",
+      "alt": "",
+      "size": "medium",
+      "align": "center"
+    }
+  },
+  "behavior": {
+    "checks": "auto"
+  },
+  "design": {
+    "accent": "brand",
+    "showInstruction": false,
+    "showImage": false,
+    "gap": {
+      "shape": "line",
+      "dashed": false,
+      "width": "auto",
+      "numbered": false
+    },
+    "style": "soft",
+    "comicLine": "accent",
+    "comicWidth": "normal",
+    "classicFont": "system",
+    "comicFont": "blogger",
+    "actionFont": "noto",
+    "softFont": "nunito",
+    "fancyFont": "nunito",
+    "actionTheme": "dark",
+    "comicOutline": "neat",
+    "page": {
+      "width": "standard",
+      "density": "comfortable",
+      "background": "plain",
+      "fontSize": "m",
+      "fontWeight": "normal"
+    },
+    "check": {
+      "variant": "filled",
+      "align": "right"
+    }
+  }
+}
