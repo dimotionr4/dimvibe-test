@@ -72,3 +72,13 @@ html[data-theme="light"]:is(.skin-soft, .skin-fancy) .draft-del { flex:none; wid
 html[data-theme="light"].skin-soft .draft.active .draft-open { box-shadow:var(--sf-in); }
 html[data-theme="light"].skin-soft .draft.active { background:transparent; }
 html[data-theme="light"].skin-fancy .draft.active .draft-open { background:var(--accent-soft); box-shadow:none; }
+
+/* Флажки и радиокнопки в стиле вида (вместо белого квадрата браузера): пустой — вдавленный, отмеченный — цвет акцента с белой галочкой */
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) input[type="checkbox"], html[data-theme="light"]:is(.skin-soft, .skin-fancy) input[type="radio"] { -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:7px; background:var(--bg); border:0; position:relative; cursor:pointer; flex:none; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) input[type="radio"] { border-radius:50%; }
+html[data-theme="light"].skin-soft input[type="checkbox"], html[data-theme="light"].skin-soft input[type="radio"] { box-shadow:var(--sf-in); }
+html[data-theme="light"].skin-fancy input[type="checkbox"], html[data-theme="light"].skin-fancy input[type="radio"] { background:#fff; box-shadow:inset 0 0 0 2px #cfd2de; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) :is(input[type="checkbox"], input[type="radio"]):checked { background:var(--accent); box-shadow:none; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) input[type="checkbox"]:checked::after { content:""; position:absolute; left:6px; top:2px; width:5px; height:10px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) input[type="radio"]:checked::after { content:""; position:absolute; inset:6px; border-radius:50%; background:#fff; }
+html[data-theme="light"]:is(.skin-soft, .skin-fancy) :is(input[type="checkbox"], input[type="radio"]):focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
