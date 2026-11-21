@@ -33,7 +33,7 @@ html.style-soft .gap-num { background:var(--accent); color:#fff; border:0; }
 html.style-soft:root .chip { background:var(--bg); color:var(--text); border:0; border-radius:999px; box-shadow:var(--sf-out-s); font-weight:600; }
 html.style-soft:root .chip:not(.used):hover { box-shadow:var(--sf-out-s); }
 html.style-soft:root .chip.selected { box-shadow:var(--sf-in); color:var(--accent); }
-html.style-soft:root .chip.used { box-shadow:var(--sf-in); color:var(--muted); opacity:1; }
+html.style-soft:root .chip.used { box-shadow:var(--sf-in); color:var(--muted); opacity:.5; }
 
 /* Нижняя панель и кнопки */
 html.style-soft:root footer { background:var(--bg); border-top:0; box-shadow:0 -6px 18px rgba(201,205,224,.5); }
